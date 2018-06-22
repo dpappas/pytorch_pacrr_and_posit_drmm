@@ -122,7 +122,8 @@ def get_Abstract():
         for AbstractText in get_children_with_tag(Abstract, 'AbstractText'):
             dato['AbstractText'].append(
                 {
-                    'text'          : AbstractText.text.strip() if (AbstractText.text is not None) else '',
+
+                    'text'          : get_element_lower_text(AbstractText).strip(),
                     'Label'         : AbstractText.get('Label').strip() if ('Label' in AbstractText.keys()) else '',
                     'NlmCategory'   : AbstractText.get('NlmCategory').strip() if ('NlmCategory' in AbstractText.keys()) else '',
                 }
@@ -531,14 +532,15 @@ actions = []
 fc = 0
 for file_gz in fs[:2]:
     fc += 1
-    infile  = gzip.open(file_gz)
-    content = infile.read()
-    children = etree.fromstring(content).getchildren()
-    ch_counter = 0
+    infile      = gzip.open(file_gz)
+    content     = infile.read()
+    # content     = content.replace('<sub>','_sub_')
+    children    = etree.fromstring(content).getchildren()
+    ch_counter  = 0
     for ch_tree in children:
         ch_counter += 1
         for elem in ch_tree.iter(tag='MedlineCitation'):
-            elem = etree.fromstring(etree.tostring(elem))
+            elem    = etree.fromstring(etree.tostring(elem))
             Article = get_children_with_tag(elem, 'Article')[0]
             Journal = get_children_with_tag(Article, 'Journal')[0]
             dato = {}
