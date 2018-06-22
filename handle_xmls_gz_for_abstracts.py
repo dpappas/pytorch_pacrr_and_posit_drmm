@@ -511,12 +511,18 @@ def fix_elk_dato(dato):
             })
         dato['SupplMeshName'] = t
         #
-    if(dato['DateCreated'] is None ):
+    if(dato['DateCreated'] is None and 'DateCompleted' in dato):
         dato['DateCreated'] = dato['DateCompleted']
-        del(dato['DateCompleted'])
-    if(dato['DateCreated'] is None ):
+    if(dato['DateCreated'] is None and 'DateRevised' in dato):
         dato['DateCreated'] = dato['DateRevised']
-        del (dato['DateRevised'])
+    try:
+        del(dato['DateCompleted'])
+    except:
+        pass
+    try:
+        del(dato['DateRevised'])
+    except:
+        pass
     pprint(dato)
 
 
