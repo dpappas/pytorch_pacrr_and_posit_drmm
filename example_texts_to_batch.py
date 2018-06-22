@@ -17,6 +17,12 @@ print bod
 doc_ids = [ t.split('/')[-1] for t in data['questions'][0]['documents'] ]
 print doc_ids
 
+for snip in data['questions'][0]['snippets']:
+    pprint(snip)
+    print(snip['beginSection'])
+    print(snip['text'])
+    print(snip['offsetInBeginSection'])
+    print(snip['offsetInEndSection'])
 
 
 
