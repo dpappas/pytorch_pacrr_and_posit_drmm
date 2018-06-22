@@ -521,6 +521,13 @@ def send_to_elk(actions):
             else:
                 flag = False
 
+def clean_alittle(content):
+    content     = content.replace('<sub>','_ssub_')
+    content     = content.replace('</sub>','_esub_')
+    content     = content.replace('<sup>','_ssup_')
+    content     = content.replace('</sup>','_esup_')
+    return content
+
 diri    = '/media/dpappas/Maxtor/Pubmed_abstract_baselines/'
 fs      = [ diri+f for f in os.listdir(diri) if f.endswith('.xml.gz') ]
 fs.sort(reverse=True)
@@ -534,7 +541,7 @@ for file_gz in fs[:2]:
     fc += 1
     infile      = gzip.open(file_gz)
     content     = infile.read()
-    # content     = content.replace('<sub>','_sub_')
+    content     = clean_alittle(content)
     children    = etree.fromstring(content).getchildren()
     ch_counter  = 0
     for ch_tree in children:
