@@ -492,22 +492,26 @@ def fix_all_elk_data(dato):
     return elk_data
 
 def fix_elk_dato(dato):
-    t = []
-    for item in dato['MeshHeadings']:
-        for v in item.values():
+    if('MeshHeadings' in dato):
+        t = []
+        for item in dato['MeshHeadings']:
+            for v in item.values():
+                t.append({
+                    "UI"    : v['UI'],
+                    "name"  : v['text']
+                })
+        dato['MeshHeadings'] = t
+    if('SupplMeshName' in dato):
+        t = []
+        for v in dato['SupplMeshName']:
             t.append({
                 "UI"    : v['UI'],
+                "Type"  : v['Type'],
                 "name"  : v['text']
             })
-    dato['MeshHeadings'] = t
-    t = []
-    for v in dato['SupplMeshName']:
-        t.append({
-            "UI"    : v['UI'],
-            "Type"  : v['Type'],
-            "name"  : v['text']
-        })
-    dato['SupplMeshName'] = t
+        dato['SupplMeshName'] = t
+        #
+    pprint(dato)
 
 
 def create_an_action(tw):
@@ -590,8 +594,9 @@ for file_gz in fs:
             if('OtherAbstract' in dato.keys()):
                 dato['AbstractText'] += '\n'+ dato['OtherAbstract'].strip()
                 del(dato['OtherAbstract'])
-            pprint(dato)
-            # exit()
+            # pprint(dato)
+            fix_elk_dato(dato)
+            exit()
             # try:
             #     for d in fix_all_elk_data(dato):
             #         if (not abs_found(d['pmid'], d['DateCreated'], d['AbstractText'])):
