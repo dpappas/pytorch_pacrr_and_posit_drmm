@@ -376,9 +376,13 @@ def get_DateCompleted():
         DateCompleted.getparent().remove(DateCompleted)
 
 def get_ArticleTitle():
-    ArticleTitle            = get_children_with_tag(Article,'ArticleTitle')[0]
-    dato['ArticleTitle']    = ArticleTitle.text.strip()
-    ArticleTitle.getparent().remove(ArticleTitle)
+    ArticleTitle            = get_children_with_tag(Article,'ArticleTitle')
+    if(len(ArticleTitle)>0):
+        ArticleTitle = ArticleTitle[0]
+        dato['ArticleTitle'] = ArticleTitle.text.strip()
+        ArticleTitle.getparent().remove(ArticleTitle)
+    else:
+        dato['ArticleTitle'] = ''
 
 def get_ISOAbbreviation():
     ISOAbbreviation = get_children_with_tag(Journal, 'ISOAbbreviation')
@@ -608,6 +612,7 @@ for file_gz in fs:
             except:
                 print etree.tostring(elem, pretty_print=True)
                 traceback.print_exc()
+                exit()
                 tb = traceback.format_exc()
                 print tb
             # pprint(dato)
