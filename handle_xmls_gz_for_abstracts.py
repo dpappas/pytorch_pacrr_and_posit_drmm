@@ -491,6 +491,9 @@ def fix_all_elk_data(dato):
     #
     return elk_data
 
+def fix_elk_dato(dato):
+
+
 def create_an_action(tw):
     tw['_op_type']= 'index'
     tw['_index']= index

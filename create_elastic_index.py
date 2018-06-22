@@ -56,6 +56,25 @@ mapping = {
                         }
                     }
                 },
+                "Chemicals": {
+                    "properties": {
+                        "UI": {
+                            "type": "keyword"
+                        },
+                        "RegistryNumber": {
+                            "type": "keyword"
+                        },
+                        "NameOfSubstance": {
+                            "type"      : "text",
+                            "analyzer"  : "standard",
+                            "fields": {
+                                "raw": {
+                                    "type":  "keyword"
+                                }
+                            }
+                        },
+                    }
+                },
                 "SupplMeshName": {
                     "properties": {
                         "UI"    : { "type": "keyword" },
