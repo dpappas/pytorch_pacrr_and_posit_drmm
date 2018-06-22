@@ -550,7 +550,7 @@ for file_gz in fs:
                 # get_MedlineJournalInfo()
                 # get_Pagination()
                 # get_CitationSubset()
-                get_DateCreated()
+                # get_DateCreated()
                 get_DateRevised()
                 get_DateCompleted()
                 get_ArticleTitle()
