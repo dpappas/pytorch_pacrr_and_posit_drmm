@@ -525,7 +525,7 @@ fs      = [ diri+f for f in os.listdir(diri) if f.endswith('.xml.gz') ]
 fs.sort(reverse=True)
 # random.shuffle(fs)
 
-b_size = 100
+b_size = 400
 actions = []
 
 fc = 0
