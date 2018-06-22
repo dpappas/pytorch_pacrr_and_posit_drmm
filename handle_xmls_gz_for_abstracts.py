@@ -537,7 +537,7 @@ b_size  = 500
 actions = []
 
 fc = 0
-for file_gz in fs[:2]:
+for file_gz in fs[2:3]:
     fc += 1
     infile      = gzip.open(file_gz)
     content     = infile.read()
@@ -600,9 +600,8 @@ for file_gz in fs[:2]:
                 actions = []
         print('finished {} of {} trees. {} of {} files. found items up_to_now:{}'.format(ch_counter, len(children), fc, len(fs), len(actions)))
 
-if(len(actions) >= b_size):
-    send_to_elk(actions)
-    actions = []
+send_to_elk(actions)
+actions = []
 
 
 
