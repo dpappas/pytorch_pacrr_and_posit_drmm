@@ -380,7 +380,7 @@ def get_ArticleTitle():
     if(len(ArticleTitle)>0 ):
         # print(ArticleTitle)
         ArticleTitle = ArticleTitle[0]
-        dato['ArticleTitle'] = ArticleTitle.text.strip()
+        dato['ArticleTitle'] = get_element_lower_text(ArticleTitle).strip()
         ArticleTitle.getparent().remove(ArticleTitle)
     else:
         dato['ArticleTitle'] = ''
