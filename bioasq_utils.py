@@ -3,11 +3,20 @@ import pickle
 import operator
 from nltk.tokenize import sent_tokenize
 from gensim.models import KeyedVectors
+from difflib import SequenceMatcher
 
 
 UNK_TOKEN = '*UNK*'
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
+def similar(a, b):
+    return max(
+        [
+            SequenceMatcher(None, a, b).ratio(),
+            SequenceMatcher(None, b, a).ratio()
+        ]
+    )
 
 def map_term2ind(w2v_path):
     word_vectors = KeyedVectors.load_word2vec_format(w2v_path, binary=True)
