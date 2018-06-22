@@ -55,6 +55,21 @@ mapping = {
                             }
                         }
                     }
+                },
+                "SupplMeshName": {
+                    "properties": {
+                        "UI"    : { "type": "keyword" },
+                        "Type"  : { "type": "keyword" },
+                        "name"  : {
+                            "type"      : "text",
+                            "analyzer"  : "standard",
+                            "fields": {
+                                "raw": {
+                                    "type":  "keyword"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
