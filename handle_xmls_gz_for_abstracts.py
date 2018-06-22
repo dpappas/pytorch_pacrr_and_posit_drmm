@@ -492,11 +492,14 @@ def fix_all_elk_data(dato):
     return elk_data
 
 def fix_elk_dato(dato):
-    dato['AbstractText'] = '\n'.join([t['text'] for t in dato['AbstractText']]).strip()
-    pprint(dato)
+    try:
+        dato['AbstractText'] = '\n'.join([t['text'] for t in dato['AbstractText']]).strip()
+    except KeyError:
+        dato['AbstractText'] = ''
     if ('OtherAbstract' in dato.keys()):
         dato['AbstractText'] += '\n' + dato['OtherAbstract']['text'].strip()
         del (dato['OtherAbstract'])
+    dato['AbstractText'] = dato['AbstractText'].strip()
     if('MeshHeadings' in dato):
         t = []
         for item in dato['MeshHeadings']:
