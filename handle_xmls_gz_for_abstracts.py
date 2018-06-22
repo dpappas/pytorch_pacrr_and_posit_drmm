@@ -49,9 +49,9 @@ def abs_found(pmid, date, abs_text):
                                     {
                                         "range": {
                                             "DateCreated": {
-                                                "gte": date.strftime("%Y-%m-%d %H:%M:%S"),
-                                                "lte" : date.strftime("%Y-%m-%d %H:%M:%S"),
-                                                'format':'yyyy-MM-dd HH:mm:ss'
+                                                "gte":      date.strftime("%Y-%m-%d %H:%M:%S"),
+                                                "lte" :     date.strftime("%Y-%m-%d %H:%M:%S"),
+                                                'format':   'yyyy-MM-dd HH:mm:ss'
                                             }
                                         }
                                     },
@@ -508,10 +508,9 @@ def send_to_elk(actions):
             else:
                 flag = False
 
-diri = '/home/dpappas/medline_baselines/'
-fs = [ diri+f for f in os.listdir(diri) if f.endswith('.xml.gz') ]
+diri    = '/media/dpappas/Maxtor/Pubmed_abstract_baselines/'
+fs      = [ diri+f for f in os.listdir(diri) if f.endswith('.xml.gz') ]
 fs.sort(reverse=True)
-# random.shuffle(fs)
 
 b_size = 100
 actions = []
