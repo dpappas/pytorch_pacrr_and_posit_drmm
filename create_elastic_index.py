@@ -33,7 +33,12 @@ mapping = {
                 },
                 'Keywords' : {
                     "type": "text",
-                    "analyzer": "standard"
+                    "analyzer": "standard",
+                    "fields": {
+                        "raw": {
+                            "type":  "keyword"
+                        }
+                    }
                 },
                 "MeshHeadings": {
                     "properties": {
