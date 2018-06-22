@@ -229,23 +229,23 @@ def get_overlap_features_mode_4(q_tokens, d_tokens, q_idf):
     return [unigram_overlap, bigram_overlap, idf_uni_overlap]
 
 def produce_pos_neg_pairs(data, docset, max_year):
-    pairs_list = []
+    pairs_list              = []
     #
-    query_list = []
-    query_len_list = []
-    query_idf_list = []
+    query_list              = []
+    query_len_list          = []
+    query_idf_list          = []
     #
-    pos_doc_list = []
-    neg_doc_list = []
+    pos_doc_list            = []
+    neg_doc_list            = []
     #
-    pos_doc_bm25_list = []
-    neg_doc_bm25_list = []
+    pos_doc_bm25_list       = []
+    neg_doc_bm25_list       = []
     #
-    pos_doc_normBM25_list = []
-    neg_doc_normBM25_list = []
+    pos_doc_normBM25_list   = []
+    neg_doc_normBM25_list   = []
     #
-    pos_doc_overlap_list = []
-    neg_doc_overlap_list = []
+    pos_doc_overlap_list    = []
+    neg_doc_overlap_list    = []
     #
     for q in tqdm(data['queries']):
         #
