@@ -352,9 +352,10 @@ def get_CitationSubset():
         CitationSubset.getparent().remove(CitationSubset)
 
 def get_DateCreated():
-    DateCreated   = get_children_with_tag(elem,'DateCreated')[0]
-    dato['DateCreated']  = get_children_with_tag(DateCreated,'Day')[0].text.strip() + '/' +get_children_with_tag(DateCreated,'Month')[0].text.strip() + '/' +get_children_with_tag(DateCreated,'Year')[0].text.strip()
-    DateCreated.getparent().remove(DateCreated)
+    if(len(get_children_with_tag(elem,'DateCreated'))>0):
+        DateCreated             = get_children_with_tag(elem,'DateCreated')[0]
+        dato['DateCreated']     = get_children_with_tag(DateCreated,'Day')[0].text.strip() + '/' +get_children_with_tag(DateCreated,'Month')[0].text.strip() + '/' +get_children_with_tag(DateCreated,'Year')[0].text.strip()
+        DateCreated.getparent().remove(DateCreated)
 
 def get_DateRevised():
     DateRevised = get_children_with_tag(elem, 'DateRevised')
@@ -564,7 +565,8 @@ for file_gz in fs:
                 traceback.print_exc()
                 tb = traceback.format_exc()
                 print tb
-            # pprint(dato)
+            pprint(dato)
+            exit()
             try:
                 for d in fix_all_elk_data(dato):
                     if (not abs_found(d['pmid'], d['DateCreated'], d['AbstractText'])):
