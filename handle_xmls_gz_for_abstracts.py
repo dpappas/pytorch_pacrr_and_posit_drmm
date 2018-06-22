@@ -492,6 +492,11 @@ def fix_all_elk_data(dato):
     return elk_data
 
 def fix_elk_dato(dato):
+    dato['AbstractText'] = '\n'.join([t['text'] for t in dato['AbstractText']]).strip()
+    pprint(dato)
+    if ('OtherAbstract' in dato.keys()):
+        dato['AbstractText'] += '\n' + dato['OtherAbstract']['text'].strip()
+        del (dato['OtherAbstract'])
     if('MeshHeadings' in dato):
         t = []
         for item in dato['MeshHeadings']:
@@ -523,8 +528,7 @@ def fix_elk_dato(dato):
         del(dato['DateRevised'])
     except:
         pass
-    pprint(dato)
-
+    return dato
 
 def create_an_action(tw):
     tw['_op_type']= 'index'
@@ -603,13 +607,10 @@ for file_gz in fs:
                 traceback.print_exc()
                 tb = traceback.format_exc()
                 print tb
-            dato['AbstractText'] = '\n'.join([ t['text'] for t in dato['AbstractText'] ]).strip()
-            if('OtherAbstract' in dato.keys()):
-                dato['AbstractText'] += '\n'+ dato['OtherAbstract'].strip()
-                del(dato['OtherAbstract'])
             # pprint(dato)
-            fix_elk_dato(dato)
-            exit()
+            dato = fix_elk_dato(dato)
+            pprint(dato)
+            # exit()
             # try:
             #     for d in fix_all_elk_data(dato):
             #         if (not abs_found(d['pmid'], d['DateCreated'], d['AbstractText'])):
