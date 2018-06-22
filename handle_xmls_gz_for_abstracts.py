@@ -511,6 +511,12 @@ def fix_elk_dato(dato):
             })
         dato['SupplMeshName'] = t
         #
+    if(dato['DateCreated'] is None ):
+        dato['DateCreated'] = dato['DateCompleted']
+    if(dato['DateCreated'] is None ):
+        dato['DateCreated'] = dato['DateRevised']
+    del(dato['DateCompleted'])
+    del(dato['DateRevised'])
     pprint(dato)
 
 
@@ -555,6 +561,7 @@ for file_gz in fs:
             Article = get_children_with_tag(elem, 'Article')[0]
             Journal = get_children_with_tag(Article, 'Journal')[0]
             dato = {}
+            # print(etree.tostring(elem))
             try:
                 get_pmid()
                 # get_NumberOfReferences()
@@ -573,9 +580,9 @@ for file_gz in fs:
                 # get_MedlineJournalInfo()
                 # get_Pagination()
                 # get_CitationSubset()
-                # get_DateCreated()
-                # get_DateRevised()
-                # get_DateCompleted()
+                get_DateCreated()
+                get_DateRevised()
+                get_DateCompleted()
                 get_ArticleTitle()
                 # get_Authors()
                 # get_ISOAbbreviation()
