@@ -155,9 +155,9 @@ def get_PersonalNameSubjectList():
 
 def get_Abstract():
     Abstract = get_children_with_tag(Article, 'Abstract')
+    dato['AbstractText'] = []
     if(len(Abstract)>0):
         Abstract = Abstract[0]
-        dato['AbstractText'] = []
         for AbstractText in get_children_with_tag(Abstract, 'AbstractText'):
             dato['AbstractText'].append(
                 {
@@ -567,24 +567,26 @@ for file_gz in fs:
                 traceback.print_exc()
                 tb = traceback.format_exc()
                 print tb
+            dato['AbstractText'] = '\n'.join([ t['text'] for t in dato['AbstractText'] ])
             pprint(dato)
-            exit()
-            try:
-                for d in fix_all_elk_data(dato):
-                    if (not abs_found(d['pmid'], d['DateCreated'], d['AbstractText'])):
-                        temp = create_an_action(d)
-                        actions.append(temp)
-                    else:
-                        print 'found pmid {}'.format(d['pmid'])
-            except:
-                print etree.tostring(elem, pretty_print=True)
-                traceback.print_exc()
-                tb = traceback.format_exc()
-                print tb
-            if (len(actions) >= b_size):
-                send_to_elk(actions)
-                actions = []
+            # exit()
+            # try:
+            #     for d in fix_all_elk_data(dato):
+            #         if (not abs_found(d['pmid'], d['DateCreated'], d['AbstractText'])):
+            #             temp = create_an_action(d)
+            #             actions.append(temp)
+            #         else:
+            #             print 'found pmid {}'.format(d['pmid'])
+            # except:
+            #     print etree.tostring(elem, pretty_print=True)
+            #     traceback.print_exc()
+            #     tb = traceback.format_exc()
+            #     print tb
+            # if (len(actions) >= b_size):
+            #     send_to_elk(actions)
+            #     actions = []
         print('finished {} of {} trees. {} of {} files. found items up_to_now:{}'.format(ch_counter, len(children), fc, len(fs), len(actions)))
+    exit()
 
 if(len(actions) >= b_size):
     send_to_elk(actions)
