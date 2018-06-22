@@ -5,7 +5,6 @@ from nltk.tokenize import sent_tokenize
 from gensim.models import KeyedVectors
 from difflib import SequenceMatcher
 
-
 UNK_TOKEN = '*UNK*'
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
