@@ -32,23 +32,19 @@ doc_type = "pubmed_abstracts_mapping_0_1"
 def abs_found(pmid, date):
     bod = {
             "query" : {
-                    "constant_score" : {
-                        "filter" : {
-                            'bool':{
-                                "must" : [
-                                    { "term": { "pmid": pmid } },
-                                    {
-                                        "range": {
-                                            "ArticleDate": {
-                                                "gte":      date,
-                                                "lte" :     date,
-                                                'format':   'dd/MM/yyyy'
-                                            }
-                                        }
-                                    },
-                                ]
-                            }
-                        }
+                    'bool':{
+                        "must" : [
+                            { "term": { "pmid": pmid } },
+                            {
+                                "range": {
+                                    "ArticleDate": {
+                                        "gte":      date,
+                                        "lte" :     date,
+                                        'format':   'dd/MM/yyyy'
+                                    }
+                                }
+                            },
+                        ]
                     }
             }
     }
@@ -606,6 +602,8 @@ for file_gz in fs:
             if (not abs_found(dato['pmid'], dato['DateCreated'])):
                 temp = create_an_action(dato)
                 actions.append(temp)
+            else:
+                print 'found pmid {}'.format(dato['pmid'])
             if (len(actions) >= b_size):
                 send_to_elk(actions)
                 actions = []
