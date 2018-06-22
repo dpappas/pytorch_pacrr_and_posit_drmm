@@ -29,7 +29,7 @@ es  = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retr
 index = 'pubmed_abstracts_index_0_1'
 doc_type = "pubmed_abstracts_mapping_0_1"
 
-def abs_found(pmid, date, abs_text):
+def abs_found(pmid, date):
     bod = {
             "query" : {
                     "constant_score" : {
@@ -603,23 +603,11 @@ for file_gz in fs:
             dato = fix_elk_dato(dato)
             pprint(dato)
             if (not abs_found(dato['pmid'], dato['DateCreated'])):
-
-            # exit()
-            # try:
-            #     for d in fix_all_elk_data(dato):
-            #         if (not abs_found(d['pmid'], d['DateCreated'], d['AbstractText'])):
-            #             temp = create_an_action(d)
-            #             actions.append(temp)
-            #         else:
-            #             print 'found pmid {}'.format(d['pmid'])
-            # except:
-            #     print etree.tostring(elem, pretty_print=True)
-            #     traceback.print_exc()
-            #     tb = traceback.format_exc()
-            #     print tb
-            # if (len(actions) >= b_size):
-            #     send_to_elk(actions)
-            #     actions = []
+                temp = create_an_action(dato)
+                actions.append(temp)
+            if (len(actions) >= b_size):
+                send_to_elk(actions)
+                actions = []
         print('finished {} of {} trees. {} of {} files. found items up_to_now:{}'.format(ch_counter, len(children), fc, len(fs), len(actions)))
     exit()
 
