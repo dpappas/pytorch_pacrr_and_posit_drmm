@@ -24,9 +24,10 @@ from elasticsearch import helpers
 import random
 
 
-es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
-index       = 'pubmed_abstracts_0_1'
-doc_type    = 'abstract_0_1'
+es  = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+
+index = 'pubmed_abstracts_index_0_1'
+doc_type = "pubmed_abstracts_mapping_0_1"
 
 def abs_found(pmid, date, abs_text):
     bod = {
@@ -35,23 +36,13 @@ def abs_found(pmid, date, abs_text):
                         "filter" : {
                             'bool':{
                                 "must" : [
-                                    {
-                                        "term": {
-                                            "pmid": pmid,
-                                        }
-                                    },
-                                    # {
-                                    #     'term': {
-                                    #         "AbstractText.raw" : abs_text,
-                                    #     }
-                                    # },
-                                    # { "query_string": { "query": "AbstractText: \""+abs_text+"\"", "analyze_wildcard": True } },
+                                    { "term": { "pmid": pmid } },
                                     {
                                         "range": {
-                                            "DateCreated": {
+                                            "ArticleDate": {
                                                 "gte":      date.strftime("%Y-%m-%d %H:%M:%S"),
                                                 "lte" :     date.strftime("%Y-%m-%d %H:%M:%S"),
-                                                'format':   'yyyy-MM-dd HH:mm:ss'
+                                                'format':   'dd-MM-yyyy'
                                             }
                                         }
                                     },
@@ -61,17 +52,8 @@ def abs_found(pmid, date, abs_text):
                     }
             }
     }
-    while(True):
-        try:
-            res = es.search(index=index , doc_type=doc_type, body=bod)
-            # pprint(res)
-            for item in res['hits']['hits']:
-                if(item['_source'][u'AbstractText'] == abs_text):
-                    return True
-            return False
-        except elasticsearch.exceptions.ConnectionError:
-            None
-    return None
+    res = es.search(index=index, doc_type=doc_type, body=bod)
+    return len(len(res['hits']['hits'])>0)
 
 def create_new_xml_from_element(element):
     return etree.fromstring(etree.tostring(element))
@@ -620,6 +602,8 @@ for file_gz in fs:
             # pprint(dato)
             dato = fix_elk_dato(dato)
             pprint(dato)
+            if (not abs_found(dato['pmid'], dato['DateCreated'])):
+
             # exit()
             # try:
             #     for d in fix_all_elk_data(dato):
