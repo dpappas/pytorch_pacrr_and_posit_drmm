@@ -29,8 +29,8 @@ es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retri
 index = 'pubmed_abstracts_index_0_1'
 doc_type = "pubmed_abstracts_mapping_0_1"
 
-def abs_found(pmid, date):
-    bod = {"query" : {'bool':{"must" : [ { "term": { "pmid": '29165238' } }]}}}
+def abs_found(pmid):
+    bod = {"query" : {'bool':{"must" : [ { "term": { "pmid": pmid } }]}}}
     res = es.search(index=index, doc_type=doc_type, body=bod)
     return len(res['hits']['hits'])>0
 
@@ -582,7 +582,7 @@ for file_gz in fs[:2]:
             # pprint(dato)
             dato = fix_elk_dato(dato)
             # pprint(dato)
-            if (not abs_found(dato['pmid'], dato['DateCreated'])):
+            if (not abs_found(dato['pmid'])):
                 temp = create_an_action(dato)
                 actions.append(temp)
             else:
