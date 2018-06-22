@@ -53,7 +53,7 @@ def abs_found(pmid, date):
             }
     }
     res = es.search(index=index, doc_type=doc_type, body=bod)
-    return len(len(res['hits']['hits'])>0)
+    return len(res['hits']['hits'])>0
 
 def create_new_xml_from_element(element):
     return etree.fromstring(etree.tostring(element))
