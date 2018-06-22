@@ -600,7 +600,7 @@ for file_gz in fs[2:3]:
                 actions = []
         print('finished {} of {} trees. {} of {} files. found items up_to_now:{}'.format(ch_counter, len(children), fc, len(fs), len(actions)))
 
-if(len(actions) >= 0):
+if(len(actions) > 0):
     send_to_elk(actions)
     actions = []
 
