@@ -97,10 +97,14 @@ mapping = {
 
 print elastic_con.indices.create(index = index, ignore=400, body=mapping)
 
+'''
+mkdir /media/dpappas/Maxtor/ELK_DATA/
+vim ~/ELK/elasticsearch-6.2.4/config/elasticsearch.yml
+change path.data to /media/dpappas/Maxtor/ELK_DATA/data
+change path.logs to /media/dpappas/Maxtor/ELK_DATA/logs
 
 
-
-
+'''
 
 
 

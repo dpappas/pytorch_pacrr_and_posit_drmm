@@ -30,24 +30,7 @@ index = 'pubmed_abstracts_index_0_1'
 doc_type = "pubmed_abstracts_mapping_0_1"
 
 def abs_found(pmid, date):
-    bod = {
-            "query" : {
-                    'bool':{
-                        "must" : [
-                            { "term": { "pmid": pmid } },
-                            {
-                                "range": {
-                                    "ArticleDate": {
-                                        "gte":      date,
-                                        "lte" :     date,
-                                        'format':   'dd/MM/yyyy'
-                                    }
-                                }
-                            },
-                        ]
-                    }
-            }
-    }
+    bod = {"query" : {'bool':{"must" : [ { "term": { "pmid": '29165238' } }]}}}
     res = es.search(index=index, doc_type=doc_type, body=bod)
     return len(res['hits']['hits'])>0
 
