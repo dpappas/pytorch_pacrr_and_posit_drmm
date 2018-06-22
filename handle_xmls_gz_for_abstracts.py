@@ -561,6 +561,7 @@ def send_to_elk(actions):
 diri    = '/media/dpappas/Maxtor/Pubmed_abstract_baselines/'
 fs      = [ diri+f for f in os.listdir(diri) if f.endswith('.xml.gz') ]
 fs.sort(reverse=True)
+# random.shuffle(fs)
 
 b_size = 100
 actions = []
