@@ -492,6 +492,22 @@ def fix_all_elk_data(dato):
     return elk_data
 
 def fix_elk_dato(dato):
+    t = []
+    for item in dato['MeshHeadings']:
+        for v in item.values():
+            t.append({
+                "UI"    : v['UI'],
+                "name"  : v['text']
+            })
+    dato['MeshHeadings'] = t
+    t = []
+    for v in dato['SupplMeshName']:
+        t.append({
+            "UI"    : v['UI'],
+            "Type"  : v['Type'],
+            "name"  : v['text']
+        })
+    dato['SupplMeshName'] = t
 
 
 def create_an_action(tw):
