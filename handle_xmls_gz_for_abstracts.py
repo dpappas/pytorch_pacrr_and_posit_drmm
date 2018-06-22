@@ -537,7 +537,7 @@ b_size  = 500
 actions = []
 
 fc = 0
-for file_gz in fs[:3]:
+for file_gz in fs[3:4]:
     fc += 1
     infile      = gzip.open(file_gz)
     content     = infile.read()
