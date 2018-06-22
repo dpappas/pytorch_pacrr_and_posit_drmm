@@ -567,9 +567,9 @@ for file_gz in fs:
                 traceback.print_exc()
                 tb = traceback.format_exc()
                 print tb
-            dato['AbstractText'] = '\n'.join([ t['text'] for t in dato['AbstractText'] ])
+            dato['AbstractText'] = '\n'.join([ t['text'] for t in dato['AbstractText'] ]).strip()
             if('OtherAbstract' in dato.keys()):
-                dato['AbstractText'] += '\n'+ dato['OtherAbstract']
+                dato['AbstractText'] += '\n'+ dato['OtherAbstract'].strip()
                 del(dato['OtherAbstract'])
             pprint(dato)
             # exit()
