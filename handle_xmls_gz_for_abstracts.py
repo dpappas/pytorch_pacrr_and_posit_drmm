@@ -24,7 +24,7 @@ from elasticsearch import helpers
 import random
 
 
-es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 index       = 'pubmed_abstracts_0_1'
 doc_type    = 'abstract_0_1'
 
