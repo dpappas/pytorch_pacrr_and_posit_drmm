@@ -513,10 +513,10 @@ def fix_elk_dato(dato):
         #
     if(dato['DateCreated'] is None ):
         dato['DateCreated'] = dato['DateCompleted']
+        del(dato['DateCompleted'])
     if(dato['DateCreated'] is None ):
         dato['DateCreated'] = dato['DateRevised']
-    del(dato['DateCompleted'])
-    del(dato['DateRevised'])
+        del (dato['DateRevised'])
     pprint(dato)
 
 
