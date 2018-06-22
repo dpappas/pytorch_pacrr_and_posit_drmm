@@ -463,9 +463,9 @@ def fix_elk_dato(dato):
         dato['AbstractText'] = '\n'.join([t['text'] for t in dato['AbstractText']]).strip()
     except KeyError:
         dato['AbstractText'] = ''
-    if ('OtherAbstract' in dato.keys()):
-        dato['AbstractText'] += '\n' + dato['OtherAbstract']['text'].strip()
-        del (dato['OtherAbstract'])
+    # if ('OtherAbstract' in dato.keys()):
+    #     dato['AbstractText'] += '\n' + dato['OtherAbstract']['text'].strip()
+    #     del (dato['OtherAbstract'])
     dato['AbstractText'] = dato['AbstractText'].strip()
     if('MeshHeadings' in dato):
         t = []
@@ -572,11 +572,10 @@ for file_gz in fs[:2]:
                 # handle_JournalIssue()
                 get_ArticleDate()
                 get_Abstract()
-                get_OtherAbstract()
+                # get_OtherAbstract()
             except:
                 print etree.tostring(elem, pretty_print=True)
                 traceback.print_exc()
-                exit()
                 tb = traceback.format_exc()
                 print tb
             # pprint(dato)
