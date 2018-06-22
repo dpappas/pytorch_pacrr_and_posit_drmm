@@ -376,11 +376,11 @@ def get_DateCompleted():
         DateCompleted.getparent().remove(DateCompleted)
 
 def get_ArticleTitle():
-    ArticleTitle            = get_children_with_tag(Article,'ArticleTitle')
+    ArticleTitle = get_children_with_tag(Article,'ArticleTitle')
     if(len(ArticleTitle)>0 ):
         print(ArticleTitle)
-        ArticleTitle            = ArticleTitle[0]
-        dato['ArticleTitle']    = ArticleTitle.text.strip()
+        ArticleTitle = ArticleTitle[0]
+        dato['ArticleTitle'] = ArticleTitle.text.strip()
         ArticleTitle.getparent().remove(ArticleTitle)
     else:
         dato['ArticleTitle'] = ''
