@@ -19,14 +19,21 @@ print doc_ids
 
 for snip in data['questions'][0]['snippets']:
     # pprint(snip)
+    print(snip['document'].split('/')[-1])
     print(snip['beginSection'])
-    print(snip['text'])
+    print(snip['text'].strip())
     print(snip['offsetInBeginSection'])
     print(snip['offsetInEndSection'])
     print 30 * '-'
 
 
+'''
+laptop:
+/home/dpappas/ELK/elasticsearch-6.2.4/bin/elasticsearch
+/home/dpappas/ELK/kibana-6.2.4-linux-x86_64/bin/kibana
+server:
 
+'''
 
 
 
