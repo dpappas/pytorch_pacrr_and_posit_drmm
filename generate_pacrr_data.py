@@ -388,27 +388,27 @@ def produce_reranking_inputs(data, docset, max_year):
 if __name__ == '__main__':
     topk = 100
     #
-    ind = sys.argv.index('-config')
+    ind         = sys.argv.index('-config')
     config_file = sys.argv[ind + 1]
-    parser = argparse.ArgumentParser()
+    parser      = argparse.ArgumentParser()
     parser.add_argument('-config', dest='config_file')
-    args = parser.parse_args()
+    args        = parser.parse_args()
     print(args.config_file)
     #
     with open(args.config_file, 'r') as f:
         config = json.load(f)
     #
-    data_directory = ''
+    data_directory          = ''
     #
-    bm25_data_path_train = data_directory + 'data/bioasq6_bm25_top{0}/bioasq6_bm25_top{0}.train.pkl'.format(topk, topk)
-    docset_path_train = data_directory + 'data/bioasq6_bm25_top{0}/bioasq6_bm25_docset_top{0}.train.pkl'.format(topk, topk)
+    bm25_data_path_train    = data_directory + 'data/bioasq6_bm25_top{0}/bioasq6_bm25_top{0}.train.pkl'.format(topk, topk)
+    docset_path_train       = data_directory + 'data/bioasq6_bm25_top{0}/bioasq6_bm25_docset_top{0}.train.pkl'.format(topk, topk)
     #
-    bm25_data_path_dev = data_directory + 'data/bioasq6_bm25_top{0}/bioasq6_bm25_top{0}.dev.pkl'.format(topk, topk)
-    docset_path_dev = data_directory + 'data/bioasq6_bm25_top{0}/bioasq6_bm25_docset_top{0}.dev.pkl'.format(topk, topk)
+    bm25_data_path_dev      = data_directory + 'data/bioasq6_bm25_top{0}/bioasq6_bm25_top{0}.dev.pkl'.format(topk, topk)
+    docset_path_dev         = data_directory + 'data/bioasq6_bm25_top{0}/bioasq6_bm25_docset_top{0}.dev.pkl'.format(topk, topk)
     #
-    w2v_path = config['WORD_EMBEDDINGS_FILE']
-    term2ind_path = config['TERM_TO_IND']
-    idf_path = config['IDF_FILE']
+    w2v_path                = config['WORD_EMBEDDINGS_FILE']
+    term2ind_path           = config['TERM_TO_IND']
+    idf_path                = config['IDF_FILE']
     #
     with open(bm25_data_path_train, 'rb') as f:
         data_train = pickle.load(f)
