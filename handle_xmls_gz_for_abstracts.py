@@ -77,7 +77,7 @@ def create_new_xml_from_element(element):
     return etree.fromstring(etree.tostring(element))
 
 def get_children_with_tag(elem,tag):
-    return [ x for x in elem.getchildren() if(x.tag == tag)  ]
+    return [ x for x in elem.getchildren() if(x.tag == tag) and x is not None ]
 
 def get_OtherIDs():
     OtherIDs = get_children_with_tag(elem,'OtherID')
@@ -377,9 +377,10 @@ def get_DateCompleted():
 
 def get_ArticleTitle():
     ArticleTitle            = get_children_with_tag(Article,'ArticleTitle')
-    if(len(ArticleTitle)>0):
-        ArticleTitle = ArticleTitle[0]
-        dato['ArticleTitle'] = ArticleTitle.text.strip()
+    if(len(ArticleTitle)>0 ):
+        print(ArticleTitle)
+        ArticleTitle            = ArticleTitle[0]
+        dato['ArticleTitle']    = ArticleTitle.text.strip()
         ArticleTitle.getparent().remove(ArticleTitle)
     else:
         dato['ArticleTitle'] = ''
