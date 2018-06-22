@@ -246,7 +246,8 @@ def get_KeywordList():
         KeywordList = KeywordList[0]
         dato['Keywords'] = []
         for Keyword in get_children_with_tag(KeywordList, 'Keyword'):
-            dato['Keywords'].append(Keyword.text.strip())
+            if(Keyword.text is not None):
+                dato['Keywords'].append(Keyword.text.strip())
             Keyword.getparent().remove(Keyword)
         KeywordList.getparent().remove(KeywordList)
 
