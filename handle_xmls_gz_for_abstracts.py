@@ -378,7 +378,7 @@ def get_DateCompleted():
 def get_ArticleTitle():
     ArticleTitle = get_children_with_tag(Article,'ArticleTitle')
     if(len(ArticleTitle)>0 ):
-        print(ArticleTitle)
+        # print(ArticleTitle)
         ArticleTitle = ArticleTitle[0]
         dato['ArticleTitle'] = ArticleTitle.text.strip()
         ArticleTitle.getparent().remove(ArticleTitle)
