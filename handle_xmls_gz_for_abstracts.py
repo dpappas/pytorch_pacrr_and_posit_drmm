@@ -373,8 +373,8 @@ def get_DateCompleted():
         DateCompleted.getparent().remove(DateCompleted)
 
 def get_ArticleTitle():
-    ArticleTitle = get_children_with_tag(Article,'ArticleTitle')[0]
-    dato['ArticleTitle'] = ArticleTitle.text.strip()
+    ArticleTitle            = get_children_with_tag(Article,'ArticleTitle')[0]
+    dato['ArticleTitle']    = ArticleTitle.text.strip()
     ArticleTitle.getparent().remove(ArticleTitle)
 
 def get_ISOAbbreviation():
