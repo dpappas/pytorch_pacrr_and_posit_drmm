@@ -40,9 +40,9 @@ def abs_found(pmid, date):
                                     {
                                         "range": {
                                             "ArticleDate": {
-                                                "gte":      date.strftime("%Y-%m-%d %H:%M:%S"),
-                                                "lte" :     date.strftime("%Y-%m-%d %H:%M:%S"),
-                                                'format':   'dd-MM-yyyy'
+                                                "gte":      date,
+                                                "lte" :     date,
+                                                'format':   'dd/MM/yyyy'
                                             }
                                         }
                                     },
