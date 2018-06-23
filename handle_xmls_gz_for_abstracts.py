@@ -604,6 +604,8 @@ if(len(actions) > 0):
     send_to_elk(actions)
     actions = []
 
+exit()
+
 '''
 
 curl -X GET "localhost:9200/pubmed_abstracts_index_0_1/pubmed_abstracts_mapping_0_1/_count"
