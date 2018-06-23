@@ -604,5 +604,17 @@ if(len(actions) > 0):
     send_to_elk(actions)
     actions = []
 
+'''
 
+curl -X GET "localhost:9200/pubmed_abstracts_index_0_1/pubmed_abstracts_mapping_0_1/_count"
+
+curl -X GET "localhost:9200/twitter/_doc/_count" -H 'Content-Type: application/json' -d'
+{
+    "query" : {
+        "term" : { "user" : "kimchy" }
+    }
+}
+'
+
+'''
 
