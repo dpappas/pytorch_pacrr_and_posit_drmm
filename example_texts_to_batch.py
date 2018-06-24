@@ -16,8 +16,8 @@ for snip in data['questions'][0]['snippets']:
     print(pmid)
     print(snip['beginSection'])
     print(snip['text'].strip())
-    print(snip['offsetInBeginSection'])
-    print(snip['offsetInEndSection'])
+    # print(snip['offsetInBeginSection'])
+    # print(snip['offsetInEndSection'])
     print 30 * '-'
 
 
