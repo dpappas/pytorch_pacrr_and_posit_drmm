@@ -11,16 +11,18 @@ data    = json.load(open(fpath,'r'))
 # pprint(data)
 sw = set(stopwords.words('english'))
 
-for snip in tqdm(data['questions'][0]['snippets']):
-    # pprint(snip)
-    pmid = snip['document'].split('/')[-1]
-    print(pmid)
-    print(snip['beginSection'])
-    print(snip['text'].strip())
-    # print(snip['offsetInBeginSection'])
-    # print(snip['offsetInEndSection'])
-    print 30 * '-'
-
+for quest in tqdm(data['questions']):
+    # pprint(quest)
+    if('snippets' in quest):
+        for snip in quest['snippets']:
+            # pprint(snip)
+            pmid = snip['document'].split('/')[-1]
+            print(pmid)
+            print(snip['beginSection'])
+            print(snip['text'].strip())
+            # print(snip['offsetInBeginSection'])
+            # print(snip['offsetInEndSection'])
+            print 30 * '-'
 
 '''
 
