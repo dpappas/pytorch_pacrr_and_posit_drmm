@@ -20,7 +20,8 @@ sw = set(stopwords.words('english'))
 
 for snip in data['questions'][0]['snippets']:
     # pprint(snip)
-    print(snip['document'].split('/')[-1])
+    pmid = snip['document'].split('/')[-1]
+    print(pmid)
     print(snip['beginSection'])
     print(snip['text'].strip())
     print(snip['offsetInBeginSection'])
