@@ -1,5 +1,5 @@
 
-
+from nltk.corpus import stopwords
 from bioasq_utils import get_sents
 from pprint import pprint
 import json
@@ -8,6 +8,7 @@ fpath   = '/home/dpappas/bioasq_ir_data/BioASQ-trainingDataset6b.json'
 data    = json.load(open(fpath,'r'))
 
 # pprint(data)
+sw = set(stopwords.words('english'))
 
 pprint(data['questions'][0].keys())
 pprint(data['questions'][0])
