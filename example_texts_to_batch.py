@@ -10,13 +10,13 @@ data    = json.load(open(fpath,'r'))
 # pprint(data)
 sw = set(stopwords.words('english'))
 
-pprint(data['questions'][0].keys())
-pprint(data['questions'][0])
-
-bod     = data['questions'][0]['body']
-print bod
-doc_ids = [ t.split('/')[-1] for t in data['questions'][0]['documents'] ]
-print doc_ids
+# pprint(data['questions'][0].keys())
+# pprint(data['questions'][0])
+#
+# bod     = data['questions'][0]['body']
+# print bod
+# doc_ids = [ t.split('/')[-1] for t in data['questions'][0]['documents'] ]
+# print doc_ids
 
 for snip in data['questions'][0]['snippets']:
     # pprint(snip)
