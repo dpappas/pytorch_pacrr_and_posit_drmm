@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import cPickle as pickle
 import re
-import operator
 import gensim
+import operator
+import cPickle as pickle
+from pprint import pprint
 UNK_TOKEN = '*UNK*'
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
@@ -24,8 +25,13 @@ term2ind = map_term2ind(w2v_path)
 all_data = pickle.load(open('joint_task_data.p','rb'))
 print(len(all_data))
 
+max_nof_sents = max([len(item['all_sents']) for item in all_data])
 
 
+for item in all_data:
+    if(len(item['all_sents']) > 50):
+        pprint(item['all_sents'])
+        break
 
 
 
