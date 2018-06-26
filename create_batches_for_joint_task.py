@@ -4,9 +4,9 @@
 import re
 import gensim
 import operator
+import numpy as np
 import cPickle as pickle
 from pprint import pprint
-UNK_TOKEN = '*UNK*'
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -25,6 +25,20 @@ def map_term2ind(w2v_path):
             for t in enumerate(vocabulary, start=1)
         ]
     )
+    term2ind[UNK_TOKEN] = max(term2ind.items(), key=operator.itemgetter(1))[1] + 1	# Index of *UNK* token
+    print('Size of voc: {0}'.format(len(vocabulary)))
+    print('Unknown terms\'s id: {0}'.format(term2ind['*UNK*']))
+    return term2ind
+
+def load_w2v_embs(w2v_path):
+    word_vectors        = gensim.models.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
+    vocabulary          = sorted(list(word_vectors.vocab.keys()))
+    #
+    av              = np.average(word_vectors.vectors,0)
+    pad             = np.zeros(av.shape)
+    #
+    vocabulary      = ['PAD', 'UNKN'] + vocabulary
+    #
     term2ind[UNK_TOKEN] = max(term2ind.items(), key=operator.itemgetter(1))[1] + 1	# Index of *UNK* token
     print('Size of voc: {0}'.format(len(vocabulary)))
     print('Unknown terms\'s id: {0}'.format(term2ind['*UNK*']))
