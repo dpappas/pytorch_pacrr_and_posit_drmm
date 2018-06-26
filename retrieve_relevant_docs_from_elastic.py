@@ -134,23 +134,17 @@ def fix_relevant_snippets(relevant_parts):
         relevant_snippets.extend(get_sents(rt))
     return relevant_snippets
 
-def get_similarity_vector():
+def get_similarity_vector(all_sents, relevant_snippets):
     ret = []
     for s in all_sents:
         mm = 0.0
         for r in relevant_snippets:
             similarity = similar(s, r)
             if (similarity >= 0.8 or r in s):
-                # print similarity
-                # print doc_id
-                # print s
-                # print r
-                # print 20 * '-'
                 mm = 1.0
                 break
         ret.append(mm)
     return ret
-
 
 bioasq_data_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
 ddd                 = preprocess_bioasq_data(bioasq_data_path)
