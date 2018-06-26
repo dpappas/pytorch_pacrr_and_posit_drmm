@@ -137,9 +137,6 @@ all_abs             = pickle.load(open(abs_path,'rb'))
 #
 bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl'
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
-# #
-# d1      = bm25_scores['queries'][0]
-# pprint(d1)
 
 all_data = []
 for quer in tqdm(bm25_scores['queries']):
