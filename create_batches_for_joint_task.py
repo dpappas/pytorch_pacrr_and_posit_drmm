@@ -7,6 +7,8 @@ import operator
 import gensim
 UNK_TOKEN = '*UNK*'
 
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
 def map_term2ind(w2v_path):
     word_vectors        = gensim.models.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
     vocabulary          = sorted(list(word_vectors.vocab.keys()))
@@ -18,8 +20,6 @@ def map_term2ind(w2v_path):
 
 w2v_path = '/home/DATA/Biomedical/bioasq6/bioasq6_data/word_embeddings/pubmed2018_w2v_200D.bin'
 term2ind = map_term2ind(w2v_path)
-
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 all_data = pickle.load(open('joint_task_data.p','rb'))
 print(len(all_data))
