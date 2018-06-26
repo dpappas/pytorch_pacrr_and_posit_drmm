@@ -38,14 +38,18 @@ def load_w2v_embs(w2v_path):
     pad             = np.zeros(av.shape)
     #
     vocabulary      = ['PAD', 'UNKN'] + vocabulary
+    t2i             = dict(t[::-1] for t in  enumerate(vocabulary))
+    i2t             = dict(enumerate(vocabulary))
     #
-    term2ind[UNK_TOKEN] = max(term2ind.items(), key=operator.itemgetter(1))[1] + 1	# Index of *UNK* token
+    matrix          = [word_vectors[t] for t in vocabulary[2:]]
+    matrix          = [pad, av] + matrix
+    #
     print('Size of voc: {0}'.format(len(vocabulary)))
-    print('Unknown terms\'s id: {0}'.format(term2ind['*UNK*']))
-    return term2ind
+    print('Unknown terms\'s id: {0}'.format(t2i['*UNK*']))
+    return t2i, i2t, matrix
 
 w2v_path = '/home/DATA/Biomedical/bioasq6/bioasq6_data/word_embeddings/pubmed2018_w2v_200D.bin'
-term2ind = map_term2ind(w2v_path)
+t2i, i2t, matrix = load_w2v_embs(w2v_path)
 
 all_data = pickle.load(open('joint_task_data.p','rb'))
 print(len(all_data))
