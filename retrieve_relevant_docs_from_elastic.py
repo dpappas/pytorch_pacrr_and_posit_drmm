@@ -162,19 +162,7 @@ for quer in bm25_scores['queries']:
         # print(retr['bm25_score'])
         # print(retr['norm_bm25_score'])
         # print(retr['is_relevant'])
-    break
-
-# get_sents(all_abs['12239580']['abstractText']
-
-
-# from bioasq_utils import get_sents, similar
-# get_sents(data['24787386']['abstractText'])
-#
-# f2 = '/home/DATA/Biomedical/bioasq6/bioasq6_data/'
-# f3 = '/home/DATA/Biomedical/bioasq6/bioasq6_data/'
-
-
-
+    # break
 
 
 
