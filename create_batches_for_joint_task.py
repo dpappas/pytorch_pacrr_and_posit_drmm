@@ -127,16 +127,6 @@ for item in tqdm(all_data):
         )
         qi, dy, si, sy, sm = [], [], [], [], []
     #
-    # print(all_sims.shape)
-    # print(sent_inds.shape)
-    # print(sent_y.shape)
-    # print(quest_inds.shape)
-    # print(all_sims.sum())
-    # print(20 * '-')
-    #
-
-
-
 
 
 '''
