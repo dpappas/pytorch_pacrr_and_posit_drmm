@@ -128,6 +128,12 @@ def preprocess_bioasq_data(bioasq_data_path):
                     ddd[bod][pmid].append(ttt)
     return ddd
 
+def fix_relevant_snippets(relevant_parts):
+    relevant_snippets = []
+    for rt in relevant_parts:
+        relevant_snippets.extend(get_sents(rt))
+    return relevant_snippets
+
 bioasq_data_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
 ddd                 = preprocess_bioasq_data(bioasq_data_path)
 #
@@ -147,19 +153,18 @@ for quer in bm25_scores['queries']:
         doc_text    = get_sents(all_abs[doc_id]['abstractText'])
         all_sents   = doc_title+doc_text
         if(retr['is_relevant']):
-            relevant_snippets = []
-            if(doc_id in ddd[quer['query_text']]):
-                for rt in ddd[quer['query_text']][doc_id]:
-                    relevant_snippets.extend(get_sents(rt))
-                for s in all_sents:
-                    for r in relevant_snippets:
-                        similarity = similar(s,r)
-                        if(similarity >= 0.8 or r in s):
-                            print similarity
-                            print doc_id
-                            print s
-                            print r
-                            print 20 * '-'
+            if(quer['query_text'] in ddd):
+                if(doc_id in ddd[quer['query_text']]):
+                    relevant_snippets = fix_relevant_snippets(ddd[quer['query_text']][doc_id])
+                    for s in all_sents:
+                        for r in relevant_snippets:
+                            similarity = similar(s,r)
+                            if(similarity >= 0.8 or r in s):
+                                print similarity
+                                print doc_id
+                                print s
+                                print r
+                                print 20 * '-'
         # print(retr['bm25_score'])
         # print(retr['norm_bm25_score'])
         # print(retr['is_relevant'])
