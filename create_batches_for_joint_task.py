@@ -59,12 +59,7 @@ max_nof_sents = max([len(item['all_sents']) for item in all_data])
 
 for item in all_data:
     if(len(item['all_sents']) > 50):
-        pprint(
-            [
-                [ term2ind[t] for t in bioclean(s)]
-                for s in item['all_sents']
-            ]
-        )
+        pprint([[t2i[t] for t in bioclean(s)] for s in item['all_sents']])
         print item['sent_sim_vec']
         print(20*'-')
 
