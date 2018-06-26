@@ -8,6 +8,7 @@ import numpy as np
 from tqdm import tqdm
 import cPickle as pickle
 from pprint import pprint
+import os
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -81,6 +82,10 @@ t2i, i2t, matrix = load_w2v_embs(w2v_path)
 
 all_data = pickle.load(open('joint_task_data.p','rb'))
 print(len(all_data))
+
+odir = '/home/dpappas/joint_task_batches/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
 
 max_nof_sents       = max([len(item['all_sents']) for item in all_data])
 max_len_of_sents    = 400 # basika einai 355 sta train
