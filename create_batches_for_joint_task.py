@@ -45,7 +45,7 @@ def load_w2v_embs(w2v_path):
     matrix          = [pad, av] + matrix
     #
     print('Size of voc: {0}'.format(len(vocabulary)))
-    print('Unknown terms\'s id: {0}'.format(t2i['*UNK*']))
+    print('Unknown terms\'s id: {0}'.format(t2i['UNKN']))
     return t2i, i2t, matrix
 
 w2v_path = '/home/DATA/Biomedical/bioasq6/bioasq6_data/word_embeddings/pubmed2018_w2v_200D.bin'
