@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 
 import json
 import cPickle as pickle
@@ -6,7 +6,7 @@ from pprint import pprint
 import re
 import operator
 from nltk.tokenize import sent_tokenize
-from gensim.models import KeyedVectors
+import gensim
 from difflib import SequenceMatcher
 from tqdm import tqdm
 
@@ -31,7 +31,7 @@ def many_similar(one_sent, many_sents):
     )
 
 def map_term2ind(w2v_path):
-    word_vectors = KeyedVectors.load_word2vec_format(w2v_path, binary=True)
+    word_vectors = gensim.models.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
     vocabulary  = sorted(list(word_vectors.vocab.keys()))
     term2ind = dict([t[::-1] for t in enumerate(vocabulary, start=1)])
     term2ind[UNK_TOKEN] = max(term2ind.items(), key=operator.itemgetter(1))[1] + 1	# Index of *UNK* token
