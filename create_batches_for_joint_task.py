@@ -71,11 +71,16 @@ for item in all_data:
     #
     quest_inds  = [t2i[token] for token in bioclean(item['question'])]
     quest_inds  = quest_inds + ([0] * (max_len_of_sents - len(quest_inds)))
-    quest_inds   = np.array(quest_inds)
+    quest_inds  = np.array(quest_inds)
     #
-    print(sent_inds.shape)
-    print(sent_y.shape)
-    print(quest_inds.shape)
+    qi.append(quest_inds)
+    si.append(sent_inds)
+    sy.append(sent_y)
+    dy.append(item['doc_rel'])
+    #
+    # print(sent_inds.shape)
+    # print(sent_y.shape)
+    # print(quest_inds.shape)
     #
     # 'question', 'all_sents', 'sent_sim_vec', 'doc_rel'
 
