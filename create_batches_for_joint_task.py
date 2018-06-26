@@ -87,45 +87,56 @@ odir = '/home/dpappas/joint_task_batches/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
-max_nof_sents       = max([len(item['all_sents']) for item in all_data])
-max_len_of_sents    = 400 # basika einai 355 sta train
+b_size              = 16
+max_nof_sents       = 20
+max_len_of_quests   = 50
+max_len_of_sents    = 300
+
+# max_nof_sents       = max([len(item['all_sents']) for item in all_data])
+# max_len_of_sents    = 400 # basika einai 355 sta train
 non_sent            = [0] * max_len_of_sents
 qi, dy, si, sy, sm  = [], [], [], [], []
-batch_size          = 32
 metr_batch          = 0
 for item in tqdm(all_data):
     indices     = [[ get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
-    indices     = [s + ([0] * (max_len_of_sents - len(s))) for s in indices]
-    indices     = indices + ((max_nof_sents - len(indices)) * [non_sent])
-    sent_inds   = np.array(indices)
-    #
-    sent_y      = np.array(item['sent_sim_vec'] + ((max_nof_sents - len(item['sent_sim_vec'])) * [0]))
-    #
     quest_inds  = [ get_index(token, t2i) for token in bioclean(item['question'])]
-    quest_inds  = quest_inds + ([0] * (max_len_of_sents - len(quest_inds)))
-    quest_inds  = np.array(quest_inds)
-    #
-    all_sims = get_sim_matrix(item, max_len_of_sents, max_nof_sents)
-    #
-    qi.append(quest_inds)
-    si.append(sent_inds)
-    sy.append(sent_y)
-    dy.append(item['doc_rel'])
-    sm.append(all_sims)
-    if(len(dy) == batch_size):
-        si, sy,qi, dy, sm = np.stack(si, 0), np.stack(sy, 0), np.stack(qi, 0), np.stack(dy, 0), np.stack(sm, 0)
-        metr_batch += 1
-        pickle.dump(
-            {
-                'sent_inds'     : si,
-                'sent_labels'   : sy,
-                'quest_inds'    : qi,
-                'doc_labels'    : dy,
-                'sim_matrix'    : sm
-            },
-            open(odir+'{}.p'.format(metr_batch),'wb')
-        )
-        qi, dy, si, sy, sm = [], [], [], [], []
+    if(
+        len(indices)                    <= max_nof_sents
+        and
+        max( len(s) for s in indices )  <= max_len_of_sents
+        and
+        len(quest_inds)                 <= max_len_of_quests
+    ):
+        indices     = [s + ([0] * (max_len_of_sents - len(s))) for s in indices]
+        indices     = indices + ((max_nof_sents - len(indices)) * [non_sent])
+        sent_inds   = np.array(indices)
+        #
+        sent_y      = np.array(item['sent_sim_vec'] + ((max_nof_sents - len(item['sent_sim_vec'])) * [0]))
+        #
+        quest_inds  = quest_inds + ([0] * (max_len_of_sents - len(quest_inds)))
+        quest_inds  = np.array(quest_inds)
+        #
+        all_sims = get_sim_matrix(item, max_len_of_sents, max_nof_sents)
+        #
+        qi.append(quest_inds)
+        si.append(sent_inds)
+        sy.append(sent_y)
+        dy.append(item['doc_rel'])
+        sm.append(all_sims)
+        if(len(dy) == b_size):
+            si, sy,qi, dy, sm = np.stack(si, 0), np.stack(sy, 0), np.stack(qi, 0), np.stack(dy, 0), np.stack(sm, 0)
+            metr_batch += 1
+            pickle.dump(
+                {
+                    'sent_inds'     : si,
+                    'sent_labels'   : sy,
+                    'quest_inds'    : qi,
+                    'doc_labels'    : dy,
+                    'sim_matrix'    : sm
+                },
+                open(odir+'{}.p'.format(metr_batch),'wb')
+            )
+            qi, dy, si, sy, sm = [], [], [], [], []
     #
 
 
