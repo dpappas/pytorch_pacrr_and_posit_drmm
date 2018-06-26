@@ -35,7 +35,8 @@ for item in all_data:
                 ' '.join(bioclean(s)) for s in item['all_sents']
             ]
         )
-        break
+        print item['sent_sim_vec']
+        print(20*'-')
 
 
 
