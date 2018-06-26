@@ -100,13 +100,8 @@ metr_batch          = 0
 for item in tqdm(all_data):
     indices     = [[ get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
     quest_inds  = [ get_index(token, t2i) for token in bioclean(item['question'])]
-    if(
-        len(indices)                    <= max_nof_sents
-        and
-        max( len(s) for s in indices )  <= max_len_of_sents
-        and
-        len(quest_inds)                 <= max_len_of_quests
-    ):
+    if(len(indices) <= max_nof_sents and max(len(s) for s in indices) <= max_len_of_sents and len(quest_inds) <= max_len_of_quests):
+        #
         indices     = [s + ([0] * (max_len_of_sents - len(s))) for s in indices]
         indices     = indices + ((max_nof_sents - len(indices)) * [non_sent])
         sent_inds   = np.array(indices)
