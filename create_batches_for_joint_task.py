@@ -1,4 +1,5 @@
-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import cPickle as pickle
 all_data = pickle.load(open('joint_task_data.p','rb'))

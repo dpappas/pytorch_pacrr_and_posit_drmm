@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from nltk.corpus import stopwords
 from bioasq_utils import get_sents
