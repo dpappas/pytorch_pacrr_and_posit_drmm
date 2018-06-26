@@ -44,6 +44,7 @@ def load_w2v_embs(w2v_path):
     #
     matrix          = [word_vectors[t] for t in vocabulary[2:]]
     matrix          = [pad, av] + matrix
+    matrix          = np.stack(matrix, 0)
     #
     print('Size of voc: {0}'.format(len(vocabulary)))
     print('Unknown terms\'s id: {0}'.format(t2i['UNKN']))
