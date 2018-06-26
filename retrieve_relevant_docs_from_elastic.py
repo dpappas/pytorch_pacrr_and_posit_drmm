@@ -30,24 +30,6 @@ def many_similar(one_sent, many_sents):
         ]
     )
 
-def map_term2ind(w2v_path):
-    word_vectors = gensim.models.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
-    vocabulary  = sorted(list(word_vectors.vocab.keys()))
-    term2ind = dict([t[::-1] for t in enumerate(vocabulary, start=1)])
-    term2ind[UNK_TOKEN] = max(term2ind.items(), key=operator.itemgetter(1))[1] + 1	# Index of *UNK* token
-    print('Size of voc: {0}'.format(len(vocabulary)))
-    print('Unknown terms\'s id: {0}'.format(term2ind['*UNK*']))
-    return term2ind
-
-def set_unk_tokens(tokens, term2ind):
-    clear_tokens = []
-    for t in tokens:
-        if t in term2ind:
-            clear_tokens.append(t)
-        else:
-            clear_tokens.append(UNK_TOKEN)
-    return clear_tokens
-
 def first_alpha_is_upper(sent):
     specials = [
         '__EU__','__SU__','__EMS__','__SMS__','__SI__',
