@@ -129,6 +129,44 @@ def get_similarity_vector(all_sents, relevant_snippets):
         ret.append(mm)
     return ret
 
+def create_the_data():
+    all_data = []
+    for quer in tqdm(bm25_scores['queries']):
+        for retr in quer['retrieved_documents']:
+            doc_id = retr['doc_id']
+            doc_title = get_sents(all_abs[doc_id]['title'])
+            doc_text = get_sents(all_abs[doc_id]['abstractText'])
+            all_sents = doc_title + doc_text
+            if (retr['is_relevant']):
+                if (quer['query_text'] in ddd):
+                    if (doc_id in ddd[quer['query_text']]):
+                        relevant_snippets = fix_relevant_snippets(ddd[quer['query_text']][doc_id])
+                        sim_vec = get_similarity_vector(all_sents, relevant_snippets)
+                        # print(len(sim_vec), sum(sim_vec), sim_vec)
+                        all_data.append(
+                            {
+                                'question': quer,
+                                'all_sents': all_sents,
+                                'sent_sim_vec': sim_vec,
+                                'doc_rel': 1.0
+                            }
+                        )
+            else:
+                all_data.append(
+                    {
+                        'question': quer,
+                        'all_sents': all_sents,
+                        'sent_sim_vec': len(all_sents) * [0],
+                        'doc_rel': 0.0
+                    }
+                )
+            # print(retr['bm25_score'])
+            # print(retr['norm_bm25_score'])
+            # print(retr['is_relevant'])
+        # break
+    return all_data
+
+
 bioasq_data_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
 ddd                 = preprocess_bioasq_data(bioasq_data_path)
 #
@@ -138,41 +176,7 @@ all_abs             = pickle.load(open(abs_path,'rb'))
 bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl'
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 
-all_data = []
-for quer in tqdm(bm25_scores['queries']):
-    for retr in quer['retrieved_documents']:
-        doc_id      = retr['doc_id']
-        doc_title   = get_sents(all_abs[doc_id]['title'])
-        doc_text    = get_sents(all_abs[doc_id]['abstractText'])
-        all_sents   = doc_title+doc_text
-        if(retr['is_relevant']):
-            if(quer['query_text'] in ddd):
-                if(doc_id in ddd[quer['query_text']]):
-                    relevant_snippets   = fix_relevant_snippets(ddd[quer['query_text']][doc_id])
-                    sim_vec             = get_similarity_vector(all_sents, relevant_snippets)
-                    # print(len(sim_vec), sum(sim_vec), sim_vec)
-                    all_data.append(
-                        {
-                            'question'      : quer,
-                            'all_sents'     : all_sents,
-                            'sent_sim_vec'  : sim_vec,
-                            'doc_rel'       : 1.0
-                        }
-                    )
-        else:
-            all_data.append(
-                {
-                    'question'      : quer,
-                    'all_sents'     : all_sents,
-                    'sent_sim_vec'  : len(all_sents) * [0],
-                    'doc_rel'       : 0.0
-                }
-            )
-        # print(retr['bm25_score'])
-        # print(retr['norm_bm25_score'])
-        # print(retr['is_relevant'])
-    # break
-
+all_data            = create_the_data()
 pickle.dump(all_data, open('joint_task_data.p','wb'))
 
 
