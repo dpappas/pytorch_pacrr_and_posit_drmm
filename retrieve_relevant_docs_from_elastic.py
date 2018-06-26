@@ -140,7 +140,7 @@ def get_similarity_vector(all_sents, relevant_snippets):
         mm = 0.0
         for r in relevant_snippets:
             similarity = similar(s, r)
-            if (similarity >= 0.8 or r in s):
+            if(similarity >= 0.8 or r in s):
                 mm = 1.0
                 break
         ret.append(mm)
