@@ -73,7 +73,7 @@ def get_sim_matrix(item, max_len_of_quests, max_len_of_sents, max_nof_sents):
     for s in item['all_sents']:
         stoks   = bioclean(s)
         sim_matrix.append(get_sim_matrix_one(qtoks, stoks, max_len_of_quests, max_len_of_sents))
-    sim_matrix.extend((max_nof_sents - len(sim_matrix)) * [np.zeros((max_len_of_sents, max_len_of_sents))])
+    sim_matrix.extend((max_nof_sents - len(sim_matrix)) * [np.zeros((max_len_of_quests, max_len_of_sents))])
     sim_matrix = np.stack(sim_matrix,0)
     return sim_matrix
 
