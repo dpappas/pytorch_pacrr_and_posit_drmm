@@ -11,8 +11,6 @@ import gensim
 from difflib import SequenceMatcher
 from tqdm import tqdm
 
-UNK_TOKEN = '*UNK*'
-
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 def similar(a, b):
