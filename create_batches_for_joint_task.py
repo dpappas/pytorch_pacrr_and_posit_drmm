@@ -88,9 +88,9 @@ if not os.path.exists(odir):
     os.makedirs(odir)
 
 b_size              = 16
-max_nof_sents       = 20
+max_nof_sents       = 10
 max_len_of_quests   = 50
-max_len_of_sents    = 200
+max_len_of_sents    = 100
 
 # max_nof_sents       = max([len(item['all_sents']) for item in all_data])
 # max_len_of_sents    = 400 # basika einai 355 sta train
