@@ -139,7 +139,16 @@ for item in tqdm(all_data):
             qi, dy, si, sy, sm = [], [], [], [], []
     #
 
+'''
+'sent_inds'     : 16 * 10 * 100 * 8,
+'sent_labels'   : 16 * 10 * 8,
+'quest_inds'    : 16 * 30 ,
+'doc_labels'    : 16,
+'sim_matrix'    : 16 * 10 * 30 * 100 * 8
 
+(16 * 10 * 30 * 100 * 8) + (16 * 10 * 100 * 8) + (16 * 10 * 8) + (16 * 30) + (16)
+
+'''
 
 
 
