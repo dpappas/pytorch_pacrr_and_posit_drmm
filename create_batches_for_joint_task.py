@@ -50,5 +50,6 @@ for item in all_data:
         print item['sent_sim_vec']
         print(20*'-')
 
+# len([ k for k in term2ind if(has_alnum(k)) ])
 
 
