@@ -146,7 +146,7 @@ def create_the_data():
                         # print(len(sim_vec), sum(sim_vec), sim_vec)
                         all_data.append(
                             {
-                                'question':     quer,
+                                'question':     quer['query_text'],
                                 'all_sents':    all_sents,
                                 'sent_sim_vec': sim_vec,
                                 'doc_rel':      1.0
@@ -155,7 +155,7 @@ def create_the_data():
             else:
                 all_data.append(
                     {
-                        'question': quer,
+                        'question': quer['query_text'],
                         'all_sents': all_sents,
                         'sent_sim_vec': len(all_sents) * [0],
                         'doc_rel': 0.0

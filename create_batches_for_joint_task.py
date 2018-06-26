@@ -60,17 +60,22 @@ print(len(all_data))
 max_nof_sents       = max([len(item['all_sents']) for item in all_data])
 max_len_of_sents    = 400 # basika einai 355 sta train
 non_sent            = [0] * max_len_of_sents
-si, sy = [], []
+qi, dy, si, sy      = [], [], [], []
 for item in all_data:
-    indices     = [[t2i[t] for t in bioclean(s)] for s in item['all_sents']]
+    indices     = [[t2i[token] for token in bioclean(s)] for s in item['all_sents']]
     indices     = [s + ([0] * (max_len_of_sents - len(s))) for s in indices]
     indices     = indices + ((max_nof_sents - len(indices)) * [non_sent])
-    #
     sent_inds   = np.array(indices)
+    #
     sent_y      = np.array(item['sent_sim_vec'] + ((max_nof_sents - len(item['sent_sim_vec'])) * [0]))
+    #
+    quest_inds  = [t2i[token] for token in bioclean(item['question'])]
+    quest_inds  = quest_inds + ([0] * (max_len_of_sents - len(quest_inds)))
+    quest_inds   = np.array(quest_inds)
     #
     print(sent_inds.shape)
     print(sent_y.shape)
+    print(quest_inds.shape)
     #
     # 'question', 'all_sents', 'sent_sim_vec', 'doc_rel'
 
