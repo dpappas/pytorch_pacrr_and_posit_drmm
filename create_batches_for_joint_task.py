@@ -32,7 +32,8 @@ for item in all_data:
     if(len(item['all_sents']) > 50):
         pprint(
             [
-                ' '.join(bioclean(s)) for s in item['all_sents']
+                ' '.join(bioclean(s))
+                for s in item['all_sents']
             ]
         )
         print item['sent_sim_vec']
