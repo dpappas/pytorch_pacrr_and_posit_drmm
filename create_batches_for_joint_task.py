@@ -17,6 +17,7 @@ def has_alnum(token):
     return False
 
 def map_term2ind(w2v_path):
+    UNK_TOKEN           = '*UNK*'
     word_vectors        = gensim.models.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
     vocabulary          = sorted(list(word_vectors.vocab.keys()))
     term2ind            = dict(
