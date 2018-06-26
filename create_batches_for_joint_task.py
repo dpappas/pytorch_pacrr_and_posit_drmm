@@ -30,7 +30,11 @@ max_nof_sents = max([len(item['all_sents']) for item in all_data])
 
 for item in all_data:
     if(len(item['all_sents']) > 50):
-        pprint(item['all_sents'])
+        pprint(
+            [
+                ' '.join(bioclean(s)) for s in item['all_sents']
+            ]
+        )
         break
 
 
