@@ -619,5 +619,9 @@ curl -X GET "localhost:9200/twitter/_doc/_count" -H 'Content-Type: application/j
 }
 '
 
+or in lab 1 
+curl -X GET "localhost:9200/bioasq/abstract/_count"
+
+
 '''
 
