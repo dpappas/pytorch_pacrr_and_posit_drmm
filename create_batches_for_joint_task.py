@@ -31,8 +31,8 @@ def map_term2ind(w2v_path):
     return term2ind
 
 def load_w2v_embs(w2v_path):
-    word_vectors        = gensim.models.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
-    vocabulary          = sorted(list(word_vectors.vocab.keys()))
+    word_vectors    = gensim.models.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
+    vocabulary      = sorted(list(word_vectors.vocab.keys()))
     #
     av              = np.average(word_vectors.vectors,0)
     pad             = np.zeros(av.shape)
