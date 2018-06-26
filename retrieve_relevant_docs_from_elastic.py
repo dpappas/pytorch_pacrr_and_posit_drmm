@@ -158,6 +158,7 @@ bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 # d1      = bm25_scores['queries'][0]
 # pprint(d1)
 
+all_data = []
 for quer in bm25_scores['queries']:
     for retr in quer['retrieved_documents']:
         doc_id      = retr['doc_id']
@@ -169,7 +170,24 @@ for quer in bm25_scores['queries']:
                 if(doc_id in ddd[quer['query_text']]):
                     relevant_snippets   = fix_relevant_snippets(ddd[quer['query_text']][doc_id])
                     sim_vec             = get_similarity_vector(all_sents, relevant_snippets)
-                    print(len(sim_vec), sum(sim_vec), sim_vec)
+                    # print(len(sim_vec), sum(sim_vec), sim_vec)
+                    all_data.append(
+                        {
+                            'question'      : quer,
+                            'all_sents'     : all_sents,
+                            'sent_sim_vec'  : sim_vec,
+                            'doc_rel'       : 1.0
+                        }
+                    )
+        else:
+            all_data.append(
+                {
+                    'question'      : quer,
+                    'all_sents'     : all_sents,
+                    'sent_sim_vec'  : len(all_sents) * [0],
+                    'doc_rel'       : 0.0
+                }
+            )
         # print(retr['bm25_score'])
         # print(retr['norm_bm25_score'])
         # print(retr['is_relevant'])
