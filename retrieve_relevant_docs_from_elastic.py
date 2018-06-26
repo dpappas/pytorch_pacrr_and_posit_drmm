@@ -39,7 +39,11 @@ for quest in data['questions']:
             bod     = quest['body'].strip()
             if(bod not in ddd):
                 ddd[bod] = {}
-            if(bod not in ddd):
+            if(pmid not in ddd[bod]):
+                ddd[bod][pmid] = [ttt]
+            else:
+                ddd[bod][pmid].append(ttt)
+
 
 
 
