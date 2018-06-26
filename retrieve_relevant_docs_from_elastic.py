@@ -21,11 +21,8 @@ for quest in data['questions']:
             else:
                 ddd[bod][pmid].append(ttt)
 
-
 abs_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/bioasq6_bm25_top100/bioasq6_bm25_docset_top100.train.pkl'
 all_abs     = pickle.load(open(abs_path,'rb'))
-
-
 
 
 
