@@ -90,7 +90,9 @@ if not os.path.exists(odir):
 max_nof_sents       = max([len(item['all_sents']) for item in all_data])
 max_len_of_sents    = 400 # basika einai 355 sta train
 non_sent            = [0] * max_len_of_sents
-qi, dy, si, sy      = [], [], [], []
+qi, dy, si, sy, sm  = [], [], [], [], []
+batch_size          = 32
+metr_batch          = 0
 for item in tqdm(all_data):
     indices     = [[ get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
     indices     = [s + ([0] * (max_len_of_sents - len(s))) for s in indices]
@@ -105,6 +107,26 @@ for item in tqdm(all_data):
     #
     all_sims = get_sim_matrix(item, max_len_of_sents, max_nof_sents)
     #
+    qi.append(quest_inds)
+    si.append(sent_inds)
+    sy.append(sent_y)
+    dy.append(item['doc_rel'])
+    sm.append(all_sims)
+    if(len(dy) == batch_size):
+        si, sy,qi, dy, sm = np.stack(si, 0), np.stack(sy, 0), np.stack(qi, 0), np.stack(dy, 0), np.stack(sm, 0)
+        metr_batch += 1
+        pickle.dump(
+            {
+                'sent_inds'     : si,
+                'sent_labels'   : sy,
+                'quest_inds'    : qi,
+                'doc_labels'    : dy,
+                'sim_matrix'    : sm
+            },
+            open(odir+'{}.p'.format(metr_batch),'wb')
+        )
+        qi, dy, si, sy, sm = [], [], [], [], []
+    #
     # print(all_sims.shape)
     # print(sent_inds.shape)
     # print(sent_y.shape)
@@ -112,6 +134,9 @@ for item in tqdm(all_data):
     # print(all_sims.sum())
     # print(20 * '-')
     #
+
+
+
 
 
 '''
