@@ -74,3 +74,10 @@ for item in all_data:
     #
     # 'question', 'all_sents', 'sent_sim_vec', 'doc_rel'
 
+
+
+
+
+
+
+
