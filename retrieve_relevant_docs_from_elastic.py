@@ -145,10 +145,10 @@ def create_the_data():
                         # print(len(sim_vec), sum(sim_vec), sim_vec)
                         all_data.append(
                             {
-                                'question': quer,
-                                'all_sents': all_sents,
+                                'question':     quer,
+                                'all_sents':    all_sents,
                                 'sent_sim_vec': sim_vec,
-                                'doc_rel': 1.0
+                                'doc_rel':      1.0
                             }
                         )
             else:
@@ -178,8 +178,6 @@ bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 
 all_data            = create_the_data()
 pickle.dump(all_data, open('joint_task_data.p','wb'))
-
-
 
 
 
