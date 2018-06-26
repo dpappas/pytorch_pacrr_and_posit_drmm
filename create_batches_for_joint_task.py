@@ -10,10 +10,21 @@ UNK_TOKEN = '*UNK*'
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
+def has_alnum(token):
+    for c in token:
+        if(c.isalnum()):
+            return True
+    return False
+
 def map_term2ind(w2v_path):
     word_vectors        = gensim.models.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
     vocabulary          = sorted(list(word_vectors.vocab.keys()))
-    term2ind            = dict([t[::-1] for t in enumerate(vocabulary, start=1)])
+    term2ind            = dict(
+        [
+            t[::-1]
+            for t in enumerate(vocabulary, start=1)
+        ]
+    )
     term2ind[UNK_TOKEN] = max(term2ind.items(), key=operator.itemgetter(1))[1] + 1	# Index of *UNK* token
     print('Size of voc: {0}'.format(len(vocabulary)))
     print('Unknown terms\'s id: {0}'.format(term2ind['*UNK*']))
@@ -32,7 +43,7 @@ for item in all_data:
     if(len(item['all_sents']) > 50):
         pprint(
             [
-                ' '.join(bioclean(s))
+                [ term2ind[t] for t in bioclean(s)]
                 for s in item['all_sents']
             ]
         )
