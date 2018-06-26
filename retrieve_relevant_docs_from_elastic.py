@@ -8,7 +8,6 @@ bioasq_data_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainin
 data                = json.load(open(bioasq_data_path, 'r'))
 ddd                 = {}
 for quest in data['questions']:
-    #
     if('snippets' in quest):
         for sn in quest['snippets']:
             pmid    = sn['document'].split('/')[-1]
