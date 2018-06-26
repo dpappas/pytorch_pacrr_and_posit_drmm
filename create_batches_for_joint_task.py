@@ -51,6 +51,12 @@ def load_w2v_embs(w2v_path):
     print('Unknown terms\'s id: {0}'.format(t2i['UNKN']))
     return t2i, i2t, matrix
 
+def get_index(token, t2i):
+    try:
+        return t2i[token]
+    except KeyError:
+        return t2i['UNKN']
+
 w2v_path = '/home/DATA/Biomedical/bioasq6/bioasq6_data/word_embeddings/pubmed2018_w2v_200D.bin'
 t2i, i2t, matrix = load_w2v_embs(w2v_path)
 
@@ -62,14 +68,14 @@ max_len_of_sents    = 400 # basika einai 355 sta train
 non_sent            = [0] * max_len_of_sents
 qi, dy, si, sy      = [], [], [], []
 for item in all_data:
-    indices     = [[t2i[token] for token in bioclean(s)] for s in item['all_sents']]
+    indices     = [[ get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
     indices     = [s + ([0] * (max_len_of_sents - len(s))) for s in indices]
     indices     = indices + ((max_nof_sents - len(indices)) * [non_sent])
     sent_inds   = np.array(indices)
     #
     sent_y      = np.array(item['sent_sim_vec'] + ((max_nof_sents - len(item['sent_sim_vec'])) * [0]))
     #
-    quest_inds  = [t2i[token] for token in bioclean(item['question'])]
+    quest_inds  = [ get_index(token, t2i) for token in bioclean(item['question'])]
     quest_inds  = quest_inds + ([0] * (max_len_of_sents - len(quest_inds)))
     quest_inds  = np.array(quest_inds)
     #
@@ -83,6 +89,27 @@ for item in all_data:
     # print(quest_inds.shape)
     #
     # 'question', 'all_sents', 'sent_sim_vec', 'doc_rel'
+
+si = np.stack(si, 0)
+sy = np.stack(sy, 0)
+qi = np.stack(qi, 0)
+dy = np.stack(dy, 0)
+
+print(si.shape)
+print(sy.shape)
+print(qi.shape)
+print(dy.shape)
+
+pickle.dump(
+    {
+        'sents'         : si,
+        'quest'         : qi,
+        'sent_labels'   : sy,
+        'doc_labels'    : dy
+    },
+    open('entire_train_joint_dataset.p', 'wb')
+)
+
 
 
 
