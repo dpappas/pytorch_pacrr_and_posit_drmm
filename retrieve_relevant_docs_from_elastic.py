@@ -167,8 +167,9 @@ for quer in bm25_scores['queries']:
         if(retr['is_relevant']):
             if(quer['query_text'] in ddd):
                 if(doc_id in ddd[quer['query_text']]):
-                    relevant_snippets = fix_relevant_snippets(ddd[quer['query_text']][doc_id])
-
+                    relevant_snippets   = fix_relevant_snippets(ddd[quer['query_text']][doc_id])
+                    sim_vec             = get_similarity_vector(all_sents, relevant_snippets)
+                    print(len(sim_vec), sum(sim_vec), sim_vec)
         # print(retr['bm25_score'])
         # print(retr['norm_bm25_score'])
         # print(retr['is_relevant'])
