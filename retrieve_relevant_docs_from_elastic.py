@@ -8,6 +8,7 @@ import operator
 from nltk.tokenize import sent_tokenize
 from gensim.models import KeyedVectors
 from difflib import SequenceMatcher
+from tqdm import tqdm
 
 UNK_TOKEN = '*UNK*'
 
@@ -159,7 +160,7 @@ bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 # pprint(d1)
 
 all_data = []
-for quer in bm25_scores['queries']:
+for quer in tqdm(bm25_scores['queries']):
     for retr in quer['retrieved_documents']:
         doc_id      = retr['doc_id']
         doc_title   = get_sents(all_abs[doc_id]['title'])
@@ -193,7 +194,7 @@ for quer in bm25_scores['queries']:
         # print(retr['is_relevant'])
     # break
 
-
+pickle.dump(all_data, open('joint_task_data.p','wb'))
 
 
 
