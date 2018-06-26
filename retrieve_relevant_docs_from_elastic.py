@@ -1,7 +1,28 @@
 
 
+import json
 import cPickle as pickle
 from pprint import pprint
+f1      = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
+data    = json.load(open(f1, 'r'))
+# query_text
+ddd = {}
+for quest in data['questions']:
+    #
+    if('snippets' in quest):
+        for sn in quest['snippets']:
+            pmid    = sn['document'].split('/')[-1]
+            ttt     = sn['text'].strip()
+            bod     = quest['body'].strip()
+            if(bod not in ddd):
+                ddd[bod] = {}
+            if(pmid not in ddd[bod]):
+                ddd[bod][pmid] = [ttt]
+            else:
+                ddd[bod][pmid].append(ttt)
+
+
+
 # fpath = '/home/DATA/Biomedical/bioasq6/bioasq6_data/bioasq6_bm25_top100/bioasq6_bm25_top100.full_train.pkl'
 # fpath = '/home/DATA/Biomedical/bioasq6/bioasq6_data/bioasq6_bm25_top100/bioasq6_bm25_docset_top100.train.pkl'
 # fpath = '/home/DATA/Biomedical/bioasq6/bioasq6_data/bioasq6_bm25_top100/bioasq6_bm25_top100.train.pkl'
@@ -23,26 +44,6 @@ f2 = '/home/DATA/Biomedical/bioasq6/bioasq6_data/'
 f3 = '/home/DATA/Biomedical/bioasq6/bioasq6_data/'
 
 
-
-import json
-from pprint import pprint
-f1      = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
-data    = json.load(open(f1, 'r'))
-# query_text
-ddd = {}
-for quest in data['questions']:
-    #
-    if('snippets' in quest):
-        for sn in quest['snippets']:
-            pmid    = sn['document'].split('/')[-1]
-            ttt     = sn['text'].strip()
-            bod     = quest['body'].strip()
-            if(bod not in ddd):
-                ddd[bod] = {}
-            if(pmid not in ddd[bod]):
-                ddd[bod][pmid] = [ttt]
-            else:
-                ddd[bod][pmid].append(ttt)
 
 
 
