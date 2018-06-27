@@ -97,3 +97,6 @@ for item in tqdm(all_data):
         pickle.dump({'sent_inds':si, 'sent_labels':sy, 'quest_inds':qi, 'doc_labels':dy, 'sim_matrix':sm}, open(odir+'{}.p'.format(metr_batch),'wb'))
         qi, dy, si, sy, sm  = [], [], [], [], []
     #
+
+
+
