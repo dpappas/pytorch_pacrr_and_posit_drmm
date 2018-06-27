@@ -93,17 +93,7 @@ for item in tqdm(all_data):
     sm.append(all_sims)
     #
     if(len(dy) == b_size):
-        si, sy,qi, dy, sm = np.stack(si, 0), np.stack(sy, 0), np.stack(qi, 0), np.stack(dy, 0), np.stack(sm, 0)
         metr_batch += 1
-        pickle.dump(
-            {
-                'sent_inds'     : si,
-                'sent_labels'   : sy,
-                'quest_inds'    : qi,
-                'doc_labels'    : dy,
-                'sim_matrix'    : sm
-            },
-            open(odir+'{}.p'.format(metr_batch),'wb')
-        )
+        pickle.dump({'sent_inds':si, 'sent_labels':sy, 'quest_inds':qi, 'doc_labels':dy, 'sim_matrix':sm}, open(odir+'{}.p'.format(metr_batch),'wb'))
         qi, dy, si, sy, sm = [], [], [], [], []
     #
