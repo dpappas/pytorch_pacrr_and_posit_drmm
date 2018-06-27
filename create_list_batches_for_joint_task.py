@@ -64,7 +64,7 @@ def get_sim_mat(stoks, qtoks):
     for i in range(len(qtoks)):
         for j in range(len(stoks)):
             if(qtoks[i] == stoks[j]):
-                sm[i,j] = 1.
+                sm[j,i] = 1.
     return sm
 
 w2v_path = '/home/DATA/Biomedical/bioasq6/bioasq6_data/word_embeddings/pubmed2018_w2v_200D.bin'
