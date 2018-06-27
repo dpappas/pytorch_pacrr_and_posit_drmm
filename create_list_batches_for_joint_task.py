@@ -81,9 +81,9 @@ b_size              = 16
 qi, dy, si, sy, sm  = [], [], [], [], []
 metr_batch          = 0
 for item in tqdm(all_data):
-    sents_inds  = [[ get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
-    quest_inds  = [ get_index(token, t2i) for token in bioclean(item['question'])]
-    all_sims    = [ get_sim_mat(stoks, quest_inds) for stoks in sents_inds ]
+    sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
+    quest_inds  = [get_index(token, t2i) for token in bioclean(item['question'])]
+    all_sims    = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
     sent_y      = np.array(item['sent_sim_vec'])
     #
     qi.append(quest_inds)
