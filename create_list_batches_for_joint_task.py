@@ -114,13 +114,3 @@ pickle.dump(i2t,    open('/home/dpappas/joint_task_list_batches/i2t.p','wb'))
 #     hf.create_dataset("embeddings",  data=matrix)
 np.save('/home/dpappas/joint_task_list_batches/embedding_matrix.npy', matrix)
 
-
-
-# pickle.dump(
-#     {
-#         'emb_matrix'    : matrix,
-#         't2i'           : t2i,
-#         'i2t'           : i2t
-#     }
-#     , open('/home/dpappas/joint_task_list_batches/embeddings_data.p','wb')
-# )
