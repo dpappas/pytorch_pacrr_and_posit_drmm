@@ -265,7 +265,7 @@ def train_one_epoch(paths, model, optimizer, epoch):
         print('train', epoch+1, i+1, average_cost, the_cost)
     return average_cost
 
-def tests_one_epoch(paths, model, epoch):
+def test_one_epoch(paths, model, epoch):
     cost_sum        = 0.0
     average_cost    = 1000.0
     for i in range(len(paths)):
@@ -283,11 +283,18 @@ def tests_one_epoch(paths, model, epoch):
         print(epoch+1, i+1, average_cost, the_cost)
     return average_cost
 
-
 dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain/'
 all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
+dir_with_batches    = '/home/dpappas/joint_task_list_batches/dev/'
+all_dev_paths       = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
+dir_with_batches    = '/home/dpappas/joint_task_list_batches/test/'
+all_test_paths      = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
+min_dev_loss        = 10e10
 for epoch in range(20):
-    train_average_loss = train_one_epoch(all_train_paths, model, optimizer, epoch)
+    train_average_loss  = train_one_epoch(all_train_paths, model, optimizer, epoch)
+    dev_average_loss    = test_one_epoch(all_dev_paths, model, epoch)
+    if(dev_average_loss < min_dev_loss):
+        test_average_loss = test_one_epoch(all_test_paths, model, epoch)
     print(train_average_loss)
     print(20 * '-')
 
