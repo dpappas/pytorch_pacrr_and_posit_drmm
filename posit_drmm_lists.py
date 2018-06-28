@@ -272,7 +272,7 @@ def train_one_epoch(paths, model, optimizer, epoch):
         the_cost        =   cost_.cpu().item()
         cost_sum        +=  the_cost
         average_cost    =   cost_sum / (i+1.0)
-        print("\rtrain epoch:{}, batch:{}/{}, aver_loss:{}, batch_loss".format(epoch + 1,i+1,len(paths),average_cost,the_cost), end="")
+        print("\rtrain epoch:{}, batch:{}/{}, aver_loss:{}, batch_loss:{}".format(epoch + 1,i+1,len(paths),average_cost,the_cost), end="")
     print('')
     return average_cost
 
@@ -291,7 +291,7 @@ def test_one_epoch(paths, model, epoch):
         the_cost        =   cost_.cpu().item()
         cost_sum        +=  the_cost
         average_cost    =   cost_sum / (i+1.0)
-        print("\rtrain epoch:{}, batch:{}/{}, aver_loss:{}, batch_loss".format(epoch + 1,i+1,len(paths),average_cost,the_cost), end="")
+        print("\rtrain epoch:{}, batch:{}/{}, aver_loss:{}, batch_loss:{}".format(epoch + 1,i+1,len(paths),average_cost,the_cost), end="")
     print('')
     return average_cost
 
