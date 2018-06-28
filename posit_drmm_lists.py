@@ -263,11 +263,13 @@ def train_one_epoch(all_train_paths, model, optimizer, epoch):
         print(epoch+1, i+1, average_cost, the_cost)
     return average_cost
 
-#
-# dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain_'
-# all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
-# for epoch in range(20):
-#     print(20 * '-')
+
+dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain_'
+all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
+for epoch in range(20):
+    train_average_loss = train_one_epoch(all_train_paths, model, optimizer, epoch)
+    print(train_average_loss)
+    print(20 * '-')
 
 '''
 from tqdm import tnrange, tqdm_notebook, tqdm
