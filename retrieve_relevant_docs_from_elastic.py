@@ -165,7 +165,6 @@ def create_the_data():
         # break
     return all_data
 
-
 bioasq_data_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
 ddd                 = preprocess_bioasq_data(bioasq_data_path)
 #
