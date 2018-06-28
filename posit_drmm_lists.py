@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
+from gensim.topic_coherence.segmentation import s_one_one
+
 __author__ = 'Dimitris'
 
 my_seed = 1989
@@ -118,9 +120,10 @@ class Posit_Drmm_Modeler(nn.Module):
             conv_res    = F.conv2d(the_input.unsqueeze(1), the_filters, bias=None, stride=1, padding=(int(filter_size/2)+1, 0))
             conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
             conv_res    = conv_res.squeeze(-1).transpose(1,2)
-            ret.append(conv_res)
+            ret.append(conv_res.squeeze(0))
         return ret
     def my_cosine_sim(self,A,B):
+        # B           = B.transpose(0,1)
         A_mag       = torch.norm(A, 2, dim=2)
         B_mag       = torch.norm(B, 2, dim=2)
         num         = torch.bmm(A, B.transpose(-1,-2))
@@ -142,7 +145,6 @@ class Posit_Drmm_Modeler(nn.Module):
         sents_embeds        = [self.get_embeds(s) for s in sentences]
         s_conv_res          = [self.apply_convolution(s, self.sent_filters_conv) for s in sents_embeds]
         #
-        print(similarity_one_hot[1][0].size())
         print(q_conv_res[0].size())
         print(s_conv_res[1][0].size())
         #
@@ -153,6 +155,9 @@ class Posit_Drmm_Modeler(nn.Module):
             ]
             for item2 in similarity_one_hot
         ]
+        print(similarity_one_hot[1][0].size())
+        #
+        self.my_cosine_sim_many(q_conv_res[0], s_conv_res[0])
         exit()
         #
         similarity_insensitive  = torch.stack([self.my_cosine_sim(question_embeds, s) for s in sentence_embeds.transpose(0, 1)])
