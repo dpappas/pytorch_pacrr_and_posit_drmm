@@ -163,6 +163,10 @@ class Posit_Drmm_Modeler(nn.Module):
                 sentences_average_loss += sal / float(len(sent_output))
         return sentences_average_loss
     def apply_masks_on_similarity(self, sentences, question, similarity):
+        for bi in range(len(sentences)):
+            print(question[bi])
+            for si in range(len(sentences[bi])):
+                exit()
         sim_mask1                = (sentences > 1).float().transpose(0,1).unsqueeze(2).expand_as(similarity)
         sim_mask2                = (question > 1).float().unsqueeze(0).unsqueeze(-1).expand_as(similarity)
         return similarity*sim_mask1*sim_mask2
@@ -204,10 +208,29 @@ lr          = 0.01
 params      = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
+def dummy_test():
+    for epoch in range(20):
+        dd = pickle.load(open('1.p', 'rb'))
+        optimizer.zero_grad()
+        cost_, sent_ems, doc_ems = model(
+            sentences            = dd['sent_inds'],
+            question             = dd['quest_inds'],
+            target_sents         = dd['sent_labels'],
+            target_docs          = dd['doc_labels'],
+            similarity_one_hot   = dd['sim_matrix']
+        )
+        cost_.backward()
+        optimizer.step()
+        the_cost = cost_.cpu().item()
+        print(the_cost)
+    print(20 * '-')
+
+dummy_test()
+exit()
+
 dir_with_batches = '/home/dpappas/joint_task_list_batches/'
 for epoch in range(20):
     for fpath in os.listdir(dir_with_batches):
-        # dd = pickle.load(open(dir_with_batches+fpath, 'rb'))
         dd = pickle.load(open('1.p', 'rb'))
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
