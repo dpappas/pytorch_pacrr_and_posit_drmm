@@ -96,7 +96,24 @@ class Posit_Drmm_Modeler(nn.Module):
         self.quest_filters_conv = self.sent_filters_conv
         self.linear_per_q       = nn.Linear(6, 1, bias=True)
         self.bce_loss           = torch.nn.BCELoss()
+    def get_embeds(self, items):
+        return [
+            self.word_embeddings(
+                autograd.Variable(
+                    torch.LongTensor(item),
+                    requires_grad = False
+                )
+            )
+            for item in items
+        ]
     def forward(self,sentences,question,target_sents,target_docs):
+        question_embeds = self.get_embeds(question)
+        print(len(question_embeds))
+        for item in question_embeds:
+            print(question[0])
+            print(item.size())
+        exit()
+        #
         sentences               = autograd.Variable(torch.LongTensor(sentences), requires_grad=False)
         question                = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         target_sents            = autograd.Variable(torch.LongTensor(target_sents), requires_grad=False)
@@ -136,6 +153,24 @@ model               = Posit_Drmm_Modeler(
     pretrained_embeds   = matrix,
     k_for_maxpool       = k_for_maxpool
 )
+
+lr = 0.1
+params      = list(set(model.parameters()) - set([model.word_embeddings.weight]))
+optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+
+for i in range(2):
+    optimizer.zero_grad()
+    cost_, sent_ems, doc_ems = model(
+        sentences   = dd['sent_inds'],
+        question    = dd['quest_inds'],
+        target_sents= dd['sent_labels'],
+        target_docs = dd['doc_labels']
+    )
+    cost_.backward()
+    optimizer.step()
+    the_cost = cost_.cpu().item()
+    print(the_cost)
+
 
 
 
