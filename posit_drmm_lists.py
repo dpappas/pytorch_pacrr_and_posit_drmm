@@ -135,26 +135,25 @@ class Posit_Drmm_Modeler(nn.Module):
     def my_cosine_sim_many(self, quest, sents):
         ret = []
         for sent in sents:
-            ret.append(self.my_cosine_sim(quest,sent))
+            ret.append(self.my_cosine_sim(sent,quest).squeeze(0))
         return ret
     def forward(self,sentences,question,target_sents,target_docs, similarity_one_hot):
-        similarity_one_hot  = [[autograd.Variable(torch.FloatTensor(item), requires_grad=False) for item in item2] for item2 in similarity_one_hot]
-        # print(similarity_one_hot[1][0].size())
-        target_sents        = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
-        target_docs         = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
+        target_sents            = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
+        target_docs             = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
         #
-        question_embeds     = self.get_embeds(question)
-        q_conv_res          = self.apply_convolution(question_embeds, self.quest_filters_conv)
+        question_embeds         = self.get_embeds(question)
+        q_conv_res              = self.apply_convolution(question_embeds, self.quest_filters_conv)
         #
-        sents_embeds        = [self.get_embeds(s) for s in sentences]
-        s_conv_res          = [self.apply_convolution(s, self.sent_filters_conv) for s in sents_embeds]
+        sents_embeds            = [self.get_embeds(s) for s in sentences]
+        s_conv_res              = [self.apply_convolution(s, self.sent_filters_conv) for s in sents_embeds]
         #
         similarity_insensitive  = [self.my_cosine_sim_many(question_embeds[i], sents_embeds[i]) for i in range(len(sents_embeds))]
         similarity_sensitive    = [self.my_cosine_sim_many(q_conv_res[i], s_conv_res[i]) for i in range(len(q_conv_res))]
+        similarity_one_hot      = [[autograd.Variable(torch.FloatTensor(item), requires_grad=False) for item in item2] for item2 in similarity_one_hot]
+        print(similarity_insensitive[1][0].size())
+        print(similarity_sensitive[1][0].size())
+        print(similarity_one_hot[1][0].size())
         exit()
-        #
-        similarity_insensitive  = torch.stack([self.my_cosine_sim(question_embeds, s) for s in sentence_embeds.transpose(0, 1)])
-        similarity_sensitive    = torch.stack([self.my_cosine_sim(q_conv_res, s) for s in s_conv_res.transpose(0, 1)])
         similarity_insensitive  = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
         similarity_sensitive    = self.apply_masks_on_similarity(sentences, question, similarity_sensitive)
         similarity_insensitive_pooled   = self.pooling_method(similarity_insensitive)
