@@ -267,6 +267,7 @@ def train_one_epoch(paths, model, optimizer, epoch):
         cost_sum        +=  the_cost
         average_cost    =   cost_sum / (i+1.0)
         print("\rtrain epoch:{}, batch:{}/{}, aver_loss:{}, batch_loss".format(epoch + 1,i+1,len(paths),average_cost,the_cost), end="")
+    print('')
     return average_cost
 
 def test_one_epoch(paths, model, epoch):
@@ -284,7 +285,8 @@ def test_one_epoch(paths, model, epoch):
         the_cost        =   cost_.cpu().item()
         cost_sum        +=  the_cost
         average_cost    =   cost_sum / (i+1.0)
-        print(epoch+1, i+1, average_cost, the_cost)
+        print("\rtrain epoch:{}, batch:{}/{}, aver_loss:{}, batch_loss".format(epoch + 1,i+1,len(paths),average_cost,the_cost), end="")
+    print('')
     return average_cost
 
 dir_with_batches    = '/home/dpappas/joint_task_list_batches/train/'
@@ -303,7 +305,14 @@ for epoch in range(20):
         min_dev_loss        = dev_average_loss
         min_loss_epoch      = epoch+1
         test_average_loss   = test_one_epoch(all_test_paths, model, epoch)
-    print(train_average_loss, dev_average_loss, test_average_loss)
+    print(
+        "epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(
+            epoch+1,
+            train_average_loss,
+            dev_average_loss,
+            test_average_loss
+        )
+    )
     print(20 * '-')
 
 '''
