@@ -7,6 +7,7 @@ from gensim.topic_coherence.segmentation import s_one_one
 __author__ = 'Dimitris'
 
 my_seed = 1989
+import h5py
 import torch
 import torch.nn as nn
 import torch.optim as optim
