@@ -283,7 +283,7 @@ def test_one_epoch(paths, model, epoch):
         print(epoch+1, i+1, average_cost, the_cost)
     return average_cost
 
-dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain/'
+dir_with_batches    = '/home/dpappas/joint_task_list_batches/train/'
 all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
 dir_with_batches    = '/home/dpappas/joint_task_list_batches/dev/'
 all_dev_paths       = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
