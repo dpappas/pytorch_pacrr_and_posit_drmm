@@ -107,7 +107,7 @@ class Posit_Drmm_Modeler(nn.Module):
             for item in items
         ]
     def apply_convolution(self, the_input, the_filters):
-        print(the_filters.size())
+        the_input       = the_input.unsqueeze(0)
         filter_size     = the_filters.size(2)
         conv_res        = F.conv2d(
             the_input.unsqueeze(1),
@@ -124,13 +124,8 @@ class Posit_Drmm_Modeler(nn.Module):
         target_docs     = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
         question_embeds = self.get_embeds(question)
         sents_embeds    = [self.get_embeds(s) for s in sentences]
-        # print(len(sents_embeds))
-        # for t in sents_embeds:
-        #     print(len(t))
-        q_conv_res      = [
-            self.apply_convolution(question_embed, self.quest_filters_conv)
-            for question_embed in question_embeds
-        ]
+        #
+        q_conv_res      = [self.apply_convolution(question_embed, self.quest_filters_conv) for question_embed in question_embeds]
         print(q_conv_res[0].size())
         exit()
         #
@@ -161,7 +156,7 @@ class Posit_Drmm_Modeler(nn.Module):
         total_loss                      = (sentences_average_loss + document_average_loss) / 2.0
         return(total_loss, sentence_relevance, document_emitions) # return the general loss, the sentences' relevance score and the documents' relevance scores
 
-nof_cnn_filters = 10
+nof_cnn_filters = 12
 filters_size    = 3
 matrix          = np.random.random((2900000, 10))
 k_for_maxpool   = 5
