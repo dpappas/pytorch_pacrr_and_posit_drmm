@@ -11,8 +11,6 @@ import gensim
 from difflib import SequenceMatcher
 from tqdm import tqdm
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
-
 def similar(a, b):
     return max(
         [
@@ -133,9 +131,9 @@ def create_the_data():
     for quer in tqdm(bm25_scores['queries']):
         for retr in quer['retrieved_documents']:
             doc_id = retr['doc_id']
-            doc_title = get_sents(all_abs[doc_id]['title'])
-            doc_text = get_sents(all_abs[doc_id]['abstractText'])
-            all_sents = doc_title + doc_text
+            doc_title   = get_sents(all_abs[doc_id]['title'])
+            doc_text    = get_sents(all_abs[doc_id]['abstractText'])
+            all_sents   = doc_title + doc_text
             if (retr['is_relevant']):
                 if (quer['query_text'] in ddd):
                     if (doc_id in ddd[quer['query_text']]):
