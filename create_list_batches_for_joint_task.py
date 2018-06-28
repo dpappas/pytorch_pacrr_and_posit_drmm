@@ -77,7 +77,7 @@ odir = '/home/dpappas/joint_task_list_batches/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
-b_size              = 16
+b_size              = 32
 qi, dy, si, sy, sm  = [], [], [], [], []
 metr_batch          = 0
 for item in tqdm(all_data):
