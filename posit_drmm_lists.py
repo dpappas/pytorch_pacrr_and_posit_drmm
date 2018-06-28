@@ -14,6 +14,7 @@ import torch.nn.functional as F
 import torch.autograd as autograd
 from torch.autograd import Variable
 import torch.backends.cudnn as cudnn
+from sklearn.metrics import roc_curve, auc
 import cPickle as pickle
 import numpy as np
 import random
@@ -21,6 +22,15 @@ import os
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 print(torch.get_num_threads())
+
+def get_the_metrics(gold_labels, predictions):
+    if(len(predictions.shape) == 2):
+        preds = predictions[:,1]
+    else:
+        preds = predictions
+    false_positive_rate, recall, thresholds = roc_curve(gold_labels, preds)
+    roc_auc = auc(false_positive_rate, recall)
+    return { 'roc_auc' : roc_auc }
 
 def dummy_test():
     for epoch in range(20):
@@ -228,10 +238,36 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 # dummy_test()
 # exit()
 
+
 dir_with_batches = '/home/dpappas/joint_task_list_batches/'
+all_paths = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
 for epoch in range(20):
-    for fpath in os.listdir(dir_with_batches):
-        dd = pickle.load(open(dir_with_batches+fpath, 'rb'))
+    cost_sum = 0.0
+    for i in range(len(all_paths)):
+        dd = pickle.load(open(all_paths[i], 'rb'))
+        optimizer.zero_grad()
+        cost_, sent_ems, doc_ems = model(
+            sentences            = dd['sent_inds'],
+            question             = dd['quest_inds'],
+            target_sents         = dd['sent_labels'],
+            target_docs          = dd['doc_labels'],
+            similarity_one_hot   = dd['sim_matrix']
+        )
+        cost_.backward()
+        optimizer.step()
+        the_cost        =   cost_.cpu().item()
+        cost_sum        +=  the_cost
+        average_cost    =   cost_sum / (i+1.0)
+        print(epoch+1, i+1, average_cost, the_cost)
+    print(20 * '-')
+
+'''
+from tqdm import tnrange, tqdm_notebook, tqdm
+dir_with_batches = '/home/dpappas/joint_task_list_batches/'
+all_paths = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
+for epoch in tqdm(range(20), desc='epochs'):
+    for i in tqdm(range(len(all_paths))):
+        dd = pickle.load(open(all_paths[i], 'rb'))
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
             sentences            = dd['sent_inds'],
@@ -245,6 +281,6 @@ for epoch in range(20):
         the_cost = cost_.cpu().item()
         print(the_cost)
     print(20 * '-')
-
+'''
 
 
