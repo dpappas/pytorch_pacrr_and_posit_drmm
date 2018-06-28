@@ -106,13 +106,18 @@ all_data    = pickle.load(open('joint_task_data_test.p','rb'))
 odir        = '/home/dpappas/joint_task_list_batches/test/'
 save_the_batches(all_data, odir, t2i, b_size)
 #
-pickle.dump(
-    {
-        'emb_matrix'    : matrix,
-        't2i'           : t2i,
-        'i2t'           : i2t
-    }
-    , open('/home/dpappas/joint_task_list_batches/embeddings_data.p','wb')
-)
+
+pickle.dump(t2i, open('/home/dpappas/joint_task_list_batches/t2i.p','wb'))
+pickle.dump(i2t, open('/home/dpappas/joint_task_list_batches/i2t.p','wb'))
+pickle.dump(matrix, open('/home/dpappas/joint_task_list_batches/embedding_matrix.p','wb'))
 
 
+
+# pickle.dump(
+#     {
+#         'emb_matrix'    : matrix,
+#         't2i'           : t2i,
+#         'i2t'           : i2t
+#     }
+#     , open('/home/dpappas/joint_task_list_batches/embeddings_data.p','wb')
+# )
