@@ -67,39 +67,42 @@ def get_sim_mat(stoks, qtoks):
                 sm[j,i] = 1.
     return sm
 
+def save_the_batches(all_data, odir, t2i, b_size):
+    print(len(all_data))
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    qi, dy, si, sy, sm  = [], [], [], [], []
+    metr_batch          = 0
+    for item in tqdm(all_data):
+        sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
+        quest_inds  = [get_index(token, t2i) for token in bioclean(item['question'])]
+        all_sims    = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
+        sent_y      = np.array(item['sent_sim_vec'])
+        #
+        qi.append(quest_inds)
+        si.append(sents_inds)
+        sy.append(sent_y)
+        dy.append(item['doc_rel'])
+        sm.append(all_sims)
+        #
+        if(len(dy) == b_size):
+            metr_batch          += 1
+            pickle.dump({'sent_inds':si, 'sent_labels':sy, 'quest_inds':qi, 'doc_labels':dy, 'sim_matrix':sm}, open(odir+'{}.p'.format(metr_batch),'wb'))
+            qi, dy, si, sy, sm  = [], [], [], [], []
+
+
 w2v_path            = '/home/DATA/Biomedical/bioasq6/bioasq6_data/word_embeddings/pubmed2018_w2v_200D.bin'
 t2i, i2t, matrix    = load_w2v_embs(w2v_path)
 b_size              = 32
 
-all_data = pickle.load(open('joint_task_data.p','rb'))
-print(len(all_data))
-odir    = '/home/dpappas/joint_task_list_batches/train/'
-if not os.path.exists(odir):
-    os.makedirs(odir)
-
-qi, dy, si, sy, sm  = [], [], [], [], []
-metr_batch          = 0
-for item in tqdm(all_data):
-    sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
-    quest_inds  = [get_index(token, t2i) for token in bioclean(item['question'])]
-    all_sims    = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
-    sent_y      = np.array(item['sent_sim_vec'])
-    #
-    qi.append(quest_inds)
-    si.append(sents_inds)
-    sy.append(sent_y)
-    dy.append(item['doc_rel'])
-    sm.append(all_sims)
-    #
-    if(len(dy) == b_size):
-        metr_batch          += 1
-        pickle.dump({'sent_inds':si, 'sent_labels':sy, 'quest_inds':qi, 'doc_labels':dy, 'sim_matrix':sm}, open(odir+'{}.p'.format(metr_batch),'wb'))
-        qi, dy, si, sy, sm  = [], [], [], [], []
-    #
-
-
-odir = '/home/dpappas/joint_task_list_batches/dev/'
-if not os.path.exists(odir):
-    os.makedirs(odir)
-
-
+all_data    = pickle.load(open('joint_task_data_train.p','rb'))
+odir        = '/home/dpappas/joint_task_list_batches/train/'
+save_the_batches(all_data, odir, t2i, b_size)
+#
+all_data    = pickle.load(open('joint_task_data_dev.p','rb'))
+odir        = '/home/dpappas/joint_task_list_batches/dev/'
+save_the_batches(all_data, odir, t2i, b_size)
+#
+all_data    = pickle.load(open('joint_task_data_test.p','rb'))
+odir        = '/home/dpappas/joint_task_list_batches/test/'
+save_the_batches(all_data, odir, t2i, b_size)
