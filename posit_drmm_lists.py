@@ -17,6 +17,7 @@ import torch.backends.cudnn as cudnn
 import cPickle as pickle
 import numpy as np
 import random
+import os
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 print(torch.get_num_threads())
@@ -72,18 +73,6 @@ def print_params(model):
     print(40 * '=')
     print(total_params)
     print(40 * '=')
-
-dd = pickle.load(open('1.p','rb'))
-# print(len(dd['sim_matrix']))
-# print(len(dd['sim_matrix'][1]))
-# print(dd['sim_matrix'][1][0].shape)
-# exit()
-
-# dd['doc_labels'][0]
-# dd['sent_labels'][0]
-# dd['quest_inds'][0]
-# len(dd['sent_inds'][0])
-# dd['sim_matrix'][0][0].shape
 
 class Posit_Drmm_Modeler(nn.Module):
     def __init__(self, nof_filters, filters_size, pretrained_embeds, k_for_maxpool):
@@ -210,20 +199,24 @@ lr          = 0.01
 params      = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-for epoch in range(20):
-    optimizer.zero_grad()
-    cost_, sent_ems, doc_ems = model(
-        sentences            = dd['sent_inds'],
-        question             = dd['quest_inds'],
-        target_sents         = dd['sent_labels'],
-        target_docs          = dd['doc_labels'],
-        similarity_one_hot   = dd['sim_matrix']
-    )
-    cost_.backward()
-    optimizer.step()
-    the_cost = cost_.cpu().item()
-    print(the_cost)
 
+dir_with_batches = '/home/dpappas/joint_task_list_batches/'
+for epoch in range(20):
+    for fpath in os.listdir(dir_with_batches):
+        dd = pickle.load(open(dir_with_batches+fpath, 'rb'))
+        optimizer.zero_grad()
+        cost_, sent_ems, doc_ems = model(
+            sentences            = dd['sent_inds'],
+            question             = dd['quest_inds'],
+            target_sents         = dd['sent_labels'],
+            target_docs          = dd['doc_labels'],
+            similarity_one_hot   = dd['sim_matrix']
+        )
+        cost_.backward()
+        optimizer.step()
+        the_cost = cost_.cpu().item()
+        print(the_cost)
+    print(20 * '-')
 
 
 
