@@ -135,7 +135,7 @@ class Posit_Drmm_Modeler(nn.Module):
     def my_cosine_sim_many(self, quest, sents):
         ret = []
         for sent in sents:
-            ret.append(self.my_cosine_sim(sent,quest).squeeze(0))
+            ret.append(self.my_cosine_sim(quest,sent).squeeze(0))
         return ret
     def pooling_method(self, sim_matrix):
         sorted_res              = torch.sort(sim_matrix, -1)[0]             # sort the input minimum to maximum
@@ -144,6 +144,26 @@ class Posit_Drmm_Modeler(nn.Module):
         the_maximum             = k_max_pooled[:, -1]                 # select the maximum value of each instance
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
+    def get_sent_output(self, similarity_one_hot_pooled, similarity_insensitive_pooled,similarity_sensitive_pooled):
+        ret = []
+        for bi in range(len(similarity_one_hot_pooled)):
+            ret_r = []
+            for j in range(len(similarity_one_hot_pooled[bi])):
+                temp = torch.cat(
+                    [
+                        similarity_insensitive_pooled[bi][j],
+                        similarity_sensitive_pooled[bi][j],
+                        similarity_one_hot_pooled[bi][j]
+                    ],
+                    -1
+                )
+                # print(temp.size())
+                lo = self.linear_per_q(temp).squeeze(-1)
+                lo = F.sigmoid(lo)
+                sr = lo.sum(-1) / lo.size(-1)
+                ret_r.append(sr)
+            ret.append(torch.stack(ret_r))
+        return ret
     def forward(self,sentences,question,target_sents,target_docs, similarity_one_hot):
         target_sents            = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
         target_docs             = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
@@ -156,16 +176,25 @@ class Posit_Drmm_Modeler(nn.Module):
         #
         similarity_insensitive  = [self.my_cosine_sim_many(question_embeds[i], sents_embeds[i]) for i in range(len(sents_embeds))]
         similarity_sensitive    = [self.my_cosine_sim_many(q_conv_res[i], s_conv_res[i]) for i in range(len(q_conv_res))]
-        similarity_one_hot      = [[autograd.Variable(torch.FloatTensor(item), requires_grad=False) for item in item2] for item2 in similarity_one_hot]
-        print(similarity_insensitive[1][0].size())
-        print(similarity_sensitive[1][0].size())
-        print(similarity_one_hot[1][0].size())
-        # exit()
+        similarity_one_hot      = [[autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in item2] for item2 in similarity_one_hot]
+        #
+        similarity_insensitive_pooled   = [[self.pooling_method(item) for item in item2] for item2 in similarity_insensitive]
+        similarity_sensitive_pooled     = [[self.pooling_method(item) for item in item2] for item2 in similarity_sensitive]
+        similarity_one_hot_pooled       = [[self.pooling_method(item) for item in item2] for item2 in similarity_one_hot]
+        #
+        # print(len(similarity_insensitive_pooled))
+        # print(len(similarity_insensitive_pooled[1]))
+        # print(similarity_insensitive_pooled[1][0].size())
+        # print(similarity_sensitive_pooled[1][0].size())
+        # print(similarity_one_hot_pooled[1][0].size())
+        #
+        sent_output = self.get_sent_output(similarity_one_hot_pooled, similarity_insensitive_pooled, similarity_sensitive_pooled)
+        for item in sent_output:
+            print(item.size())
+        #
+        exit()
         # similarity_insensitive          = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
         # similarity_sensitive            = self.apply_masks_on_similarity(sentences, question, similarity_sensitive)
-        similarity_insensitive_pooled   = self.pooling_method(similarity_insensitive)
-        similarity_sensitive_pooled     = self.pooling_method(similarity_sensitive)
-        similarity_one_hot_pooled       = self.pooling_method(similarity_one_hot)
         similarities_concatenated       = torch.cat([similarity_insensitive_pooled, similarity_sensitive_pooled,similarity_one_hot_pooled],-1)
         similarities_concatenated       = similarities_concatenated.transpose(0,1)
         sent_out                        = self.linear_per_q(similarities_concatenated)
