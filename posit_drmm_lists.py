@@ -233,7 +233,7 @@ filters_size    = 3
 print('LOADING embedding_matrix (14GB)')
 # matrix = pickle.load(open('/home/dpappas/joint_task_list_batches/embedding_matrix.p','rb'))
 with h5py.File('/home/dpappas/joint_task_list_batches/embedding_matrix.h5', 'r') as hf:
-    data = hf['embeddings'][:]
+    matrix = hf['embeddings'][:]
 print('Done')
 
 k_for_maxpool   = 5
