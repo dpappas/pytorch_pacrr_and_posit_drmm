@@ -293,8 +293,8 @@ min_dev_loss        = 10e10
 min_loss_epoch      = -1
 test_average_loss   = 10e10
 for epoch in range(20):
-    train_average_loss  = train_one_epoch(all_train_paths, model, optimizer, epoch)
-    dev_average_loss    = test_one_epoch(all_dev_paths, model, epoch)
+    train_average_loss      = train_one_epoch(all_train_paths, model, optimizer, epoch)
+    dev_average_loss        = test_one_epoch(all_dev_paths, model, epoch)
     if(dev_average_loss < min_dev_loss):
         min_dev_loss        = dev_average_loss
         min_loss_epoch      = epoch+1
