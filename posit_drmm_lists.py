@@ -130,8 +130,10 @@ class Posit_Drmm_Modeler(nn.Module):
         q_conv_res          = self.apply_convolution(question_embeds, self.quest_filters_conv)
         #
         sents_embeds        = [self.get_embeds(s) for s in sentences]
+        s_conv_res          = [self.apply_convolution(s, self.sent_filters_conv) for s in sents_embeds]
         #
         print(q_conv_res[0].size())
+        print(s_conv_res[1][0].size())
         exit()
         #
         sentences               = autograd.Variable(torch.LongTensor(sentences), requires_grad=False)
@@ -179,10 +181,11 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 for i in range(2):
     optimizer.zero_grad()
     cost_, sent_ems, doc_ems = model(
-        sentences   = dd['sent_inds'],
-        question    = dd['quest_inds'],
-        target_sents= dd['sent_labels'],
-        target_docs = dd['doc_labels']
+        sentences            = dd['sent_inds'],
+        question             = dd['quest_inds'],
+        target_sents         = dd['sent_labels'],
+        target_docs          = dd['doc_labels'],
+        similarity_one_hot   = dd['sim_matrix']
     )
     cost_.backward()
     optimizer.step()
