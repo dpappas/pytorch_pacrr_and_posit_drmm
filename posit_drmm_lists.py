@@ -260,6 +260,24 @@ def train_one_epoch(all_train_paths, model, optimizer, epoch):
         the_cost        =   cost_.cpu().item()
         cost_sum        +=  the_cost
         average_cost    =   cost_sum / (i+1.0)
+        print('train', epoch+1, i+1, average_cost, the_cost)
+    return average_cost
+
+def tests_one_epoch(all_train_paths, model, optimizer, epoch):
+    cost_sum        = 0.0
+    average_cost    = 1000.0
+    for i in range(len(all_train_paths)):
+        dd = pickle.load(open(all_train_paths[i], 'rb'))
+        cost_, sent_ems, doc_ems = model(
+            sentences            = dd['sent_inds'],
+            question             = dd['quest_inds'],
+            target_sents         = dd['sent_labels'],
+            target_docs          = dd['doc_labels'],
+            similarity_one_hot   = dd['sim_matrix']
+        )
+        the_cost        =   cost_.cpu().item()
+        cost_sum        +=  the_cost
+        average_cost    =   cost_sum / (i+1.0)
         print(epoch+1, i+1, average_cost, the_cost)
     return average_cost
 
