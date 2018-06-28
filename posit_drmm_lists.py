@@ -204,18 +204,13 @@ nof_cnn_filters = 12
 filters_size    = 3
 matrix          = np.random.random((2900000, 10))
 k_for_maxpool   = 5
-model               = Posit_Drmm_Modeler(
-    nof_filters         = nof_cnn_filters,
-    filters_size        = filters_size,
-    pretrained_embeds   = matrix,
-    k_for_maxpool       = k_for_maxpool
-)
+model           = Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=filters_size, pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
 
-lr = 0.1
+lr          = 0.01
 params      = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-for i in range(2):
+for i in range(20):
     optimizer.zero_grad()
     cost_, sent_ems, doc_ems = model(
         sentences            = dd['sent_inds'],
