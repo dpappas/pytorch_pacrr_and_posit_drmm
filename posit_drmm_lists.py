@@ -239,13 +239,12 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 # dummy_test()
 # exit()
 
-
-dir_with_batches = '/home/dpappas/joint_task_list_batches/'
-all_paths = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
+dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain_'
+all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
 for epoch in range(20):
     cost_sum = 0.0
-    for i in range(len(all_paths)):
-        dd = pickle.load(open(all_paths[i], 'rb'))
+    for i in range(len(all_train_paths)):
+        dd = pickle.load(open(all_train_paths[i], 'rb'))
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
             sentences            = dd['sent_inds'],
