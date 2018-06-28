@@ -137,6 +137,13 @@ class Posit_Drmm_Modeler(nn.Module):
         for sent in sents:
             ret.append(self.my_cosine_sim(sent,quest).squeeze(0))
         return ret
+    def pooling_method(self, sim_matrix):
+        sorted_res              = torch.sort(sim_matrix, -1)[0]             # sort the input minimum to maximum
+        k_max_pooled            = sorted_res[:,-self.k:]                # select the last k of each instance in our data
+        average_k_max_pooled    = k_max_pooled.sum(-1)/float(self.k)        # average these k values
+        the_maximum             = k_max_pooled[:, -1]                 # select the maximum value of each instance
+        the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
+        return the_concatenation     # return the concatenation
     def forward(self,sentences,question,target_sents,target_docs, similarity_one_hot):
         target_sents            = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
         target_docs             = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
@@ -153,9 +160,9 @@ class Posit_Drmm_Modeler(nn.Module):
         print(similarity_insensitive[1][0].size())
         print(similarity_sensitive[1][0].size())
         print(similarity_one_hot[1][0].size())
-        exit()
-        similarity_insensitive  = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
-        similarity_sensitive    = self.apply_masks_on_similarity(sentences, question, similarity_sensitive)
+        # exit()
+        # similarity_insensitive          = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
+        # similarity_sensitive            = self.apply_masks_on_similarity(sentences, question, similarity_sensitive)
         similarity_insensitive_pooled   = self.pooling_method(similarity_insensitive)
         similarity_sensitive_pooled     = self.pooling_method(similarity_sensitive)
         similarity_one_hot_pooled       = self.pooling_method(similarity_one_hot)
