@@ -242,11 +242,11 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # dummy_test()
 # exit()
 
-def train_one_epoch(all_train_paths, model, optimizer, epoch):
+def train_one_epoch(paths, model, optimizer, epoch):
     cost_sum        = 0.0
     average_cost    = 1000.0
-    for i in range(len(all_train_paths)):
-        dd = pickle.load(open(all_train_paths[i], 'rb'))
+    for i in range(len(paths)):
+        dd = pickle.load(open(paths[i], 'rb'))
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
             sentences            = dd['sent_inds'],
@@ -263,11 +263,11 @@ def train_one_epoch(all_train_paths, model, optimizer, epoch):
         print('train', epoch+1, i+1, average_cost, the_cost)
     return average_cost
 
-def tests_one_epoch(all_train_paths, model, optimizer, epoch):
+def tests_one_epoch(paths, model, epoch):
     cost_sum        = 0.0
     average_cost    = 1000.0
-    for i in range(len(all_train_paths)):
-        dd = pickle.load(open(all_train_paths[i], 'rb'))
+    for i in range(len(paths)):
+        dd = pickle.load(open(paths[i], 'rb'))
         cost_, sent_ems, doc_ems = model(
             sentences            = dd['sent_inds'],
             question             = dd['quest_inds'],
@@ -282,12 +282,12 @@ def tests_one_epoch(all_train_paths, model, optimizer, epoch):
     return average_cost
 
 
-dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain_'
-all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
-for epoch in range(20):
-    train_average_loss = train_one_epoch(all_train_paths, model, optimizer, epoch)
-    print(train_average_loss)
-    print(20 * '-')
+# dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain_'
+# all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
+# for epoch in range(20):
+#     train_average_loss = train_one_epoch(all_train_paths, model, optimizer, epoch)
+#     print(train_average_loss)
+#     print(20 * '-')
 
 '''
 from tqdm import tnrange, tqdm_notebook, tqdm
