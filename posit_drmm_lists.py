@@ -242,10 +242,9 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # dummy_test()
 # exit()
 
-dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain_'
-all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
-for epoch in range(20):
-    cost_sum = 0.0
+def train_one_epoch(all_train_paths, model, optimizer, epoch):
+    cost_sum        = 0.0
+    average_cost    = 1000.0
     for i in range(len(all_train_paths)):
         dd = pickle.load(open(all_train_paths[i], 'rb'))
         optimizer.zero_grad()
@@ -262,7 +261,13 @@ for epoch in range(20):
         cost_sum        +=  the_cost
         average_cost    =   cost_sum / (i+1.0)
         print(epoch+1, i+1, average_cost, the_cost)
-    print(20 * '-')
+    return average_cost
+
+#
+# dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain_'
+# all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
+# for epoch in range(20):
+#     print(20 * '-')
 
 '''
 from tqdm import tnrange, tqdm_notebook, tqdm
