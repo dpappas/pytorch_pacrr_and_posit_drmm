@@ -106,6 +106,19 @@ class Posit_Drmm_Modeler(nn.Module):
             )
             for item in items
         ]
+    def apply_convolution(self, the_input, the_filters):
+        print(the_filters.size())
+        filter_size     = the_filters.size(2)
+        conv_res        = F.conv2d(
+            the_input.unsqueeze(1),
+            the_filters,
+            bias        = None,
+            stride      = 1,
+            padding     = (int(filter_size/2)+1, 0)             # pad the sequence
+        )
+        conv_res = conv_res[:, :, -1*the_input.size(1):, :]     # just take the output of the text convolution ignoring the first rows that came from the padding
+        conv_res = conv_res.squeeze(-1).transpose(1,2)          # transpose to get an output of (batch_size, nof_sents, ... )
+        return conv_res
     def forward(self,sentences,question,target_sents,target_docs):
         target_sents    = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
         target_docs     = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
@@ -114,6 +127,11 @@ class Posit_Drmm_Modeler(nn.Module):
         # print(len(sents_embeds))
         # for t in sents_embeds:
         #     print(len(t))
+        q_conv_res      = [
+            self.apply_convolution(question_embed, self.quest_filters_conv)
+            for question_embed in question_embeds
+        ]
+        print(q_conv_res[0].size())
         exit()
         #
         sentences               = autograd.Variable(torch.LongTensor(sentences), requires_grad=False)
