@@ -210,7 +210,7 @@ lr          = 0.01
 params      = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-for i in range(20):
+for epoch in range(20):
     optimizer.zero_grad()
     cost_, sent_ems, doc_ems = model(
         sentences            = dd['sent_inds'],
