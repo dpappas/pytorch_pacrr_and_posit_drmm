@@ -107,19 +107,13 @@ class Posit_Drmm_Modeler(nn.Module):
             for item in items
         ]
     def apply_convolution(self, listed_inputs, the_filters):
-        ret                 = []
-        filter_size         = the_filters.size(2)
+        ret             = []
+        filter_size     = the_filters.size(2)
         for the_input in listed_inputs:
-            the_input       = the_input.unsqueeze(0)
-            conv_res        = F.conv2d(
-                the_input.unsqueeze(1),
-                the_filters,
-                bias        = None,
-                stride      = 1,
-                padding     = (int(filter_size/2)+1, 0)
-            )
-            conv_res = conv_res[:, :, -1*the_input.size(1):, :]
-            conv_res = conv_res.squeeze(-1).transpose(1,2)
+            the_input   = the_input.unsqueeze(0)
+            conv_res    = F.conv2d(the_input.unsqueeze(1), the_filters, bias=None, stride=1, padding=(int(filter_size/2)+1, 0))
+            conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
+            conv_res    = conv_res.squeeze(-1).transpose(1,2)
             ret.append(conv_res)
         return ret
     def forward(self,sentences,question,target_sents,target_docs):
@@ -128,7 +122,7 @@ class Posit_Drmm_Modeler(nn.Module):
         question_embeds = self.get_embeds(question)
         sents_embeds    = [self.get_embeds(s) for s in sentences]
         #
-        q_conv_res      = [self.apply_convolution(question_embed, self.quest_filters_conv) for question_embed in question_embeds]
+        q_conv_res      = self.apply_convolution(question_embeds, self.quest_filters_conv)
         print(q_conv_res[0].size())
         exit()
         #
