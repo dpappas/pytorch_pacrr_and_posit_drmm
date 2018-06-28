@@ -107,8 +107,8 @@ class Posit_Drmm_Modeler(nn.Module):
             for item in items
         ]
     def forward(self,sentences,question,target_sents,target_docs):
-        target_sents            = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
-        target_docs             = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
+        target_sents    = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
+        target_docs     = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
         question_embeds = self.get_embeds(question)
         sents_embeds    = [self.get_embeds(s) for s in sentences]
         # print(len(sents_embeds))
