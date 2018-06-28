@@ -16,18 +16,9 @@ import cPickle as pickle
 import numpy as np
 import random
 random.seed(my_seed)
-from joblib import Parallel, delayed
 
-cudnn.benchmark = True
 torch.manual_seed(my_seed)
 print(torch.get_num_threads())
-print(torch.cuda.is_available())
-print(torch.cuda.device_count())
-
-gpu_device = 0
-use_cuda = torch.cuda.is_available()
-if(use_cuda):
-    torch.cuda.manual_seed(my_seed)
 
 def loadGloveModel(w2v_voc, w2v_vec):
     '''
@@ -88,6 +79,64 @@ dd = pickle.load(open('/home/dpappas/joint_task_list_batches/1.p','rb'))
 # dd['quest_inds'][0]
 # len(dd['sent_inds'][0])
 # dd['sim_matrix'][0][0].shape
+
+class Posit_Drmm_Modeler(nn.Module):
+    def __init__(self, nof_filters, filters_size, pretrained_embeds, k_for_maxpool):
+        super(Posit_Drmm_Modeler, self).__init__()
+        self.nof_sent_filters                       = nof_filters           # number of filters for the convolution of sentences
+        self.sent_filters_size                      = filters_size          # The size of the ngram filters we will apply on sentences
+        self.nof_quest_filters                      = nof_filters           # number of filters for the convolution of the question
+        self.quest_filters_size                     = filters_size          # The size of the ngram filters we will apply on question
+        self.k                                      = k_for_maxpool         # k is for the average k pooling
+        self.vocab_size                             = pretrained_embeds.shape[0]
+        self.embedding_dim                          = pretrained_embeds.shape[1]
+        self.word_embeddings                        = nn.Embedding(self.vocab_size, self.embedding_dim)
+        self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
+        self.word_embeddings.weight.requires_grad   = False
+        self.sent_filters_conv  = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,self.sent_filters_size,self.embedding_dim))
+        self.quest_filters_conv = self.sent_filters_conv
+        self.linear_per_q       = nn.Linear(6, 1, bias=True)
+        self.bce_loss           = torch.nn.BCELoss()
+    def forward(self,sentences,question,target_sents,target_docs):
+        sentences               = autograd.Variable(torch.LongTensor(sentences), requires_grad=False)
+        question                = autograd.Variable(torch.LongTensor(question), requires_grad=False)
+        target_sents            = autograd.Variable(torch.LongTensor(target_sents), requires_grad=False)
+        target_docs             = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
+        question_embeds         = self.word_embeddings(question)
+        sentence_embeds         = self.word_embeddings(sentences.view(sentences.size(0), -1))
+        sentence_embeds         = sentence_embeds.view(sentences.size(0), sentences.size(1), sentences.size(2), -1)
+        similarity_insensitive  = torch.stack([self.my_cosine_sim(question_embeds, s) for s in sentence_embeds.transpose(0, 1)])
+        similarity_one_hot      = (similarity_insensitive >= (1.0-(1e-05))).float()
+        q_conv_res              = self.apply_convolution(question_embeds, self.quest_filters_conv, self.quest_filters_size)
+        s_conv_res              = torch.stack([self.apply_convolution(s, self.sent_filters_conv, self.sent_filters_size) for s in sentence_embeds])
+        similarity_sensitive    = torch.stack([self.my_cosine_sim(q_conv_res, s) for s in s_conv_res.transpose(0, 1)])
+        similarity_insensitive  = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
+        similarity_sensitive    = self.apply_masks_on_similarity(sentences, question, similarity_sensitive)
+        similarity_insensitive_pooled   = self.pooling_method(similarity_insensitive)
+        similarity_sensitive_pooled     = self.pooling_method(similarity_sensitive)
+        similarity_one_hot_pooled       = self.pooling_method(similarity_one_hot)
+        similarities_concatenated       = torch.cat([similarity_insensitive_pooled, similarity_sensitive_pooled,similarity_one_hot_pooled],-1)
+        similarities_concatenated       = similarities_concatenated.transpose(0,1)
+        sent_out                        = self.linear_per_q(similarities_concatenated)
+        sent_out                        = sent_out.squeeze(-1)
+        sent_out                        = F.sigmoid(sent_out)
+        sentence_relevance              = sent_out.sum(-1) / sent_out.size(-1)
+        sentences_average_loss          = self.bce_loss(sentence_relevance, target_sents.float())
+        document_emitions               = sentence_relevance.max(-1)[0]
+        document_average_loss           = self.bce_loss(document_emitions, target_docs.float())
+        total_loss                      = (sentences_average_loss + document_average_loss) / 2.0
+        return(total_loss, sentence_relevance, document_emitions) # return the general loss, the sentences' relevance score and the documents' relevance scores
+
+nof_cnn_filters = 10
+filters_size    = 3
+matrix          = np.random.random((2000000, 10))
+k_for_maxpool   = 5
+model               = Posit_Drmm_Modeler(
+    nof_filters         = nof_cnn_filters,
+    filters_size        = filters_size,
+    pretrained_embeds   = matrix,
+    k_for_maxpool       = k_for_maxpool
+)
 
 
 
