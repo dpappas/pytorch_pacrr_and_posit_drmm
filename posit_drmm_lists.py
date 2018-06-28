@@ -16,7 +16,6 @@ import cPickle as pickle
 import numpy as np
 import random
 random.seed(my_seed)
-
 torch.manual_seed(my_seed)
 print(torch.get_num_threads())
 
@@ -72,7 +71,7 @@ def print_params(model):
     print(total_params)
     print(40 * '=')
 
-dd = pickle.load(open('/home/dpappas/joint_task_list_batches/1.p','rb'))
+dd = pickle.load(open('1.p','rb'))
 
 # dd['doc_labels'][0]
 # dd['sent_labels'][0]
