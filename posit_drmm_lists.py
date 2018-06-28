@@ -164,6 +164,15 @@ class Posit_Drmm_Modeler(nn.Module):
                 ret_r.append(sr)
             ret.append(torch.stack(ret_r))
         return ret
+    def compute_sent_average_loss(self, sent_output, target_sents):
+        sentences_average_loss = None
+        for i in range(len(sent_output)):
+            sal = self.bce_loss(sent_output[i], target_sents[i].float())
+            if(sentences_average_loss is None):
+                sentences_average_loss  = sal / float(len(sent_output))
+            else:
+                sentences_average_loss += sal / float(len(sent_output))
+        return sentences_average_loss
     def forward(self,sentences,question,target_sents,target_docs, similarity_one_hot):
         target_sents            = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
         target_docs             = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
@@ -182,30 +191,14 @@ class Posit_Drmm_Modeler(nn.Module):
         similarity_sensitive_pooled     = [[self.pooling_method(item) for item in item2] for item2 in similarity_sensitive]
         similarity_one_hot_pooled       = [[self.pooling_method(item) for item in item2] for item2 in similarity_one_hot]
         #
-        # print(len(similarity_insensitive_pooled))
-        # print(len(similarity_insensitive_pooled[1]))
-        # print(similarity_insensitive_pooled[1][0].size())
-        # print(similarity_sensitive_pooled[1][0].size())
-        # print(similarity_one_hot_pooled[1][0].size())
+        sent_output             = self.get_sent_output(similarity_one_hot_pooled, similarity_insensitive_pooled, similarity_sensitive_pooled)
+        sentences_average_loss  = self.compute_sent_average_loss(sent_output, target_sents)
         #
-        sent_output = self.get_sent_output(similarity_one_hot_pooled, similarity_insensitive_pooled, similarity_sensitive_pooled)
-        for item in sent_output:
-            print(item.size())
+        document_emitions       = torch.stack([ s.max(-1)[0] for s in sent_output])
+        document_average_loss   = self.bce_loss(document_emitions, target_docs.float())
+        total_loss              = (sentences_average_loss + document_average_loss) / 2.0
         #
-        exit()
-        # similarity_insensitive          = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
-        # similarity_sensitive            = self.apply_masks_on_similarity(sentences, question, similarity_sensitive)
-        similarities_concatenated       = torch.cat([similarity_insensitive_pooled, similarity_sensitive_pooled,similarity_one_hot_pooled],-1)
-        similarities_concatenated       = similarities_concatenated.transpose(0,1)
-        sent_out                        = self.linear_per_q(similarities_concatenated)
-        sent_out                        = sent_out.squeeze(-1)
-        sent_out                        = F.sigmoid(sent_out)
-        sentence_relevance              = sent_out.sum(-1) / sent_out.size(-1)
-        sentences_average_loss          = self.bce_loss(sentence_relevance, target_sents.float())
-        document_emitions               = sentence_relevance.max(-1)[0]
-        document_average_loss           = self.bce_loss(document_emitions, target_docs.float())
-        total_loss                      = (sentences_average_loss + document_average_loss) / 2.0
-        return(total_loss, sentence_relevance, document_emitions) # return the general loss, the sentences' relevance score and the documents' relevance scores
+        return(total_loss, sent_output, document_emitions) # return the general loss, the sentences' relevance score and the documents' relevance scores
 
 nof_cnn_filters = 12
 filters_size    = 3
