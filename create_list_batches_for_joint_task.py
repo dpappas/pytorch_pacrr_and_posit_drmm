@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 import cPickle as pickle
 from pprint import pprint
-import h5py
+# import h5py
 import os
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
@@ -110,9 +110,9 @@ save_the_batches(all_data, odir, t2i, b_size)
 
 pickle.dump(t2i,    open('/home/dpappas/joint_task_list_batches/t2i.p','wb'))
 pickle.dump(i2t,    open('/home/dpappas/joint_task_list_batches/i2t.p','wb'))
-with h5py.File('/home/dpappas/joint_task_list_batches/embedding_matrix.h5', 'w') as hf:
-    hf.create_dataset("embeddings",  data=matrix)
-
+# with h5py.File('/home/dpappas/joint_task_list_batches/embedding_matrix.h5', 'w') as hf:
+#     hf.create_dataset("embeddings",  data=matrix)
+np.save('/home/dpappas/joint_task_list_batches/embedding_matrix.npy', matrix)
 
 
 

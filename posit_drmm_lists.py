@@ -7,7 +7,7 @@ from gensim.topic_coherence.segmentation import s_one_one
 __author__ = 'Dimitris'
 
 my_seed = 1989
-import h5py
+# import h5py
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -232,8 +232,11 @@ filters_size    = 3
 # matrix          = np.random.random((2900000, 10))
 print('LOADING embedding_matrix (14GB)')
 # matrix = pickle.load(open('/home/dpappas/joint_task_list_batches/embedding_matrix.p','rb'))
-with h5py.File('/home/dpappas/joint_task_list_batches/embedding_matrix.h5', 'r') as hf:
-    matrix = hf['embeddings'][:]
+# with h5py.File('/home/dpappas/joint_task_list_batches/embedding_matrix.h5', 'r') as hf:
+#     matrix = hf['embeddings'][:]
+matrix = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+
+np.savez_compressed(, )
 print('Done')
 
 k_for_maxpool   = 5
