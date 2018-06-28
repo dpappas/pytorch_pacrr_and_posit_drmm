@@ -69,11 +69,10 @@ def get_sim_mat(stoks, qtoks):
 
 w2v_path = '/home/DATA/Biomedical/bioasq6/bioasq6_data/word_embeddings/pubmed2018_w2v_200D.bin'
 t2i, i2t, matrix = load_w2v_embs(w2v_path)
+b_size  = 32
 
 all_data = pickle.load(open('joint_task_data.p','rb'))
 print(len(all_data))
-
-b_size  = 32
 
 odir    = '/home/dpappas/joint_task_list_batches/train/'
 if not os.path.exists(odir):
