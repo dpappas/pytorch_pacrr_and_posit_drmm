@@ -239,6 +239,8 @@ lr              = 0.01
 params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
+del(matrix)
+
 # dummy_test()
 # exit()
 
@@ -282,12 +284,12 @@ def tests_one_epoch(paths, model, epoch):
     return average_cost
 
 
-# dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain_'
-# all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
-# for epoch in range(20):
-#     train_average_loss = train_one_epoch(all_train_paths, model, optimizer, epoch)
-#     print(train_average_loss)
-#     print(20 * '-')
+dir_with_batches    = '/home/dpappas/joint_task_list_batches/tain/'
+all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
+for epoch in range(20):
+    train_average_loss = train_one_epoch(all_train_paths, model, optimizer, epoch)
+    print(train_average_loss)
+    print(20 * '-')
 
 '''
 from tqdm import tnrange, tqdm_notebook, tqdm
