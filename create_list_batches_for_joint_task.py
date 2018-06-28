@@ -90,7 +90,6 @@ def save_the_batches(all_data, odir, t2i, b_size):
             pickle.dump({'sent_inds':si, 'sent_labels':sy, 'quest_inds':qi, 'doc_labels':dy, 'sim_matrix':sm}, open(odir+'{}.p'.format(metr_batch),'wb'))
             qi, dy, si, sy, sm  = [], [], [], [], []
 
-
 w2v_path            = '/home/DATA/Biomedical/bioasq6/bioasq6_data/word_embeddings/pubmed2018_w2v_200D.bin'
 t2i, i2t, matrix    = load_w2v_embs(w2v_path)
 b_size              = 32
@@ -110,3 +109,5 @@ save_the_batches(all_data, odir, t2i, b_size)
 pickle.dump(t2i, open('/home/dpappas/joint_task_list_batches/t2i.p','wb'))
 pickle.dump(i2t, open('/home/dpappas/joint_task_list_batches/i2t.p','wb'))
 pickle.dump(matrix, open('/home/dpappas/joint_task_list_batches/embedding_matrix.p','wb'))
+
+
