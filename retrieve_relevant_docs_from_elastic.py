@@ -171,12 +171,24 @@ ddd                 = preprocess_bioasq_data(bioasq_data_path)
 #
 abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl'
 all_abs             = pickle.load(open(abs_path,'rb'))
-#
 bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl'
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
-
 all_data            = create_the_data()
-pickle.dump(all_data, open('joint_task_data.p','wb'))
+pickle.dump(all_data, open('joint_task_data_train.p','wb'))
+
+abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl'
+all_abs             = pickle.load(open(abs_path,'rb'))
+bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl'
+bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
+all_data            = create_the_data()
+pickle.dump(all_data, open('joint_task_data_dev.p','wb'))
+
+abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl'
+all_abs             = pickle.load(open(abs_path,'rb'))
+bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
+bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
+all_data            = create_the_data()
+pickle.dump(all_data, open('joint_task_data_test.p','wb'))
 
 
 
