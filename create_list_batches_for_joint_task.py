@@ -112,7 +112,7 @@ pickle.dump(
         't2i'           : t2i,
         'i2t'           : i2t
     }
-    , open('/home/dpappas/joint_task_list_batches/embeddings_data.p','wb'))
+    , open('/home/dpappas/joint_task_list_batches/embeddings_data.p','wb')
 )
 
 
