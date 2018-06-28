@@ -73,7 +73,6 @@ b_size              = 32
 
 all_data = pickle.load(open('joint_task_data.p','rb'))
 print(len(all_data))
-
 odir    = '/home/dpappas/joint_task_list_batches/train/'
 if not os.path.exists(odir):
     os.makedirs(odir)
