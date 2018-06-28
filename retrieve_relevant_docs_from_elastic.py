@@ -11,6 +11,8 @@ import gensim
 from difflib import SequenceMatcher
 from tqdm import tqdm
 
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
 def similar(a, b):
     return max(
         [
@@ -134,6 +136,7 @@ def create_the_data():
             doc_title   = get_sents(all_abs[doc_id]['title'])
             doc_text    = get_sents(all_abs[doc_id]['abstractText'])
             all_sents   = doc_title + doc_text
+            all_sents   = [s for s in all_sents if(len(bioclean(s))>0)]
             if (retr['is_relevant']):
                 if (quer['query_text'] in ddd):
                     if (doc_id in ddd[quer['query_text']]):
