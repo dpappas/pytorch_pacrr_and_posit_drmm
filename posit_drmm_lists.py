@@ -162,6 +162,10 @@ class Posit_Drmm_Modeler(nn.Module):
             else:
                 sentences_average_loss += sal / float(len(sent_output))
         return sentences_average_loss
+    def apply_masks_on_similarity(self, sentences, question, similarity):
+        sim_mask1                = (sentences > 1).float().transpose(0,1).unsqueeze(2).expand_as(similarity)
+        sim_mask2                = (question > 1).float().unsqueeze(0).unsqueeze(-1).expand_as(similarity)
+        return similarity*sim_mask1*sim_mask2
     def forward(self,sentences,question,target_sents,target_docs, similarity_one_hot):
         target_sents            = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
         target_docs             = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
@@ -173,6 +177,7 @@ class Posit_Drmm_Modeler(nn.Module):
         s_conv_res              = [self.apply_convolution(s, self.sent_filters_conv) for s in sents_embeds]
         #
         similarity_insensitive  = [self.my_cosine_sim_many(question_embeds[i], sents_embeds[i]) for i in range(len(sents_embeds))]
+        similarity_insensitive  = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
         similarity_sensitive    = [self.my_cosine_sim_many(q_conv_res[i], s_conv_res[i]) for i in range(len(q_conv_res))]
         similarity_one_hot      = [[autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in item2] for item2 in similarity_one_hot]
         #
@@ -199,11 +204,11 @@ lr          = 0.01
 params      = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-
 dir_with_batches = '/home/dpappas/joint_task_list_batches/'
 for epoch in range(20):
     for fpath in os.listdir(dir_with_batches):
-        dd = pickle.load(open(dir_with_batches+fpath, 'rb'))
+        # dd = pickle.load(open(dir_with_batches+fpath, 'rb'))
+        dd = pickle.load(open('1.p', 'rb'))
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
             sentences            = dd['sent_inds'],
