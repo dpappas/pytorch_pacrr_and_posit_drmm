@@ -156,12 +156,16 @@ class Posit_Drmm_Modeler(nn.Module):
         return sentences_average_loss
     def apply_masks_on_similarity(self, sentences, question, similarity):
         for bi in range(len(sentences)):
-            print(question[bi])
+            qq = question[bi]
+            qq = ( qq > 1).float()
             for si in range(len(sentences[bi])):
-                exit()
-        sim_mask1                = (sentences > 1).float().transpose(0,1).unsqueeze(2).expand_as(similarity)
-        sim_mask2                = (question > 1).float().unsqueeze(0).unsqueeze(-1).expand_as(similarity)
-        return similarity*sim_mask1*sim_mask2
+                ss  = sentences[bi][si]
+                ss  = (ss > 1).float()
+                sim_mask1 = qq.unsqueeze(-1).expand_as(similarity[bi][si])
+                sim_mask2 = ss.unsqueeze(0).expand_as(similarity[bi][si])
+                similarity[bi][si] *= sim_mask1
+                similarity[bi][si] *= sim_mask2
+        return similarity
     def forward(self, sentences, question, target_sents, target_docs, similarity_one_hot):
         #
         question                = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in question]
