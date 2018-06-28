@@ -92,15 +92,7 @@ class Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q       = nn.Linear(6, 1, bias=True)
         self.bce_loss           = torch.nn.BCELoss()
     def get_embeds(self, items):
-        return [
-            self.word_embeddings(
-                autograd.Variable(
-                    torch.LongTensor(item),
-                    requires_grad = False
-                )
-            )
-            for item in items
-        ]
+        return [self.word_embeddings(item)for item in items]
     def apply_convolution(self, listed_inputs, the_filters):
         ret             = []
         filter_size     = the_filters.size(2)
@@ -170,7 +162,11 @@ class Posit_Drmm_Modeler(nn.Module):
         sim_mask1                = (sentences > 1).float().transpose(0,1).unsqueeze(2).expand_as(similarity)
         sim_mask2                = (question > 1).float().unsqueeze(0).unsqueeze(-1).expand_as(similarity)
         return similarity*sim_mask1*sim_mask2
-    def forward(self,sentences,question,target_sents,target_docs, similarity_one_hot):
+    def forward(self, sentences, question, target_sents, target_docs, similarity_one_hot):
+        #
+        question                = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in question]
+        sentences               = [[autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in item2] for item2 in sentences]
+        #
         target_sents            = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
         target_docs             = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
         #
