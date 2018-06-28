@@ -83,15 +83,18 @@ def split_sentences(text):
     return ret
 
 def get_sents(ntext):
-    sents = []
-    for subtext in ntext.split('\n'):
-        subtext = re.sub( '\s+', ' ', subtext.replace('\n',' ') ).strip()
-        if (len(subtext) > 0):
-            ss = split_sentences(subtext)
-            sents.extend([ s for s in ss if(len(s.strip())>0)])
-    if(len(sents[-1]) == 0 ):
-        sents = sents[:-1]
-    return sents
+    if(len(ntext.strip())>0):
+        sents = []
+        for subtext in ntext.split('\n'):
+            subtext = re.sub( '\s+', ' ', subtext.replace('\n',' ') ).strip()
+            if (len(subtext) > 0):
+                ss = split_sentences(subtext)
+                sents.extend([ s for s in ss if(len(s.strip())>0)])
+        if(len(sents[-1]) == 0 ):
+            sents = sents[:-1]
+        return sents
+    else:
+        return []
 
 def preprocess_bioasq_data(bioasq_data_path):
     data = json.load(open(bioasq_data_path, 'r'))
