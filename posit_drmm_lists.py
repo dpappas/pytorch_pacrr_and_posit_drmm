@@ -229,6 +229,7 @@ class Posit_Drmm_Modeler(nn.Module):
 nof_cnn_filters = 12
 filters_size    = 3
 # matrix          = np.random.random((2900000, 10))
+print('LOADING embedding_matrix')
 matrix = pickle.load(open('/home/dpappas/joint_task_list_batches/embedding_matrix.p','rb'))
 
 k_for_maxpool   = 5
