@@ -74,12 +74,18 @@ def loadGloveModel(w2v_voc, w2v_vec):
     print("Done.",len(vocab)," words loaded!")
     return vocab, matrix
 
-def save_checkpoint(state, filename='checkpoint.pth.tar'):
+def save_checkpoint(epoch, model, min_dev_loss, optimizer, filename='checkpoint.pth.tar'):
     '''
     :param state:       the stete of the pytorch mode
     :param filename:    the name of the file in which we will store the model.
     :return:            Nothing. It just saves the model.
     '''
+    state = {
+        'epoch':            epoch,
+        'state_dict':       model.state_dict(),
+        'best_valid_score': min_dev_loss,
+        'optimizer':        optimizer.state_dict(),
+    }
     torch.save(state, filename)
 
 def print_params(model):
@@ -298,6 +304,7 @@ all_test_paths      = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with
 min_dev_loss        = 10e10
 min_loss_epoch      = -1
 test_average_loss   = 10e10
+odir                = './'
 for epoch in range(20):
     train_average_loss      = train_one_epoch(all_train_paths, model, optimizer, epoch)
     dev_average_loss        = test_one_epoch(all_dev_paths, model, epoch)
@@ -305,6 +312,7 @@ for epoch in range(20):
         min_dev_loss        = dev_average_loss
         min_loss_epoch      = epoch+1
         test_average_loss   = test_one_epoch(all_test_paths, model, epoch)
+        save_checkpoint(epoch, model, min_dev_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
     print(
         "epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(
             epoch+1,
