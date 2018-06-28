@@ -313,14 +313,7 @@ for epoch in range(20):
         min_loss_epoch      = epoch+1
         test_average_loss   = test_one_epoch(all_test_paths, model, epoch)
         save_checkpoint(epoch, model, min_dev_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    print(
-        "epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(
-            epoch+1,
-            train_average_loss,
-            dev_average_loss,
-            test_average_loss
-        )
-    )
+    print("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
     print(20 * '-')
 
 '''
