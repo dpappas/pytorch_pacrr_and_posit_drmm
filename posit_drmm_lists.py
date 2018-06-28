@@ -120,11 +120,21 @@ class Posit_Drmm_Modeler(nn.Module):
             conv_res    = conv_res.squeeze(-1).transpose(1,2)
             ret.append(conv_res)
         return ret
+    def my_cosine_sim(self,A,B):
+        A_mag       = torch.norm(A, 2, dim=2)
+        B_mag       = torch.norm(B, 2, dim=2)
+        num         = torch.bmm(A, B.transpose(-1,-2))
+        den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
+        dist_mat    = num / den
+        return dist_mat
+    def my_cosine_sim_many(self, quest, sents):
+        ret = []
+        for sent in sents:
+            ret.append(self.my_cosine_sim(quest,sent))
+        return ret
     def forward(self,sentences,question,target_sents,target_docs, similarity_one_hot):
         target_sents        = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
         target_docs         = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
-        similarity_one_hot  = autograd.Variable(torch.FloatTensor(similarity_one_hot), requires_grad=False)
-        #print(similarity_one_hot)
         #
         question_embeds     = self.get_embeds(question)
         q_conv_res          = self.apply_convolution(question_embeds, self.quest_filters_conv)
@@ -132,19 +142,20 @@ class Posit_Drmm_Modeler(nn.Module):
         sents_embeds        = [self.get_embeds(s) for s in sentences]
         s_conv_res          = [self.apply_convolution(s, self.sent_filters_conv) for s in sents_embeds]
         #
+        print(similarity_one_hot[1][0].size())
         print(q_conv_res[0].size())
         print(s_conv_res[1][0].size())
+        #
+        similarity_one_hot  = [
+            [
+                autograd.Variable(torch.FloatTensor(item), requires_grad=False)
+                for item in item2
+            ]
+            for item2 in similarity_one_hot
+        ]
         exit()
         #
-        sentences               = autograd.Variable(torch.LongTensor(sentences), requires_grad=False)
-        question                = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        question_embeds         = self.word_embeddings(question)
-        sentence_embeds         = self.word_embeddings(sentences.view(sentences.size(0), -1))
-        sentence_embeds         = sentence_embeds.view(sentences.size(0), sentences.size(1), sentences.size(2), -1)
         similarity_insensitive  = torch.stack([self.my_cosine_sim(question_embeds, s) for s in sentence_embeds.transpose(0, 1)])
-        similarity_one_hot      = (similarity_insensitive >= (1.0-(1e-05))).float()
-        q_conv_res              = self.apply_convolution(question_embeds, self.quest_filters_conv, self.quest_filters_size)
-        s_conv_res              = torch.stack([self.apply_convolution(s, self.sent_filters_conv, self.sent_filters_size) for s in sentence_embeds])
         similarity_sensitive    = torch.stack([self.my_cosine_sim(q_conv_res, s) for s in s_conv_res.transpose(0, 1)])
         similarity_insensitive  = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
         similarity_sensitive    = self.apply_masks_on_similarity(sentences, question, similarity_sensitive)
