@@ -108,10 +108,10 @@ class Posit_Drmm_Modeler(nn.Module):
         ]
     def forward(self,sentences,question,target_sents,target_docs):
         question_embeds = self.get_embeds(question)
-        print(len(question_embeds))
-        for item in question_embeds:
-            print(question[0])
-            print(item.size())
+        sents_embeds    = [self.get_embeds(s) for s in sentences]
+        # print(len(sents_embeds))
+        # for t in sents_embeds:
+        #     print(len(t))
         exit()
         #
         sentences               = autograd.Variable(torch.LongTensor(sentences), requires_grad=False)
@@ -145,7 +145,7 @@ class Posit_Drmm_Modeler(nn.Module):
 
 nof_cnn_filters = 10
 filters_size    = 3
-matrix          = np.random.random((2000000, 10))
+matrix          = np.random.random((2900000, 10))
 k_for_maxpool   = 5
 model               = Posit_Drmm_Modeler(
     nof_filters         = nof_cnn_filters,
