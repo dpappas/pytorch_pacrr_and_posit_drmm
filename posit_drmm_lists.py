@@ -72,6 +72,10 @@ def print_params(model):
     print(40 * '=')
 
 dd = pickle.load(open('1.p','rb'))
+# print(len(dd['sim_matrix']))
+# print(len(dd['sim_matrix'][1]))
+# print(dd['sim_matrix'][1][0].shape)
+# exit()
 
 # dd['doc_labels'][0]
 # dd['sent_labels'][0]
@@ -116,13 +120,17 @@ class Posit_Drmm_Modeler(nn.Module):
             conv_res    = conv_res.squeeze(-1).transpose(1,2)
             ret.append(conv_res)
         return ret
-    def forward(self,sentences,question,target_sents,target_docs):
-        target_sents    = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
-        target_docs     = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
-        question_embeds = self.get_embeds(question)
-        sents_embeds    = [self.get_embeds(s) for s in sentences]
+    def forward(self,sentences,question,target_sents,target_docs, similarity_one_hot):
+        target_sents        = [autograd.Variable(torch.LongTensor(ts), requires_grad=False) for ts in target_sents]
+        target_docs         = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
+        similarity_one_hot  = autograd.Variable(torch.FloatTensor(similarity_one_hot), requires_grad=False)
+        #print(similarity_one_hot)
         #
-        q_conv_res      = self.apply_convolution(question_embeds, self.quest_filters_conv)
+        question_embeds     = self.get_embeds(question)
+        q_conv_res          = self.apply_convolution(question_embeds, self.quest_filters_conv)
+        #
+        sents_embeds        = [self.get_embeds(s) for s in sentences]
+        #
         print(q_conv_res[0].size())
         exit()
         #
