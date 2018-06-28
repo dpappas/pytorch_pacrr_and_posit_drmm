@@ -73,11 +73,12 @@ t2i, i2t, matrix = load_w2v_embs(w2v_path)
 all_data = pickle.load(open('joint_task_data.p','rb'))
 print(len(all_data))
 
-odir = '/home/dpappas/joint_task_list_batches/'
+b_size  = 32
+
+odir    = '/home/dpappas/joint_task_list_batches/train/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
-b_size              = 32
 qi, dy, si, sy, sm  = [], [], [], [], []
 metr_batch          = 0
 for item in tqdm(all_data):
@@ -98,5 +99,9 @@ for item in tqdm(all_data):
         qi, dy, si, sy, sm  = [], [], [], [], []
     #
 
+
+odir = '/home/dpappas/joint_task_list_batches/dev/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
 
 
