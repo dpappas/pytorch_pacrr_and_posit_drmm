@@ -20,6 +20,9 @@ def get_elk_results(search_text):
             "bool": {
                 "must": [
                     {
+                    "regexp":{"ArticleTitle": ".+"}
+                    },
+                    {
                         "range": {
                             "DateCreated": {
                                 "gte": "1900",
@@ -51,6 +54,9 @@ def get_elk_results_2(search_text):
         "query": {
             "bool": {
                 "must": [
+                    {
+                    "regexp":{"ArticleTitle": ".+"}
+                    },
                     {
                         "range": {
                             "DateCreated": {
