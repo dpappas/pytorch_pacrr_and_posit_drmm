@@ -54,13 +54,17 @@ for quest in data['questions']:
     print(qtext)
     print(pmids)
     elk_scored_pmids = get_elk_results(qtext)
-    sorted_keys     = sorted(elk_scored_pmids.keys(), key=lambda x: elk_scored_pmids[x])
+    sorted_keys     = sorted(elk_scored_pmids.keys(), key=lambda x: elk_scored_pmids[x], reverse=True)
     my_truth_1000   = [ p in sorted_keys[:1000] for p in pmids ]
     my_truth_500    = [ p in sorted_keys[:500] for p in pmids  ]
     my_truth_100    = [ p in sorted_keys[:100] for p in pmids  ]
     my_truth_50     = [ p in sorted_keys[:50] for p in pmids   ]
     my_truth_10     = [ p in sorted_keys[:10] for p in pmids   ]
-
-    print my_truth_1000
+    my_truth_1000   = float(sum(my_truth_1000)) / float(len(my_truth_1000))
+    my_truth_500    = float(sum(my_truth_500))  / float(len(my_truth_500))
+    my_truth_100    = float(sum(my_truth_100))  / float(len(my_truth_100))
+    my_truth_50     = float(sum(my_truth_50))   / float(len(my_truth_50))
+    my_truth_10     = float(sum(my_truth_10))   / float(len(my_truth_10))
+    print my_truth_10, my_truth_50, my_truth_100, my_truth_500, my_truth_1000
     print 20 * '-'
 
