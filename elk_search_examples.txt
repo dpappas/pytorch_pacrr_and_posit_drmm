@@ -29,6 +29,15 @@ GET /pubmed_abstracts_index_0_1/_search
 
 GET /pubmed_abstracts_index_0_1/_search
 {
+    "aggs" : {
+        "pmids" : {
+            "terms" : { "field" : "pmid" }
+        }
+    }
+}
+
+GET /pubmed_abstracts_index_0_1/_search
+{
     "query": {
         "bool": {
             "must": [

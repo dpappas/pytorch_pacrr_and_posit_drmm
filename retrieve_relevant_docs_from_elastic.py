@@ -97,7 +97,6 @@ def get_the_scores(pmids, elk_scored_pmids):
     my_truth_10     = float(sum(my_truth_10))   / float(len(my_truth_10))
     print my_truth_10, my_truth_50, my_truth_100, my_truth_500, my_truth_1000
 
-
 # bioasq_data_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
 bioasq_data_path    = '/home/dpappas/bioasq_ir_data/BioASQ-trainingDataset6b.json'
 data                = json.load(open(bioasq_data_path, 'r'))
@@ -123,3 +122,31 @@ for quest in data['questions'][50:60]:
     print('Finished {} of {}'.format(m, total))
     print 20 * '-'
 
+'''
+
+bb = {
+    "aggs" : {
+        "pmids" : {
+            "terms" : { "field" : "pmid" }
+        }
+    }
+}
+
+bb = {
+    "query": {
+        "bool": {
+            "must": [
+                {
+                "regexp":{"ArticleTitle": ".+"}
+                },
+                {
+                "regexp":{"AbstractText": ".+"}
+                }
+            ]
+        }
+    }
+}
+res = es.search(index=index, doc_type=map, body=bb)
+pprint(res)
+exit()
+'''
