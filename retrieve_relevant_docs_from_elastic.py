@@ -13,7 +13,6 @@ bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '')
 es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
 
 def get_elk_results(search_text):
-    search_text = ' '.join([token for token in bioclean(search_text) if (token not in stopWords)])
     print(search_text)
     bod = {
         'size': 1000,
@@ -100,15 +99,20 @@ total               = len(data['questions'])
 m                   = 0
 for quest in data['questions']:
     qtext       = quest['body']
+    clean_text  = ' '.join([token for token in bioclean(search_text) if (token not in stopWords)])
     pmids       = [d.split('/')[-1] for d in quest['documents']]
     print(qtext)
     print(pmids)
     print(min([int(f) for f in pmids]))
     print(max([int(f) for f in pmids]))
-    elk_scored_pmids    = get_elk_results(qtext)
-    elk_scored_pmids_2  = get_elk_results_2(qtext)
-    get_the_scores(pmids, elk_scored_pmids)
+    elk_scored_pmids_1    = get_elk_results(qtext)
+    get_the_scores(pmids, elk_scored_pmids_1)
+    elk_scored_pmids_2    = get_elk_results(clean_text)
     get_the_scores(pmids, elk_scored_pmids_2)
+    elk_scored_pmids_3    = get_elk_results_2(qtext)
+    get_the_scores(pmids, elk_scored_pmids_3)
+    elk_scored_pmids_4    = get_elk_results_2(clean_text)
+    get_the_scores(pmids, elk_scored_pmids_4)
     m+=1
     print('Finished {} of {}'.format(m, total))
     print 20 * '-'
