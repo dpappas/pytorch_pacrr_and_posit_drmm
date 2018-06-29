@@ -24,7 +24,7 @@ def get_elk_results(search_text):
                         "range": {
                             "DateCreated": {
                                 "gte": "1900",
-                                "lte": "2017",
+                                "lte": "2018",
                                 "format": "dd/MM/yyyy||yyyy"
                             }
                         }
@@ -55,8 +55,8 @@ for quest in data['questions']:
     pmids       = [d.split('/')[-1] for d in quest['documents']]
     print(qtext)
     print(pmids)
-    print(min([float(f) for f in pmids]))
-    print(max([float(f) for f in pmids]))
+    print(min([int(f) for f in pmids]))
+    print(max([int(f) for f in pmids]))
     elk_scored_pmids = get_elk_results(qtext)
     sorted_keys     = sorted(elk_scored_pmids.keys(), key=lambda x: elk_scored_pmids[x], reverse=True)
     my_truth_1000   = [ p in sorted_keys[:1000] for p in pmids ]
