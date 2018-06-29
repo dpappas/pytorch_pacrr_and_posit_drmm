@@ -47,7 +47,9 @@ def get_elk_results(search_text):
 
 # bioasq_data_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
 bioasq_data_path    = '/home/dpappas/bioasq_ir_data/BioASQ-trainingDataset6b.json'
-data = json.load(open(bioasq_data_path, 'r'))
+data                = json.load(open(bioasq_data_path, 'r'))
+total               = len(data['questions'])
+m                   = 0
 for quest in data['questions']:
     qtext       = quest['body']
     pmids       = [d.split('/')[-1] for d in quest['documents']]
@@ -66,5 +68,7 @@ for quest in data['questions']:
     my_truth_50     = float(sum(my_truth_50))   / float(len(my_truth_50))
     my_truth_10     = float(sum(my_truth_10))   / float(len(my_truth_10))
     print my_truth_10, my_truth_50, my_truth_100, my_truth_500, my_truth_1000
+    m+=1
+    print('Finished {} of {}'.format(m, total))
     print 20 * '-'
 
