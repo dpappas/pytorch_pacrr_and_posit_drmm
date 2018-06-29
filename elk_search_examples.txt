@@ -1,0 +1,42 @@
+
+
+GET /pubmed_abstracts_index_0_1/_search?size=0
+{
+    "aggs" : {
+        "without_a_date" : {
+            "missing" : { "field" : "DateCreated" }
+        }
+    }
+}
+
+GET /pubmed_abstracts_index_0_1/_search
+{
+    "query": {
+        "bool": {
+            "must": {
+                "exists": {
+                    "field": "DateCreated"
+                }
+            }
+        }
+    }
+}
+
+
+GET /pubmed_abstracts_index_0_1/_search
+{
+    "query": {
+        "bool": {
+            "must": {
+                "range" : {
+                    "DateCreated" : {
+                        "gte": "2000",
+                        "lte": "2018",
+                        "format": "dd/MM/yyyy||yyyy"
+                    }
+                }
+            }
+        }
+    }
+}
+
