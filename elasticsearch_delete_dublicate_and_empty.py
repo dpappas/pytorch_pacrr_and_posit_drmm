@@ -2,10 +2,6 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk, scan
 from pprint import pprint
-from nltk.corpus import stopwords
-import json
-import re
-
 
 index       = 'pubmed_abstracts_index_0_1'
 map         = "pubmed_abstracts_mapping_0_1"
