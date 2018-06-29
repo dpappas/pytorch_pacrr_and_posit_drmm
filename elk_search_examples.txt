@@ -56,7 +56,7 @@ GET /pubmed_abstracts_index_0_1/_search
                 },
                 {
                     "query_string": {
-                        "query": "field:text"
+                        "query": "What is the treatment of choice  for gastric lymphoma"
                     }
                 }
             ]
@@ -66,5 +66,5 @@ GET /pubmed_abstracts_index_0_1/_search
 
 
 
-What is the treatment of choice  for gastric lymphoma?
+
 
