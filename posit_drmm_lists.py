@@ -34,7 +34,7 @@ def get_the_metrics(gold_labels, predictions):
     return { 'roc_auc' : roc_auc }
 
 def dummy_test():
-    for epoch in range(20):
+    for epoch in range(200):
         dd = pickle.load(open('1.p', 'rb'))
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
@@ -97,15 +97,20 @@ def print_params(model):
     print(40 * '=')
     print(model)
     print(40 * '=')
-    total_params = 0
+    trainable       = 0
+    untrainable     = 0
     for parameter in model.parameters():
         # print(parameter.size())
         v = 1
         for s in parameter.size():
             v *= s
-        total_params += v
+        if(parameter.requires_grad):
+            trainable   += v
+        else:
+            untrainable += v
+    total_params = trainable + untrainable
     print(40 * '=')
-    print(total_params)
+    print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
 
 class Posit_Drmm_Modeler(nn.Module):
@@ -239,20 +244,21 @@ print('LOADING embedding_matrix (14GB)')
 # matrix = pickle.load(open('/home/dpappas/joint_task_list_batches/embedding_matrix.p','rb'))
 # with h5py.File('/home/dpappas/joint_task_list_batches/embedding_matrix.h5', 'r') as hf:
 #     matrix = hf['embeddings'][:]
-# matrix          = np.random.random((2900000, 10))
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+matrix          = np.random.random((2900000, 10))
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 print('Done')
 
 k_for_maxpool   = 5
 model           = Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=filters_size, pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
 lr              = 0.01
 params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
+print_params(model)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
 del(matrix)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 def train_one_epoch(paths, model, optimizer, epoch):
     cost_sum        = 0.0
@@ -291,7 +297,7 @@ def test_one_epoch(paths, model, epoch):
         the_cost        =   cost_.cpu().item()
         cost_sum        +=  the_cost
         average_cost    =   cost_sum / (i+1.0)
-        print("\rtrain epoch:{}, batch:{}/{}, aver_loss:{}, batch_loss:{}".format(epoch + 1,i+1,len(paths),average_cost,the_cost), end="")
+        print("\rtest epoch:{}, batch:{}/{}, aver_loss:{}, batch_loss:{}".format(epoch + 1,i+1,len(paths),average_cost,the_cost), end="")
     print('')
     return average_cost
 
