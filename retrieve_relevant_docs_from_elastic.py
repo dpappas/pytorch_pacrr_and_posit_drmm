@@ -8,7 +8,7 @@ map     = "pubmed_abstracts_mapping_0_1"
 es      = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
 
 
-query = {
+bod     = {
     "query": {
         "bool": {
             "must": [
@@ -31,7 +31,9 @@ query = {
     }
 }
 
+res = es.search(index=index, doc_type=map, body=bod)
 
-for item in scan( es, query=query, index=index, doc_type=map):
+
+for item in res:
     pprint(item)
     exit()
