@@ -122,31 +122,3 @@ for quest in data['questions'][50:60]:
     print('Finished {} of {}'.format(m, total))
     print 20 * '-'
 
-'''
-
-bb = {
-    "aggs" : {
-        "pmids" : {
-            "terms" : { "field" : "pmid" }
-        }
-    }
-}
-
-bb = {
-    "query": {
-        "bool": {
-            "must": [
-                {
-                "regexp":{"ArticleTitle": ".+"}
-                },
-                {
-                "regexp":{"AbstractText": ".+"}
-                }
-            ]
-        }
-    }
-}
-res = es.search(index=index, doc_type=map, body=bb)
-pprint(res)
-exit()
-'''
