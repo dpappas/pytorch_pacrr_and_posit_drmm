@@ -13,7 +13,6 @@ bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '')
 es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
 
 def get_elk_results(search_text):
-    search_text = "What is the treatment of choice  for gastric lymphoma?"
     search_text = ' '.join([token for token in bioclean(search_text) if (token not in stopWords)])
     print(search_text)
     bod = {
@@ -40,22 +39,20 @@ def get_elk_results(search_text):
         }
     }
     res = es.search(index=index, doc_type=map, body=bod)
+    ret = {}
     for item in res['hits']['hits']:
-        print(item[u'_score'])
-    print 20 * '-'
+        ret[item[u'_source']['pmid']] = item[u'_score']
+    return ret
 
 
 # bioasq_data_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
-bioasq_data_path    = '/home/dpappas/BioASQ-trainingDataset6b.json'
+bioasq_data_path    = '/home/dpappas/bioasq_ir_data/BioASQ-trainingDataset6b.json'
 data = json.load(open(bioasq_data_path, 'r'))
 for quest in data['questions']:
-    pmid = sn['document'].split('/')[-1]
-                ttt = sn['text'].strip()
-                bod = quest['body'].strip()
-                if (bod not in ddd):
-                    ddd[bod] = {}
-                if (pmid not in ddd[bod]):
-                    ddd[bod][pmid] = [ttt]
-                else:
-                    ddd[bod][pmid].append(ttt)
-    return ddd
+    qtext = quest['body']
+    pmids = [d.split('/')[-1] for d in quest['documents']]
+    print(qtext)
+    print(pmids)
+    get_elk_results(qtext)
+    exit()
+
