@@ -55,11 +55,11 @@ for quest in data['questions']:
     print(pmids)
     elk_scored_pmids = get_elk_results(qtext)
     sorted_keys     = sorted(elk_scored_pmids.keys(), key=lambda x: elk_scored_pmids[x])
-    my_truth_1000   = [ p in sorted_keys[:1000] for p in pmids]
-    my_truth_500    = [ p in sorted_keys[:500] for p in pmids]
-    my_truth_100    = [ p in sorted_keys[:100] for p in pmids]
-    my_truth_50     = [ p in sorted_keys[:50] for p in pmids]
-    my_truth_10     = [ p in sorted_keys[:10] for p in pmids]
+    my_truth_1000   = [ p in sorted_keys[:1000] for p in pmids ]
+    my_truth_500    = [ p in sorted_keys[:500] for p in pmids  ]
+    my_truth_100    = [ p in sorted_keys[:100] for p in pmids  ]
+    my_truth_50     = [ p in sorted_keys[:50] for p in pmids   ]
+    my_truth_10     = [ p in sorted_keys[:10] for p in pmids   ]
 
     print my_truth_1000
     print 20 * '-'
