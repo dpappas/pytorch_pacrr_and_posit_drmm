@@ -15,6 +15,9 @@ mapping = {
     "mappings":{
         map:{
             "properties":{
+                "pmid" : {
+                    "type": "keyword"
+                },
                 "AbstractText" : {
                     "type": "text",
                     "analyzer": "standard",
