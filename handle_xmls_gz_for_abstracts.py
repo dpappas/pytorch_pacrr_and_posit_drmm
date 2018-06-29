@@ -591,15 +591,16 @@ for file_gz in fs:
                 print tb
             # pprint(dato)
             dato = fix_elk_dato(dato)
-            # pprint(dato)
-            if (not abs_found(dato['pmid'])):
-                temp = create_an_action(dato)
-                actions.append(temp)
-            else:
-                print 'found pmid {}'.format(dato['pmid'])
-            if (len(actions) >= b_size):
-                send_to_elk(actions)
-                actions = []
+            print(dato['DateCreated'])
+            # # pprint(dato)
+            # if (not abs_found(dato['pmid'])):
+            #     temp = create_an_action(dato)
+            #     actions.append(temp)
+            # else:
+            #     print 'found pmid {}'.format(dato['pmid'])
+            # if (len(actions) >= b_size):
+            #     send_to_elk(actions)
+            #     actions = []
         print('finished {} of {} trees. {} of {} files. found items up_to_now:{}'.format(ch_counter, len(children), fc, len(fs), len(actions)))
 
 if(len(actions) > 0):
