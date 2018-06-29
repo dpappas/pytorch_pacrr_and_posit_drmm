@@ -40,3 +40,31 @@ GET /pubmed_abstracts_index_0_1/_search
     }
 }
 
+GET /pubmed_abstracts_index_0_1/_search
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "range" : {
+                        "DateCreated" : {
+                            "gte": "2000",
+                            "lte": "2018",
+                            "format": "dd/MM/yyyy||yyyy"
+                        }
+                    }
+                },
+                {
+                    "query_string": {
+                        "query": "field:text"
+                    }
+                }
+            ]
+        }
+    }
+}
+
+
+
+What is the treatment of choice  for gastric lymphoma?
+
