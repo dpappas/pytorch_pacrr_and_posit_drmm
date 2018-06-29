@@ -235,12 +235,12 @@ class Posit_Drmm_Modeler(nn.Module):
 
 nof_cnn_filters = 12
 filters_size    = 3
-# matrix          = np.random.random((2900000, 10))
 print('LOADING embedding_matrix (14GB)')
 # matrix = pickle.load(open('/home/dpappas/joint_task_list_batches/embedding_matrix.p','rb'))
 # with h5py.File('/home/dpappas/joint_task_list_batches/embedding_matrix.h5', 'r') as hf:
 #     matrix = hf['embeddings'][:]
-matrix = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+matrix          = np.random.random((2900000, 10))
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 print('Done')
 
 k_for_maxpool   = 5
@@ -251,8 +251,8 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 
 del(matrix)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 def train_one_epoch(paths, model, optimizer, epoch):
     cost_sum        = 0.0
