@@ -591,7 +591,6 @@ for file_gz in fs:
                 print tb
             # pprint(dato)
             dato = fix_elk_dato(dato)
-            print(dato['DateCreated'])
             # pprint(dato)
             if (not abs_found(dato['pmid'])):
                 temp = create_an_action(dato)
