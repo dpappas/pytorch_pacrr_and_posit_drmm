@@ -103,7 +103,7 @@ bioasq_data_path    = '/home/dpappas/bioasq_ir_data/BioASQ-trainingDataset6b.jso
 data                = json.load(open(bioasq_data_path, 'r'))
 total               = len(data['questions'])
 m                   = 0
-for quest in data['questions']:
+for quest in data['questions'][50:60]:
     qtext       = quest['body']
     clean_text  = ' '.join([token for token in bioclean(qtext) if (token not in stopWords)])
     pmids       = [d.split('/')[-1] for d in quest['documents']]
