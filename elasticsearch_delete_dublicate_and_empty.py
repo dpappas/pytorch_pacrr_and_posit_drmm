@@ -15,7 +15,7 @@ for item in items:
         or
         len(item['_source']['ArticleTitle'].strip()) == 0
     ):
-        es.delete(index=index, doc_type=map, id=item['_id'])
+        print(es.delete(index=index, doc_type=map, id=item['_id']))
     m += 1
     print m
 
