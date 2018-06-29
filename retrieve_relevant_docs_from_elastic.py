@@ -99,7 +99,7 @@ total               = len(data['questions'])
 m                   = 0
 for quest in data['questions']:
     qtext       = quest['body']
-    clean_text  = ' '.join([token for token in bioclean(search_text) if (token not in stopWords)])
+    clean_text  = ' '.join([token for token in bioclean(qtext) if (token not in stopWords)])
     pmids       = [d.split('/')[-1] for d in quest['documents']]
     print(qtext)
     print(pmids)
