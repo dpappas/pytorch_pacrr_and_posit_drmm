@@ -106,6 +106,9 @@ change path.logs to /media/dpappas/Maxtor/ELK_DATA/logs
 /home/dpappas/ELK/elasticsearch-6.2.4/bin/elasticsearch &
 /home/dpappas/ELK/kibana-6.2.4-linux-x86_64/bin/kibana &
 
+vim /media/dpappas/Maxtor/ELK/elasticsearch-6.3.0/config/elasticsearch.yml
+change path.data to /media/dpappas/Maxtor/ELK_DATA/data
+change path.logs to /media/dpappas/Maxtor/ELK_DATA/logs
 /media/dpappas/Maxtor/ELK/elasticsearch-6.3.0/bin/elasticsearch &
 /media/dpappas/Maxtor/ELK/kibana-6.3.0-linux-x86_64/bin/kibana &
 
