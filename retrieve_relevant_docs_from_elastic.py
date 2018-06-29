@@ -17,14 +17,15 @@ search_text = ' '.join([ token for token in bioclean(search_text) if(token not i
 print(search_text)
 
 bod     = {
+    'size' : 1000,
     "query": {
         "bool": {
             "must": [
                 {
                     "range" : {
                         "DateCreated" : {
-                            "gte": "2000",
-                            "lte": "2018",
+                            "gte": "1900",
+                            "lte": "2017",
                             "format": "dd/MM/yyyy||yyyy"
                         }
                     }
