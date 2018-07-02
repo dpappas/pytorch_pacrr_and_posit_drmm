@@ -8,6 +8,7 @@ import torch.autograd as autograd
 import numpy as np
 import json
 import os
+import re
 from pprint import pprint
 
 def loadGloveModel(w2v_voc, w2v_vec):
@@ -72,6 +73,13 @@ def get_sim_mat(stoks, qtoks):
             if(qtoks[i] == stoks[j]):
                 sm[j,i] = 1.
     return sm
+
+def load_model_from_checkpoint(resume_from):
+    if os.path.isfile(resume_from):
+        print("=> loading checkpoint '{}'".format(resume_from))
+        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
+        model.load_state_dict(checkpoint['state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
 class Posit_Drmm_Modeler(nn.Module):
     def __init__(self, nof_filters, filters_size, pretrained_embeds, k_for_maxpool):
@@ -214,6 +222,9 @@ params          = list(set(model.parameters()) - set([model.word_embeddings.weig
 print_params(model)
 del(matrix)
 
+resume_from = '/home/dpappas/best_checkpoint.pth.tar'
+load_model_from_checkpoint(resume_from)
+
 all_data    = pickle.load(open('joint_task_data_test.p','rb'))
 fpath       = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
 data        = json.load(open(fpath, 'r'))
@@ -221,22 +232,23 @@ total       = len(data['questions'])
 m           = 0
 for quest in data['questions']:
     pprint(quest)
-    item = [ d for d in all_data if(d['question'] == quest['body'])][0]
-    #
-    sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
-    quest_inds  = [get_index(token, t2i) for token in bioclean(item['question'])]
-    all_sims    = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
-    sent_y      = np.array(item['sent_sim_vec'])
-    #
+    for item in [ d for d in all_data if(d['question'] == quest['body'])]:
+        #
+        sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
+        quest_inds  = [get_index(token, t2i) for token in bioclean(item['question'])]
+        all_sims    = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
+        sent_y      = np.array(item['sent_sim_vec'])
+        #
+        cost_, sent_ems, doc_ems = model(
+            sentences=          [sents_inds],
+            question=           [quest_inds],
+            target_sents=       [sent_y],
+            target_docs=        [item['doc_rel']],
+            similarity_one_hot= [all_sims]
+        )
+        print(item['doc_rel'], float(doc_ems))
     break
 
-cost_, sent_ems, doc_ems = model(
-    sentences=          dd['sent_inds'],
-    question=           dd['quest_inds'],
-    target_sents=       dd['sent_labels'],
-    target_docs=        dd['doc_labels'],
-    similarity_one_hot= dd['sim_matrix']
-)
 
 
 
