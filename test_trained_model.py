@@ -345,7 +345,8 @@ for quer in bm25_scores['queries']:
 with open('/home/dpappas/elk_relevant_abs_posit_drmm_lists.json', 'w') as f:
     f.write(json.dumps(data, indent=4, sort_keys=True))
 
-    # all_data    = pickle.load(open('joint_task_data_test.p','rb'))
+
+# all_data    = pickle.load(open('joint_task_data_test.p','rb'))
 # fpath       = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
 # data        = json.load(open(fpath, 'r'))
 # total       = len(data['questions'])
