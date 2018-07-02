@@ -5,27 +5,12 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.autograd as autograd
+from nltk.tokenize import sent_tokenize
 import numpy as np
 import json
 import os
 import re
 from pprint import pprint
-
-def similar(a, b):
-    return max(
-        [
-            SequenceMatcher(None, a, b).ratio(),
-            SequenceMatcher(None, b, a).ratio()
-        ]
-    )
-
-def many_similar(one_sent, many_sents):
-    return max(
-        [
-            similar(one_sent, s)
-            for s in many_sents
-        ]
-    )
 
 def first_alpha_is_upper(sent):
     specials = [
@@ -332,7 +317,16 @@ for quer in bm25_scores['queries']:
         quest_inds = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
         #
         all_sims = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
-
+        #
+        cost_, sent_ems, doc_ems = model(
+            sentences=          [sents_inds],
+            question=           [quest_inds],
+            target_sents=       [[0] * len(sents_inds)],
+            target_docs=        [0.0],
+            similarity_one_hot= [all_sims]
+        )
+        #
+        print(retr['is_relevant'], float(doc_ems))
 
 
 # all_data    = pickle.load(open('joint_task_data_test.p','rb'))
