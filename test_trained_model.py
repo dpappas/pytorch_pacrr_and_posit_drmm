@@ -6,14 +6,9 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.autograd as autograd
 import numpy as np
+import json
 import os
 from pprint import pprint
-
-test_data           = pickle.load(open('joint_task_data_test.p','rb'))
-pprint(test_data[0])
-
-dir_with_batches    = '/home/dpappas/joint_task_list_batches/test/'
-all_test_paths      = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
 
 def loadGloveModel(w2v_voc, w2v_vec):
     '''
@@ -63,6 +58,20 @@ def print_params(model):
     print(40 * '=')
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
+
+def get_index(token, t2i):
+    try:
+        return t2i[token]
+    except KeyError:
+        return t2i['UNKN']
+
+def get_sim_mat(stoks, qtoks):
+    sm = np.zeros((len(stoks), len(qtoks)))
+    for i in range(len(qtoks)):
+        for j in range(len(stoks)):
+            if(qtoks[i] == stoks[j]):
+                sm[j,i] = 1.
+    return sm
 
 class Posit_Drmm_Modeler(nn.Module):
     def __init__(self, nof_filters, filters_size, pretrained_embeds, k_for_maxpool):
@@ -189,11 +198,13 @@ class Posit_Drmm_Modeler(nn.Module):
         #
         return(total_loss, sent_output, document_emitions) # return the general loss, the sentences' relevance score and the documents' relevance scores
 
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 nof_cnn_filters = 12
 filters_size    = 3
 print('LOADING embedding_matrix (14GB)')
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+t2i             = pickle.load(open('/home/dpappas/joint_task_list_batches/t2i.p','rb'))
 print('Done')
 
 k_for_maxpool   = 5
@@ -201,11 +212,31 @@ model           = Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=f
 lr              = 0.01
 params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 print_params(model)
-optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-
 del(matrix)
 
+all_data    = pickle.load(open('joint_task_data_test.p','rb'))
+fpath       = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
+data        = json.load(open(fpath, 'r'))
+total       = len(data['questions'])
+m           = 0
+for quest in data['questions']:
+    pprint(quest)
+    item = [ d for d in all_data if(d['question'] == quest['body'])][0]
+    #
+    sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
+    quest_inds  = [get_index(token, t2i) for token in bioclean(item['question'])]
+    all_sims    = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
+    sent_y      = np.array(item['sent_sim_vec'])
+    #
+    break
 
+cost_, sent_ems, doc_ems = model(
+    sentences=          dd['sent_inds'],
+    question=           dd['quest_inds'],
+    target_sents=       dd['sent_labels'],
+    target_docs=        dd['doc_labels'],
+    similarity_one_hot= dd['sim_matrix']
+)
 
 
 
