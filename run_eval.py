@@ -71,9 +71,6 @@ if __name__ == '__main__':
         os.remove(qret_temp_file)
         os.rmdir(temp_dir)
 
-#
-# /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.bioasq.json
-# /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.bioasq.oracle.json
-#
+
 
 
