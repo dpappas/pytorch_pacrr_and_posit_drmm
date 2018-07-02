@@ -10,6 +10,7 @@ import numpy as np
 import json
 import os
 import re
+from tqdm import tqdm
 from pprint import pprint
 
 def first_alpha_is_upper(sent):
@@ -305,7 +306,7 @@ bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 
 data = []
-for quer in bm25_scores['queries']:
+for quer in tqdm(bm25_scores['queries']):
     dato = {
         'body'      : quer['query_text'],
         'id'        : quer['query_id'],
@@ -334,12 +335,10 @@ for quer in bm25_scores['queries']:
             similarity_one_hot= [all_sims]
         )
         #
-        # print(retr['is_relevant'], float(doc_ems))
         doc_res[doc_id] = float(doc_ems)
     doc_res             = sorted(doc_res.keys(), key=lambda x: doc_res[x], reverse=True)
     doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm) for pm in doc_res[:100]]
     dato['documents']   = doc_res
-    # pprint(dato)
     data.append(dato)
 
 with open('/home/dpappas/elk_relevant_abs_posit_drmm_lists.json', 'w') as f:
