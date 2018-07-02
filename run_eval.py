@@ -40,11 +40,10 @@ def trec_evaluate(qrels_file, qret_file):
 
 if __name__ == '__main__':
     try:
-        golden_file = sys.argv[1]
-        predictions_file = sys.argv[2]
+        golden_file         = sys.argv[1]
+        predictions_file    = sys.argv[2]
     except:
         sys.exit("Provide golden and predictions files.")
-
     try:
         system_name = sys.argv[3]
     except:
