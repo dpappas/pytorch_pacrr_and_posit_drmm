@@ -11,6 +11,89 @@ import os
 import re
 from pprint import pprint
 
+def similar(a, b):
+    return max(
+        [
+            SequenceMatcher(None, a, b).ratio(),
+            SequenceMatcher(None, b, a).ratio()
+        ]
+    )
+
+def many_similar(one_sent, many_sents):
+    return max(
+        [
+            similar(one_sent, s)
+            for s in many_sents
+        ]
+    )
+
+def first_alpha_is_upper(sent):
+    specials = [
+        '__EU__','__SU__','__EMS__','__SMS__','__SI__',
+        '__ESB','__SSB__','__EB__','__SB__','__EI__',
+        '__EA__','__SA__','__SQ__','__EQ__','__EXTLINK',
+        '__XREF','__URI', '__EMAIL','__ARRAY','__TABLE',
+        '__FIG','__AWID','__FUNDS'
+    ]
+    for special in specials:
+        sent = sent.replace(special,'')
+    for c in sent:
+        if(c.isalpha()):
+            if(c.isupper()):
+                return True
+            else:
+                return False
+    return False
+
+def ends_with_special(sent):
+    sent = sent.lower()
+    ind = [item.end() for item in re.finditer('[\W\s]sp.|[\W\s]nos.|[\W\s]figs.|[\W\s]sp.[\W\s]no.|[\W\s][vols.|[\W\s]cv.|[\W\s]fig.|[\W\s]e.g.|[\W\s]et[\W\s]al.|[\W\s]i.e.|[\W\s]p.p.m.|[\W\s]cf.|[\W\s]n.a.', sent)]
+    if(len(ind)==0):
+        return False
+    else:
+        ind = max(ind)
+        if (len(sent) == ind):
+            return True
+        else:
+            return False
+
+def split_sentences(text):
+    sents = [l.strip() for l in sent_tokenize(text)]
+    ret = []
+    i = 0
+    while (i < len(sents)):
+        sent = sents[i]
+        while (
+            ((i + 1) < len(sents)) and
+            (
+                ends_with_special(sent) or
+                not first_alpha_is_upper(sents[i+1].strip())
+                # sent[-5:].count('.') > 1       or
+                # sents[i+1][:10].count('.')>1   or
+                # len(sent.split()) < 2          or
+                # len(sents[i+1].split()) < 2
+            )
+        ):
+            sent += ' ' + sents[i + 1]
+            i += 1
+        ret.append(sent.replace('\n',' ').strip())
+        i += 1
+    return ret
+
+def get_sents(ntext):
+    if(len(ntext.strip())>0):
+        sents = []
+        for subtext in ntext.split('\n'):
+            subtext = re.sub( '\s+', ' ', subtext.replace('\n',' ') ).strip()
+            if (len(subtext) > 0):
+                ss = split_sentences(subtext)
+                sents.extend([ s for s in ss if(len(s.strip())>0)])
+        if(len(sents[-1]) == 0 ):
+            sents = sents[:-1]
+        return sents
+    else:
+        return []
+
 def loadGloveModel(w2v_voc, w2v_vec):
     '''
     :param w2v_voc: the txt file with the vocabulary extracted from gensim
@@ -80,6 +163,12 @@ def load_model_from_checkpoint(resume_from):
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
+def fix_relevant_snippets(relevant_parts):
+    relevant_snippets = []
+    for rt in relevant_parts:
+        relevant_snippets.extend(get_sents(rt))
+    return relevant_snippets
 
 class Posit_Drmm_Modeler(nn.Module):
     def __init__(self, nof_filters, filters_size, pretrained_embeds, k_for_maxpool):
@@ -225,32 +314,50 @@ del(matrix)
 resume_from = '/home/dpappas/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 
-all_data    = pickle.load(open('joint_task_data_test.p','rb'))
-fpath       = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
-data        = json.load(open(fpath, 'r'))
-total       = len(data['questions'])
-m           = 0
-for quest in data['questions']:
-    pprint(quest)
-    for item in [ d for d in all_data if(d['question'] == quest['body'])]:
+abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl'
+all_abs             = pickle.load(open(abs_path,'rb'))
+bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
+bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
+
+for quer in bm25_scores['queries']:
+    for retr in quer['retrieved_documents']:
         #
-        sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
-        quest_inds  = [get_index(token, t2i) for token in bioclean(item['question'])]
-        all_sims    = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
-        sent_y      = np.array(item['sent_sim_vec'])
+        doc_id      = retr['doc_id']
+        doc_title   = get_sents(all_abs[doc_id]['title'])
+        doc_text    = get_sents(all_abs[doc_id]['abstractText'])
+        all_sents   = doc_title + doc_text
+        all_sents   = [s for s in all_sents if (len(bioclean(s)) > 0)]
+        sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in all_sents]
         #
-        cost_, sent_ems, doc_ems = model(
-            sentences=          [sents_inds],
-            question=           [quest_inds],
-            target_sents=       [sent_y],
-            target_docs=        [item['doc_rel']],
-            similarity_one_hot= [all_sims]
-        )
-        print(item['doc_rel'], float(doc_ems))
-    break
+        quest_inds = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
+        #
+        all_sims = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
 
 
 
+# all_data    = pickle.load(open('joint_task_data_test.p','rb'))
+# fpath       = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
+# data        = json.load(open(fpath, 'r'))
+# total       = len(data['questions'])
+# m           = 0
+# for quest in data['questions']:
+#     pprint(quest)
+#     for item in [ d for d in all_data if(d['question'] == quest['body'])]:
+#         #
+#         sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in item['all_sents']]
+#         quest_inds  = [get_index(token, t2i) for token in bioclean(item['question'])]
+#         all_sims    = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
+#         sent_y      = np.array(item['sent_sim_vec'])
+#         #
+#         cost_, sent_ems, doc_ems = model(
+#             sentences=          [sents_inds],
+#             question=           [quest_inds],
+#             target_sents=       [sent_y],
+#             target_docs=        [item['doc_rel']],
+#             similarity_one_hot= [all_sims]
+#         )
+#         print(item['doc_rel'], float(doc_ems))
+#     break
 
 
 
