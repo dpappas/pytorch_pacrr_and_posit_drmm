@@ -304,10 +304,18 @@ all_abs             = pickle.load(open(abs_path,'rb'))
 bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 
+data = []
 for quer in bm25_scores['queries']:
+    dato = {
+        'body'      : quer['query_text'],
+        'id'        : quer['query_id'],
+        'documents' : []
+    }
+    doc_res = {}
     for retr in quer['retrieved_documents']:
         #
         doc_id      = retr['doc_id']
+        #
         doc_title   = get_sents(all_abs[doc_id]['title'])
         doc_text    = get_sents(all_abs[doc_id]['abstractText'])
         all_sents   = doc_title + doc_text
@@ -326,10 +334,18 @@ for quer in bm25_scores['queries']:
             similarity_one_hot= [all_sims]
         )
         #
-        print(retr['is_relevant'], float(doc_ems))
+        # print(retr['is_relevant'], float(doc_ems))
+        doc_res[doc_id] = float(doc_ems)
+    doc_res             = sorted(doc_res.keys(), key=lambda x: doc_res[x], reverse=True)
+    doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm) for pm in doc_res[:100]]
+    dato['documents']   = doc_res
+    # pprint(dato)
+    data.append(dato)
 
+with open('/home/dpappas/elk_relevant_abs_posit_drmm_lists.json', 'w') as f:
+    f.write(json.dumps(data, indent=4, sort_keys=True))
 
-# all_data    = pickle.load(open('joint_task_data_test.p','rb'))
+    # all_data    = pickle.load(open('joint_task_data_test.p','rb'))
 # fpath       = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
 # data        = json.load(open(fpath, 'r'))
 # total       = len(data['questions'])
