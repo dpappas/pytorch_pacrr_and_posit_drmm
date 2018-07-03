@@ -242,8 +242,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.requires_grad   = False
         self.sent_filters_conv                      = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,self.sent_filters_size,self.embedding_dim))
         self.quest_filters_conv                     = self.sent_filters_conv
-        self.linear_per_q                           = nn.Linear(6, 1, bias=True)
+        self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
+        self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
+        self.my_relu1                               = torch.nn.PReLU()
+        self.my_relu2                               = torch.nn.PReLU()
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
@@ -285,8 +288,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         ret_r = []
         for j in range(len(similarity_one_hot_pooled)):
             temp = torch.cat([similarity_insensitive_pooled[j], similarity_sensitive_pooled[j], similarity_one_hot_pooled[j]], -1)
-            lo = self.linear_per_q(temp).squeeze(-1)
-            lo = F.sigmoid(lo)
+            lo = self.linear_per_q1(temp)
+            lo = self.my_relu1(lo)
+            lo = self.linear_per_q2(lo).squeeze(-1)
+            lo = self.my_relu2(lo)
+            # lo = F.sigmoid(lo)
             sr = lo.sum(-1) / lo.size(-1)
             ret_r.append(sr)
         return torch.stack(ret_r)
