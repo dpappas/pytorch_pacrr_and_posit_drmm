@@ -296,6 +296,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sr = lo.sum(-1) / lo.size(-1)
             ret_r.append(sr)
         return torch.stack(ret_r)
+    def get_reg_loss(self):
+        l2_reg = None
+        for W in self.parameters():
+            if l2_reg is None:
+                l2_reg = W.norm(2)
+            else:
+                l2_reg = l2_reg + W.norm(2)
+        return l2_reg
     def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim):
         #
         question                            = autograd.Variable(torch.LongTensor(question), requires_grad=False)
@@ -335,15 +343,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_emit                           = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
         doc2_emit                           = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
         #
-        loss        = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        #
-        l2_reg = None
-        for W in self.parameters():
-            if l2_reg is None:
-                l2_reg = W.norm(2)
-            else:
-                l2_reg = l2_reg + W.norm(2)
-        loss += l2_reg * reg_lambda
+        loss                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
+        loss                                += self.get_reg_loss() * reg_lambda
         return loss, doc1_emit, doc2_emit
 
 print('LOADING embedding_matrix (14GB)...')
