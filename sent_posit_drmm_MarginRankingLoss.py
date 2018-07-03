@@ -122,7 +122,7 @@ for quer in bm25_scores[u'queries']:
         bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
     break
 
-#
+
 # print('LOADING embedding_matrix (14GB)')
 # matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # print('Done')
