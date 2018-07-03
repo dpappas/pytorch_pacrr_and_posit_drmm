@@ -212,13 +212,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
     def apply_masks_on_similarity(self, sentences, question, similarity):
-        qq = question
-        qq = ( qq > 1).float()
+        qq = ( question > 1).float()
         for si in range(len(sentences)):
-            ss  = sentences[si]
-            ss  = (ss > 1).float()
-            sim_mask1 = qq.unsqueeze(-1).expand_as(similarity[si])
-            sim_mask2 = ss.unsqueeze(0).expand_as(similarity[si])
+            ss              = (sentences[si] > 1).float()
+            sim_mask1       = qq.unsqueeze(-1).expand_as(similarity[si])
+            sim_mask2       = ss.unsqueeze(0).expand_as(similarity[si])
             similarity[si] *= sim_mask1
             similarity[si] *= sim_mask2
         return similarity
