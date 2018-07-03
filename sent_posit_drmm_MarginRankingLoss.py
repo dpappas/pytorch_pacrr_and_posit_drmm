@@ -150,7 +150,8 @@ def dummy_test():
         bad_all_sims        = np.zeros((7, 5, 4))
         bad_quest_inds      = np.random.randint(0,100,(4))
         optimizer.zero_grad()
-        cost_, sent_ems, doc_ems = model(
+        # cost_, sent_ems, doc_ems =
+        model(
             doc1_sents  = good_sents_inds,
             doc2_sents  = bad_sents_inds,
             question    = bad_quest_inds,
@@ -183,15 +184,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.quest_filters_conv = self.sent_filters_conv
         self.linear_per_q       = nn.Linear(6, 1, bias=True)
         self.bce_loss           = torch.nn.BCELoss()
-    def apply_convolution(self, listed_inputs, the_filters):
-        ret             = []
-        filter_size     = the_filters.size(2)
-        for the_input in listed_inputs:
-            the_input   = the_input.unsqueeze(0)
-            conv_res    = F.conv2d(the_input.unsqueeze(1), the_filters, bias=None, stride=1, padding=(int(filter_size/2)+1, 0))
-            conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
-            conv_res    = conv_res.squeeze(-1).transpose(1,2)
-            ret.append(conv_res.squeeze(0))
+    def apply_convolution(self, the_input, the_filters):
+        ret         = []
+        filter_size = the_filters.size(2)
+        the_input   = the_input.unsqueeze(0)
+        conv_res    = F.conv2d(the_input.unsqueeze(1), the_filters, bias=None, stride=1, padding=(int(filter_size/2)+1, 0))
+        conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
+        conv_res    = conv_res.squeeze(-1).transpose(1,2)
+        ret.append(conv_res.squeeze(0))
         return ret
     def my_cosine_sim(self,A,B):
         A           = A.unsqueeze(0)
