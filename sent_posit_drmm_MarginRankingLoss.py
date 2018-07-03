@@ -392,9 +392,9 @@ print('Done')
 min_dev_loss    = 10e10
 for epoch in range(200):
     #
-    train_yielder = data_yielder(train_bm25_scores, train_all_abs, t2i)
-    dev_yielder = data_yielder(dev_bm25_scores, dev_all_abs, t2i)
-    test_yielder = data_yielder(test_bm25_scores, test_all_abs, t2i)
+    train_yielder   = data_yielder(train_bm25_scores, train_all_abs, t2i)
+    dev_yielder     = data_yielder(dev_bm25_scores, dev_all_abs, t2i)
+    test_yielder    = data_yielder(test_bm25_scores, test_all_abs, t2i)
     #
     train_average_loss      = train_one()
     dev_average_loss        = test_one('dev', dev_yielder)
