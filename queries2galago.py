@@ -32,4 +32,19 @@ def prerpocess(path_in, path_out):
 
 prerpocess(sys.argv[1], sys.argv[2])
 
+'''
+cat /home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/galago-3.10-bin/bin/galago_batchsearch_example.txt 
+
+/home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/galago-3.10-bin/bin/galago \
+batch-search \
+--index=pubmed_only_abstract_galago_index \
+--verbose=False \
+--requested=2000 \
+--scorer=bm25 \
+--defaultTextPart=postings.krovetz \
+--mode=threaded \
+/home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/bioasq.train.galago.json \
+> /home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/bioasq_bm25_retrieval.train.txt
+'''
+
 
