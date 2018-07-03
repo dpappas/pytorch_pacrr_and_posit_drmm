@@ -299,10 +299,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def get_reg_loss(self):
         l2_reg = None
         for W in self.parameters():
-            if l2_reg is None:
-                l2_reg = W.norm(2)
-            else:
-                l2_reg = l2_reg + W.norm(2)
+            if(W.requires_grad):
+                if l2_reg is None:
+                    l2_reg = W.norm(2)
+                else:
+                    l2_reg = l2_reg + W.norm(2)
         return l2_reg
     def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim):
         #
