@@ -212,16 +212,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
     def apply_masks_on_similarity(self, sentences, question, similarity):
-        for bi in range(len(sentences)):
-            qq = question[bi]
-            qq = ( qq > 1).float()
-            for si in range(len(sentences[bi])):
-                ss  = sentences[bi][si]
-                ss  = (ss > 1).float()
-                sim_mask1 = qq.unsqueeze(-1).expand_as(similarity[bi][si])
-                sim_mask2 = ss.unsqueeze(0).expand_as(similarity[bi][si])
-                similarity[bi][si] *= sim_mask1
-                similarity[bi][si] *= sim_mask2
+        qq = question
+        qq = ( qq > 1).float()
+        for si in range(len(sentences)):
+            ss  = sentences[si]
+            ss  = (ss > 1).float()
+            sim_mask1 = qq.unsqueeze(-1).expand_as(similarity[si])
+            sim_mask2 = ss.unsqueeze(0).expand_as(similarity[si])
+            similarity[si] *= sim_mask1
+            similarity[si] *= sim_mask2
         return similarity
     def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim, targets):
         #
@@ -242,8 +241,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # print(doc1_sents_embeds[0].size())
         # print(doc1_sents_conv[0].size())
         #
-        similarity_insensitive = [self.my_cosine_sim_many(question_embeds[i], sents_embeds[i]) for i in
-                                  range(len(sents_embeds))]
+        similarity_insensitive_doc1 = self.my_cosine_sim_many(question_embeds, doc1_sents_embeds)
+        similarity_insensitive_doc1 = self.apply_masks_on_similarity(doc1_sents, question, similarity_insensitive_doc1)
+        similarity_insensitive_doc2 = self.my_cosine_sim_many(question_embeds, doc2_sents_embeds)
+        #
+        #
+        print(similarity_insensitive_doc2[0].size())
 
 
 
