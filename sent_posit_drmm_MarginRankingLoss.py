@@ -224,7 +224,7 @@ def train_one():
         average_task_loss   += loss1.cpu().item()
         average_reg_loss    += loss2.cpu().item()
         #
-        instance_metr           += 1
+        instance_metr       += 1
         costs.append(instance_cost)
         if(len(costs) == bsize):
             batch_loss      = compute_the_cost(costs, True)
