@@ -273,15 +273,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # print(loss)
         return loss, doc1_emit, doc2_emit
 
-print('LOADING embedding_matrix (14GB)')
+print('LOADING embedding_matrix (14GB)...')
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-print('Done')
 # matrix          = np.random.random((290, 10))
 
 nof_cnn_filters = 12
 filters_size    = 3
 k_for_maxpool   = 5
 lr              = 0.01
+print('Compiling model...')
 model           = Sent_Posit_Drmm_Modeler(
     nof_filters=        nof_cnn_filters,
     filters_size=       filters_size,
@@ -299,9 +299,13 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl'
 bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl'
 token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
+print('Loading abs texts...')
 all_abs             = pickle.load(open(abs_path,'rb'))
+print('Loading retrieved docsc...')
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
+print('Loading token to index files...')
 t2i                 = pickle.load(open(token_to_index_f,'rb'))
+print('Done')
 
 dy = data_yielder(bm25_scores, all_abs, t2i)
 
