@@ -116,6 +116,9 @@ def print_params(model):
     print(40 * '=')
     print(model)
     print(40 * '=')
+    logger.info(40 * '=')
+    logger.info(model)
+    logger.info(40 * '=')
     trainable       = 0
     untrainable     = 0
     for parameter in model.parameters():
@@ -131,6 +134,9 @@ def print_params(model):
     print(40 * '=')
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
+    logger.info(40 * '=')
+    logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
+    logger.info(40 * '=')
 
 def data_yielder(bm25_scores, all_abs, t2i):
     for quer in bm25_scores[u'queries']:
@@ -353,7 +359,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss                                += self.get_reg_loss() * reg_lambda
         return loss, doc1_emit, doc2_emit
 
+odir = '/home/dpappas/sent_posit_drmm_rank_loss/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
+
+import logging
+logger = logging.getLogger('sent_posit_drmm_MarginRankingLoss')
+hdlr = logging.FileHandler(odir+'model.log')
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
+
 print('LOADING embedding_matrix (14GB)...')
+logger.info('LOADING embedding_matrix (14GB)...')
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # matrix          = np.random.random((290, 10))
 
@@ -363,11 +382,8 @@ filters_size    = 3
 k_for_maxpool   = 5
 lr              = 0.01
 bsize           = 32
-odir            = '/home/dpappas/sent_posit_drmm_rank_loss/'
-if not os.path.exists(odir):
-    os.makedirs(odir)
-
 print('Compiling model...')
+logger.info('Compiling model...')
 model           = Sent_Posit_Drmm_Modeler(
     nof_filters         = nof_cnn_filters,
     filters_size        = filters_size,
@@ -385,16 +401,20 @@ sys.stdout.flush()
 
 token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
 print('Loading abs texts...')
+logger.info('Loading abs texts...')
 train_all_abs       = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl','rb'))
 dev_all_abs         = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl','rb'))
 test_all_abs        = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl','rb'))
 print('Loading retrieved docsc...')
+logger.info('Loading retrieved docsc...')
 train_bm25_scores   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
 dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
 test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
 print('Loading token to index files...')
+logger.info('Loading token to index files...')
 t2i                 = pickle.load(open(token_to_index_f,'rb'))
 print('Done')
+logger.info('Done')
 
 sys.stdout.flush()
 
