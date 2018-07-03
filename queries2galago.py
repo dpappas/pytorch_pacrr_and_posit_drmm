@@ -16,7 +16,7 @@ def prerpocess(path_in, path_out):
     with open('stopwords.pkl', 'rb') as f:
         stopwords = pickle.load(f)
     #
-    f_in = open(path_in, 'r', encoding='utf-8')
+    f_in    = open(path_in, 'r', encoding='utf-8')
     queries = ijson.items(f_in, 'questions.item')
     #
     q_array = []
