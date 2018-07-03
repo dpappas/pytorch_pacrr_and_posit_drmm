@@ -408,8 +408,10 @@ epoch:11,   train_average_loss:0.52991367056,   dev_average_loss:0.608225152876,
 epoch:12,   train_average_loss:0.523759432305,  dev_average_loss:0.577785431604,    test_average_loss:0.69085225633
 epoch:13,   train_average_loss:0.523577548926,  dev_average_loss:0.55662096005,     test_average_loss:0.656115521617
 epoch:14,   train_average_loss:0.514917892319,  dev_average_loss:0.643535474376,    test_average_loss:0.656115521617
-epoch:15, train_average_loss:0.501302283959, dev_average_loss:0.597576552294, test_average_loss:0.656115521617
-epoch:16, train_average_loss:0.498953454636, dev_average_loss:0.622948509112, test_average_loss:0.656115521617
+epoch:15,   train_average_loss:0.501302283959,  dev_average_loss:0.597576552294,    test_average_loss:0.656115521617
+epoch:16,   train_average_loss:0.498953454636,  dev_average_loss:0.622948509112,    test_average_loss:0.656115521617
+epoch:17,   train_average_loss:0.500210404671,  dev_average_loss:0.599602773576,    test_average_loss:0.656115521617
+
 
 # batch:190
 '''
