@@ -273,11 +273,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # print(loss)
         return loss, doc1_emit, doc2_emit
 
-
-# print('LOADING embedding_matrix (14GB)')
-# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-# print('Done')
-matrix          = np.random.random((290, 10))
+print('LOADING embedding_matrix (14GB)')
+matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+print('Done')
+# matrix          = np.random.random((290, 10))
 
 nof_cnn_filters = 12
 filters_size    = 3
@@ -294,21 +293,44 @@ print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-dummy_test()
-exit()
+# dummy_test()
+# exit()
 
-# abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl'
-# bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl'
-# #
-# all_abs             = pickle.load(open(abs_path,'rb'))
-# bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
-# #
-# t2i = pickle.load(open('/home/dpappas/joint_task_list_batches/t2i.p','rb'))
-#
-# dy = data_yielder(bm25_scores, all_abs, t2i)
-# good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds = dy.next()
-# model(good_sents_inds, bad_sents_inds, bad_quest_inds, good_all_sims, bad_all_sims, [0])
+abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl'
+bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl'
+token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
+all_abs             = pickle.load(open(abs_path,'rb'))
+bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
+t2i                 = pickle.load(open(token_to_index_f,'rb'))
 
+dy = data_yielder(bm25_scores, all_abs, t2i)
+
+bsize   = 64
+optimizer.zero_grad()
+for epoch in range(200):
+    costs = []
+    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in dy:
+        #
+        instance_cost, sent_ems, doc_ems = model( good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
+        costs.append(instance_cost)
+        #
+        if(len(costs) == bsize):
+            cost_ = torch.stack(costs)
+            cost_ = cost_.sum(costs) / (1.0 * cost_.size(0))
+            cost_.backward()
+            optimizer.step()
+            the_cost = cost_.cpu().item()
+            print(the_cost)
+            optimizer.zero_grad()
+    if(len(costs)>0):
+        cost_ = torch.stack(costs)
+        cost_ = cost_.sum(costs) / (1.0 * cost_.size(0))
+        cost_.backward()
+        optimizer.step()
+        the_cost = cost_.cpu().item()
+        print(the_cost)
+        optimizer.zero_grad()
+    print(20 * '-')
 
 
 
