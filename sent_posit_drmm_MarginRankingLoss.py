@@ -181,7 +181,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_filters_conv                      = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,self.sent_filters_size,self.embedding_dim))
         self.quest_filters_conv                     = self.sent_filters_conv
         self.linear_per_q                           = nn.Linear(6, 1, bias=True)
-        self.my_loss                                = nn.MarginRankingLoss(margin=0.6)
+        self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
