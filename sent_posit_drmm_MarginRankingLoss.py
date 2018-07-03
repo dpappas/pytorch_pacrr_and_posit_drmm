@@ -215,7 +215,6 @@ def train_one():
             m+=1
             print('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
             logger.info('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
-            sys.stdout.flush()
     if(len(costs)>0):
         batch_loss = compute_the_cost(costs, True)
         average_loss += batch_loss
@@ -234,7 +233,6 @@ def test_one(prefix, the_instances):
         average_loss += instance_cost.cpu().item()
         print('{} epoch:{}, batch:{}, average_loss:{}'.format(prefix, epoch, m, average_loss/(1.*m)))
         logger.info('{} epoch:{}, batch:{}, average_loss:{}'.format(prefix, epoch, m, average_loss/(1.*m)))
-    sys.stdout.flush()
     return average_loss/(1.*m)
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
@@ -400,7 +398,6 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 
 # dummy_test()
 # exit()
-sys.stdout.flush()
 
 token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
 print('Loading abs texts...')
@@ -418,8 +415,6 @@ logger.info('Loading token to index files...')
 t2i                 = pickle.load(open(token_to_index_f,'rb'))
 print('Done')
 logger.info('Done')
-
-sys.stdout.flush()
 
 train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i))
 dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i))
