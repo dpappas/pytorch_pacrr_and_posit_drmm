@@ -144,8 +144,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.quest_filters_conv = self.sent_filters_conv
         self.linear_per_q       = nn.Linear(6, 1, bias=True)
         self.bce_loss           = torch.nn.BCELoss()
-    def get_embeds(self, items):
-        return [ for item in items]
     def apply_convolution(self, listed_inputs, the_filters):
         ret             = []
         filter_size     = the_filters.size(2)
