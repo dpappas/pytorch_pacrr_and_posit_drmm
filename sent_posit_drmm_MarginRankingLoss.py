@@ -130,7 +130,7 @@ def print_params(model):
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
 
-def data_yielder(bm25_scores):
+def data_yielder(bm25_scores, all_abs, t2i):
     for quer in bm25_scores[u'queries']:
         quest = quer['query_text']
         ret_pmids = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
@@ -293,7 +293,7 @@ exit()
 # #
 # t2i = pickle.load(open('/home/dpappas/joint_task_list_batches/t2i.p','rb'))
 #
-# dy = data_yielder(bm25_scores)
+# dy = data_yielder(bm25_scores, all_abs, t2i)
 # good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds = dy.next()
 # model(good_sents_inds, bad_sents_inds, bad_quest_inds, good_all_sims, bad_all_sims, [0])
 
