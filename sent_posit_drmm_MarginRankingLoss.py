@@ -163,6 +163,15 @@ def dummy_test():
         print(the_cost)
     print(20 * '-')
 
+def compute_the_cost(costs):
+    cost_ = torch.stack(costs)
+    cost_ = cost_.sum() / (1.0 * cost_.size(0))
+    cost_.backward()
+    optimizer.step()
+    the_cost = cost_.cpu().item()
+    print(the_cost)
+    optimizer.zero_grad()
+
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
@@ -280,7 +289,7 @@ matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matri
 nof_cnn_filters = 12
 filters_size    = 3
 k_for_maxpool   = 5
-lr              = 0.01
+lr              = 0.1
 print('Compiling model...')
 model           = Sent_Posit_Drmm_Modeler(
     nof_filters=        nof_cnn_filters,
@@ -310,15 +319,6 @@ print('Done')
 dy = data_yielder(bm25_scores, all_abs, t2i)
 bsize   = 64
 optimizer.zero_grad()
-
-def compute_the_cost(costs):
-    cost_ = torch.stack(costs)
-    cost_ = cost_.sum() / (1.0 * cost_.size(0))
-    cost_.backward()
-    optimizer.step(lr)
-    the_cost = cost_.cpu().item()
-    print(the_cost)
-    optimizer.zero_grad()
 
 for epoch in range(200):
     costs = []
