@@ -244,8 +244,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity_insensitive_doc2 = self.my_cosine_sim_many(question_embeds, doc2_sents_embeds)
         similarity_insensitive_doc2 = self.apply_masks_on_similarity(doc2_sents, question, similarity_insensitive_doc2)
         #
-        #
+        print(similarity_insensitive_doc1[0].size())
         print(similarity_insensitive_doc2[0].size())
+        #
 
 
 
