@@ -151,12 +151,12 @@ def dummy_test():
         bad_quest_inds      = np.random.randint(0,100,(4))
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
-            good_sents_inds,
-            good_all_sims,
-            bad_sents_inds,
-            bad_all_sims,
-            bad_quest_inds,
-            [0]
+            doc1_sents  = good_sents_inds,
+            doc2_sents  = bad_sents_inds,
+            question    = bad_quest_inds,
+            doc1_sim    = good_all_sims,
+            doc2_sim    = bad_all_sims,
+            targets     = [0]
         )
         cost_.backward()
         optimizer.step()
