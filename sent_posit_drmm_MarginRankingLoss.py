@@ -228,7 +228,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             lo = F.sigmoid(lo)
             sr = lo.sum(-1) / lo.size(-1)
             ret_r.append(sr)
-        return ret_r
+        return torch.stack(ret_r)
     def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim, targets):
         #
         question     = autograd.Variable(torch.LongTensor(question), requires_grad=False)
@@ -262,9 +262,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity_sensitive_pooled_doc2     = [self.pooling_method(item) for item in similarity_sensitive_doc2]
         similarity_one_hot_pooled_doc2       = [self.pooling_method(item) for item in similarity_one_hot_doc2]
         #
-        sent_output_doc1                    = self.get_sent_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
-        sent_output_doc2                    = self.get_sent_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
+        sent_output_doc1                     = self.get_sent_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
+        sent_output_doc2                     = self.get_sent_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
         #
+        print(sent_output_doc1.size())
+        print(sent_output_doc2.size())
 
 
 # print('LOADING embedding_matrix (14GB)')
