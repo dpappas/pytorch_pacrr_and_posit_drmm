@@ -413,7 +413,8 @@ for epoch in range(200):
 
 '''
 python test.py >my_out.txt
-# batch:190
+
+# max batch:380 when bsize=32
 '''
 
 
