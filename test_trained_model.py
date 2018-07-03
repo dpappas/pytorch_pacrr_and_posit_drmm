@@ -305,7 +305,8 @@ all_abs             = pickle.load(open(abs_path,'rb'))
 bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 
-data = []
+data = {}
+data['questions'] = []
 for quer in tqdm(bm25_scores['queries']):
     dato = {
         'body'      : quer['query_text'],
@@ -339,7 +340,7 @@ for quer in tqdm(bm25_scores['queries']):
     doc_res             = sorted(doc_res.keys(), key=lambda x: doc_res[x], reverse=True)
     doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm) for pm in doc_res[:100]]
     dato['documents']   = doc_res
-    data.append(dato)
+    data['questions'].append(dato)
 
 with open('/home/dpappas/elk_relevant_abs_posit_drmm_lists.json', 'w') as f:
     f.write(json.dumps(data, indent=4, sort_keys=True))
