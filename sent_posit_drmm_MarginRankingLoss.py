@@ -334,20 +334,23 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         doc1_emit                           = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
         doc2_emit                           = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
-        # summa       = doc1_emit + doc2_emit
-        # doc1_emit   = doc1_emit / summa
-        # doc2_emit   = doc2_emit / summa
         #
         loss        = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        # print(doc1_emit)
-        # print(doc2_emit)
-        # print(loss)
+        #
+        l2_reg = None
+        for W in self.parameters():
+            if l2_reg is None:
+                l2_reg = W.norm(2)
+            else:
+                l2_reg = l2_reg + W.norm(2)
+        loss += l2_reg * reg_lambda
         return loss, doc1_emit, doc2_emit
 
 print('LOADING embedding_matrix (14GB)...')
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # matrix          = np.random.random((290, 10))
 
+reg_lambda      = 0.1
 nof_cnn_filters = 12
 filters_size    = 3
 k_for_maxpool   = 5
