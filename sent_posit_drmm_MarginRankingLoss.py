@@ -1,4 +1,5 @@
 
+import os
 import re
 import random
 import numpy as np
@@ -372,11 +373,14 @@ print('Done')
 
 m               = 0
 bsize           = 64
-train_yielder   = data_yielder(train_bm25_scores, train_all_abs, t2i)
-dev_yielder     = data_yielder(dev_bm25_scores, dev_all_abs, t2i)
-test_yielder    = data_yielder(test_bm25_scores, test_all_abs, t2i)
+train_yielder   = data_yielder(train_bm25_scores,   train_all_abs,  t2i)
+dev_yielder     = data_yielder(dev_bm25_scores,     dev_all_abs,    t2i)
+test_yielder    = data_yielder(test_bm25_scores,    test_all_abs,   t2i)
 
-odir            = './'
+odir            = '/home/dpappas/sent_posit_drmm_rank_loss/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
+
 min_dev_loss    = 10e10
 for epoch in range(200):
     train_average_loss      = train_one()
