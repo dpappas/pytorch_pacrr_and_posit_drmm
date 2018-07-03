@@ -179,7 +179,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
             conv_res    = conv_res.squeeze(-1).transpose(1,2)
             ret.append(conv_res.squeeze(0))
-            # ret.append(conv_res)
         return ret
     def my_cosine_sim(self,A,B):
         A           = A.unsqueeze(0)
@@ -197,9 +196,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return ret
     def pooling_method(self, sim_matrix):
         sorted_res              = torch.sort(sim_matrix, -1)[0]             # sort the input minimum to maximum
-        k_max_pooled            = sorted_res[:,-self.k:]                # select the last k of each instance in our data
+        k_max_pooled            = sorted_res[:,-self.k:]                    # select the last k of each instance in our data
         average_k_max_pooled    = k_max_pooled.sum(-1)/float(self.k)        # average these k values
-        the_maximum             = k_max_pooled[:, -1]                 # select the maximum value of each instance
+        the_maximum             = k_max_pooled[:, -1]                       # select the maximum value of each instance
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
     def get_sent_output(self, similarity_one_hot_pooled, similarity_insensitive_pooled,similarity_sensitive_pooled):
@@ -207,18 +206,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for bi in range(len(similarity_one_hot_pooled)):
             ret_r = []
             for j in range(len(similarity_one_hot_pooled[bi])):
-                temp = torch.cat(
-                    [
-                        similarity_insensitive_pooled[bi][j],
-                        similarity_sensitive_pooled[bi][j],
-                        similarity_one_hot_pooled[bi][j]
-                    ],
-                    -1
-                )
-                # print(temp.size())
+                temp = torch.cat([similarity_insensitive_pooled[bi][j], similarity_sensitive_pooled[bi][j], similarity_one_hot_pooled[bi][j]], -1)
                 lo = self.linear_per_q(temp).squeeze(-1)
                 lo = F.sigmoid(lo)
-                # lo =  F.hardtanh(lo, min_val=0, max_val=1)
                 sr = lo.sum(-1) / lo.size(-1)
                 ret_r.append(sr)
             ret.append(torch.stack(ret_r))
@@ -228,7 +218,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for i in range(len(sent_output)):
             sal = self.bce_loss(sent_output[i], target_sents[i].float())
             if(sentences_average_loss is None):
-                sentences_average_loss  = sal / float(len(sent_output))
+                sentences_average_loss = sal / float(len(sent_output))
             else:
                 sentences_average_loss += sal / float(len(sent_output))
         return sentences_average_loss
@@ -253,18 +243,31 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         question_embeds     = self.word_embeddings(question)
         doc1_sents_embeds   = [self.word_embeddings(sent) for sent in doc1_sents]
         doc2_sents_embeds   = [self.word_embeddings(sent) for sent in doc2_sents]
+        #
+        q_conv_res          = self.apply_convolution(question_embeds, self.quest_filters_conv)
+        print(q_conv_res.size())
 
 print('LOADING embedding_matrix (14GB)')
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 print('Done')
 
-model           = Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=filters_size, pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
+nof_cnn_filters = 12
+filters_size    = 3
+k_for_maxpool   = 5
+lr              = 0.01
+model           = Sent_Posit_Drmm_Modeler(
+    nof_filters=nof_cnn_filters,
+    filters_size=filters_size,
+    pretrained_embeds=matrix,
+    k_for_maxpool=k_for_maxpool
+)
 params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 print_params(model)
 del(matrix)
 
-
-
+dy = data_yielder()
+good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds = dy.next()
+model(good_sents_inds, bad_sents_inds, bad_quest_inds, good_all_sims, bad_all_sims, [0])
 
 
 
