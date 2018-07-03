@@ -444,9 +444,12 @@ for epoch in range(max_epochs):
 python test.py >my_out.txt
 
 tail -10 /home/dpappas/sent_posit_drmm_rank_loss/model.log
-tail -10 /home/dpappas/sent_posit_drmm_rank_loss_2/model.log
 
 # max batch:380 when bsize=32
+
+tail -10 /home/dpappas/sent_posit_drmm_rank_loss_2/model.log
+# 2018-07-04 01:43:53,387 INFO epoch:1, train_average_loss:0.802206847507, dev_average_loss:0.746443166559, test_average_loss:0.730067178506
+
 '''
 
 
