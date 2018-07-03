@@ -196,7 +196,7 @@ def train_one():
     average_loss            = 0.0
     average_instance_loss   = 0.0
     instance_metr           = 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_yielder:
+    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_instances:
         instance_cost, sent_ems, doc_ems = model( good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         average_instance_loss   += instance_cost.cpu().item()
         instance_metr           += 1
@@ -214,11 +214,11 @@ def train_one():
         print('train epoch:{}, batch:{}, batch_loss:{}, average_loss{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
     return average_instance_loss / instance_metr
 
-def test_one(prefix, the_yielder):
+def test_one(prefix, the_instances):
     m       = 0
     optimizer.zero_grad()
     average_loss = 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in the_yielder:
+    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in the_instances:
         instance_cost, sent_ems, doc_ems = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         m+=1
         average_loss += instance_cost.cpu().item()
@@ -389,19 +389,18 @@ print('Loading token to index files...')
 t2i                 = pickle.load(open(token_to_index_f,'rb'))
 print('Done')
 
+train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i))
+dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i))
+test_instances  = list(data_yielder(test_bm25_scores, test_all_abs, t2i))
+#
 min_dev_loss    = 10e10
 for epoch in range(200):
-    #
-    train_yielder   = data_yielder(train_bm25_scores, train_all_abs, t2i)
-    dev_yielder     = data_yielder(dev_bm25_scores, dev_all_abs, t2i)
-    test_yielder    = data_yielder(test_bm25_scores, test_all_abs, t2i)
-    #
     train_average_loss      = train_one()
-    dev_average_loss        = test_one('dev', dev_yielder)
+    dev_average_loss        = test_one('dev', dev_instances)
     if(dev_average_loss < min_dev_loss):
         min_dev_loss        = dev_average_loss
         min_loss_epoch      = epoch+1
-        test_average_loss   = test_one('test', test_yielder)
+        test_average_loss   = test_one('test', test_instances)
         save_checkpoint(epoch, model, min_dev_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
     print(
         "epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(
