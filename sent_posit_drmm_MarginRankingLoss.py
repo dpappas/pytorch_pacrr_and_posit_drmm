@@ -164,14 +164,15 @@ def dummy_test():
         print(the_cost)
     print(20 * '-')
 
-def compute_the_cost(costs):
+def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
-    cost_.backward()
-    optimizer.step()
+    if(back_prop):
+        cost_.backward()
+        optimizer.step()
+        optimizer.zero_grad()
     the_cost = cost_.cpu().item()
-    print(the_cost)
-    optimizer.zero_grad()
+    return the_cost
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -306,33 +307,38 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # dummy_test()
 # exit()
 
-abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl'
-bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl'
 token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
 print('Loading abs texts...')
-all_abs             = pickle.load(open(abs_path,'rb'))
+train_all_abs       = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl','rb'))
+dev_all_abs         = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl','rb'))
+test_all_abs        = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl','rb'))
 print('Loading retrieved docsc...')
-bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
+train_bm25_scores   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
+dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
+test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
 print('Loading token to index files...')
 t2i                 = pickle.load(open(token_to_index_f,'rb'))
 print('Done')
 
-dy = data_yielder(bm25_scores, all_abs, t2i)
-bsize   = 64
+m               = 0
+bsize           = 64
+train_yielder   = data_yielder(train_bm25_scores, train_all_abs, t2i)
+dev_yielder     = data_yielder(dev_bm25_scores, dev_all_abs, t2i)
+test_yielder    = data_yielder(test_bm25_scores, test_all_abs, t2i)
 optimizer.zero_grad()
+total_train = 12119
 for epoch in range(200):
     costs = []
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in dy:
-        pass
-        #
+    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_yielder:
+        m +=1
         instance_cost, sent_ems, doc_ems = model( good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         costs.append(instance_cost)
         #
         if(len(costs) == bsize):
-            compute_the_cost(costs)
+            print(compute_the_cost(costs))
             costs = []
     if(len(costs)>0):
-        compute_the_cost(costs)
+        print(compute_the_cost(costs))
         costs = []
     print(20 * '-')
 
