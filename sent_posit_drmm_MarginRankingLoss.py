@@ -308,15 +308,14 @@ t2i                 = pickle.load(open(token_to_index_f,'rb'))
 print('Done')
 
 dy = data_yielder(bm25_scores, all_abs, t2i)
-
 bsize   = 64
 optimizer.zero_grad()
 
-def compute_the_cost():
+def compute_the_cost(costs):
     cost_ = torch.stack(costs)
-    cost_ = cost_.sum(costs) / (1.0 * cost_.size(0))
+    cost_ = cost_.sum() / (1.0 * cost_.size(0))
     cost_.backward()
-    optimizer.step()
+    optimizer.step(lr)
     the_cost = cost_.cpu().item()
     print(the_cost)
     optimizer.zero_grad()
@@ -329,9 +328,11 @@ for epoch in range(200):
         costs.append(instance_cost)
         #
         if(len(costs) == bsize):
-            compute_the_cost()
+            compute_the_cost(costs)
+            costs = []
     if(len(costs)>0):
-        compute_the_cost()
+        compute_the_cost(costs)
+        costs = []
     print(20 * '-')
 
 
