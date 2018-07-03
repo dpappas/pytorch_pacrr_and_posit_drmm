@@ -352,7 +352,7 @@ matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matri
 # matrix          = np.random.random((290, 10))
 
 reg_lambda      = 0.1
-nof_cnn_filters = 12
+nof_cnn_filters = 50
 filters_size    = 3
 k_for_maxpool   = 5
 lr              = 0.01
