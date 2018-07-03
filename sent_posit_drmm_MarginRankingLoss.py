@@ -267,10 +267,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_emit   = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
         doc2_emit   = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
         #
-        print(doc1_emit)
-        print(doc2_emit)
         loss        = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        print(loss)
+        # print(doc1_emit)
+        # print(doc2_emit)
+        # print(loss)
         return loss, doc1_emit, doc2_emit
 
 
