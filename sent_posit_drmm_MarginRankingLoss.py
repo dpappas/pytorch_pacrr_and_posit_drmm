@@ -13,6 +13,10 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.autograd as autograd
 
+my_seed = 1989
+random.seed(my_seed)
+torch.manual_seed(my_seed)
+
 def get_index(token, t2i):
     try:
         return t2i[token]
