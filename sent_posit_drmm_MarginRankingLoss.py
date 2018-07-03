@@ -150,8 +150,7 @@ def dummy_test():
         bad_all_sims        = np.zeros((7, 5, 4))
         bad_quest_inds      = np.random.randint(0,100,(4))
         optimizer.zero_grad()
-        # cost_, sent_ems, doc_ems =
-        model(
+        cost_, sent_ems, doc_ems = model(
             doc1_sents  = good_sents_inds,
             doc2_sents  = bad_sents_inds,
             question    = bad_quest_inds,
@@ -185,14 +184,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q       = nn.Linear(6, 1, bias=True)
         self.bce_loss           = torch.nn.BCELoss()
     def apply_convolution(self, the_input, the_filters):
-        ret         = []
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
         conv_res    = F.conv2d(the_input.unsqueeze(1), the_filters, bias=None, stride=1, padding=(int(filter_size/2)+1, 0))
         conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
         conv_res    = conv_res.squeeze(-1).transpose(1,2)
-        ret.append(conv_res.squeeze(0))
-        return ret
+        return conv_res.squeeze(0)
     def my_cosine_sim(self,A,B):
         A           = A.unsqueeze(0)
         B           = B.unsqueeze(0)
@@ -214,27 +211,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_maximum             = k_max_pooled[:, -1]                       # select the maximum value of each instance
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
-    def get_sent_output(self, similarity_one_hot_pooled, similarity_insensitive_pooled,similarity_sensitive_pooled):
-        ret = []
-        for bi in range(len(similarity_one_hot_pooled)):
-            ret_r = []
-            for j in range(len(similarity_one_hot_pooled[bi])):
-                temp = torch.cat([similarity_insensitive_pooled[bi][j], similarity_sensitive_pooled[bi][j], similarity_one_hot_pooled[bi][j]], -1)
-                lo = self.linear_per_q(temp).squeeze(-1)
-                lo = F.sigmoid(lo)
-                sr = lo.sum(-1) / lo.size(-1)
-                ret_r.append(sr)
-            ret.append(torch.stack(ret_r))
-        return ret
-    def compute_sent_average_loss(self, sent_output, target_sents):
-        sentences_average_loss = None
-        for i in range(len(sent_output)):
-            sal = self.bce_loss(sent_output[i], target_sents[i].float())
-            if(sentences_average_loss is None):
-                sentences_average_loss = sal / float(len(sent_output))
-            else:
-                sentences_average_loss += sal / float(len(sent_output))
-        return sentences_average_loss
     def apply_masks_on_similarity(self, sentences, question, similarity):
         for bi in range(len(sentences)):
             qq = question[bi]
@@ -257,10 +233,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_sents_embeds   = [self.word_embeddings(sent) for sent in doc1_sents]
         doc2_sents_embeds   = [self.word_embeddings(sent) for sent in doc2_sents]
         #
-        print(question_embeds.size())
         q_conv_res          = self.apply_convolution(question_embeds, self.quest_filters_conv)
-        print(len(q_conv_res))
-        print(q_conv_res[0].size())
+        doc1_sents_conv     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc1_sents_embeds]
+        doc2_sents_conv     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc2_sents_embeds]
+        #
+        # print(question_embeds.size())
+        # print(q_conv_res.size())
+        # print(doc1_sents_embeds[0].size())
+        # print(doc1_sents_conv[0].size())
+        #
+        similarity_insensitive = [self.my_cosine_sim_many(question_embeds[i], sents_embeds[i]) for i in
+                                  range(len(sents_embeds))]
+
+
 
 # print('LOADING embedding_matrix (14GB)')
 # matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
