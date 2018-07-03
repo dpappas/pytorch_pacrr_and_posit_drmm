@@ -206,12 +206,12 @@ def train_one():
             average_loss += batch_loss
             costs = []
             m+=1
-            print('train epoch:{}, batch:{}, batch_loss:{}, average_loss{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
+            print('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
     if(len(costs)>0):
         batch_loss = compute_the_cost(costs, True)
         average_loss += batch_loss
         m+=1
-        print('train epoch:{}, batch:{}, batch_loss:{}, average_loss{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
+        print('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
     return average_instance_loss / instance_metr
 
 def test_one(prefix, the_instances):
@@ -222,7 +222,7 @@ def test_one(prefix, the_instances):
         instance_cost, sent_ems, doc_ems = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         m+=1
         average_loss += instance_cost.cpu().item()
-        print('{} epoch:{}, batch:{}, average_loss{}'.format(prefix, epoch, m, average_loss/(1.*m)))
+        print('{} epoch:{}, batch:{}, average_loss:{}'.format(prefix, epoch, m, average_loss/(1.*m)))
     return average_loss/(1.*m)
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
