@@ -212,7 +212,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
     def apply_masks_on_similarity(self, sentences, question, similarity):
-        qq = ( question > 1).float()
+        qq = (question > 1).float()
         for si in range(len(sentences)):
             ss              = (sentences[si] > 1).float()
             sim_mask1       = qq.unsqueeze(-1).expand_as(similarity[si])
@@ -242,6 +242,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity_insensitive_doc1 = self.my_cosine_sim_many(question_embeds, doc1_sents_embeds)
         similarity_insensitive_doc1 = self.apply_masks_on_similarity(doc1_sents, question, similarity_insensitive_doc1)
         similarity_insensitive_doc2 = self.my_cosine_sim_many(question_embeds, doc2_sents_embeds)
+        similarity_insensitive_doc2 = self.apply_masks_on_similarity(doc2_sents, question, similarity_insensitive_doc2)
         #
         #
         print(similarity_insensitive_doc2[0].size())
