@@ -230,14 +230,42 @@ def train_one():
 def test_one(prefix, the_instances):
     m       = 0
     optimizer.zero_grad()
-    average_loss = 0.0
+    average_total_loss  = 0.0
+    average_task_loss   = 0.0
+    average_reg_loss    = 0.0
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in the_instances:
-        instance_cost, sent_ems, doc_ems = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(
+            good_sents_inds,
+            bad_sents_inds,
+            quest_inds,
+            good_all_sims,
+            bad_all_sims
+        )
         m+=1
-        average_loss += instance_cost.cpu().item()
-        print('{} epoch:{}, batch:{}, average_loss:{}'.format(prefix, epoch, m, average_loss/(1.*m)))
-        logger.info('{} epoch:{}, batch:{}, average_loss:{}'.format(prefix, epoch, m, average_loss/(1.*m)))
-    return average_loss/(1.*m)
+        average_total_loss  += instance_cost.cpu().item()
+        average_task_loss   += loss1.cpu().item()
+        average_reg_loss    += loss2.cpu().item()
+        print(
+            '{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(
+                prefix,
+                epoch,
+                m,
+                average_total_loss/(1.*m),
+                average_task_loss/(1.*m),
+                average_reg_loss/(1.*m)
+            )
+        )
+        logger.info(
+            '{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(
+                prefix,
+                epoch,
+                m,
+                average_total_loss/(1.*m),
+                average_task_loss/(1.*m),
+                average_reg_loss/(1.*m)
+            )
+        )
+    return average_total_loss/(1.*m)
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
