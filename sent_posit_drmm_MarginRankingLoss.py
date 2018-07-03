@@ -207,6 +207,11 @@ def train_one():
     average_loss            = 0.0
     average_instance_loss   = 0.0
     instance_metr           = 0.0
+    #
+    average_total_loss      = 0.0
+    average_task_loss       = 0.0
+    average_reg_loss        = 0.0
+    #
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_instances:
         instance_cost, sent_ems, doc_ems = model( good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         average_instance_loss   += instance_cost.cpu().item()
@@ -265,7 +270,7 @@ def test_one(prefix, the_instances):
                 average_reg_loss/(1.*m)
             )
         )
-    return average_total_loss/(1.*m)
+    return average_task_loss/(1.*m)
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
