@@ -297,7 +297,7 @@ params          = list(set(model.parameters()) - set([model.word_embeddings.weig
 print_params(model)
 del(matrix)
 
-resume_from = '/home/dpappas/best_checkpoint.pth.tar'
+resume_from         = '/home/dpappas/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 
 abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl'
