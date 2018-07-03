@@ -120,7 +120,7 @@ for quer in bm25_scores[u'queries']:
         bid = random.choice(bad_pmids)
         good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
         bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
-    break
+        #
 
 
 # print('LOADING embedding_matrix (14GB)')
