@@ -325,21 +325,29 @@ bsize           = 64
 train_yielder   = data_yielder(train_bm25_scores, train_all_abs, t2i)
 dev_yielder     = data_yielder(dev_bm25_scores, dev_all_abs, t2i)
 test_yielder    = data_yielder(test_bm25_scores, test_all_abs, t2i)
-optimizer.zero_grad()
-total_train = 12119
-for epoch in range(200):
-    costs = []
+
+def train_one():
+    m       = 0
+    costs   = []
+    optimizer.zero_grad()
+    average_loss = 0.0
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_yielder:
-        m +=1
         instance_cost, sent_ems, doc_ems = model( good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         costs.append(instance_cost)
-        #
         if(len(costs) == bsize):
-            print(compute_the_cost(costs))
+            batch_loss = compute_the_cost(costs)
+            average_loss += batch_loss
             costs = []
+            m+=1
     if(len(costs)>0):
-        print(compute_the_cost(costs))
-        costs = []
+        batch_loss = compute_the_cost(costs)
+        average_loss += batch_loss
+        m+=1
+
+
+
+
+for epoch in range(200):
     print(20 * '-')
 
 
