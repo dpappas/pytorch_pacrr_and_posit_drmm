@@ -233,6 +233,7 @@ def test_one(prefix, the_instances):
         m+=1
         average_loss += instance_cost.cpu().item()
         print('{} epoch:{}, batch:{}, average_loss:{}'.format(prefix, epoch, m, average_loss/(1.*m)))
+        logger.info('{} epoch:{}, batch:{}, average_loss:{}'.format(prefix, epoch, m, average_loss/(1.*m)))
     sys.stdout.flush()
     return average_loss/(1.*m)
 
