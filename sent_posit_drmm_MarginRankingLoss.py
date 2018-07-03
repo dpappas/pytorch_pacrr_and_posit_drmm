@@ -356,7 +356,7 @@ nof_cnn_filters = 50
 filters_size    = 3
 k_for_maxpool   = 5
 lr              = 0.01
-bsize           = 64
+bsize           = 32
 odir            = '/home/dpappas/sent_posit_drmm_rank_loss/'
 if not os.path.exists(odir):
     os.makedirs(odir)
