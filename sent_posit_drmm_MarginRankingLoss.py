@@ -359,11 +359,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc2_emit                           = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
         #
         loss1                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        loss2                                = self.get_reg_loss() * reg_lambda
+        # loss2                                = self.get_reg_loss() * reg_lambda
+        loss2                                = 0.
         loss                                 = loss1 + loss2
         return loss, doc1_emit, doc2_emit, loss1, loss2
 
-odir = '/home/dpappas/sent_posit_drmm_rank_loss/'
+odir = '/home/dpappas/sent_posit_drmm_rank_loss_2/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
