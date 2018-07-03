@@ -201,22 +201,11 @@ def save_checkpoint(epoch, model, min_dev_loss, optimizer, filename='checkpoint.
     torch.save(state, filename)
 
 def train_one():
-    m       = 0
     costs   = []
     optimizer.zero_grad()
-    instance_metr           = 0.0
-    average_total_loss      = 0.0
-    average_task_loss       = 0.0
-    average_reg_loss        = 0.0
-    #
+    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(
-            good_sents_inds,
-            bad_sents_inds,
-            quest_inds,
-            good_all_sims,
-            bad_all_sims
-        )
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         #
         average_total_loss  += instance_cost.cpu().item()
         average_task_loss   += loss1.cpu().item()
@@ -227,87 +216,26 @@ def train_one():
         if(len(costs) == bsize):
             batch_loss      = compute_the_cost(costs, True)
             costs = []
-            m+=1
-            print(
-                'train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(
-                    epoch,
-                    m,
-                    average_total_loss/(1.*m),
-                    average_task_loss/(1.*m),
-                    average_reg_loss/(1.*m)
-                )
-            )
-            logger.info(
-                'train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(
-                    epoch,
-                    m,
-                    average_total_loss/(1.*m),
-                    average_task_loss/(1.*m),
-                    average_reg_loss/(1.*m)
-                )
-            )
+            print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
+            logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
     if(len(costs)>0):
         batch_loss = compute_the_cost(costs, True)
-        m+=1
-        print(
-            'train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(
-                epoch,
-                m,
-                average_total_loss/(1.*m),
-                average_task_loss/(1.*m),
-                average_reg_loss/(1.*m)
-            )
-        )
-        logger.info(
-            'train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(
-                epoch,
-                m,
-                average_total_loss/(1.*m),
-                average_task_loss/(1.*m),
-                average_reg_loss/(1.*m)
-            )
-        )
+        print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
+        logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
     return average_task_loss / instance_metr
 
 def test_one(prefix, the_instances):
-    m       = 0
     optimizer.zero_grad()
-    average_total_loss  = 0.0
-    average_task_loss   = 0.0
-    average_reg_loss    = 0.0
+    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in the_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(
-            good_sents_inds,
-            bad_sents_inds,
-            quest_inds,
-            good_all_sims,
-            bad_all_sims
-        )
-        m+=1
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds,bad_sents_inds,quest_inds,good_all_sims,bad_all_sims)
+        instance_metr       += 1
         average_total_loss  += instance_cost.cpu().item()
         average_task_loss   += loss1.cpu().item()
         average_reg_loss    += loss2.cpu().item()
-        print(
-            '{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(
-                prefix,
-                epoch,
-                m,
-                average_total_loss/(1.*m),
-                average_task_loss/(1.*m),
-                average_reg_loss/(1.*m)
-            )
-        )
-        logger.info(
-            '{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(
-                prefix,
-                epoch,
-                m,
-                average_total_loss/(1.*m),
-                average_task_loss/(1.*m),
-                average_reg_loss/(1.*m)
-            )
-        )
-    return average_task_loss/(1.*m)
+        print('{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(prefix, epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
+        logger.info('{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(prefix, epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
+    return average_task_loss/(1.*instance_metr)
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
