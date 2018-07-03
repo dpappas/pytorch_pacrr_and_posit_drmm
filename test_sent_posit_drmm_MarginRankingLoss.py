@@ -11,6 +11,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.autograd as autograd
+from tqdm import tqdm
+import json
 
 def get_index(token, t2i):
     try:
@@ -144,87 +146,6 @@ def data_yielder(bm25_scores, all_abs, t2i):
                 bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
                 yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
 
-def dummy_test():
-    good_sents_inds     = np.random.randint(0,100, (10,3))
-    good_all_sims       = np.zeros((10,3, 4))
-    bad_sents_inds      = np.random.randint(0,100, (7,5))
-    bad_all_sims        = np.zeros((7, 5, 4))
-    bad_quest_inds      = np.random.randint(0,100,(4))
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, sent_ems, doc_ems = model(
-            doc1_sents  = good_sents_inds,
-            doc2_sents  = bad_sents_inds,
-            question    = bad_quest_inds,
-            doc1_sim    = good_all_sims,
-            doc2_sim    = bad_all_sims
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost)
-    print(20 * '-')
-
-def compute_the_cost(costs, back_prop=True):
-    cost_ = torch.stack(costs)
-    cost_ = cost_.sum() / (1.0 * cost_.size(0))
-    if(back_prop):
-        cost_.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-    the_cost = cost_.cpu().item()
-    return the_cost
-
-def save_checkpoint(epoch, model, min_dev_loss, optimizer, filename='checkpoint.pth.tar'):
-    '''
-    :param state:       the stete of the pytorch mode
-    :param filename:    the name of the file in which we will store the model.
-    :return:            Nothing. It just saves the model.
-    '''
-    state = {
-        'epoch':            epoch,
-        'state_dict':       model.state_dict(),
-        'best_valid_score': min_dev_loss,
-        'optimizer':        optimizer.state_dict(),
-    }
-    torch.save(state, filename)
-
-def train_one():
-    m       = 0
-    costs   = []
-    optimizer.zero_grad()
-    average_loss            = 0.0
-    average_instance_loss   = 0.0
-    instance_metr           = 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_yielder:
-        instance_cost, sent_ems, doc_ems = model( good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
-        average_instance_loss   += instance_cost.cpu().item()
-        instance_metr           += 1
-        costs.append(instance_cost)
-        if(len(costs) == bsize):
-            batch_loss = compute_the_cost(costs, True)
-            average_loss += batch_loss
-            costs = []
-            m+=1
-            print('train epoch:{}, batch:{}, batch_loss:{}, average_loss{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
-    if(len(costs)>0):
-        batch_loss = compute_the_cost(costs, True)
-        average_loss += batch_loss
-        m+=1
-        print('train epoch:{}, batch:{}, batch_loss:{}, average_loss{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
-    return average_instance_loss / instance_metr
-
-def test_one(prefix, the_yielder):
-    m       = 0
-    optimizer.zero_grad()
-    average_loss = 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in the_yielder:
-        instance_cost, sent_ems, doc_ems = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
-        m+=1
-        average_loss += instance_cost.cpu().item()
-        print('{} epoch:{}, batch:{}, average_loss{}'.format(prefix, epoch, m, average_loss/(1.*m)))
-    return average_loss/(1.*m)
-
 def load_model_from_checkpoint(resume_from):
     if os.path.isfile(resume_from):
         print("=> loading checkpoint '{}'".format(resume_from))
@@ -291,59 +212,39 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def get_sent_output(self, similarity_one_hot_pooled, similarity_insensitive_pooled,similarity_sensitive_pooled):
         ret_r = []
         for j in range(len(similarity_one_hot_pooled)):
-            temp = torch.cat([similarity_insensitive_pooled[j], similarity_sensitive_pooled[j], similarity_one_hot_pooled[j]], -1)
-            lo = self.linear_per_q(temp).squeeze(-1)
-            lo = F.sigmoid(lo)
-            sr = lo.sum(-1) / lo.size(-1)
+            temp    = torch.cat([similarity_insensitive_pooled[j], similarity_sensitive_pooled[j], similarity_one_hot_pooled[j]], -1)
+            lo      = self.linear_per_q(temp).squeeze(-1)
+            lo      = F.sigmoid(lo)
+            sr      = lo.sum(-1) / lo.size(-1)
             ret_r.append(sr)
         return torch.stack(ret_r)
-    def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim):
+    def forward(self, doc1_sents, question, doc1_sim):
         #
         question     = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1_sents   = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc1_sents]
-        doc2_sents   = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc2_sents]
         #
         question_embeds     = self.word_embeddings(question)
         doc1_sents_embeds   = [self.word_embeddings(sent) for sent in doc1_sents]
-        doc2_sents_embeds   = [self.word_embeddings(sent) for sent in doc2_sents]
         #
         q_conv_res          = self.apply_convolution(question_embeds, self.quest_filters_conv)
         doc1_sents_conv     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc1_sents_embeds]
-        doc2_sents_conv     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc2_sents_embeds]
         #
         similarity_insensitive_doc1 = self.my_cosine_sim_many(question_embeds, doc1_sents_embeds)
         similarity_insensitive_doc1 = self.apply_masks_on_similarity(doc1_sents, question, similarity_insensitive_doc1)
-        similarity_insensitive_doc2 = self.my_cosine_sim_many(question_embeds, doc2_sents_embeds)
-        similarity_insensitive_doc2 = self.apply_masks_on_similarity(doc2_sents, question, similarity_insensitive_doc2)
         #
         similarity_sensitive_doc1   = self.my_cosine_sim_many(q_conv_res, doc1_sents_conv)
-        similarity_sensitive_doc2   = self.my_cosine_sim_many(q_conv_res, doc2_sents_conv)
         #
         similarity_one_hot_doc1     = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc1_sim]
-        similarity_one_hot_doc2     = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc2_sim]
         #
         similarity_insensitive_pooled_doc1   = [self.pooling_method(item) for item in similarity_insensitive_doc1]
         similarity_sensitive_pooled_doc1     = [self.pooling_method(item) for item in similarity_sensitive_doc1]
         similarity_one_hot_pooled_doc1       = [self.pooling_method(item) for item in similarity_one_hot_doc1]
         #
-        similarity_insensitive_pooled_doc2   = [self.pooling_method(item) for item in similarity_insensitive_doc2]
-        similarity_sensitive_pooled_doc2     = [self.pooling_method(item) for item in similarity_sensitive_doc2]
-        similarity_one_hot_pooled_doc2       = [self.pooling_method(item) for item in similarity_one_hot_doc2]
-        #
         sent_output_doc1                     = self.get_sent_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
-        sent_output_doc2                     = self.get_sent_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
         #
         doc1_emit   = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
-        doc2_emit   = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
-        summa       = doc1_emit + doc2_emit
-        doc1_emit   = doc1_emit / summa
-        doc2_emit   = doc2_emit / summa
         #
-        loss        = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        # print(doc1_emit)
-        # print(doc2_emit)
-        # print(loss)
-        return loss, doc1_emit, doc2_emit
+        return None, doc1_emit, None
 
 nof_cnn_filters = 12
 filters_size    = 3
@@ -364,6 +265,50 @@ del(matrix)
 resume_from = '/home/dpappas/sent_posit_drmm_rank_loss/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 
+abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl'
+all_abs             = pickle.load(open(abs_path,'rb'))
+bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
+bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
+
+data = {}
+data['questions'] = []
+for quer in tqdm(bm25_scores['queries']):
+    dato = {
+        'body'      : quer['query_text'],
+        'id'        : quer['query_id'],
+        'documents' : []
+    }
+    doc_res = {}
+    for retr in quer['retrieved_documents']:
+        #
+        doc_id      = retr['doc_id']
+        doc_title   = get_sents(all_abs[doc_id]['title'])
+        doc_text    = get_sents(all_abs[doc_id]['abstractText'])
+        all_sents   = doc_title + doc_text
+        all_sents   = [s for s in all_sents if (len(bioclean(s)) > 0)]
+        sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in all_sents]
+        #
+        quest_inds = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
+        #
+        all_sims = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
+        #
+        _, doc1_emit_, _ = model(
+            doc1_sents  = sents_inds,
+            question    = quest_inds,
+            doc1_sim    = all_sims,
+        )
+        #
+        print doc1_emit_
+        break
+
+        doc_res[doc_id] = float(doc_ems)
+    doc_res             = sorted(doc_res.keys(), key=lambda x: doc_res[x], reverse=True)
+    doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm) for pm in doc_res[:100]]
+    dato['documents']   = doc_res
+    data['questions'].append(dato)
+
+with open('/home/dpappas/elk_relevant_abs_posit_drmm_lists.json', 'w') as f:
+    f.write(json.dumps(data, indent=4, sort_keys=True))
 
 
 
