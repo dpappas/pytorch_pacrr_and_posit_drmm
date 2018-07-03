@@ -426,7 +426,8 @@ dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i))
 test_instances  = list(data_yielder(test_bm25_scores, test_all_abs, t2i))
 #
 min_dev_loss    = 10e10
-for epoch in range(200):
+max_epochs      = 30
+for epoch in range(max_epochs):
     train_average_loss      = train_one()
     dev_average_loss        = test_one('dev', dev_instances)
     if(dev_average_loss < min_dev_loss):
