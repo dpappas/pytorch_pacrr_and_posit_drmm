@@ -136,11 +136,12 @@ def data_yielder(bm25_scores, all_abs, t2i):
         ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
         bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-        for gid in good_pmids:
-            bid = random.choice(bad_pmids)
-            good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
-            bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
-            yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
+        if(len(bad_pmids)>0):
+            for gid in good_pmids:
+                bid = random.choice(bad_pmids)
+                good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
+                bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
+                yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
 
 def dummy_test():
     good_sents_inds     = np.random.randint(0,100, (10,3))
