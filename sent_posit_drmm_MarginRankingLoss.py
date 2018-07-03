@@ -335,20 +335,32 @@ def train_one():
         instance_cost, sent_ems, doc_ems = model( good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         costs.append(instance_cost)
         if(len(costs) == bsize):
-            batch_loss = compute_the_cost(costs)
+            batch_loss = compute_the_cost(costs, True)
             average_loss += batch_loss
             costs = []
             m+=1
+            print('train epoch:{}, batch:{}, batch_loss:{}, average_loss{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
     if(len(costs)>0):
-        batch_loss = compute_the_cost(costs)
+        batch_loss = compute_the_cost(costs, True)
         average_loss += batch_loss
         m+=1
+        print('train epoch:{}, batch:{}, batch_loss:{}, average_loss{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
 
-
-
+def test_one(prefix, the_yielder):
+    m       = 0
+    optimizer.zero_grad()
+    average_loss = 0.0
+    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in the_yielder:
+        instance_cost, sent_ems, doc_ems = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
+        m+=1
+        average_loss += instance_cost.cpu().item()
+        print('{} epoch:{}, batch:{}, average_loss{}'.format(prefix, epoch, m, average_loss/(1.*m)))
+    return average_loss/(1.*m)
 
 for epoch in range(200):
-    print(20 * '-')
+    train_one()
+    dev_aver_loss = test_one('dev', dev_yielder)
+    test_aver_loss = test_one('test', test_yielder)
 
 
 
