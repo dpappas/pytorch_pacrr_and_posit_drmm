@@ -234,7 +234,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity_one_hot_pooled_doc1      = [self.pooling_method(item) for item in similarity_one_hot_doc1]
         sent_output_doc1                    = self.get_sent_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
         doc1_emit                           = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
-        return None, doc1_emit, None
+        return None, doc1_emit, sent_output_doc1
 
 nof_cnn_filters = 12
 filters_size    = 3
@@ -282,7 +282,7 @@ for quer in tqdm(bm25_scores['queries']):
         #
         all_sims = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
         #
-        _, doc1_emit_, _ = model(
+        _, doc1_emit_, tt = model(
             doc1_sents  = sents_inds,
             question    = quest_inds,
             doc1_sim    = all_sims,

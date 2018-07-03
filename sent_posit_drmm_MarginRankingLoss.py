@@ -328,9 +328,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         doc1_emit   = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
         doc2_emit   = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
-        summa       = doc1_emit + doc2_emit
-        doc1_emit   = doc1_emit / summa
-        doc2_emit   = doc2_emit / summa
+        # summa       = doc1_emit + doc2_emit
+        # doc1_emit   = doc1_emit / summa
+        # doc2_emit   = doc2_emit / summa
         #
         loss        = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
         # print(doc1_emit)
@@ -345,7 +345,7 @@ matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matri
 nof_cnn_filters = 12
 filters_size    = 3
 k_for_maxpool   = 5
-lr              = 0.1
+lr              = 0.01
 bsize           = 64
 odir            = '/home/dpappas/sent_posit_drmm_rank_loss/'
 if not os.path.exists(odir):
