@@ -360,7 +360,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         loss1                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
         # loss2                                = self.get_reg_loss() * reg_lambda
-        loss2                                = 0.
+        loss2                                = loss1 * 0.
         loss                                 = loss1 + loss2
         return loss, doc1_emit, doc2_emit, loss1, loss2
 
@@ -442,6 +442,9 @@ for epoch in range(max_epochs):
 
 '''
 python test.py >my_out.txt
+
+tail -10 /home/dpappas/sent_posit_drmm_rank_loss/model.log
+tail -10 /home/dpappas/sent_posit_drmm_rank_loss_2/model.log
 
 # max batch:380 when bsize=32
 '''
