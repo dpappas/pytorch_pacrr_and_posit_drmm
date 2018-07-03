@@ -130,7 +130,7 @@ def print_params(model):
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
 
-def data_yielder():
+def data_yielder(bm25_scores):
     for quer in bm25_scores[u'queries']:
         quest = quer['query_text']
         ret_pmids = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
@@ -142,16 +142,29 @@ def data_yielder():
             bad_sents_inds, bad_quest_inds, bad_all_sims = get_item_inds(all_abs[bid], quest, t2i)
             yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
 
+def dummy_test():
+    for epoch in range(200):
+        good_sents_inds     = np.random.randint(0,100, (10,3))
+        good_all_sims       = np.zeros((10,3, 4))
+        bad_sents_inds      = np.random.randint(0,100, (7,5))
+        bad_all_sims        = np.zeros((7, 5, 4))
+        bad_quest_inds      = np.random.randint(0,100,(4))
+        optimizer.zero_grad()
+        cost_, sent_ems, doc_ems = model(
+            good_sents_inds,
+            good_all_sims,
+            bad_sents_inds,
+            bad_all_sims,
+            bad_quest_inds,
+            [0]
+        )
+        cost_.backward()
+        optimizer.step()
+        the_cost = cost_.cpu().item()
+        print(the_cost)
+    print(20 * '-')
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
-
-abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl'
-bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl'
-#
-all_abs             = pickle.load(open(abs_path,'rb'))
-bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
-#
-t2i = pickle.load(open('/home/dpappas/joint_task_list_batches/t2i.p','rb'))
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, nof_filters, filters_size, pretrained_embeds, k_for_maxpool):
@@ -244,30 +257,45 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_sents_embeds   = [self.word_embeddings(sent) for sent in doc1_sents]
         doc2_sents_embeds   = [self.word_embeddings(sent) for sent in doc2_sents]
         #
+        print(question_embeds.size())
         q_conv_res          = self.apply_convolution(question_embeds, self.quest_filters_conv)
-        print(q_conv_res.size())
+        print(len(q_conv_res))
+        print(q_conv_res[0].size())
 
-print('LOADING embedding_matrix (14GB)')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-print('Done')
+# print('LOADING embedding_matrix (14GB)')
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# print('Done')
+matrix          = np.random.random((290, 10))
 
 nof_cnn_filters = 12
 filters_size    = 3
 k_for_maxpool   = 5
 lr              = 0.01
 model           = Sent_Posit_Drmm_Modeler(
-    nof_filters=nof_cnn_filters,
-    filters_size=filters_size,
-    pretrained_embeds=matrix,
-    k_for_maxpool=k_for_maxpool
+    nof_filters=        nof_cnn_filters,
+    filters_size=       filters_size,
+    pretrained_embeds=  matrix,
+    k_for_maxpool=      k_for_maxpool
 )
 params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 print_params(model)
 del(matrix)
+optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-dy = data_yielder()
-good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds = dy.next()
-model(good_sents_inds, bad_sents_inds, bad_quest_inds, good_all_sims, bad_all_sims, [0])
+dummy_test()
+exit()
+
+# abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl'
+# bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl'
+# #
+# all_abs             = pickle.load(open(abs_path,'rb'))
+# bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
+# #
+# t2i = pickle.load(open('/home/dpappas/joint_task_list_batches/t2i.p','rb'))
+#
+# dy = data_yielder(bm25_scores)
+# good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds = dy.next()
+# model(good_sents_inds, bad_sents_inds, bad_quest_inds, good_all_sims, bad_all_sims, [0])
 
 
 
