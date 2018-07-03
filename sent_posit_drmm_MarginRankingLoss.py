@@ -404,7 +404,8 @@ for epoch in range(200):
 '''
 epoch:9,    train_average_loss:0.558677255274,  dev_average_loss:0.634912843366, test_average_loss:0.707571583874
 epoch:10,   train_average_loss:0.550462425306,  dev_average_loss:0.617003605189, test_average_loss:0.707571583874
-epoch:11,   train_average_loss:0.52991367056, dev_average_loss:0.608225152876, test_average_loss:0.707571583874
+epoch:11,   train_average_loss:0.52991367056,   dev_average_loss:0.608225152876, test_average_loss:0.707571583874
+epoch:12,   train_average_loss:0.523759432305,  dev_average_loss:0.577785431604, test_average_loss:0.69085225633
 
 '''
 
