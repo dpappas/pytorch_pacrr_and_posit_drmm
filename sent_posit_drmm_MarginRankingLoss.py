@@ -214,12 +214,14 @@ def train_one():
             costs = []
             m+=1
             print('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
+            logger.info('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
             sys.stdout.flush()
     if(len(costs)>0):
         batch_loss = compute_the_cost(costs, True)
         average_loss += batch_loss
         m+=1
         print('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
+        logger.info('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
     return average_instance_loss / instance_metr
 
 def test_one(prefix, the_instances):
@@ -431,12 +433,10 @@ for epoch in range(200):
         min_loss_epoch      = epoch+1
         test_average_loss   = test_one('test', test_instances)
         save_checkpoint(epoch, model, min_dev_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    print(
-        "epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(
-            epoch+1, train_average_loss, dev_average_loss, test_average_loss
-        )
-    )
+    print("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
     print(20 * '-')
+    logger.info("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
+    logger.info(20 * '-')
 
 
 '''
