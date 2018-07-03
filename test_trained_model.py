@@ -285,14 +285,15 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').re
 
 nof_cnn_filters = 12
 filters_size    = 3
+k_for_maxpool   = 5
+lr              = 0.01
+#
 print('LOADING embedding_matrix (14GB)')
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 t2i             = pickle.load(open('/home/dpappas/joint_task_list_batches/t2i.p','rb'))
 print('Done')
 
-k_for_maxpool   = 5
 model           = Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=filters_size, pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
-lr              = 0.01
 params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 print_params(model)
 del(matrix)
