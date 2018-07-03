@@ -205,7 +205,6 @@ def train_one():
     costs   = []
     optimizer.zero_grad()
     average_loss            = 0.0
-    average_instance_loss   = 0.0
     instance_metr           = 0.0
     #
     average_total_loss      = 0.0
@@ -213,24 +212,48 @@ def train_one():
     average_reg_loss        = 0.0
     #
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_instances:
-        instance_cost, sent_ems, doc_ems = model( good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
-        average_instance_loss   += instance_cost.cpu().item()
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(
+            good_sents_inds,
+            bad_sents_inds,
+            quest_inds,
+            good_all_sims,
+            bad_all_sims
+        )
+        #
+        average_total_loss  += instance_cost.cpu().item()
+        average_task_loss   += loss1.cpu().item()
+        average_reg_loss    += loss2.cpu().item()
+        #
         instance_metr           += 1
         costs.append(instance_cost)
         if(len(costs) == bsize):
-            batch_loss = compute_the_cost(costs, True)
-            average_loss += batch_loss
+            batch_loss      = compute_the_cost(costs, True)
+            average_loss    += batch_loss
             costs = []
             m+=1
-            print('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
-            logger.info('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
+            print(
+                'train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(
+                    epoch,
+                    m,
+                    batch_loss,
+                    average_loss/(1.*m)
+                )
+            )
+            logger.info(
+                'train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(
+                    epoch,
+                    m,
+                    batch_loss,
+                    average_loss / (1. * m)
+                )
+            )
     if(len(costs)>0):
         batch_loss = compute_the_cost(costs, True)
         average_loss += batch_loss
         m+=1
         print('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
         logger.info('train epoch:{}, batch:{}, batch_loss:{}, average_loss:{}'.format(epoch, m, batch_loss, average_loss/(1.*m)))
-    return average_instance_loss / instance_metr
+    return average_task_loss / instance_metr
 
 def test_one(prefix, the_instances):
     m       = 0
