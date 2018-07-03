@@ -292,42 +292,42 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return torch.stack(ret_r)
     def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim):
         #
-        question     = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        doc1_sents   = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc1_sents]
-        doc2_sents   = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc2_sents]
+        question                            = autograd.Variable(torch.LongTensor(question), requires_grad=False)
+        doc1_sents                          = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc1_sents]
+        doc2_sents                          = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc2_sents]
         #
-        question_embeds     = self.word_embeddings(question)
-        doc1_sents_embeds   = [self.word_embeddings(sent) for sent in doc1_sents]
-        doc2_sents_embeds   = [self.word_embeddings(sent) for sent in doc2_sents]
+        question_embeds                     = self.word_embeddings(question)
+        doc1_sents_embeds                   = [self.word_embeddings(sent) for sent in doc1_sents]
+        doc2_sents_embeds                   = [self.word_embeddings(sent) for sent in doc2_sents]
         #
-        q_conv_res          = self.apply_convolution(question_embeds, self.quest_filters_conv)
-        doc1_sents_conv     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc1_sents_embeds]
-        doc2_sents_conv     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc2_sents_embeds]
+        q_conv_res                          = self.apply_convolution(question_embeds, self.quest_filters_conv)
+        doc1_sents_conv                     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc1_sents_embeds]
+        doc2_sents_conv                     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc2_sents_embeds]
         #
-        similarity_insensitive_doc1 = self.my_cosine_sim_many(question_embeds, doc1_sents_embeds)
-        similarity_insensitive_doc1 = self.apply_masks_on_similarity(doc1_sents, question, similarity_insensitive_doc1)
-        similarity_insensitive_doc2 = self.my_cosine_sim_many(question_embeds, doc2_sents_embeds)
-        similarity_insensitive_doc2 = self.apply_masks_on_similarity(doc2_sents, question, similarity_insensitive_doc2)
+        similarity_insensitive_doc1         = self.my_cosine_sim_many(question_embeds, doc1_sents_embeds)
+        similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1_sents, question, similarity_insensitive_doc1)
+        similarity_insensitive_doc2         = self.my_cosine_sim_many(question_embeds, doc2_sents_embeds)
+        similarity_insensitive_doc2         = self.apply_masks_on_similarity(doc2_sents, question, similarity_insensitive_doc2)
         #
-        similarity_sensitive_doc1   = self.my_cosine_sim_many(q_conv_res, doc1_sents_conv)
-        similarity_sensitive_doc2   = self.my_cosine_sim_many(q_conv_res, doc2_sents_conv)
+        similarity_sensitive_doc1           = self.my_cosine_sim_many(q_conv_res, doc1_sents_conv)
+        similarity_sensitive_doc2           = self.my_cosine_sim_many(q_conv_res, doc2_sents_conv)
         #
-        similarity_one_hot_doc1     = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc1_sim]
-        similarity_one_hot_doc2     = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc2_sim]
+        similarity_one_hot_doc1             = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc1_sim]
+        similarity_one_hot_doc2             = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc2_sim]
         #
-        similarity_insensitive_pooled_doc1   = [self.pooling_method(item) for item in similarity_insensitive_doc1]
-        similarity_sensitive_pooled_doc1     = [self.pooling_method(item) for item in similarity_sensitive_doc1]
-        similarity_one_hot_pooled_doc1       = [self.pooling_method(item) for item in similarity_one_hot_doc1]
+        similarity_insensitive_pooled_doc1  = [self.pooling_method(item) for item in similarity_insensitive_doc1]
+        similarity_sensitive_pooled_doc1    = [self.pooling_method(item) for item in similarity_sensitive_doc1]
+        similarity_one_hot_pooled_doc1      = [self.pooling_method(item) for item in similarity_one_hot_doc1]
         #
-        similarity_insensitive_pooled_doc2   = [self.pooling_method(item) for item in similarity_insensitive_doc2]
-        similarity_sensitive_pooled_doc2     = [self.pooling_method(item) for item in similarity_sensitive_doc2]
-        similarity_one_hot_pooled_doc2       = [self.pooling_method(item) for item in similarity_one_hot_doc2]
+        similarity_insensitive_pooled_doc2  = [self.pooling_method(item) for item in similarity_insensitive_doc2]
+        similarity_sensitive_pooled_doc2    = [self.pooling_method(item) for item in similarity_sensitive_doc2]
+        similarity_one_hot_pooled_doc2      = [self.pooling_method(item) for item in similarity_one_hot_doc2]
         #
-        sent_output_doc1                     = self.get_sent_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
-        sent_output_doc2                     = self.get_sent_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
+        sent_output_doc1                    = self.get_sent_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
+        sent_output_doc2                    = self.get_sent_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
         #
-        doc1_emit   = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
-        doc2_emit   = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
+        doc1_emit                           = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
+        doc2_emit                           = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
         # summa       = doc1_emit + doc2_emit
         # doc1_emit   = doc1_emit / summa
         # doc2_emit   = doc2_emit / summa
