@@ -220,6 +220,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             similarity[si] *= sim_mask1
             similarity[si] *= sim_mask2
         return similarity
+    def get_sent_output(self, similarity_one_hot_pooled, similarity_insensitive_pooled,similarity_sensitive_pooled):
+        ret_r = []
+        for j in range(len(similarity_one_hot_pooled)):
+            temp = torch.cat([similarity_insensitive_pooled[j], similarity_sensitive_pooled[j], similarity_one_hot_pooled[j]], -1)
+            lo = self.linear_per_q(temp).squeeze(-1)
+            lo = F.sigmoid(lo)
+            sr = lo.sum(-1) / lo.size(-1)
+            ret_r.append(sr)
+        return ret_r
     def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim, targets):
         #
         question     = autograd.Variable(torch.LongTensor(question), requires_grad=False)
@@ -234,20 +243,36 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_sents_conv     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc1_sents_embeds]
         doc2_sents_conv     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc2_sents_embeds]
         #
-        # print(question_embeds.size())
-        # print(q_conv_res.size())
-        # print(doc1_sents_embeds[0].size())
-        # print(doc1_sents_conv[0].size())
-        #
         similarity_insensitive_doc1 = self.my_cosine_sim_many(question_embeds, doc1_sents_embeds)
         similarity_insensitive_doc1 = self.apply_masks_on_similarity(doc1_sents, question, similarity_insensitive_doc1)
         similarity_insensitive_doc2 = self.my_cosine_sim_many(question_embeds, doc2_sents_embeds)
         similarity_insensitive_doc2 = self.apply_masks_on_similarity(doc2_sents, question, similarity_insensitive_doc2)
         #
-        print(similarity_insensitive_doc1[0].size())
-        print(similarity_insensitive_doc2[0].size())
+        similarity_sensitive_doc1   = self.my_cosine_sim_many(q_conv_res, doc1_sents_conv)
+        similarity_sensitive_doc2   = self.my_cosine_sim_many(q_conv_res, doc2_sents_conv)
         #
-
+        similarity_one_hot_doc1     = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc1_sim]
+        similarity_one_hot_doc2     = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc2_sim]
+        #
+        similarity_insensitive_pooled_doc1   = [self.pooling_method(item) for item in similarity_insensitive_doc1]
+        similarity_sensitive_pooled_doc1     = [self.pooling_method(item) for item in similarity_sensitive_doc1]
+        similarity_one_hot_pooled_doc1       = [self.pooling_method(item) for item in similarity_one_hot_doc1]
+        #
+        similarity_insensitive_pooled_doc2   = [self.pooling_method(item) for item in similarity_insensitive_doc2]
+        similarity_sensitive_pooled_doc2     = [self.pooling_method(item) for item in similarity_sensitive_doc2]
+        similarity_one_hot_pooled_doc2       = [self.pooling_method(item) for item in similarity_one_hot_doc2]
+        #
+        sent_output_doc1                    = self.get_sent_output(
+            similarity_one_hot_pooled_doc1,
+            similarity_insensitive_pooled_doc1,
+            similarity_sensitive_pooled_doc1
+        )
+        sent_output_doc2                    = self.get_sent_output(
+            similarity_one_hot_pooled_doc2,
+            similarity_insensitive_pooled_doc2,
+            similarity_sensitive_pooled_doc2
+        )
+        #
 
 
 # print('LOADING embedding_matrix (14GB)')
