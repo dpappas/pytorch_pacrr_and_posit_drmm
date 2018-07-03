@@ -247,6 +247,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
         self.my_relu1                               = torch.nn.PReLU()
         self.my_relu2                               = torch.nn.PReLU()
+        self.my_drop1                               = nn.Dropout(p=0.2)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
@@ -290,6 +291,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             temp = torch.cat([similarity_insensitive_pooled[j], similarity_sensitive_pooled[j], similarity_one_hot_pooled[j]], -1)
             lo = self.linear_per_q1(temp)
             lo = self.my_relu1(lo)
+            lo = self.my_drop1(lo)
             lo = self.linear_per_q2(lo).squeeze(-1)
             lo = self.my_relu2(lo)
             # lo = F.sigmoid(lo)
