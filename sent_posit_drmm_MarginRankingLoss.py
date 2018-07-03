@@ -143,12 +143,12 @@ def data_yielder(bm25_scores, all_abs, t2i):
             yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
 
 def dummy_test():
+    good_sents_inds     = np.random.randint(0,100, (10,3))
+    good_all_sims       = np.zeros((10,3, 4))
+    bad_sents_inds      = np.random.randint(0,100, (7,5))
+    bad_all_sims        = np.zeros((7, 5, 4))
+    bad_quest_inds      = np.random.randint(0,100,(4))
     for epoch in range(200):
-        good_sents_inds     = np.random.randint(0,100, (10,3))
-        good_all_sims       = np.zeros((10,3, 4))
-        bad_sents_inds      = np.random.randint(0,100, (7,5))
-        bad_all_sims        = np.zeros((7, 5, 4))
-        bad_quest_inds      = np.random.randint(0,100,(4))
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
             doc1_sents  = good_sents_inds,
@@ -181,7 +181,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_filters_conv                      = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,self.sent_filters_size,self.embedding_dim))
         self.quest_filters_conv                     = self.sent_filters_conv
         self.linear_per_q                           = nn.Linear(6, 1, bias=True)
-        self.my_loss                                = nn.MarginRankingLoss()
+        self.my_loss                                = nn.MarginRankingLoss(margin=0.6)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
@@ -270,7 +270,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         print(doc1_emit)
         print(doc2_emit)
         loss        = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        print loss
+        print(loss)
+        return loss, doc1_emit, doc2_emit
 
 
 # print('LOADING embedding_matrix (14GB)')
