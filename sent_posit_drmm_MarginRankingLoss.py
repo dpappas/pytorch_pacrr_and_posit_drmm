@@ -262,16 +262,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity_sensitive_pooled_doc2     = [self.pooling_method(item) for item in similarity_sensitive_doc2]
         similarity_one_hot_pooled_doc2       = [self.pooling_method(item) for item in similarity_one_hot_doc2]
         #
-        sent_output_doc1                    = self.get_sent_output(
-            similarity_one_hot_pooled_doc1,
-            similarity_insensitive_pooled_doc1,
-            similarity_sensitive_pooled_doc1
-        )
-        sent_output_doc2                    = self.get_sent_output(
-            similarity_one_hot_pooled_doc2,
-            similarity_insensitive_pooled_doc2,
-            similarity_sensitive_pooled_doc2
-        )
+        sent_output_doc1                    = self.get_sent_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
+        sent_output_doc2                    = self.get_sent_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
         #
 
 
