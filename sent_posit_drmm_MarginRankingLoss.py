@@ -411,6 +411,9 @@ epoch:14,   train_average_loss:0.514917892319,  dev_average_loss:0.643535474376,
 epoch:15,   train_average_loss:0.501302283959,  dev_average_loss:0.597576552294,    test_average_loss:0.656115521617
 epoch:16,   train_average_loss:0.498953454636,  dev_average_loss:0.622948509112,    test_average_loss:0.656115521617
 epoch:17,   train_average_loss:0.500210404671,  dev_average_loss:0.599602773576,    test_average_loss:0.656115521617
+epoch:19,   train_average_loss:0.475524060868,  dev_average_loss:0.589101939099,    test_average_loss:0.656115521617
+epoch:26,   train_average_loss:0.0,             dev_average_loss:0.0,               test_average_loss:0.0
+
 
 
 # batch:190
