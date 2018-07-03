@@ -105,6 +105,44 @@ def get_item_inds(item, question, t2i):
     #
     return sents_inds, quest_inds, all_sims
 
+def print_params(model):
+    '''
+    It just prints the number of parameters in the model.
+    :param model:   The pytorch model
+    :return:        Nothing.
+    '''
+    print(40 * '=')
+    print(model)
+    print(40 * '=')
+    trainable       = 0
+    untrainable     = 0
+    for parameter in model.parameters():
+        # print(parameter.size())
+        v = 1
+        for s in parameter.size():
+            v *= s
+        if(parameter.requires_grad):
+            trainable   += v
+        else:
+            untrainable += v
+    total_params = trainable + untrainable
+    print(40 * '=')
+    print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
+    print(40 * '=')
+
+def data_yielder():
+    for quer in bm25_scores[u'queries']:
+        quest = quer['query_text']
+        ret_pmids = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
+        good_pmids = [t for t in ret_pmids if t in quer[u'relevant_documents']]
+        bad_pmids = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
+        for gid in good_pmids:
+            bid = random.choice(bad_pmids)
+            good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
+            bad_sents_inds, bad_quest_inds, bad_all_sims = get_item_inds(all_abs[bid], quest, t2i)
+            yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
+
+
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl'
@@ -113,19 +151,7 @@ bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq
 all_abs             = pickle.load(open(abs_path,'rb'))
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 #
-
 t2i = pickle.load(open('/home/dpappas/joint_task_list_batches/t2i.p','rb'))
-
-for quer in bm25_scores[u'queries']:
-    quest       = quer['query_text']
-    ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
-    good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
-    bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-    for gid in good_pmids:
-        bid = random.choice(bad_pmids)
-        good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
-        bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
-        #
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, nof_filters, filters_size, pretrained_embeds, k_for_maxpool):
@@ -218,15 +244,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 similarity[bi][si] *= sim_mask1
                 similarity[bi][si] *= sim_mask2
         return similarity
-    def forward(
-            self,
-            doc1_sents,
-            doc2_sents,
-            question,
-            doc1_sim,
-            doc2_sim,
-            targets
-    ):
+    def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim, targets):
         #
         question     = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1_sents   = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc1_sents]
@@ -235,34 +253,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         question_embeds     = self.word_embeddings(question)
         doc1_sents_embeds   = [self.word_embeddings(sent) for sent in doc1_sents]
         doc2_sents_embeds   = [self.word_embeddings(sent) for sent in doc2_sents]
-        exit()
-        #
-        # q_conv_res              = self.apply_convolution(question_embeds, self.quest_filters_conv)
-        # #
-        # sents_embeds            = [self.get_embeds(s) for s in sentences]
-        # s_conv_res              = [self.apply_convolution(s, self.sent_filters_conv) for s in sents_embeds]
-        # #
-        # similarity_insensitive  = [self.my_cosine_sim_many(question_embeds[i], sents_embeds[i]) for i in range(len(sents_embeds))]
-        # similarity_insensitive  = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
-        # similarity_sensitive    = [self.my_cosine_sim_many(q_conv_res[i], s_conv_res[i]) for i in range(len(q_conv_res))]
-        # similarity_one_hot      = [[autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in item2] for item2 in similarity_one_hot]
-        # #
-        # similarity_insensitive_pooled   = [[self.pooling_method(item) for item in item2] for item2 in similarity_insensitive]
-        # similarity_sensitive_pooled     = [[self.pooling_method(item) for item in item2] for item2 in similarity_sensitive]
-        # similarity_one_hot_pooled       = [[self.pooling_method(item) for item in item2] for item2 in similarity_one_hot]
-        # #
-        # sent_output             = self.get_sent_output(similarity_one_hot_pooled, similarity_insensitive_pooled, similarity_sensitive_pooled)
-        # sentences_average_loss  = self.compute_sent_average_loss(sent_output, target_sents)
-        # #
-        # document_emitions       = torch.stack([ s.max(-1)[0] for s in sent_output])
-        # document_average_loss   = self.bce_loss(document_emitions, target_docs.float())
-        # total_loss              = (sentences_average_loss + document_average_loss) / 2.0
-        # #
-        # return(total_loss, sent_output, document_emitions) # return the general loss, the sentences' relevance score and the documents' relevance scores
 
 print('LOADING embedding_matrix (14GB)')
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 print('Done')
+
+model           = Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=filters_size, pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
+params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
+print_params(model)
+del(matrix)
 
 
 
