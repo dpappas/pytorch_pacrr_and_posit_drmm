@@ -155,8 +155,7 @@ def dummy_test():
             doc2_sents  = bad_sents_inds,
             question    = bad_quest_inds,
             doc1_sim    = good_all_sims,
-            doc2_sim    = bad_all_sims,
-            targets     = [0]
+            doc2_sim    = bad_all_sims
         )
         cost_.backward()
         optimizer.step()
@@ -179,10 +178,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings                        = nn.Embedding(self.vocab_size, self.embedding_dim)
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
-        self.sent_filters_conv  = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,self.sent_filters_size,self.embedding_dim))
-        self.quest_filters_conv = self.sent_filters_conv
-        self.linear_per_q       = nn.Linear(6, 1, bias=True)
-        self.bce_loss           = torch.nn.BCELoss()
+        self.sent_filters_conv                      = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,self.sent_filters_size,self.embedding_dim))
+        self.quest_filters_conv                     = self.sent_filters_conv
+        self.linear_per_q                           = nn.Linear(6, 1, bias=True)
+        self.my_loss                                = nn.MarginRankingLoss()
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
@@ -229,7 +228,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sr = lo.sum(-1) / lo.size(-1)
             ret_r.append(sr)
         return torch.stack(ret_r)
-    def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim, targets):
+    def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim):
         #
         question     = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1_sents   = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc1_sents]
@@ -265,8 +264,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sent_output_doc1                     = self.get_sent_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
         sent_output_doc2                     = self.get_sent_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
         #
-        print(sent_output_doc1.size())
-        print(sent_output_doc2.size())
+        doc1_emit   = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
+        doc2_emit   = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
+        #
+        print(doc1_emit)
+        print(doc2_emit)
+        loss        = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
+        print loss
 
 
 # print('LOADING embedding_matrix (14GB)')
