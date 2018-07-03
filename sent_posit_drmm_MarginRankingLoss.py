@@ -307,6 +307,16 @@ dy = data_yielder(bm25_scores, all_abs, t2i)
 
 bsize   = 64
 optimizer.zero_grad()
+
+def compute_the_cost():
+    cost_ = torch.stack(costs)
+    cost_ = cost_.sum(costs) / (1.0 * cost_.size(0))
+    cost_.backward()
+    optimizer.step()
+    the_cost = cost_.cpu().item()
+    print(the_cost)
+    optimizer.zero_grad()
+
 for epoch in range(200):
     costs = []
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in dy:
@@ -315,21 +325,9 @@ for epoch in range(200):
         costs.append(instance_cost)
         #
         if(len(costs) == bsize):
-            cost_ = torch.stack(costs)
-            cost_ = cost_.sum(costs) / (1.0 * cost_.size(0))
-            cost_.backward()
-            optimizer.step()
-            the_cost = cost_.cpu().item()
-            print(the_cost)
-            optimizer.zero_grad()
+            compute_the_cost()
     if(len(costs)>0):
-        cost_ = torch.stack(costs)
-        cost_ = cost_.sum(costs) / (1.0 * cost_.size(0))
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost)
-        optimizer.zero_grad()
+        compute_the_cost()
     print(20 * '-')
 
 
