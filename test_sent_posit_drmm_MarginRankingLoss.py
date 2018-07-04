@@ -291,6 +291,26 @@ with open('/home/dpappas/sent_posit_drmm_rank_loss_2/elk_relevant_abs_posit_drmm
     f.write(json.dumps(data, indent=4, sort_keys=True))
 
 
+'''
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.bioasq.oracle.json
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.bioasq.json
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/elk_relevant_abs.json
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/elk_relevant_abs_posit_drmm_lists.json
+
+'''
+
+
 
 
 
