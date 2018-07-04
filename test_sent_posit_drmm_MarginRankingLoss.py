@@ -308,6 +308,10 @@ python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
 /home/dpappas/elk_relevant_abs_posit_drmm_lists.json
 
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/sent_posit_drmm_rank_loss_2/elk_relevant_abs_posit_drmm_lists.json
+
 '''
 
 
