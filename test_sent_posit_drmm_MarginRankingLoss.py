@@ -252,7 +252,8 @@ params  = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 print_params(model)
 del(matrix)
 
-resume_from = '/home/dpappas/sent_posit_drmm_rank_loss/best_checkpoint.pth.tar'
+# resume_from = '/home/dpappas/sent_posit_drmm_rank_loss/best_checkpoint.pth.tar'
+resume_from = '/home/dpappas/sent_posit_drmm_rank_loss_2/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 
 abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl'
@@ -263,14 +264,9 @@ bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 data = {}
 data['questions'] = []
 for quer in tqdm(bm25_scores['queries']):
-    dato = {
-        'body'      : quer['query_text'],
-        'id'        : quer['query_id'],
-        'documents' : []
-    }
+    dato    = {'body':quer['query_text'], 'id':quer['query_id'], 'documents':[]}
     doc_res = {}
     for retr in quer['retrieved_documents']:
-        #
         doc_id      = retr['doc_id']
         doc_title   = get_sents(all_abs[doc_id]['title'])
         doc_text    = get_sents(all_abs[doc_id]['abstractText'])
@@ -282,22 +278,16 @@ for quer in tqdm(bm25_scores['queries']):
         #
         all_sims = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
         #
-        _, doc1_emit_, tt = model(
-            doc1_sents  = sents_inds,
-            question    = quest_inds,
-            doc1_sim    = all_sims,
-        )
+        _, doc1_emit_, tt = model(doc1_sents=sents_inds, question=quest_inds, doc1_sim=all_sims)
         #
-        print doc1_emit_
-        break
-
-        doc_res[doc_id] = float(doc_ems)
+        # print doc1_emit_
+        doc_res[doc_id] = float(doc1_emit_)
     doc_res             = sorted(doc_res.keys(), key=lambda x: doc_res[x], reverse=True)
     doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm) for pm in doc_res[:100]]
     dato['documents']   = doc_res
     data['questions'].append(dato)
 
-with open('/home/dpappas/elk_relevant_abs_posit_drmm_lists.json', 'w') as f:
+with open('/home/dpappas/sent_posit_drmm_rank_loss_2/elk_relevant_abs_posit_drmm_lists.json', 'w') as f:
     f.write(json.dumps(data, indent=4, sort_keys=True))
 
 
