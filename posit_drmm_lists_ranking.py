@@ -25,6 +25,17 @@ filters_size    = 3
 k_for_maxpool   = 5
 lr              = 0.01
 bsize           = 32
+
+import logging
+logger = logging.getLogger(od)
+hdlr = logging.FileHandler(odir+'model.log')
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
+
+print('LOADING embedding_matrix (14GB)...')
+logger.info('LOADING embedding_matrix (14GB)...')
 # matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 matrix          = np.random.random((290, 10))
 
@@ -214,11 +225,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
         dist_mat    = num / den
         return dist_mat
-    def my_cosine_sim_many(self, quest, sents):
-        ret = []
-        for sent in sents:
-            ret.append(self.my_cosine_sim(quest,sent).squeeze(0))
-        return ret
     def pooling_method(self, sim_matrix):
         sorted_res              = torch.sort(sim_matrix, -1)[0]             # sort the input minimum to maximum
         k_max_pooled            = sorted_res[:,-self.k:]                    # select the last k of each instance in our data
@@ -257,20 +263,23 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 else:
                     l2_reg = l2_reg + W.norm(2)
         return l2_reg
-    def forward(self, doc1_sents, doc2_sents, question, doc1_sim, doc2_sim):
+    def forward(self, doc1, doc2, question, doc1_sim, doc2_sim):
         #
         question                            = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        doc1_sents                          = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc1_sents]
-        doc2_sents                          = [autograd.Variable(torch.LongTensor(item), requires_grad=False) for item in doc2_sents]
+        doc1                                = autograd.Variable(torch.LongTensor(doc1), requires_grad=False)
+        doc2                                = autograd.Variable(torch.LongTensor(doc2), requires_grad=False)
         #
         question_embeds                     = self.word_embeddings(question)
-        doc1_sents_embeds                   = [self.word_embeddings(sent) for sent in doc1_sents]
-        doc2_sents_embeds                   = [self.word_embeddings(sent) for sent in doc2_sents]
+        doc1_embeds                         = self.word_embeddings(doc1)
+        doc2_embeds                         = self.word_embeddings(doc2)
         #
-        q_conv_res                          = self.apply_convolution(question_embeds, self.quest_filters_conv)
-        doc1_sents_conv                     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc1_sents_embeds]
-        doc2_sents_conv                     = [self.apply_convolution(sent, self.sent_filters_conv) for sent in doc2_sents_embeds]
+        q_conv_res                          = self.apply_convolution(question_embeds,   self.quest_filters_conv)
+        doc1_conv                           = self.apply_convolution(doc1_embeds,       self.sent_filters_conv)
+        doc2_conv                           = self.apply_convolution(doc2_embeds,       self.sent_filters_conv)
         #
+        similarity_insensitive_doc1         = self.my_cosine_sim(question_embeds, doc1_embeds)
+        print(similarity_insensitive_doc1.size())
+        exit()
         similarity_insensitive_doc1         = self.my_cosine_sim_many(question_embeds, doc1_sents_embeds)
         similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1_sents, question, similarity_insensitive_doc1)
         similarity_insensitive_doc2         = self.my_cosine_sim_many(question_embeds, doc2_sents_embeds)
@@ -304,17 +313,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 if not os.path.exists(odir):
     os.makedirs(odir)
-
-import logging
-logger = logging.getLogger(od)
-hdlr = logging.FileHandler(odir+'model.log')
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-hdlr.setFormatter(formatter)
-logger.addHandler(hdlr)
-logger.setLevel(logging.INFO)
-
-print('LOADING embedding_matrix (14GB)...')
-logger.info('LOADING embedding_matrix (14GB)...')
 
 print('Compiling model...')
 logger.info('Compiling model...')
