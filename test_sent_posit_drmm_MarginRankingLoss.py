@@ -236,7 +236,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_emit                           = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
         return None, doc1_emit, sent_output_doc1
 
-nof_cnn_filters = 12
+nof_cnn_filters = 50
 filters_size    = 3
 k_for_maxpool   = 5
 lr              = 0.01
