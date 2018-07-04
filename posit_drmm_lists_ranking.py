@@ -112,7 +112,7 @@ def dummy_test():
     bad_all_sims        = np.zeros((37, 40))
     for epoch in range(200):
         optimizer.zero_grad()
-        cost_, sent_ems, doc_ems = model(
+        cost_, doc1_emit_, doc2_emit_, loss1_, loss2_ = model(
             doc1        = good_sents_inds,
             doc2        = bad_sents_inds,
             question    = quest_inds,
