@@ -18,6 +18,9 @@ random.seed(my_seed)
 torch.manual_seed(my_seed)
 
 odir            = '/home/dpappas/posit_drmm_lists_rank/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
+
 od              = 'sent_posit_drmm_MarginRankingLoss'
 nof_cnn_filters = 50
 filters_size    = 3
@@ -305,9 +308,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss2                                = loss1 * 0.
         loss                                 = loss1 + loss2
         return loss, doc1_emit, doc2_emit, loss1, loss2
-
-if not os.path.exists(odir):
-    os.makedirs(odir)
 
 print('Compiling model...')
 logger.info('Compiling model...')
