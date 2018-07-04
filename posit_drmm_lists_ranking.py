@@ -361,6 +361,13 @@ for epoch in range(max_epochs):
     logger.info("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
     logger.info(20 * '-')
 
+'''
+python posit_drmm_lists_rank.py
+
+tail -10 /home/dpappas/posit_drmm_lists_rank/model.log
+grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank/model.log
+
+'''
 
 
 
