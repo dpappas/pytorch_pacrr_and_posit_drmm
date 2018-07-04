@@ -113,8 +113,8 @@ def dummy_test():
     for epoch in range(200):
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
-            doc1_sents  = good_sents_inds,
-            doc2_sents  = bad_sents_inds,
+            doc1        = good_sents_inds,
+            doc2        = bad_sents_inds,
             question    = quest_inds,
             doc1_sim    = good_all_sims,
             doc2_sim    = bad_all_sims
@@ -232,28 +232,30 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_maximum             = k_max_pooled[:, -1]                       # select the maximum value of each instance
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
-    def apply_masks_on_similarity(self, sentences, question, similarity):
+    def apply_masks_on_similarity(self, document, question, similarity):
         qq = (question > 1).float()
-        for si in range(len(sentences)):
-            ss              = (sentences[si] > 1).float()
-            sim_mask1       = qq.unsqueeze(-1).expand_as(similarity[si])
-            sim_mask2       = ss.unsqueeze(0).expand_as(similarity[si])
-            similarity[si] *= sim_mask1
-            similarity[si] *= sim_mask2
+        ss              = (document > 1).float()
+        sim_mask1       = qq.unsqueeze(-1).expand_as(similarity)
+        sim_mask2       = ss.unsqueeze(0).expand_as(similarity)
+        similarity      *= sim_mask1
+        similarity      *= sim_mask2
         return similarity
-    def get_sent_output(self, similarity_one_hot_pooled, similarity_insensitive_pooled,similarity_sensitive_pooled):
-        ret_r = []
-        for j in range(len(similarity_one_hot_pooled)):
-            temp = torch.cat([similarity_insensitive_pooled[j], similarity_sensitive_pooled[j], similarity_one_hot_pooled[j]], -1)
-            lo = self.linear_per_q1(temp)
-            lo = self.my_relu1(lo)
-            lo = self.my_drop1(lo)
-            lo = self.linear_per_q2(lo).squeeze(-1)
-            lo = self.my_relu2(lo)
-            # lo = F.sigmoid(lo)
-            sr = lo.sum(-1) / lo.size(-1)
-            ret_r.append(sr)
-        return torch.stack(ret_r)
+    def get_output(self, similarity_one_hot_pooled, similarity_insensitive_pooled,similarity_sensitive_pooled):
+        temp    = torch.cat(
+            [
+                similarity_insensitive_pooled,
+                similarity_sensitive_pooled,
+                similarity_one_hot_pooled
+            ],
+            -1
+        )
+        lo      = self.linear_per_q1(temp)
+        lo      = self.my_relu1(lo)
+        lo      = self.my_drop1(lo)
+        lo      = self.linear_per_q2(lo).squeeze(-1)
+        lo      = self.my_relu2(lo)
+        sr      = lo.sum(-1) / lo.size(-1)
+        return sr
     def get_reg_loss(self):
         l2_reg = None
         for W in self.parameters():
@@ -277,33 +279,26 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_conv                           = self.apply_convolution(doc1_embeds,       self.sent_filters_conv)
         doc2_conv                           = self.apply_convolution(doc2_embeds,       self.sent_filters_conv)
         #
-        similarity_insensitive_doc1         = self.my_cosine_sim(question_embeds, doc1_embeds)
-        print(similarity_insensitive_doc1.size())
-        exit()
-        similarity_insensitive_doc1         = self.my_cosine_sim_many(question_embeds, doc1_sents_embeds)
-        similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1_sents, question, similarity_insensitive_doc1)
-        similarity_insensitive_doc2         = self.my_cosine_sim_many(question_embeds, doc2_sents_embeds)
-        similarity_insensitive_doc2         = self.apply_masks_on_similarity(doc2_sents, question, similarity_insensitive_doc2)
+        similarity_insensitive_doc1         = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
+        similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1, question, similarity_insensitive_doc1)
+        similarity_insensitive_doc2         = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
+        similarity_insensitive_doc2         = self.apply_masks_on_similarity(doc2, question, similarity_insensitive_doc2)
         #
-        similarity_sensitive_doc1           = self.my_cosine_sim_many(q_conv_res, doc1_sents_conv)
-        similarity_sensitive_doc2           = self.my_cosine_sim_many(q_conv_res, doc2_sents_conv)
+        similarity_sensitive_doc1           = self.my_cosine_sim(q_conv_res, doc1_conv).squeeze(0)
+        similarity_sensitive_doc2           = self.my_cosine_sim(q_conv_res, doc2_conv).squeeze(0)
         #
-        similarity_one_hot_doc1             = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc1_sim]
-        similarity_one_hot_doc2             = [autograd.Variable(torch.FloatTensor(item).transpose(0,1), requires_grad=False) for item in doc2_sim]
+        similarity_one_hot_doc1             = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
+        similarity_one_hot_doc2             = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
         #
-        similarity_insensitive_pooled_doc1  = [self.pooling_method(item) for item in similarity_insensitive_doc1]
-        similarity_sensitive_pooled_doc1    = [self.pooling_method(item) for item in similarity_sensitive_doc1]
-        similarity_one_hot_pooled_doc1      = [self.pooling_method(item) for item in similarity_one_hot_doc1]
+        similarity_insensitive_pooled_doc1  = self.pooling_method(similarity_insensitive_doc1)
+        similarity_sensitive_pooled_doc1    = self.pooling_method(similarity_sensitive_doc1)
+        similarity_one_hot_pooled_doc1      = self.pooling_method(similarity_one_hot_doc1)
+        similarity_insensitive_pooled_doc2  = self.pooling_method(similarity_insensitive_doc2)
+        similarity_sensitive_pooled_doc2    = self.pooling_method(similarity_sensitive_doc2)
+        similarity_one_hot_pooled_doc2      = self.pooling_method(similarity_one_hot_doc2)
         #
-        similarity_insensitive_pooled_doc2  = [self.pooling_method(item) for item in similarity_insensitive_doc2]
-        similarity_sensitive_pooled_doc2    = [self.pooling_method(item) for item in similarity_sensitive_doc2]
-        similarity_one_hot_pooled_doc2      = [self.pooling_method(item) for item in similarity_one_hot_doc2]
-        #
-        sent_output_doc1                    = self.get_sent_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
-        sent_output_doc2                    = self.get_sent_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
-        #
-        doc1_emit                           = sent_output_doc1.sum() / (1. * sent_output_doc1.size(0))
-        doc2_emit                           = sent_output_doc2.sum() / (1. * sent_output_doc2.size(0))
+        doc1_emit = self.get_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
+        doc2_emit = self.get_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
         #
         loss1                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
         # loss2                                = self.get_reg_loss() * reg_lambda
