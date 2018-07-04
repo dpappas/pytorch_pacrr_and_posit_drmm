@@ -32,16 +32,10 @@ def get_sim_mat(stoks, qtoks):
     return sm
 
 def get_item_inds(item, question, t2i):
-    doc_title   = get_sents(item['title'])
-    doc_text    = get_sents(item['abstractText'])
-    all_sents   = doc_title + doc_text
-    all_sents   = [s for s in all_sents if(len(bioclean(s))>0)]
-    #
-    all_sims    = [get_sim_mat(bioclean(stoks), bioclean(question)) for stoks in all_sents]
-    #
-    sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in all_sents]
+    passage     = item['title'] + ' ' + item['abstractText']
+    all_sims    = get_sim_mat(bioclean(passage), bioclean(question))
+    sents_inds  = [get_index(token, t2i) for token in bioclean(passage)]
     quest_inds  = [get_index(token, t2i) for token in bioclean(question)]
-    #
     return sents_inds, quest_inds, all_sims
 
 def print_params(model):
