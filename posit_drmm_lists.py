@@ -238,28 +238,6 @@ class Posit_Drmm_Modeler(nn.Module):
         #
         return(total_loss, sent_output, document_emitions) # return the general loss, the sentences' relevance score and the documents' relevance scores
 
-nof_cnn_filters = 12
-filters_size    = 3
-print('LOADING embedding_matrix (14GB)')
-# matrix = pickle.load(open('/home/dpappas/joint_task_list_batches/embedding_matrix.p','rb'))
-# with h5py.File('/home/dpappas/joint_task_list_batches/embedding_matrix.h5', 'r') as hf:
-#     matrix = hf['embeddings'][:]
-# matrix          = np.random.random((2900000, 10))
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-print('Done')
-
-k_for_maxpool   = 5
-model           = Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=filters_size, pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
-lr              = 0.01
-params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
-print_params(model)
-optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-
-del(matrix)
-
-# dummy_test()
-# exit()
-
 def train_one_epoch(paths, model, optimizer, epoch):
     cost_sum        = 0.0
     average_cost    = 1000.0
@@ -300,6 +278,28 @@ def test_one_epoch(paths, model, epoch):
         print("\rtest epoch:{}, batch:{}/{}, aver_loss:{}, batch_loss:{}".format(epoch + 1,i+1,len(paths),average_cost,the_cost), end="")
     print('')
     return average_cost
+
+nof_cnn_filters = 12
+filters_size    = 3
+print('LOADING embedding_matrix (14GB)')
+# matrix = pickle.load(open('/home/dpappas/joint_task_list_batches/embedding_matrix.p','rb'))
+# with h5py.File('/home/dpappas/joint_task_list_batches/embedding_matrix.h5', 'r') as hf:
+#     matrix = hf['embeddings'][:]
+# matrix          = np.random.random((2900000, 10))
+matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+print('Done')
+
+k_for_maxpool   = 5
+model           = Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=filters_size, pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
+lr              = 0.01
+params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
+print_params(model)
+optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+
+del(matrix)
+
+# dummy_test()
+# exit()
 
 dir_with_batches    = '/home/dpappas/joint_task_list_batches/train/'
 all_train_paths     = [ dir_with_batches+fpath for fpath  in os.listdir(dir_with_batches) ]
