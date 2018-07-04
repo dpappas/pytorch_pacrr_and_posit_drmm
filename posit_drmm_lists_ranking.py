@@ -17,6 +17,17 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
+odir            = '/home/dpappas/posit_drmm_lists_rank/'
+od              = 'sent_posit_drmm_MarginRankingLoss'
+reg_lambda      = 0.1
+nof_cnn_filters = 50
+filters_size    = 3
+k_for_maxpool   = 5
+lr              = 0.01
+bsize           = 32
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+matrix          = np.random.random((290, 10))
+
 def get_index(token, t2i):
     try:
         return t2i[token]
@@ -291,12 +302,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss                                 = loss1 + loss2
         return loss, doc1_emit, doc2_emit, loss1, loss2
 
-odir = '/home/dpappas/sent_posit_drmm_rank_loss_2/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
 import logging
-logger = logging.getLogger('sent_posit_drmm_MarginRankingLoss')
+logger = logging.getLogger(od)
 hdlr = logging.FileHandler(odir+'model.log')
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
@@ -305,15 +315,7 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-# matrix          = np.random.random((290, 10))
 
-reg_lambda      = 0.1
-nof_cnn_filters = 50
-filters_size    = 3
-k_for_maxpool   = 5
-lr              = 0.01
-bsize           = 32
 print('Compiling model...')
 logger.info('Compiling model...')
 model           = Sent_Posit_Drmm_Modeler(
@@ -327,8 +329,8 @@ print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
 print('Loading abs texts...')
