@@ -247,8 +247,8 @@ t2i             = pickle.load(open('/home/dpappas/joint_task_list_batches/t2i.p'
 print('Done')
 
 print('Compiling model...')
-model = Sent_Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=filters_size, pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
-params = list(set(model.parameters()) - set([model.word_embeddings.weight]))
+model   = Sent_Posit_Drmm_Modeler(nof_filters=nof_cnn_filters, filters_size=filters_size, pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
+params  = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 print_params(model)
 del(matrix)
 
