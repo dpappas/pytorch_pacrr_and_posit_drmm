@@ -19,12 +19,12 @@ torch.manual_seed(my_seed)
 
 odir            = '/home/dpappas/posit_drmm_lists_rank/'
 od              = 'sent_posit_drmm_MarginRankingLoss'
-reg_lambda      = 0.1
 nof_cnn_filters = 50
 filters_size    = 3
 k_for_maxpool   = 5
 lr              = 0.01
 bsize           = 32
+reg_lambda      = 0.1
 
 import logging
 logger = logging.getLogger(od)
