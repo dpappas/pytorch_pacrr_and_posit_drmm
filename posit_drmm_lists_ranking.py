@@ -94,17 +94,17 @@ def data_yielder(bm25_scores, all_abs, t2i):
                 yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
 
 def dummy_test():
-    good_sents_inds     = np.random.randint(0,100, (10,3))
-    good_all_sims       = np.zeros((10,3, 4))
-    bad_sents_inds      = np.random.randint(0,100, (7,5))
-    bad_all_sims        = np.zeros((7, 5, 4))
-    bad_quest_inds      = np.random.randint(0,100,(4))
+    quest_inds          = np.random.randint(0,100,(40))
+    good_sents_inds     = np.random.randint(0,100,(36))
+    good_all_sims       = np.zeros((36, 40))
+    bad_sents_inds      = np.random.randint(0,100,(37))
+    bad_all_sims        = np.zeros((37, 40))
     for epoch in range(200):
         optimizer.zero_grad()
         cost_, sent_ems, doc_ems = model(
             doc1_sents  = good_sents_inds,
             doc2_sents  = bad_sents_inds,
-            question    = bad_quest_inds,
+            question    = quest_inds,
             doc1_sim    = good_all_sims,
             doc2_sim    = bad_all_sims
         )
@@ -330,6 +330,7 @@ del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
 dummy_test()
+
 exit()
 
 token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
