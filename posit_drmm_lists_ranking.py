@@ -39,8 +39,8 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-matrix          = np.random.random((290, 10))
+matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# matrix          = np.random.random((290, 10))
 
 def get_index(token, t2i):
     try:
