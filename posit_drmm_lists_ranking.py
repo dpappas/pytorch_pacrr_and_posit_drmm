@@ -239,8 +239,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.PReLU()
         self.my_relu2                               = torch.nn.PReLU()
         self.my_drop1                               = nn.Dropout(p=0.2)
-        # self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
-        self.my_loss                                = nn.HingeEmbeddingLoss(margin=0.9)
+        self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
+        # self.my_loss                                = nn.HingeEmbeddingLoss(margin=0.9)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
@@ -349,6 +349,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         )
         #
         loss1                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
+        # loss1                                = self.my_loss(doc2_emit.unsqueeze(0), doc1_emit.unsqueeze(0))
         # loss2                                = self.get_reg_loss() * reg_lambda
         loss2                                = loss1 * 0.
         loss                                 = loss1 + loss2
