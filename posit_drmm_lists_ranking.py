@@ -322,7 +322,6 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # dummy_test()
 # exit()
 
-token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
 print('Loading abs texts...')
 logger.info('Loading abs texts...')
 train_all_abs       = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl','rb'))
@@ -335,17 +334,11 @@ dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/b
 test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
 print('Loading token to index files...')
 logger.info('Loading token to index files...')
+token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
 t2i                 = pickle.load(open(token_to_index_f,'rb'))
 print('Done')
 logger.info('Done')
 
-idf                 = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF.pkl', 'rb'))
-idf_mat             = np.zeros(len(t2i))
-for t in idf:
-    try:
-        idf_mat[t2i[t]] = idf[t]
-    except KeyError:
-        pass
 
 train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i, 3))
 dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1))
@@ -384,6 +377,8 @@ python3
 import pickle
 idf = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF.pkl', 'rb')) 
 pickle.dump( idf, open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF_python_v2.pkl', 'wb', protocol=2)) 
+
+
 
 '''
 
