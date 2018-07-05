@@ -313,21 +313,23 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_embeds                         = self.word_embeddings(doc1)
         doc2_embeds                         = self.word_embeddings(doc2)
         #
-        q_conv_res                          = self.apply_convolution(question_embeds,   self.quest_filters_conv_1)
-        doc1_conv_1                         = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_1)
-        doc1_conv_2                         = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_2)
-        doc2_conv_1                         = self.apply_convolution(doc2_embeds,       self.sent_filters_conv_1)
-        doc2_conv_2                         = self.apply_convolution(doc2_embeds,       self.sent_filters_conv_2)
+        q_conv_res_1                        = self.apply_convolution(question_embeds,   self.quest_filters_conv_1,  self.self.conv_relu1)
+        q_conv_res_2                        = self.apply_convolution(question_embeds,   self.quest_filters_conv_2,  self.self.conv_relu2)
+        #
+        doc1_conv_1                         = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_1,   self.self.conv_relu1)
+        doc1_conv_2                         = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_2,   self.self.conv_relu2)
+        doc2_conv_1                         = self.apply_convolution(doc2_embeds,       self.sent_filters_conv_1,   self.self.conv_relu1)
+        doc2_conv_2                         = self.apply_convolution(doc2_embeds,       self.sent_filters_conv_2,   self.self.conv_relu2)
         #
         similarity_insensitive_doc1         = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1, question, similarity_insensitive_doc1)
         similarity_insensitive_doc2         = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
         similarity_insensitive_doc2         = self.apply_masks_on_similarity(doc2, question, similarity_insensitive_doc2)
         #
-        similarity_sensitive_doc1_1         = self.my_cosine_sim(q_conv_res, doc1_conv_1).squeeze(0)
-        similarity_sensitive_doc2_1         = self.my_cosine_sim(q_conv_res, doc2_conv_1).squeeze(0)
-        similarity_sensitive_doc1_2         = self.my_cosine_sim(q_conv_res, doc1_conv_2).squeeze(0)
-        similarity_sensitive_doc2_2         = self.my_cosine_sim(q_conv_res, doc2_conv_2).squeeze(0)
+        similarity_sensitive_doc1_1         = self.my_cosine_sim(q_conv_res_1, doc1_conv_1).squeeze(0)
+        similarity_sensitive_doc2_1         = self.my_cosine_sim(q_conv_res_1, doc2_conv_1).squeeze(0)
+        similarity_sensitive_doc1_2         = self.my_cosine_sim(q_conv_res_2, doc1_conv_2).squeeze(0)
+        similarity_sensitive_doc2_2         = self.my_cosine_sim(q_conv_res_2, doc2_conv_2).squeeze(0)
         #
         similarity_one_hot_doc1             = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
         similarity_one_hot_doc2             = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
