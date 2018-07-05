@@ -45,18 +45,24 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').re
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, pretrained_embeds, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.k                                      = k_for_maxpool
+        self.k                                      = k_for_maxpool         # k is for the average k pooling
+        #
         self.vocab_size                             = pretrained_embeds.shape[0]
         self.embedding_dim                          = pretrained_embeds.shape[1]
         self.word_embeddings                        = nn.Embedding(self.vocab_size, self.embedding_dim)
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
+        #
         self.sent_filters_conv_1                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
         self.quest_filters_conv_1                   = self.sent_filters_conv_1
         self.sent_filters_conv_2                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
         self.quest_filters_conv_2                   = self.sent_filters_conv_2
-        self.linear_per_q1                          = nn.Linear(8, 1, bias=True)
+        #
+        self.linear_per_q1                          = nn.Linear(8, 8, bias=True)
+        self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_relu1                               = torch.nn.PReLU()
+        self.my_relu2                               = torch.nn.PReLU()
+        self.my_drop1                               = nn.Dropout(p=0.2)
         self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
@@ -83,7 +89,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1)
         return the_concatenation
     def apply_masks_on_similarity(self, document, question, similarity):
-        qq              = (question > 1).float()
+        qq = (question > 1).float()
         ss              = (document > 1).float()
         sim_mask1       = qq.unsqueeze(-1).expand_as(similarity)
         sim_mask2       = ss.unsqueeze(0).expand_as(similarity)
@@ -94,28 +100,45 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
+        lo      = self.my_drop1(lo)
+        lo      = self.linear_per_q2(lo)
+        lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
     def forward(self, doc1, question, doc1_sim):
+        #
         question                            = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1                                = autograd.Variable(torch.LongTensor(doc1), requires_grad=False)
+        #
         question_embeds                     = self.word_embeddings(question)
         doc1_embeds                         = self.word_embeddings(doc1)
+        #
         q_conv_res                          = self.apply_convolution(question_embeds,   self.quest_filters_conv_1)
         doc1_conv_1                         = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_1)
         doc1_conv_2                         = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_2)
+        #
         similarity_insensitive_doc1         = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1, question, similarity_insensitive_doc1)
+        #
         similarity_sensitive_doc1_1         = self.my_cosine_sim(q_conv_res, doc1_conv_1).squeeze(0)
         similarity_sensitive_doc1_2         = self.my_cosine_sim(q_conv_res, doc1_conv_2).squeeze(0)
+        #
         similarity_one_hot_doc1             = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
+        #
         similarity_insensitive_pooled_doc1  = self.pooling_method(similarity_insensitive_doc1)
         similarity_sensitive_pooled_doc1_1  = self.pooling_method(similarity_sensitive_doc1_1)
         similarity_sensitive_pooled_doc1_2  = self.pooling_method(similarity_sensitive_doc1_2)
         similarity_one_hot_pooled_doc1      = self.pooling_method(similarity_one_hot_doc1)
         #
-        doc1_emit = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_1, similarity_sensitive_pooled_doc1_2])
+        doc1_emit = self.get_output(
+            [
+                similarity_one_hot_pooled_doc1,
+                similarity_insensitive_pooled_doc1,
+                similarity_sensitive_pooled_doc1_1,
+                similarity_sensitive_pooled_doc1_2
+            ]
+        )
         return doc1_emit
 
 print('Compiling model...')
