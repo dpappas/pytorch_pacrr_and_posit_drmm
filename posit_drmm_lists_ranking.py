@@ -107,14 +107,14 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
         ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
         bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-        if(how_many_loops==0):
-            for gid in good_pmids:
-                for bid in bad_pmids:
-                    good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
-                    bad_sents_inds, bad_quest_inds, bad_all_sims = get_item_inds(all_abs[bid], quest, t2i)
-                    yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
-        else:
-            if(len(bad_pmids)>0):
+        if(len(bad_pmids)>0):
+            if(how_many_loops==0):
+                for gid in good_pmids:
+                    for bid in bad_pmids:
+                        good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
+                        bad_sents_inds, bad_quest_inds, bad_all_sims = get_item_inds(all_abs[bid], quest, t2i)
+                        yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
+            else:
                 for gid in good_pmids:
                     for i in range(how_many_loops):
                         bid = random.choice(bad_pmids)
@@ -221,19 +221,33 @@ def load_the_data(loopes):
     t2i                 = pickle.load(open(token_to_index_f,'rb'))
     print('yielding data')
     logger.info('yielding data')
-    if(loopes[0] == 0):
-        train_instances = data_yielder(train_bm25_scores,  train_all_abs,  t2i, loopes[0])
-    else:
-        train_instances = list(data_yielder(train_bm25_scores,  train_all_abs,  t2i, loopes[0]))
-    if (loopes[1] == 0):
-        dev_instances   = data_yielder(dev_bm25_scores,    dev_all_abs,    t2i, loopes[1])
-    else:
-        dev_instances   = list(data_yielder(dev_bm25_scores,    dev_all_abs,    t2i, loopes[1]))
-    if (loopes[2] == 0):
-        test_instances  = data_yielder(test_bm25_scores,   test_all_abs,   t2i, loopes[2])
-    else:
-        test_instances  = list(data_yielder(test_bm25_scores,   test_all_abs,   t2i, loopes[2]))
+    train_instances     = list(data_yielder(train_bm25_scores,  train_all_abs,  t2i, loopes[0]))
+    dev_instances       = list(data_yielder(dev_bm25_scores,    dev_all_abs,    t2i, loopes[1]))
+    test_instances      = list(data_yielder(test_bm25_scores,   test_all_abs,   t2i, loopes[2]))
+    print('Done')
+    logger.info('Done')
+    return train_instances, dev_instances, test_instances
 
+def load_all_data():
+    print('Loading abs texts...')
+    logger.info('Loading abs texts...')
+    train_all_abs       = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl','rb'))
+    dev_all_abs         = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl','rb'))
+    test_all_abs        = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl','rb'))
+    print('Loading retrieved docsc...')
+    logger.info('Loading retrieved docsc...')
+    train_bm25_scores   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
+    dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
+    test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
+    print('Loading token to index files...')
+    logger.info('Loading token to index files...')
+    token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
+    t2i                 = pickle.load(open(token_to_index_f,'rb'))
+    print('yielding data')
+    logger.info('yielding data')
+    train_instances     = data_yielder(train_bm25_scores,  train_all_abs,  t2i, 0)
+    dev_instances       = data_yielder(dev_bm25_scores,    dev_all_abs,    t2i, 0)
+    test_instances      = data_yielder(test_bm25_scores,   test_all_abs,   t2i, 0)
     print('Done')
     logger.info('Done')
     return train_instances, dev_instances, test_instances
