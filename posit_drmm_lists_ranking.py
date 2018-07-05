@@ -92,7 +92,7 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def data_yielder(bm25_scores, all_abs, t2i):
+def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
     for quer in bm25_scores[u'queries']:
         quest       = quer['query_text']
         ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
@@ -100,7 +100,7 @@ def data_yielder(bm25_scores, all_abs, t2i):
         bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
         if(len(bad_pmids)>0):
             for gid in good_pmids:
-                for i in range(3):
+                for i in range(how_many_loops):
                     bid = random.choice(bad_pmids)
                     good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
                     bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
@@ -339,9 +339,9 @@ t2i                 = pickle.load(open(token_to_index_f,'rb'))
 print('Done')
 logger.info('Done')
 
-train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i))
-dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i))
-test_instances  = list(data_yielder(test_bm25_scores, test_all_abs, t2i))
+train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i, 3))
+dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1))
+test_instances  = list(data_yielder(test_bm25_scores, test_all_abs, t2i, 1))
 #
 min_dev_loss    = 10e10
 max_epochs      = 30
