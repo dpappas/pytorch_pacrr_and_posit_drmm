@@ -18,7 +18,8 @@ random.seed(my_seed)
 torch.manual_seed(my_seed)
 
 # odir            = '/home/dpappas/posit_drmm_lists_rank_3timesloop/'
-odir            = '/home/dpappas/omg_its_a_monster_3timesloop/'
+# odir            = '/home/dpappas/omg_its_a_monster_3timesloop/'
+odir            = '/home/dpappas/posit_drmm_lists_hinge/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
@@ -193,7 +194,7 @@ def test_one(prefix, the_instances):
         logger.info('{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(prefix, epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
     return average_task_loss/(1.*instance_metr)
 
-def load_the_data():
+def load_the_data(loopes):
     print('Loading abs texts...')
     logger.info('Loading abs texts...')
     train_all_abs       = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl','rb'))
@@ -210,9 +211,9 @@ def load_the_data():
     t2i                 = pickle.load(open(token_to_index_f,'rb'))
     print('yielding data')
     logger.info('yielding data')
-    train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i, 3))
-    dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1))
-    test_instances  = list(data_yielder(test_bm25_scores, test_all_abs, t2i, 1))
+    train_instances = list(data_yielder(train_bm25_scores,  train_all_abs,  t2i, loopes[0]))
+    dev_instances   = list(data_yielder(dev_bm25_scores,    dev_all_abs,    t2i, loopes[1]))
+    test_instances  = list(data_yielder(test_bm25_scores,   test_all_abs,   t2i, loopes[2]))
     print('Done')
     logger.info('Done')
     return train_instances, dev_instances, test_instances
@@ -371,7 +372,7 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # dummy_test()
 # exit()
 
-train_instances, dev_instances, test_instances = load_the_data()
+train_instances, dev_instances, test_instances = load_the_data(loopes=[3,1,1])
 min_dev_loss    = 10e10
 max_epochs      = 30
 for epoch in range(max_epochs):
