@@ -237,9 +237,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.requires_grad   = False
         #
         self.sent_filters_conv_bigram               = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
-        self.quest_filters_conv_bigram              = self.sent_filters_conv_1
+        self.quest_filters_conv_bigram              = self.sent_filters_conv_bigram
         self.sent_filters_conv_trigram              = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
-        self.quest_filters_conv_trigram             = self.sent_filters_conv_2
+        self.quest_filters_conv_trigram             = self.sent_filters_conv_trigram
         self.conv_relu_bigram                       = torch.nn.PReLU()
         self.conv_relu_trigram                      = torch.nn.PReLU()
         #
