@@ -234,7 +234,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_filters_conv_2                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
         self.quest_filters_conv_2                   = self.sent_filters_conv_2
         #
-        self.linear_per_q1                          = nn.Linear(9, 8, bias=True)
+        self.linear_per_q1                          = nn.Linear(8, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_relu1                               = torch.nn.PReLU()
         self.my_relu2                               = torch.nn.PReLU()
@@ -356,7 +356,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 print('Compiling model...')
 logger.info('Compiling model...')
 model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
-params = list(set(model.parameters()) - set([model.word_embeddings.weight, model.idf_embeddings.weight]))
+# params = list(set(model.parameters()) - set([model.word_embeddings.weight, model.idf_embeddings.weight]))
+params = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
