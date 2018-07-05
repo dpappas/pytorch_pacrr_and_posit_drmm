@@ -33,13 +33,6 @@ def get_sim_mat(stoks, qtoks):
                 sm[j,i] = 1.
     return sm
 
-def get_item_inds(item, question, t2i):
-    passage     = item['title'] + ' ' + item['abstractText']
-    all_sims    = get_sim_mat(bioclean(passage), bioclean(question))
-    sents_inds  = [get_index(token, t2i) for token in bioclean(passage)]
-    quest_inds  = [get_index(token, t2i) for token in bioclean(question)]
-    return sents_inds, quest_inds, all_sims
-
 def load_model_from_checkpoint(resume_from):
     if os.path.isfile(resume_from):
         print("=> loading checkpoint '{}'".format(resume_from))
@@ -122,69 +115,50 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 else:
                     l2_reg = l2_reg + W.norm(2)
         return l2_reg
-    def forward(self, doc1, doc2, question, doc1_sim, doc2_sim):
+    def forward(self, doc1, question, doc1_sim):
         #
         question                            = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1                                = autograd.Variable(torch.LongTensor(doc1), requires_grad=False)
-        doc2                                = autograd.Variable(torch.LongTensor(doc2), requires_grad=False)
         #
         question_embeds                     = self.word_embeddings(question)
         doc1_embeds                         = self.word_embeddings(doc1)
-        doc2_embeds                         = self.word_embeddings(doc2)
         #
         q_conv_res                          = self.apply_convolution(question_embeds,   self.quest_filters_conv_1)
         doc1_conv_1                         = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_1)
         doc1_conv_2                         = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_2)
-        doc2_conv_1                         = self.apply_convolution(doc2_embeds,       self.sent_filters_conv_1)
-        doc2_conv_2                         = self.apply_convolution(doc2_embeds,       self.sent_filters_conv_2)
         #
         similarity_insensitive_doc1         = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1, question, similarity_insensitive_doc1)
-        similarity_insensitive_doc2         = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
-        similarity_insensitive_doc2         = self.apply_masks_on_similarity(doc2, question, similarity_insensitive_doc2)
         #
         similarity_sensitive_doc1_1         = self.my_cosine_sim(q_conv_res, doc1_conv_1).squeeze(0)
-        similarity_sensitive_doc2_1         = self.my_cosine_sim(q_conv_res, doc2_conv_1).squeeze(0)
         similarity_sensitive_doc1_2         = self.my_cosine_sim(q_conv_res, doc1_conv_2).squeeze(0)
-        similarity_sensitive_doc2_2         = self.my_cosine_sim(q_conv_res, doc2_conv_2).squeeze(0)
         #
         similarity_one_hot_doc1             = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
-        similarity_one_hot_doc2             = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
         #
         similarity_insensitive_pooled_doc1  = self.pooling_method(similarity_insensitive_doc1)
         similarity_sensitive_pooled_doc1_1  = self.pooling_method(similarity_sensitive_doc1_1)
         similarity_sensitive_pooled_doc1_2  = self.pooling_method(similarity_sensitive_doc1_2)
         similarity_one_hot_pooled_doc1      = self.pooling_method(similarity_one_hot_doc1)
         #
-        similarity_insensitive_pooled_doc2  = self.pooling_method(similarity_insensitive_doc2)
-        similarity_sensitive_pooled_doc2_1  = self.pooling_method(similarity_sensitive_doc2_1)
-        similarity_sensitive_pooled_doc2_2  = self.pooling_method(similarity_sensitive_doc2_2)
-        similarity_one_hot_pooled_doc2      = self.pooling_method(similarity_one_hot_doc2)
-        #
         doc1_emit = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_1, similarity_sensitive_pooled_doc1_2])
-        doc2_emit = self.get_output([similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2_1, similarity_sensitive_pooled_doc2_2])
         #
-        loss1                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        # loss2                                = self.get_reg_loss() * reg_lambda
-        loss2                                = loss1 * 0.
-        loss                                 = loss1 + loss2
-        return loss, doc1_emit, doc2_emit, loss1, loss2
+        return doc1_emit
 
 print('Compiling model...')
+matrix = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
 params = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 
 token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
-
-
-resume_from = '/home/dpappas/posit_drmm_lists_rank/best_checkpoint.pth.tar'
+resume_dir          = '/home/dpappas/sent_posit_drmm_rank_loss_2/'
+resume_from         = resume_dir+'best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 
 abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl'
 all_abs             = pickle.load(open(abs_path,'rb'))
 bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
-t2i                 = pickle.load(open('/home/dpappas/joint_task_list_batches/t2i.p','rb'))
+t2i                 = pickle.load(open(token_to_index_f,'rb'))
 
 data = {}
 data['questions'] = []
@@ -198,24 +172,17 @@ for quer in tqdm(bm25_scores['queries']):
         all_sims    = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
         #
         sents_inds  = [get_index(token, t2i) for token in bioclean(passage)]
-        quest_inds  = [get_index(token, t2i) for token in bioclean(question)]
-
-
-        sents_inds  = [[get_index(token, t2i) for token in bioclean(s)] for s in all_sents]
+        quest_inds  = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
+        all_sims    = get_sim_mat(sents_inds, quest_inds)
         #
-        quest_inds = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
-        #
-        all_sims = [get_sim_mat(stoks, quest_inds) for stoks in sents_inds]
-        #
-        _, doc1_emit_, tt = model(doc1_sents=sents_inds, question=quest_inds, doc1_sim=all_sims)
-        #
-        # print doc1_emit_
+        _, doc1_emit_, doc2_emit_, _, _ = model(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims)
+        print doc1_emit_
         doc_res[doc_id] = float(doc1_emit_)
     doc_res             = sorted(doc_res.keys(), key=lambda x: doc_res[x], reverse=True)
     doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm) for pm in doc_res[:100]]
     dato['documents']   = doc_res
     data['questions'].append(dato)
 
-with open('/home/dpappas/sent_posit_drmm_rank_loss_2/elk_relevant_abs_posit_drmm_lists.json', 'w') as f:
+with open(resume_dir+'elk_relevant_abs_posit_drmm_lists.json', 'w') as f:
     f.write(json.dumps(data, indent=4, sort_keys=True))
 
