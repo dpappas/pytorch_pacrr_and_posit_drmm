@@ -35,14 +35,14 @@ hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
-print('LOADING embedding_matrix (14GB)...')
-logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
-print(matrix.shape)
-print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
-# idf_mat          = np.random.random((150))
+# print('LOADING embedding_matrix (14GB)...')
+# logger.info('LOADING embedding_matrix (14GB)...')
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
+# print(matrix.shape)
+# print(idf_mat.shape)
+matrix          = np.random.random((150, 10))
+idf_mat          = np.random.random((150))
 
 def get_index(token, t2i):
     try:
@@ -238,11 +238,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_filters_conv_2                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
         self.quest_filters_conv_2                   = self.sent_filters_conv_2
         #
-        self.linear_per_q1                          = nn.Linear(9, 1, bias=True)
-        # self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
+        self.linear_per_q1                          = nn.Linear(9, 8, bias=True)
+        self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_relu1                               = torch.nn.PReLU()
-        # self.my_relu2                               = torch.nn.PReLU()
-        # self.my_drop1                               = nn.Dropout(p=0.2)
+        self.my_relu2                               = torch.nn.PReLU()
+        self.my_drop1                               = nn.Dropout(p=0.2)
         self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
@@ -368,8 +368,8 @@ print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_instances, dev_instances, test_instances = load_the_data()
 min_dev_loss    = 10e10
