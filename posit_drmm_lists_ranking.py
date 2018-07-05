@@ -191,10 +191,8 @@ def test_one(prefix, the_instances):
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, nof_filters, pretrained_embeds, k_for_maxpool):
+    def __init__(self, pretrained_embeds, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.nof_sent_filters                       = nof_filters           # number of filters for the convolution of sentences
-        self.nof_quest_filters                      = nof_filters           # number of filters for the convolution of the question
         self.k                                      = k_for_maxpool         # k is for the average k pooling
         #
         self.vocab_size                             = pretrained_embeds.shape[0]
@@ -203,23 +201,24 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
-        self.sent_filters_conv_1                    = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,3,self.embedding_dim))
+        self.sent_filters_conv_1                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
         self.quest_filters_conv_1                   = self.sent_filters_conv_1
-        self.sent_filters_conv_2                    = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,2,self.embedding_dim))
+        self.sent_filters_conv_2                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
         self.quest_filters_conv_2                   = self.sent_filters_conv_2
         #
-        self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
-        self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
+        self.linear_per_q1                          = nn.Linear(8, 1, bias=True)
+        # self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
         self.my_relu1                               = torch.nn.PReLU()
-        self.my_relu2                               = torch.nn.PReLU()
-        self.my_drop1                               = nn.Dropout(p=0.2)
+        # self.my_relu2                               = torch.nn.PReLU()
+        # self.my_drop1                               = nn.Dropout(p=0.2)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
         conv_res    = F.conv2d(the_input.unsqueeze(1), the_filters, bias=None, stride=1, padding=(int(filter_size/2)+1, 0))
         conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
         conv_res    = conv_res.squeeze(-1).transpose(1,2)
+        conv_res    = conv_res + the_input
         return conv_res.squeeze(0)
     def my_cosine_sim(self,A,B):
         A           = A.unsqueeze(0)
@@ -245,20 +244,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity      *= sim_mask1
         similarity      *= sim_mask2
         return similarity
-    def get_output(self, similarity_one_hot_pooled, similarity_insensitive_pooled,similarity_sensitive_pooled):
-        temp    = torch.cat(
-            [
-                similarity_insensitive_pooled,
-                similarity_sensitive_pooled,
-                similarity_one_hot_pooled
-            ],
-            -1
-        )
+    def get_output(self, input_list):
+        temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
-        lo      = self.my_drop1(lo)
-        lo      = self.linear_per_q2(lo).squeeze(-1)
-        lo      = self.my_relu2(lo)
+        # lo      = self.my_drop1(lo)
+        # lo      = self.linear_per_q2(lo)
+        # lo      = self.my_relu2(lo)
+        lo      = lo.squeeze(-1)
+        print(lo.size())
+        exit()
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
     def get_reg_loss(self):
@@ -285,32 +280,34 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_conv_2                         = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_2)
         doc2_conv_1                         = self.apply_convolution(doc2_embeds,       self.sent_filters_conv_1)
         doc2_conv_2                         = self.apply_convolution(doc2_embeds,       self.sent_filters_conv_2)
-        print(doc1_conv_1.size())
-        print(doc1_conv_2.size())
-        print(doc2_conv_1.size())
-        print(doc2_conv_2.size())
-        exit()
         #
         similarity_insensitive_doc1         = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1, question, similarity_insensitive_doc1)
         similarity_insensitive_doc2         = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
         similarity_insensitive_doc2         = self.apply_masks_on_similarity(doc2, question, similarity_insensitive_doc2)
         #
-        similarity_sensitive_doc1           = self.my_cosine_sim(q_conv_res, doc1_conv).squeeze(0)
-        similarity_sensitive_doc2           = self.my_cosine_sim(q_conv_res, doc2_conv).squeeze(0)
+        similarity_sensitive_doc1_1         = self.my_cosine_sim(q_conv_res, doc1_conv_1).squeeze(0)
+        similarity_sensitive_doc2_1         = self.my_cosine_sim(q_conv_res, doc2_conv_1).squeeze(0)
+        similarity_sensitive_doc1_2         = self.my_cosine_sim(q_conv_res, doc1_conv_2).squeeze(0)
+        similarity_sensitive_doc2_2         = self.my_cosine_sim(q_conv_res, doc2_conv_2).squeeze(0)
         #
         similarity_one_hot_doc1             = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
         similarity_one_hot_doc2             = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
         #
         similarity_insensitive_pooled_doc1  = self.pooling_method(similarity_insensitive_doc1)
-        similarity_sensitive_pooled_doc1    = self.pooling_method(similarity_sensitive_doc1)
+        similarity_sensitive_pooled_doc1_1  = self.pooling_method(similarity_sensitive_doc1_1)
+        similarity_sensitive_pooled_doc1_2  = self.pooling_method(similarity_sensitive_doc1_2)
         similarity_one_hot_pooled_doc1      = self.pooling_method(similarity_one_hot_doc1)
+        #
         similarity_insensitive_pooled_doc2  = self.pooling_method(similarity_insensitive_doc2)
-        similarity_sensitive_pooled_doc2    = self.pooling_method(similarity_sensitive_doc2)
+        similarity_sensitive_pooled_doc2_1  = self.pooling_method(similarity_sensitive_doc2_1)
+        similarity_sensitive_pooled_doc2_2  = self.pooling_method(similarity_sensitive_doc2_2)
         similarity_one_hot_pooled_doc2      = self.pooling_method(similarity_one_hot_doc2)
         #
-        doc1_emit = self.get_output(similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1)
-        doc2_emit = self.get_output(similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2)
+        doc1_emit = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_1, similarity_sensitive_pooled_doc1_2])
+        doc2_emit = self.get_output([similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2_1, similarity_sensitive_pooled_doc2_2])
+        #
+        exit()
         #
         loss1                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
         # loss2                                = self.get_reg_loss() * reg_lambda
@@ -321,7 +318,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 print('Compiling model...')
 logger.info('Compiling model...')
 model           = Sent_Posit_Drmm_Modeler(
-    nof_filters         = nof_cnn_filters,
     pretrained_embeds   = matrix,
     k_for_maxpool       = k_for_maxpool
 )
