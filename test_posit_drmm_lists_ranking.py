@@ -145,9 +145,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return doc1_emit
 
 print('Compiling model...')
-matrix = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
-params = list(set(model.parameters()) - set([model.word_embeddings.weight]))
+matrix              = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+model               = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
+params              = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 
 token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
 resume_dir          = '/home/dpappas/sent_posit_drmm_rank_loss_2/'
