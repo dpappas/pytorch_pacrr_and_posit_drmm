@@ -42,6 +42,7 @@ idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy'
 print(matrix.shape)
 print(idf_mat.shape)
 # matrix          = np.random.random((150, 10))
+# idf_mat          = np.random.random((150))
 
 def get_index(token, t2i):
     try:
@@ -205,7 +206,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.requires_grad   = False
         #
         self.idf_embeddings                         = nn.Embedding(self.vocab_size, 1)
-        self.idf_embeddings.weight.data.copy_(torch.from_numpy(idf_mat))
+        self.idf_embeddings.weight.data.copy_(torch.from_numpy(idf_mat).unsqueeze(-1))
         self.idf_embeddings.weight.requires_grad    = False
         #
         self.sent_filters_conv_1                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
@@ -213,7 +214,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_filters_conv_2                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
         self.quest_filters_conv_2                   = self.sent_filters_conv_2
         #
-        self.linear_per_q1                          = nn.Linear(8, 1, bias=True)
+        self.linear_per_q1                          = nn.Linear(9, 1, bias=True)
         # self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_relu1                               = torch.nn.PReLU()
         # self.my_relu2                               = torch.nn.PReLU()
@@ -338,7 +339,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 print('Compiling model...')
 logger.info('Compiling model...')
 model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, idf_mat=idf_mat, k_for_maxpool=k_for_maxpool)
-params = list(set(model.parameters()) - set([model.word_embeddings.weight]))
+params = list(set(model.parameters()) - set([model.word_embeddings.weight, model.idf_embeddings.weight]))
 print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
@@ -362,7 +363,6 @@ token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
 t2i                 = pickle.load(open(token_to_index_f,'rb'))
 print('Done')
 logger.info('Done')
-
 
 train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i, 3))
 dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1))
