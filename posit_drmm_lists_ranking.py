@@ -339,6 +339,14 @@ t2i                 = pickle.load(open(token_to_index_f,'rb'))
 print('Done')
 logger.info('Done')
 
+idf                 = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF.pkl', 'rb'))
+idf_mat             = np.zeros(len(t2i))
+for t in idf:
+    try:
+        idf_mat[t2i[t]] = idf[t]
+    except KeyError:
+        pass
+
 train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i, 3))
 dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1))
 test_instances  = list(data_yielder(test_bm25_scores, test_all_abs, t2i, 1))
@@ -375,6 +383,7 @@ grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank_3timesloop/model.l
 python3
 import pickle
 idf = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF.pkl', 'rb')) 
+pickle.dump( idf, open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF_python_v2.pkl', 'wb', protocol=2)) 
 
 '''
 
