@@ -38,6 +38,9 @@ logger.setLevel(logging.INFO)
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
+print(matrix.shape)
+print(idf_mat.shape)
 # matrix          = np.random.random((150, 10))
 
 def get_index(token, t2i):
@@ -191,7 +194,7 @@ def test_one(prefix, the_instances):
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, pretrained_embeds, k_for_maxpool):
+    def __init__(self, pretrained_embeds, idf_mat, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool         # k is for the average k pooling
         #
@@ -199,6 +202,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.embedding_dim                          = pretrained_embeds.shape[1]
         self.word_embeddings                        = nn.Embedding(self.vocab_size, self.embedding_dim)
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
+        self.word_embeddings.weight.requires_grad   = False
+        #
+        self.word_embeddings                        = nn.Embedding(self.vocab_size, 1)
+        self.word_embeddings.weight.data.copy_(torch.from_numpy(idf_mat))
         self.word_embeddings.weight.requires_grad   = False
         #
         self.sent_filters_conv_1                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
