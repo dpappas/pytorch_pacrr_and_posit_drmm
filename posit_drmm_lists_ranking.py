@@ -21,7 +21,8 @@ torch.manual_seed(my_seed)
 # odir            = '/home/dpappas/omg_its_a_monster_3timesloop/'
 # odir            = '/home/dpappas/posit_drmm_lists_hinge/'
 # odir            = '/home/dpappas/posit_drmm_lists_hinge_plus_bce/'
-odir            = '/home/dpappas/posit_drmm_lists_rank_111/'
+# odir            = '/home/dpappas/posit_drmm_lists_rank_111/'
+odir            = '/home/dpappas/posit_drmm_lists_rank_000/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
@@ -384,7 +385,7 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # dummy_test()
 # exit()
 
-train_instances, dev_instances, test_instances = load_the_data(loopes=[1,1,1])
+train_instances, dev_instances, test_instances = load_the_data(loopes=[0,0,0])
 min_dev_loss    = 10e10
 max_epochs      = 30
 for epoch in range(max_epochs):
