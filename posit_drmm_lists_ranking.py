@@ -112,7 +112,7 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
                 for gid in good_pmids:
                     for bid in bad_pmids:
                         good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
-                        bad_sents_inds, bad_quest_inds, bad_all_sims = get_item_inds(all_abs[bid], quest, t2i)
+                        bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
                         yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
             else:
                 for gid in good_pmids:
