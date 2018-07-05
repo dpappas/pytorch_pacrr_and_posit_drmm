@@ -17,7 +17,8 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir            = '/home/dpappas/posit_drmm_lists_rank_3timesloop/'
+# odir            = '/home/dpappas/posit_drmm_lists_rank_3timesloop/'
+odir            = '/home/dpappas/omg_its_a_monster_3timesloop/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
@@ -35,14 +36,14 @@ hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
-# print('LOADING embedding_matrix (14GB)...')
-# logger.info('LOADING embedding_matrix (14GB)...')
-# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-# # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
-# print(matrix.shape)
-# # print(idf_mat.shape)
-matrix          = np.random.random((150, 10))
-idf_mat          = np.random.random((150))
+print('LOADING embedding_matrix (14GB)...')
+logger.info('LOADING embedding_matrix (14GB)...')
+matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
+print(matrix.shape)
+# print(idf_mat.shape)
+# matrix          = np.random.random((150, 10))
+# idf_mat          = np.random.random((150))
 
 def get_index(token, t2i):
     try:
@@ -128,7 +129,7 @@ def dummy_test():
         cost_.backward()
         optimizer.step()
         the_cost = cost_.cpu().item()
-        print(the_cost)
+        print(the_cost, float(doc1_emit_), float(doc2_emit_))
     print(20 * '-')
 
 def compute_the_cost(costs, back_prop=True):
@@ -239,8 +240,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.PReLU()
         self.my_relu2                               = torch.nn.PReLU()
         self.my_drop1                               = nn.Dropout(p=0.2)
-        self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
-        # self.my_loss                                = nn.HingeEmbeddingLoss(margin=0.9)
+        # self.margin_loss                            = nn.MarginRankingLoss(margin=0.9)
+        # self.bce_loss                               = nn.BCELoss()
+        self.hinge_loss                             = nn.HingeEmbeddingLoss(margin=0.9)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
@@ -279,6 +281,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = self.my_relu1(lo)
         lo      = self.my_drop1(lo)
         lo      = self.linear_per_q2(lo)
+        # lo      = F.sigmoid(lo)
         lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
         sr      = lo.sum(-1) / lo.size(-1)
@@ -293,7 +296,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                     l2_reg = l2_reg + W.norm(2)
         return l2_reg
     def forward(self, doc1, doc2, question, doc1_sim, doc2_sim):
-        #
         question                            = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1                                = autograd.Variable(torch.LongTensor(doc1), requires_grad=False)
         doc2                                = autograd.Variable(torch.LongTensor(doc2), requires_grad=False)
@@ -348,8 +350,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             ]
         )
         #
-        loss1                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        # loss1                                = self.my_loss(doc2_emit.unsqueeze(0), doc1_emit.unsqueeze(0))
+        # loss1                                = self.margin_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
+        # loss1                                += self.bce_loss(doc1_emit.unsqueeze(0), torch.ones(1,1))
+        # loss1                                += self.bce_loss(doc2_emit.unsqueeze(0), torch.zeros(1,1))
+        loss1                                = self.hinge_loss(doc2_emit.unsqueeze(0), doc1_emit.unsqueeze(0))
         # loss2                                = self.get_reg_loss() * reg_lambda
         loss2                                = loss1 * 0.
         loss                                 = loss1 + loss2
@@ -364,8 +368,8 @@ print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-dummy_test()
-exit()
+# dummy_test()
+# exit()
 
 train_instances, dev_instances, test_instances = load_the_data()
 min_dev_loss    = 10e10
