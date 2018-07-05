@@ -313,11 +313,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 print('Compiling model...')
 logger.info('Compiling model...')
-model           = Sent_Posit_Drmm_Modeler(
-    pretrained_embeds   = matrix,
-    k_for_maxpool       = k_for_maxpool
-)
-params          = list(set(model.parameters()) - set([model.word_embeddings.weight]))
+model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
+params = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
