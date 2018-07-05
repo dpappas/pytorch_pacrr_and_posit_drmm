@@ -167,7 +167,7 @@ def save_checkpoint(epoch, model, min_dev_loss, optimizer, filename='checkpoint.
     }
     torch.save(state, filename)
 
-def train_one():
+def train_one(train_instances):
     costs   = []
     optimizer.zero_grad()
     instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
@@ -381,19 +381,16 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
-train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i, 1)))
-dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1]))
-test_instances  = list(data_yielder(test_bm25_scores, test_all_abs, t2i, 1]))
 
 min_dev_loss    = 10e10
 max_epochs      = 30
 for epoch in range(max_epochs):
-    train_average_loss      = train_one()
-    dev_average_loss        = test_one('dev', dev_instances)
+    train_average_loss      = train_one(data_yielder(train_bm25_scores, train_all_abs, t2i, 1))
+    dev_average_loss        = test_one('dev', data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1))
     if(dev_average_loss < min_dev_loss):
         min_dev_loss        = dev_average_loss
         min_loss_epoch      = epoch+1
-        test_average_loss   = test_one('test', test_instances)
+        test_average_loss   = test_one('test', data_yielder(test_bm25_scores, test_all_abs, t2i, 1))
         save_checkpoint(epoch, model, min_dev_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
     print("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
     print(20 * '-')
