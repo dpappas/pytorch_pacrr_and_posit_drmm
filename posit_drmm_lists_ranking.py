@@ -372,6 +372,10 @@ grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank_3timesloop/model.l
 grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank/model.log
 grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank_3timesloop/model.log
 
+python3
+import pickle
+idf = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF.pkl', 'rb')) 
+
 '''
 
 
