@@ -221,9 +221,19 @@ def load_the_data(loopes):
     t2i                 = pickle.load(open(token_to_index_f,'rb'))
     print('yielding data')
     logger.info('yielding data')
-    train_instances = list(data_yielder(train_bm25_scores,  train_all_abs,  t2i, loopes[0]))
-    dev_instances   = list(data_yielder(dev_bm25_scores,    dev_all_abs,    t2i, loopes[1]))
-    test_instances  = list(data_yielder(test_bm25_scores,   test_all_abs,   t2i, loopes[2]))
+    if(loopes[0] == 0):
+        train_instances = data_yielder(train_bm25_scores,  train_all_abs,  t2i, loopes[0])
+    else:
+        train_instances = list(data_yielder(train_bm25_scores,  train_all_abs,  t2i, loopes[0]))
+    if (loopes[1] == 0):
+        dev_instances   = data_yielder(dev_bm25_scores,    dev_all_abs,    t2i, loopes[1])
+    else:
+        dev_instances   = list(data_yielder(dev_bm25_scores,    dev_all_abs,    t2i, loopes[1]))
+    if (loopes[2] == 0):
+        test_instances  = data_yielder(test_bm25_scores,   test_all_abs,   t2i, loopes[2])
+    else:
+        test_instances  = list(data_yielder(test_bm25_scores,   test_all_abs,   t2i, loopes[2]))
+
     print('Done')
     logger.info('Done')
     return train_instances, dev_instances, test_instances
