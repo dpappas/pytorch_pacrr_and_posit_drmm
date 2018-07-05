@@ -22,7 +22,6 @@ if not os.path.exists(odir):
     os.makedirs(odir)
 
 od              = 'sent_posit_drmm_MarginRankingLoss'
-nof_cnn_filters = 50
 k_for_maxpool   = 5
 lr              = 0.01
 bsize           = 32
