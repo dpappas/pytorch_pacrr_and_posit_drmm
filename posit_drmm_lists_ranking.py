@@ -365,6 +365,8 @@ tail -10 /home/dpappas/posit_drmm_lists_rank/model.log
 grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank/model.log
 
 
+tail -10 /home/dpappas/posit_drmm_lists_rank_3timesloop/model.log
+grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank_3timesloop/model.log
 
 '''
 
