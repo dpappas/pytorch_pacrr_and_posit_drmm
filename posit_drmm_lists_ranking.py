@@ -252,8 +252,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # lo      = self.linear_per_q2(lo)
         # lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
-        print(lo.size())
-        exit()
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
     def get_reg_loss(self):
@@ -306,8 +304,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         doc1_emit = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_1, similarity_sensitive_pooled_doc1_2])
         doc2_emit = self.get_output([similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2_1, similarity_sensitive_pooled_doc2_2])
-        #
-        exit()
         #
         loss1                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
         # loss2                                = self.get_reg_loss() * reg_lambda
