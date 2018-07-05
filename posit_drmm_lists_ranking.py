@@ -35,14 +35,14 @@ hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
-# print('LOADING embedding_matrix (14GB)...')
-# logger.info('LOADING embedding_matrix (14GB)...')
-# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+print('LOADING embedding_matrix (14GB)...')
+logger.info('LOADING embedding_matrix (14GB)...')
+matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
-# print(matrix.shape)
+print(matrix.shape)
 # print(idf_mat.shape)
-matrix          = np.random.random((150, 10))
-idf_mat          = np.random.random((150))
+# matrix          = np.random.random((150, 10))
+# idf_mat          = np.random.random((150))
 
 def get_index(token, t2i):
     try:
@@ -219,7 +219,7 @@ def load_the_data():
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, pretrained_embeds, idf_mat, k_for_maxpool):
+    def __init__(self, pretrained_embeds, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool         # k is for the average k pooling
         #
@@ -228,10 +228,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings                        = nn.Embedding(self.vocab_size, self.embedding_dim)
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
-        #
-        self.idf_embeddings                         = nn.Embedding(self.vocab_size, 1)
-        self.idf_embeddings.weight.data.copy_(torch.from_numpy(idf_mat).unsqueeze(-1))
-        self.idf_embeddings.weight.requires_grad    = False
         #
         self.sent_filters_conv_1                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
         self.quest_filters_conv_1                   = self.sent_filters_conv_1
@@ -280,9 +276,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
-        # lo      = self.my_drop1(lo)
-        # lo      = self.linear_per_q2(lo)
-        # lo      = self.my_relu2(lo)
+        lo      = self.my_drop1(lo)
+        lo      = self.linear_per_q2(lo)
+        lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
@@ -302,7 +298,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc2                                = autograd.Variable(torch.LongTensor(doc2), requires_grad=False)
         #
         question_embeds                     = self.word_embeddings(question)
-        question_idfs                       = self.idf_embeddings(question)
         doc1_embeds                         = self.word_embeddings(doc1)
         doc2_embeds                         = self.word_embeddings(doc2)
         #
@@ -340,8 +335,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 similarity_one_hot_pooled_doc1,
                 similarity_insensitive_pooled_doc1,
                 similarity_sensitive_pooled_doc1_1,
-                similarity_sensitive_pooled_doc1_2,
-                question_idfs
+                similarity_sensitive_pooled_doc1_2
             ]
         )
         doc2_emit = self.get_output(
@@ -349,8 +343,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 similarity_one_hot_pooled_doc2,
                 similarity_insensitive_pooled_doc2,
                 similarity_sensitive_pooled_doc2_1,
-                similarity_sensitive_pooled_doc2_2,
-                question_idfs
+                similarity_sensitive_pooled_doc2_2
             ]
         )
         #
@@ -362,14 +355,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 print('Compiling model...')
 logger.info('Compiling model...')
-model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, idf_mat=idf_mat, k_for_maxpool=k_for_maxpool)
+model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
 params = list(set(model.parameters()) - set([model.word_embeddings.weight, model.idf_embeddings.weight]))
 print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-dummy_test()
-exit()
+# dummy_test()
+# exit()
 
 train_instances, dev_instances, test_instances = load_the_data()
 min_dev_loss    = 10e10
