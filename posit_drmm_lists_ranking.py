@@ -236,12 +236,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
-        self.sent_filters_conv_1                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
-        self.quest_filters_conv_1                   = self.sent_filters_conv_1
-        self.sent_filters_conv_2                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
-        self.quest_filters_conv_2                   = self.sent_filters_conv_2
-        self.conv_relu1                             = torch.nn.PReLU()
-        self.conv_relu2                             = torch.nn.PReLU()
+        self.sent_filters_conv_bigram               = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
+        self.quest_filters_conv_bigram              = self.sent_filters_conv_1
+        self.sent_filters_conv_trigram              = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
+        self.quest_filters_conv_trigram             = self.sent_filters_conv_2
+        self.conv_relu_bigram                       = torch.nn.PReLU()
+        self.conv_relu_trigram                      = torch.nn.PReLU()
         #
         self.linear_per_q1                          = nn.Linear(8, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
