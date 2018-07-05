@@ -38,8 +38,8 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-# matrix          = np.random.random((290, 10))
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+matrix          = np.random.random((150, 10))
 
 def get_index(token, t2i):
     try:
@@ -330,8 +330,8 @@ print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
 print('Loading abs texts...')
