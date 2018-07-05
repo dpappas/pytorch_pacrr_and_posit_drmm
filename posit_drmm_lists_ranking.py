@@ -196,6 +196,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.nof_sent_filters                       = nof_filters           # number of filters for the convolution of sentences
         self.nof_quest_filters                      = nof_filters           # number of filters for the convolution of the question
         self.k                                      = k_for_maxpool         # k is for the average k pooling
+        #
         self.vocab_size                             = pretrained_embeds.shape[0]
         self.embedding_dim                          = pretrained_embeds.shape[1]
         self.word_embeddings                        = nn.Embedding(self.vocab_size, self.embedding_dim)
