@@ -207,10 +207,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         self.linear_per_q1                          = nn.Linear(8, 1, bias=True)
         # self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
-        self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
         self.my_relu1                               = torch.nn.PReLU()
         # self.my_relu2                               = torch.nn.PReLU()
         # self.my_drop1                               = nn.Dropout(p=0.2)
+        self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
