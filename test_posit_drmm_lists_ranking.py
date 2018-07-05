@@ -149,16 +149,17 @@ matrix              = np.load('/home/dpappas/joint_task_list_batches/embedding_m
 model               = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
 params              = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 
-token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
+
 resume_dir          = '/home/dpappas/sent_posit_drmm_rank_loss_2/'
 resume_from         = resume_dir+'best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 
+token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
+t2i                 = pickle.load(open(token_to_index_f,'rb'))
 abs_path            = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl'
 all_abs             = pickle.load(open(abs_path,'rb'))
 bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
 bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
-t2i                 = pickle.load(open(token_to_index_f,'rb'))
 
 data = {}
 data['questions'] = []
