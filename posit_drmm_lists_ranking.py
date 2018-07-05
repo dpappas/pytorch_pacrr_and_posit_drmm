@@ -384,13 +384,14 @@ train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, te
 
 min_dev_loss    = 10e10
 max_epochs      = 30
+loopes          = [0,0,0]
 for epoch in range(max_epochs):
-    train_average_loss      = train_one(data_yielder(train_bm25_scores, train_all_abs, t2i, 1))
-    dev_average_loss        = test_one('dev', data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1))
+    train_average_loss      = train_one(data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0]))
+    dev_average_loss        = test_one('dev', data_yielder(dev_bm25_scores, dev_all_abs, t2i, loopes[1]))
     if(dev_average_loss < min_dev_loss):
         min_dev_loss        = dev_average_loss
         min_loss_epoch      = epoch+1
-        test_average_loss   = test_one('test', data_yielder(test_bm25_scores, test_all_abs, t2i, 1))
+        test_average_loss   = test_one('test', data_yielder(test_bm25_scores, test_all_abs, t2i, loopes[2]))
         save_checkpoint(epoch, model, min_dev_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
     print("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
     print(20 * '-')
