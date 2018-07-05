@@ -204,9 +204,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
-        self.word_embeddings                        = nn.Embedding(self.vocab_size, 1)
-        self.word_embeddings.weight.data.copy_(torch.from_numpy(idf_mat))
-        self.word_embeddings.weight.requires_grad   = False
+        self.idf_embeddings                         = nn.Embedding(self.vocab_size, 1)
+        self.idf_embeddings.weight.data.copy_(torch.from_numpy(idf_mat))
+        self.idf_embeddings.weight.requires_grad    = False
         #
         self.sent_filters_conv_1                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
         self.quest_filters_conv_1                   = self.sent_filters_conv_1
