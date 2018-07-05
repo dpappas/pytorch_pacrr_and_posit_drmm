@@ -17,7 +17,7 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir            = '/home/dpappas/posit_drmm_lists_rank/'
+odir            = '/home/dpappas/posit_drmm_lists_rank_3timesloop/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
@@ -100,10 +100,11 @@ def data_yielder(bm25_scores, all_abs, t2i):
         bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
         if(len(bad_pmids)>0):
             for gid in good_pmids:
-                bid = random.choice(bad_pmids)
-                good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
-                bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
-                yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
+                for i in range(3):
+                    bid = random.choice(bad_pmids)
+                    good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
+                    bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
+                    yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
 
 def dummy_test():
     quest_inds          = np.random.randint(0,100,(40))
@@ -362,6 +363,8 @@ python posit_drmm_lists_rank.py
 
 tail -10 /home/dpappas/posit_drmm_lists_rank/model.log
 grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank/model.log
+
+
 
 '''
 
