@@ -23,7 +23,6 @@ if not os.path.exists(odir):
 
 od              = 'sent_posit_drmm_MarginRankingLoss'
 nof_cnn_filters = 50
-filters_size    = 3
 k_for_maxpool   = 5
 lr              = 0.01
 bsize           = 32
@@ -192,10 +191,9 @@ def test_one(prefix, the_instances):
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, nof_filters, filters_size, pretrained_embeds, k_for_maxpool):
+    def __init__(self, nof_filters, pretrained_embeds, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.nof_sent_filters                       = nof_filters           # number of filters for the convolution of sentences
-        self.sent_filters_size                      = filters_size          # The size of the ngram filters we will apply on sentences
         self.nof_quest_filters                      = nof_filters           # number of filters for the convolution of the question
         self.quest_filters_size                     = filters_size          # The size of the ngram filters we will apply on question
         self.k                                      = k_for_maxpool         # k is for the average k pooling
@@ -204,8 +202,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings                        = nn.Embedding(self.vocab_size, self.embedding_dim)
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
-        self.sent_filters_conv                      = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,self.sent_filters_size,self.embedding_dim))
-        self.quest_filters_conv                     = self.sent_filters_conv
+        #
+        self.sent_filters_conv_1                    = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,3,self.embedding_dim))
+        self.quest_filters_conv_1                   = self.sent_filters_conv_1
+        self.sent_filters_conv_2                    = torch.nn.Parameter(torch.randn(self.nof_sent_filters,1,2,self.embedding_dim))
+        self.quest_filters_conv_2                   = self.sent_filters_conv_2
+        #
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_loss                                = nn.MarginRankingLoss(margin=0.9)
@@ -313,7 +315,6 @@ print('Compiling model...')
 logger.info('Compiling model...')
 model           = Sent_Posit_Drmm_Modeler(
     nof_filters         = nof_cnn_filters,
-    filters_size        = filters_size,
     pretrained_embeds   = matrix,
     k_for_maxpool       = k_for_maxpool
 )
