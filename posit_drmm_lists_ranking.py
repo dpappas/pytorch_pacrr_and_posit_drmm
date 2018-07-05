@@ -372,7 +372,6 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # exit()
 
 train_instances, dev_instances, test_instances = load_the_data()
-
 min_dev_loss    = 10e10
 max_epochs      = 30
 for epoch in range(max_epochs):
@@ -387,6 +386,9 @@ for epoch in range(max_epochs):
     print(20 * '-')
     logger.info("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
     logger.info(20 * '-')
+
+
+
 
 '''
 python posit_drmm_lists_rank.py
@@ -406,8 +408,6 @@ python3
 import pickle
 idf = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF.pkl', 'rb')) 
 pickle.dump( idf, open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF_python_v2.pkl', 'wb', protocol=2)) 
-
-
 
 '''
 
