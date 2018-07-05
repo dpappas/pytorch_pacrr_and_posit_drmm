@@ -277,6 +277,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc2                                = autograd.Variable(torch.LongTensor(doc2), requires_grad=False)
         #
         question_embeds                     = self.word_embeddings(question)
+        question_idfs                       = self.idf_embeddings(question)
         doc1_embeds                         = self.word_embeddings(doc1)
         doc2_embeds                         = self.word_embeddings(doc2)
         #
@@ -309,8 +310,24 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity_sensitive_pooled_doc2_2  = self.pooling_method(similarity_sensitive_doc2_2)
         similarity_one_hot_pooled_doc2      = self.pooling_method(similarity_one_hot_doc2)
         #
-        doc1_emit = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_1, similarity_sensitive_pooled_doc1_2])
-        doc2_emit = self.get_output([similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2_1, similarity_sensitive_pooled_doc2_2])
+        doc1_emit = self.get_output(
+            [
+                similarity_one_hot_pooled_doc1,
+                similarity_insensitive_pooled_doc1,
+                similarity_sensitive_pooled_doc1_1,
+                similarity_sensitive_pooled_doc1_2,
+                question_idfs
+            ]
+        )
+        doc2_emit = self.get_output(
+            [
+                similarity_one_hot_pooled_doc2,
+                similarity_insensitive_pooled_doc2,
+                similarity_sensitive_pooled_doc2_1,
+                similarity_sensitive_pooled_doc2_2,
+                question_idfs
+            ]
+        )
         #
         loss1                                = self.my_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
         # loss2                                = self.get_reg_loss() * reg_lambda
