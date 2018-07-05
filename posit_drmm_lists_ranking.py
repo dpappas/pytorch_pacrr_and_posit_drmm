@@ -242,9 +242,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.PReLU()
         self.my_relu2                               = torch.nn.PReLU()
         self.my_drop1                               = nn.Dropout(p=0.2)
-        # self.margin_loss                            = nn.MarginRankingLoss(margin=0.9)
-        self.bce_loss                               = nn.BCELoss()
-        self.hinge_loss                             = nn.HingeEmbeddingLoss(margin=0.9)
+        self.margin_loss                            = nn.MarginRankingLoss(margin=0.9)
+        # self.bce_loss                               = nn.BCELoss()
+        # self.hinge_loss                             = nn.HingeEmbeddingLoss(margin=0.9)
     def apply_convolution(self, the_input, the_filters):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
@@ -283,8 +283,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = self.my_relu1(lo)
         lo      = self.my_drop1(lo)
         lo      = self.linear_per_q2(lo)
-        lo      = F.sigmoid(lo)
-        # lo      = self.my_relu2(lo)
+        # lo      = F.sigmoid(lo)
+        lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
@@ -352,13 +352,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             ]
         )
         #
-        # loss1                                = self.margin_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        loss1                                = self.hinge_loss(doc2_emit.unsqueeze(0),  doc1_emit.unsqueeze(0))
-        loss1                                += self.bce_loss(doc1_emit.unsqueeze(0),   torch.ones(1,1))
-        loss1                                += self.bce_loss(doc2_emit.unsqueeze(0),   torch.zeros(1,1))
+        loss1                                = self.margin_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
+        # loss1                                = self.hinge_loss(doc2_emit.unsqueeze(0),  doc1_emit.unsqueeze(0))
+        # loss2                                = self.bce_loss(doc1_emit.unsqueeze(0),   torch.ones(1,1))
+        # loss3                                = self.bce_loss(doc2_emit.unsqueeze(0),   torch.zeros(1,1))
         # loss2                                = self.get_reg_loss() * reg_lambda
         loss2                                = loss1 * 0.
-        loss                                 = loss1 + loss2
+        loss                                 = loss1 #+ loss2 + loss3
         return loss, doc1_emit, doc2_emit, loss1, loss2
 
 print('Compiling model...')
@@ -373,7 +373,7 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # dummy_test()
 # exit()
 
-train_instances, dev_instances, test_instances = load_the_data(loopes=[3,1,1])
+train_instances, dev_instances, test_instances = load_the_data(loopes=[1,1,1])
 min_dev_loss    = 10e10
 max_epochs      = 30
 for epoch in range(max_epochs):
