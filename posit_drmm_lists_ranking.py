@@ -192,6 +192,30 @@ def test_one(prefix, the_instances):
         logger.info('{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(prefix, epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
     return average_task_loss/(1.*instance_metr)
 
+def load_the_data():
+    print('Loading abs texts...')
+    logger.info('Loading abs texts...')
+    train_all_abs       = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl','rb'))
+    dev_all_abs         = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl','rb'))
+    test_all_abs        = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl','rb'))
+    print('Loading retrieved docsc...')
+    logger.info('Loading retrieved docsc...')
+    train_bm25_scores   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
+    dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
+    test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
+    print('Loading token to index files...')
+    logger.info('Loading token to index files...')
+    token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
+    t2i                 = pickle.load(open(token_to_index_f,'rb'))
+    print('yielding data')
+    logger.info('yielding data')
+    train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i, 3))
+    dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1))
+    test_instances  = list(data_yielder(test_bm25_scores, test_all_abs, t2i, 1))
+    print('Done')
+    logger.info('Done')
+    return train_instances, dev_instances, test_instances
+
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
@@ -347,27 +371,8 @@ optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weigh
 # dummy_test()
 # exit()
 
-print('Loading abs texts...')
-logger.info('Loading abs texts...')
-train_all_abs       = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl','rb'))
-dev_all_abs         = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl','rb'))
-test_all_abs        = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl','rb'))
-print('Loading retrieved docsc...')
-logger.info('Loading retrieved docsc...')
-train_bm25_scores   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
-dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
-test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
-print('Loading token to index files...')
-logger.info('Loading token to index files...')
-token_to_index_f    = '/home/dpappas/joint_task_list_batches/t2i.p'
-t2i                 = pickle.load(open(token_to_index_f,'rb'))
-print('Done')
-logger.info('Done')
+train_instances, dev_instances, test_instances = load_the_data()
 
-train_instances = list(data_yielder(train_bm25_scores, train_all_abs, t2i, 3))
-dev_instances   = list(data_yielder(dev_bm25_scores, dev_all_abs, t2i, 1))
-test_instances  = list(data_yielder(test_bm25_scores, test_all_abs, t2i, 1))
-#
 min_dev_loss    = 10e10
 max_epochs      = 30
 for epoch in range(max_epochs):
