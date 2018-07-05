@@ -237,6 +237,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.quest_filters_conv_1                   = self.sent_filters_conv_1
         self.sent_filters_conv_2                    = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
         self.quest_filters_conv_2                   = self.sent_filters_conv_2
+        self.conv_relu1                             = torch.nn.PReLU()
+        self.conv_relu2                             = torch.nn.PReLU()
         #
         self.linear_per_q1                          = nn.Linear(8, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
@@ -246,10 +248,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.margin_loss                            = nn.MarginRankingLoss(margin=0.9)
         # self.bce_loss                               = nn.BCELoss()
         # self.hinge_loss                             = nn.HingeEmbeddingLoss(margin=0.9)
-    def apply_convolution(self, the_input, the_filters):
+    def apply_convolution(self, the_input, the_filters, activation):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
         conv_res    = F.conv2d(the_input.unsqueeze(1), the_filters, bias=None, stride=1, padding=(int(filter_size/2)+1, 0))
+        conv_res    = activation(conv_res)
         conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
         conv_res    = conv_res.squeeze(-1).transpose(1,2)
         conv_res    = conv_res + the_input
