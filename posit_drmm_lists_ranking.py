@@ -42,12 +42,12 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
-print(matrix.shape)
 # print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
+matrix          = np.random.random((150, 10))
 # idf_mat          = np.random.random((150))
+print(matrix.shape)
 
 def get_index(token, t2i):
     try:
@@ -236,11 +236,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
-        self.sent_filters_conv_bigram               = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
-        self.quest_filters_conv_bigram              = self.sent_filters_conv_bigram
+        # self.sent_filters_conv_bigram               = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
+        # self.quest_filters_conv_bigram              = self.sent_filters_conv_bigram
+        # self.conv_relu_bigram                       = torch.nn.PReLU()
         self.sent_filters_conv_trigram              = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
         self.quest_filters_conv_trigram             = self.sent_filters_conv_trigram
-        self.conv_relu_bigram                       = torch.nn.PReLU()
         self.conv_relu_trigram                      = torch.nn.PReLU()
         #
         self.linear_per_q1                          = nn.Linear(8, 8, bias=True)
@@ -254,8 +254,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def apply_convolution(self, the_input, the_filters, activation):
         filter_size = the_filters.size(2)
         the_input   = the_input.unsqueeze(0)
-        conv_res    = F.conv2d(the_input.unsqueeze(1), the_filters, bias=None, stride=1, padding=(int(filter_size/2)+1, 0))
+        print(the_input.size())
+        conv_res    = F.conv2d(
+            the_input.unsqueeze(1),
+            the_filters,
+            bias    = None,
+            stride  = 1,
+            # padding = (int(filter_size/2)+1, 0)
+            padding = (int(filter_size/2)+1, 0)
+        )
         conv_res    = activation(conv_res)
+        print(conv_res.size())
+        exit()
         conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
         conv_res    = conv_res.squeeze(-1).transpose(1,2)
         conv_res    = conv_res + the_input
@@ -321,37 +331,25 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity_insensitive_doc2         = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
         similarity_insensitive_doc2         = self.apply_masks_on_similarity(doc2, question, similarity_insensitive_doc2)
         #
-        q_conv_res_bigram                   = self.apply_convolution(question_embeds, self.quest_filters_conv_bigram, self.conv_relu_bigram)
         q_conv_res_trigram                  = self.apply_convolution(question_embeds, self.quest_filters_conv_trigram, self.conv_relu_trigram)
-        #
-        doc1_conv_bigram                    = self.apply_convolution(doc1_embeds, self.sent_filters_conv_bigram,  self.conv_relu_bigram)
         doc1_conv_trigram                   = self.apply_convolution(doc1_embeds, self.sent_filters_conv_trigram, self.conv_relu_trigram)
-
-        doc2_conv_bigram                    = self.apply_convolution(doc2_embeds, self.sent_filters_conv_bigram,  self.conv_relu_bigram)
         doc2_conv_trigram                   = self.apply_convolution(doc2_embeds, self.sent_filters_conv_trigram, self.conv_relu_trigram)
         #
-        similarity_sensitive_doc1_bigram    = self.my_cosine_sim(q_conv_res_bigram, doc1_conv_bigram).squeeze(0)
-        similarity_sensitive_doc2_bigram    = self.my_cosine_sim(q_conv_res_bigram, doc2_conv_bigram).squeeze(0)
         similarity_sensitive_doc1_trigram   = self.my_cosine_sim(q_conv_res_trigram, doc1_conv_trigram).squeeze(0)
         similarity_sensitive_doc2_trigram   = self.my_cosine_sim(q_conv_res_trigram, doc2_conv_trigram).squeeze(0)
         #
         similarity_insensitive_pooled_doc1          = self.pooling_method(similarity_insensitive_doc1)
-        similarity_sensitive_pooled_doc1_bigram     = self.pooling_method(similarity_sensitive_doc1_bigram)
         similarity_sensitive_pooled_doc1_trigram    = self.pooling_method(similarity_sensitive_doc1_trigram)
         similarity_one_hot_pooled_doc1              = self.pooling_method(similarity_one_hot_doc1)
         #
         similarity_insensitive_pooled_doc2          = self.pooling_method(similarity_insensitive_doc2)
-        similarity_sensitive_pooled_doc2_bigram     = self.pooling_method(similarity_sensitive_doc2_bigram)
         similarity_sensitive_pooled_doc2_trigram    = self.pooling_method(similarity_sensitive_doc2_trigram)
         similarity_one_hot_pooled_doc2              = self.pooling_method(similarity_one_hot_doc2)
         #
-        doc1_emit = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_bigram, similarity_sensitive_pooled_doc1_trigram])
-        doc2_emit = self.get_output([similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2_bigram, similarity_sensitive_pooled_doc2_trigram])
+        doc1_emit = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_trigram])
+        doc2_emit = self.get_output([similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2_trigram])
         #
         loss1                                = self.margin_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        # loss1                                = self.hinge_loss(doc2_emit.unsqueeze(0),  doc1_emit.unsqueeze(0))
-        # loss2                                = self.bce_loss(doc1_emit.unsqueeze(0),   torch.ones(1,1))
-        # loss3                                = self.bce_loss(doc2_emit.unsqueeze(0),   torch.zeros(1,1))
         # loss2                                = self.get_reg_loss() * reg_lambda
         loss2                                = loss1 * 0.
         loss                                 = loss1 #+ loss2 + loss3
@@ -366,8 +364,8 @@ print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
