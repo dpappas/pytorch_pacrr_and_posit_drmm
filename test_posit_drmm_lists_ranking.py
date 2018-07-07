@@ -169,7 +169,8 @@ for quer in tqdm(bm25_scores['queries']):
         # print doc1_emit_
         doc_res[doc_id] = float(doc1_emit_)
     doc_res             = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-    doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res[:100]]
+    # doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res[:100]]
+    doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
     dato['documents']   = doc_res
     data['questions'].append(dato)
 
