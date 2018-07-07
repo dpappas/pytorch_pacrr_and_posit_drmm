@@ -355,7 +355,7 @@ train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, te
 
 min_dev_loss    = 10e10
 max_epochs      = 30
-loopes          = [0,0,0]
+loopes          = [1,1,1]
 for epoch in range(max_epochs):
     train_average_loss      = train_one(data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0]))
     dev_average_loss        = test_one('dev', data_yielder(dev_bm25_scores, dev_all_abs, t2i, loopes[1]))
