@@ -162,7 +162,7 @@ for quer in tqdm(bm25_scores['queries']):
         sents_inds  = [get_index(token, t2i) for token in bioclean(passage)]
         quest_inds  = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
         doc1_emit_  = model(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims)
-        print doc1_emit_
+        # print doc1_emit_
         doc_res[doc_id] = float(doc1_emit_)
     doc_res             = sorted(doc_res.keys(), key=lambda x: doc_res[x], reverse=True)
     doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm) for pm in doc_res[:100]]
