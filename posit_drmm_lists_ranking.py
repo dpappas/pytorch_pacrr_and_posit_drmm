@@ -236,38 +236,21 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
-        # self.sent_filters_conv_bigram               = torch.nn.Parameter(torch.randn(self.embedding_dim,1,2,self.embedding_dim))
-        # self.quest_filters_conv_bigram              = self.sent_filters_conv_bigram
-        # self.conv_relu_bigram                       = torch.nn.PReLU()
-        self.sent_filters_conv_trigram              = torch.nn.Parameter(torch.randn(self.embedding_dim,1,3,self.embedding_dim))
+        self.sent_filters_conv_trigram              = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=3)
         self.quest_filters_conv_trigram             = self.sent_filters_conv_trigram
         self.conv_relu_trigram                      = torch.nn.PReLU()
         #
-        self.linear_per_q1                          = nn.Linear(8, 8, bias=True)
+        self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_relu1                               = torch.nn.PReLU()
         self.my_relu2                               = torch.nn.PReLU()
         self.my_drop1                               = nn.Dropout(p=0.2)
         self.margin_loss                            = nn.MarginRankingLoss(margin=0.9)
-        # self.bce_loss                               = nn.BCELoss()
-        # self.hinge_loss                             = nn.HingeEmbeddingLoss(margin=0.9)
     def apply_convolution(self, the_input, the_filters, activation):
-        filter_size = the_filters.size(2)
-        the_input   = the_input.unsqueeze(0)
-        print(the_input.size())
-        conv_res    = F.conv2d(
-            the_input.unsqueeze(1),
-            the_filters,
-            bias    = None,
-            stride  = 1,
-            # padding = (int(filter_size/2)+1, 0)
-            padding = (int(filter_size/2)+1, 0)
-        )
+        conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
         conv_res    = activation(conv_res)
-        print(conv_res.size())
-        exit()
-        conv_res    = conv_res[:, :, -1*the_input.size(1):, :]
-        conv_res    = conv_res.squeeze(-1).transpose(1,2)
+        conv_res    = conv_res[:, :, -1*the_input.size(0):]
+        conv_res    = conv_res.transpose(1, 2)
         conv_res    = conv_res + the_input
         return conv_res.squeeze(0)
     def my_cosine_sim(self,A,B):
