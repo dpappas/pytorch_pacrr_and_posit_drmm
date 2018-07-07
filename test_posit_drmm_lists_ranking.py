@@ -153,7 +153,11 @@ bm25_scores         = pickle.load(open(bm25_scores_path, 'rb'))
 data = {}
 data['questions'] = []
 for quer in tqdm(bm25_scores['queries']):
-    dato    = {'body':quer['query_text'], 'id':quer['query_id'], 'documents':[]}
+    dato    = {
+        'body':         quer['query_text'],
+        'id':           quer['query_id'],
+        'documents':    []
+    }
     doc_res = {}
     for retr in quer['retrieved_documents']:
         doc_id      = retr['doc_id']
@@ -164,8 +168,8 @@ for quer in tqdm(bm25_scores['queries']):
         doc1_emit_  = model(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims)
         # print doc1_emit_
         doc_res[doc_id] = float(doc1_emit_)
-    doc_res             = sorted(doc_res.keys(), key=lambda x: doc_res[x], reverse=True)
-    doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm) for pm in doc_res[:100]]
+    doc_res             = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res[:100]]
     dato['documents']   = doc_res
     data['questions'].append(dato)
 
