@@ -372,6 +372,7 @@ tail -10 /home/dpappas/posit_drmm_lists_rank_111/model.log
 grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank_111/model.log
 
 
+
 python3
 import pickle
 idf = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/IDF.pkl', 'rb')) 
