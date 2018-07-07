@@ -370,8 +370,6 @@ for epoch in range(max_epochs):
     logger.info(20 * '-')
 
 
-
-
 '''
 python posit_drmm_lists_rank.py
 
