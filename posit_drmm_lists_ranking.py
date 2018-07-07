@@ -368,16 +368,9 @@ for epoch in range(max_epochs):
 '''
 python posit_drmm_lists_rank.py
 
-tail -10 /home/dpappas/posit_drmm_lists_rank/model.log
-grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank/model.log
+tail -10 /home/dpappas/posit_drmm_lists_rank_111/model.log
+grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank_111/model.log
 
-
-tail -10 /home/dpappas/posit_drmm_lists_rank_3timesloop/model.log
-grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank_3timesloop/model.log
-
-
-grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank/model.log
-grep 'train_average_loss' /home/dpappas/posit_drmm_lists_rank_3timesloop/model.log
 
 python3
 import pickle
