@@ -139,8 +139,7 @@ matrix              = np.load('/home/dpappas/joint_task_list_batches/embedding_m
 model               = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
 params              = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 
-# resume_dir          = '/home/dpappas/posit_drmm_lists_rank/'
-resume_dir          = '/home/dpappas/posit_drmm_lists_rank_3timesloop/'
+resume_dir          = '/home/dpappas/posit_drmm_lists_rank_000/'
 resume_from         = resume_dir+'best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 
@@ -182,3 +181,4 @@ python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
 /home/dpappas/posit_drmm_lists_rank_3timesloop/elk_relevant_abs_posit_drmm_lists.json
 '''
+
