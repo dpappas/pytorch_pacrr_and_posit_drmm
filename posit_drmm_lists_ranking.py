@@ -117,7 +117,8 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
             else:
                 for gid in good_pmids:
                     for i in range(how_many_loops):
-                        bid                                             = bad_pmids[i%len(bad_pmids)]
+                        # bid                                             = bad_pmids[i%len(bad_pmids)]
+                        bid                                             = random.choice(bad_pmids)
                         good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
                         bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
                         yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
@@ -347,8 +348,8 @@ print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-dummy_test()
-exit()
+# dummy_test()
+# exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
