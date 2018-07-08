@@ -5,6 +5,7 @@ import random
 import numpy as np
 import tensorflow as tf
 import keras.backend as K
+import cPickle as pickle
 from keras.layers import Embedding, Conv1D, Input, LeakyReLU, Lambda, Concatenate, Dense
 from keras.layers import Add, TimeDistributed, PReLU, GlobalAveragePooling1D
 from keras.models import Model
@@ -49,21 +50,17 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
 
 def load_data():
     print('Loading abs texts...')
-    logger.info('Loading abs texts...')
-    train_all_abs = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl', 'rb'))
-    dev_all_abs = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl', 'rb'))
-    test_all_abs = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl', 'rb'))
+    train_all_abs   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl', 'rb'))
+    dev_all_abs     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl', 'rb'))
+    test_all_abs    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl', 'rb'))
     print('Loading retrieved docsc...')
-    logger.info('Loading retrieved docsc...')
-    train_bm25_scores = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
-    dev_bm25_scores = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
-    test_bm25_scores = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
+    train_bm25_scores   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
+    dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
+    test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
     print('Loading token to index files...')
-    logger.info('Loading token to index files...')
     token_to_index_f = '/home/dpappas/joint_task_list_batches/t2i.p'
-    t2i = pickle.load(open(token_to_index_f, 'rb'))
+    t2i                 = pickle.load(open(token_to_index_f, 'rb'))
     print('yielding data')
-    logger.info('yielding data')
     return train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
