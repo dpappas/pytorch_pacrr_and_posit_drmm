@@ -401,11 +401,18 @@ optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_deca
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
+dev_bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl'
+dev_bm25_scores         = pickle.load(open(dev_bm25_scores_path, 'rb'))
+test_bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
+test_bm25_scores         = pickle.load(open(test_bm25_scores_path, 'rb'))
+
+
 min_dev_loss    = 10e10
 max_epochs      = 30
 loopes          = [1,0,0]
 for epoch in range(max_epochs):
     train_average_loss      = train_one(data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0]))
+    dev_map                 = get_one_map('dev', bm25_scores, all_abs)
     dev_average_loss        = test_one('dev', data_yielder(dev_bm25_scores, dev_all_abs, t2i, loopes[1]))
     if(dev_average_loss < min_dev_loss):
         min_dev_loss        = dev_average_loss
