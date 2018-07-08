@@ -422,9 +422,9 @@ for epoch in range(max_epochs):
         min_loss_epoch      = epoch+1
         test_map            = get_one_map('test', test_bm25_scores, test_all_abs)
         save_checkpoint(epoch, model, max_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    print("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
+    print("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_map, test_map))
     print(20 * '-')
-    logger.info("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
+    logger.info("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_map, test_map))
     logger.info(20 * '-')
 
 
