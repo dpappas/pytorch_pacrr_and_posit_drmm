@@ -339,8 +339,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return doc1_emit
     def forward(self, doc1, doc2, question, doc1_sim, doc2_sim):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        doc1                            = autograd.Variable(torch.LongTensor(doc1), requires_grad=False)
-        doc2                            = autograd.Variable(torch.LongTensor(doc2), requires_grad=False)
+        doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
+        doc2                            = autograd.Variable(torch.LongTensor(doc2),     requires_grad=False)
         #
         sim_oh_d1                       = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
         sim_oh_d2                       = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
