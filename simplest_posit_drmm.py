@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import json
 import subprocess
 import random
 import numpy as np
@@ -189,18 +190,35 @@ def train_one(train_instances):
         logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
     return average_task_loss / instance_metr
 
-def test_one(prefix, the_instances):
-    optimizer.zero_grad()
-    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in the_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds,bad_sents_inds,quest_inds,good_all_sims,bad_all_sims)
-        instance_metr       += 1
-        average_total_loss  += instance_cost.cpu().item()
-        average_task_loss   += loss1.cpu().item()
-        average_reg_loss    += loss2.cpu().item()
-        print('{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(prefix, epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
-        logger.info('{} epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(prefix, epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
-    return average_task_loss/(1.*instance_metr)
+def test_one(prefix, bm25_scores, all_abs):
+    data = {}
+    data['questions'] = []
+    for quer in bm25_scores['queries']:
+        dato = {'body': quer['query_text'],'id': quer['query_id'],'documents': []}
+        doc_res = {}
+        for retr in quer['retrieved_documents']:
+            doc_id = retr['doc_id']
+            passage = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
+            all_sims = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
+            sents_inds = [get_index(token, t2i) for token in bioclean(passage)]
+            quest_inds = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
+            doc1_emit_ = model(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims)
+            doc_res[doc_id] = float(doc1_emit_)
+        doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+        doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+        dato['documents'] = doc_res
+        data['questions'].append(dato)
+    with open(odir+'elk_relevant_abs_posit_drmm_lists_{}.json'.format(prefix), 'w') as f:
+        f.write(json.dumps(data, indent=4, sort_keys=True))
+    if(prefix=='dev'):
+        res_map = get_map_res(fgold, odir+'elk_relevant_abs_posit_drmm_lists_dev.json')
+    else:
+        res_map = get_map_res(
+            '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json',
+            odir+'elk_relevant_abs_posit_drmm_lists_dev.json'
+        )
+    return res_map
+
 
 def load_data():
     print('Loading abs texts...')
@@ -221,13 +239,13 @@ def load_data():
     logger.info('yielding data')
     return train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i
 
-def get_map_res(fpath):
+def get_map_res(fgold, femit):
     trec_eval_res = subprocess.Popen(
         [
             'python',
             '/home/DATA/Biomedical/document_ranking/eval/run_eval.py',
-            '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json',
-            fpath
+            fgold,
+            femit
         ],
         stdout=subprocess.PIPE, shell=False)
     (out, err) = trec_eval_res.communicate()
