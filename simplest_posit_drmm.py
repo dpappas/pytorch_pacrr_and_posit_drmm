@@ -352,9 +352,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity_insensitive_doc1                 = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         similarity_insensitive_doc2                 = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
         #
-        q_conv_res_trigram                          = self.apply_convolution(question_embeds,   self.quest_filters_conv_trigram,    self.conv_activation_trigram)
-        doc1_conv_trigram                           = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_trigram,     self.conv_activation_trigram)
-        doc2_conv_trigram                           = self.apply_convolution(doc2_embeds,       self.sent_filters_conv_trigram,     self.conv_activation_trigram)
+        q_conv_res_trigram                          = self.apply_convolution(question_embeds, self.trigram_convolution, self.trigram_convolution_activation)
+        doc1_conv_trigram                           = self.apply_convolution(doc1_embeds,     self.trigram_convolution, self.trigram_convolution_activation)
+        doc2_conv_trigram                           = self.apply_convolution(doc2_embeds,     self.trigram_convolution, self.trigram_convolution_activation)
         #
         similarity_sensitive_doc1_trigram           = self.my_cosine_sim(q_conv_res_trigram, doc1_conv_trigram).squeeze(0)
         similarity_sensitive_doc2_trigram           = self.my_cosine_sim(q_conv_res_trigram, doc2_conv_trigram).squeeze(0)
