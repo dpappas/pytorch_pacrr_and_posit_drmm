@@ -73,12 +73,12 @@ od1                 = GlobalAveragePooling1D()(od1)
 model               = Model(inputs=[doc1, quest], outputs=od1)
 model.compile(optimizer='sgd', loss='hinge', metrics=['accuracy'])
 
-doc1_       = np.random.randint(0,vocab_size, (1000, 500))
-doc2_       = np.random.randint(0,vocab_size, (1000, 500))
-quest_      = np.random.randint(0,vocab_size, (1000, 200))
-labels      = np.random.randint(0,2,(1000))
+doc1_               = np.random.randint(0,vocab_size, (1000, 500))
+doc2_               = np.random.randint(0,vocab_size, (1000, 500))
+quest_              = np.random.randint(0,vocab_size, (1000, 200))
+labels              = np.random.randint(0,2,(1000))
 
-H           = model.fit([doc1_,quest_],labels,validation_data=None, epochs=5,verbose=1,batch_size=32)
+H                   = model.fit([doc1_,quest_],labels,validation_data=None, epochs=5,verbose=1,batch_size=32)
 
 
 
