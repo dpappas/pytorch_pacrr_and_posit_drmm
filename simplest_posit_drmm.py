@@ -338,12 +338,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_emit                                   = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_trigram])
         return doc1_emit
     def forward(self, doc1, doc2, question, doc1_sim, doc2_sim):
-        question                            = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        doc1                                = autograd.Variable(torch.LongTensor(doc1), requires_grad=False)
-        doc2                                = autograd.Variable(torch.LongTensor(doc2), requires_grad=False)
+        question                                    = autograd.Variable(torch.LongTensor(question), requires_grad=False)
+        doc1                                        = autograd.Variable(torch.LongTensor(doc1), requires_grad=False)
+        doc2                                        = autograd.Variable(torch.LongTensor(doc2), requires_grad=False)
         #
-        similarity_one_hot_doc1             = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
-        similarity_one_hot_doc2             = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
+        similarity_one_hot_doc1                     = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
+        similarity_one_hot_doc2                     = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
         #
         question_embeds                             = self.word_embeddings(question)
         doc1_embeds                                 = self.word_embeddings(doc1)
@@ -367,13 +367,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity_sensitive_pooled_doc2_trigram    = self.pooling_method(similarity_sensitive_doc2_trigram)
         similarity_one_hot_pooled_doc2              = self.pooling_method(similarity_one_hot_doc2)
         #
-        doc1_emit = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_trigram])
-        doc2_emit = self.get_output([similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2_trigram])
+        doc1_emit                                   = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_trigram])
+        doc2_emit                                   = self.get_output([similarity_one_hot_pooled_doc2, similarity_insensitive_pooled_doc2, similarity_sensitive_pooled_doc2_trigram])
         #
-        loss1                                = self.margin_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        # loss2                                = self.get_reg_loss() * reg_lambda
-        loss2                                = loss1 * 0.
-        loss                                 = loss1 #+ loss2 + loss3
+        loss1                                       = self.margin_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
+        # loss2                                       = self.get_reg_loss() * reg_lambda
+        loss2                                       = loss1 * 0.
+        loss                                        = loss1 #+ loss2 + loss3
         return loss, doc1_emit, doc2_emit, loss1, loss2
 
 print('Compiling model...')
