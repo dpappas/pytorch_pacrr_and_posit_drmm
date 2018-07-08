@@ -46,7 +46,8 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
                     bid                                             = random.choice(bad_pmids)
                     good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
                     bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
-                    yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
+                    yield good_sents_inds,  good_all_sims,  good_quest_inds,    1
+                    yield bad_sents_inds,   bad_all_sims,   bad_quest_inds,     0
 
 def load_data():
     print('Loading abs texts...')
@@ -65,10 +66,8 @@ def load_data():
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
-
-
-def myGenerator():
-    for f in fs:
+def myGenerator(bm25_scores, all_abs, t2i, how_many_loops):
+    for f in data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
         d = pickle.load(open(f,'rb'))
         yield d['x'],d['y']
 
