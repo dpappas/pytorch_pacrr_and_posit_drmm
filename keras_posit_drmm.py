@@ -1,10 +1,10 @@
 
 import re
+import keras
+import random
 import numpy as np
 import tensorflow as tf
-import keras
 import keras.backend as K
-import random
 from keras.layers import Embedding, Conv1D, Input, LeakyReLU, Lambda, Concatenate, Dense
 from keras.layers import Add, TimeDistributed, PReLU, GlobalAveragePooling1D
 from keras.models import Model
