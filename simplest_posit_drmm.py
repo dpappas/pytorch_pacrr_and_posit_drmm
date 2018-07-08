@@ -25,7 +25,7 @@ if not os.path.exists(odir):
 
 od              = 'sent_posit_drmm_MarginRankingLoss'
 k_for_maxpool   = 5
-lr              = 0.01
+lr              = 0.001
 bsize           = 32
 reg_lambda      = 0.1
 
