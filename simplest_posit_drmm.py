@@ -401,10 +401,14 @@ optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_deca
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
+dev_all_abs_path        = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl'
+dev_all_abs             = pickle.load(open(dev_all_abs_path,'rb'))
+test_all_abs_path       = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl'
+test_all_abs            = pickle.load(open(test_all_abs_path,'rb'))
 dev_bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl'
 dev_bm25_scores         = pickle.load(open(dev_bm25_scores_path, 'rb'))
-test_bm25_scores_path    = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
-test_bm25_scores         = pickle.load(open(test_bm25_scores_path, 'rb'))
+test_bm25_scores_path   = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl'
+test_bm25_scores        = pickle.load(open(test_bm25_scores_path, 'rb'))
 
 
 min_dev_loss    = 10e10
