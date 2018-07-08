@@ -106,14 +106,14 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
         bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
         if(len(bad_pmids)>0):
             if(how_many_loops==0):
-                for gid in good_pmids:
-                    for bid in bad_pmids:
+                for bid in bad_pmids:
+                    for gid in good_pmids:
                         good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
                         bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
                         yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
             else:
-                for gid in good_pmids:
-                    for i in range(how_many_loops):
+                for i in range(how_many_loops):
+                    for gid in good_pmids:
                         # bid                                             = bad_pmids[i%len(bad_pmids)]
                         bid                                             = random.choice(bad_pmids)
                         good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
