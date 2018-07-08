@@ -152,7 +152,7 @@ def compute_the_cost(costs, back_prop=True):
     the_cost = cost_.cpu().item()
     return the_cost
 
-def save_checkpoint(epoch, model, min_dev_loss, optimizer, filename='checkpoint.pth.tar'):
+def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
     '''
     :param state:       the stete of the pytorch mode
     :param filename:    the name of the file in which we will store the model.
@@ -161,7 +161,7 @@ def save_checkpoint(epoch, model, min_dev_loss, optimizer, filename='checkpoint.
     state = {
         'epoch':            epoch,
         'state_dict':       model.state_dict(),
-        'best_valid_score': min_dev_loss,
+        'best_valid_score': max_dev_map,
         'optimizer':        optimizer.state_dict(),
     }
     torch.save(state, filename)
@@ -411,18 +411,17 @@ test_bm25_scores_path   = '/home/DATA/Biomedical/document_ranking/bioasq_data/bi
 test_bm25_scores        = pickle.load(open(test_bm25_scores_path, 'rb'))
 
 
-min_dev_loss    = 10e10
+max_dev_map     = 0.0
 max_epochs      = 30
 loopes          = [1,0,0]
 for epoch in range(max_epochs):
     train_average_loss      = train_one(data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0]))
-    dev_map                 = get_one_map('dev', bm25_scores, all_abs)
-    dev_average_loss        = test_one('dev', data_yielder(dev_bm25_scores, dev_all_abs, t2i, loopes[1]))
-    if(dev_average_loss < min_dev_loss):
-        min_dev_loss        = dev_average_loss
+    dev_map                 = get_one_map('dev', dev_bm25_scores, dev_all_abs)
+    if(max_dev_map < dev_map):
+        max_dev_map         = dev_map
         min_loss_epoch      = epoch+1
-        test_average_loss   = test_one('test', data_yielder(test_bm25_scores, test_all_abs, t2i, loopes[2]))
-        save_checkpoint(epoch, model, min_dev_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
+        test_map            = get_one_map('test', test_bm25_scores, test_all_abs)
+        save_checkpoint(epoch, model, max_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
     print("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
     print(20 * '-')
     logger.info("epoch:{}, train_average_loss:{}, dev_average_loss:{}, test_average_loss:{}".format(epoch+1, train_average_loss, dev_average_loss, test_average_loss))
