@@ -38,10 +38,10 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
+matrix          = np.random.random((150, 10))
 # idf_mat          = np.random.random((150))
 print(matrix.shape)
 
@@ -307,9 +307,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc2_embeds                         = self.word_embeddings(doc2)
         #
         similarity_insensitive_doc1         = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1, question, similarity_insensitive_doc1)
+        # similarity_insensitive_doc1         = self.apply_masks_on_similarity(doc1, question, similarity_insensitive_doc1)
         similarity_insensitive_doc2         = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
-        similarity_insensitive_doc2         = self.apply_masks_on_similarity(doc2, question, similarity_insensitive_doc2)
+        # similarity_insensitive_doc2         = self.apply_masks_on_similarity(doc2, question, similarity_insensitive_doc2)
         #
         q_conv_res_trigram                  = self.apply_convolution(question_embeds, self.quest_filters_conv_trigram, self.conv_relu_trigram)
         doc1_conv_trigram                   = self.apply_convolution(doc1_embeds, self.sent_filters_conv_trigram, self.conv_relu_trigram)
@@ -344,8 +344,8 @@ print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
