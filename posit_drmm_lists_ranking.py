@@ -38,10 +38,10 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # print(idf_mat.shape)
-matrix          = np.random.random((150, 10))
+# matrix          = np.random.random((150, 10))
 # idf_mat          = np.random.random((150))
 print(matrix.shape)
 
@@ -345,8 +345,8 @@ print_params(model)
 del(matrix)
 optimizer       = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-dummy_test()
-exit()
+# dummy_test()
+# exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
