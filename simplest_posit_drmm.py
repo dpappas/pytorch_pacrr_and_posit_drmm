@@ -14,6 +14,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.autograd as autograd
+from tqdm import tqdm
 
 my_seed = 1989
 random.seed(my_seed)
@@ -184,7 +185,7 @@ def train_one(train_instances):
 def get_one_map(prefix, bm25_scores, all_abs):
     data = {}
     data['questions'] = []
-    for quer in bm25_scores['queries']:
+    for quer in tqdm(bm25_scores['queries']):
         dato = {'body': quer['query_text'],'id': quer['query_id'],'documents': []}
         doc_res = {}
         for retr in quer['retrieved_documents']:
