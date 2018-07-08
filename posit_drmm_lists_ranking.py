@@ -17,7 +17,8 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir            = '/home/dpappas/posit_drmm_lists_rank_111/'
+# odir            = '/home/dpappas/posit_drmm_lists_rank_111/'
+odir            = '/home/dpappas/posit_drmm_lists_rank_100/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
@@ -350,7 +351,7 @@ train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, te
 
 min_dev_loss    = 10e10
 max_epochs      = 30
-loopes          = [1,1,1]
+loopes          = [1,0,0]
 for epoch in range(max_epochs):
     train_average_loss      = train_one(data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0]))
     dev_average_loss        = test_one('dev', data_yielder(dev_bm25_scores, dev_all_abs, t2i, loopes[1]))
