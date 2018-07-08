@@ -262,8 +262,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
-        self.trigram_convolution                    = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=3)
-        self.trigram_convolution_activation         = torch.nn.Sigmoid()
+        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=3)
+        self.trigram_conv_activation                = torch.nn.Sigmoid()
         #
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
@@ -352,9 +352,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         sim_insensitive_d2              = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
         #
-        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_convolution, self.trigram_convolution_activation)
-        d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_convolution, self.trigram_convolution_activation)
-        d2_conv_trigram                 = self.apply_convolution(doc2_embeds,     self.trigram_convolution, self.trigram_convolution_activation)
+        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+        d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
+        d2_conv_trigram                 = self.apply_convolution(doc2_embeds,     self.trigram_conv, self.trigram_conv_activation)
         #
         sim_sensitive_d1_trigram        = self.my_cosine_sim(q_conv_res_trigram, d1_conv_trigram).squeeze(0)
         sim_sensitive_d2_trigram        = self.my_cosine_sim(q_conv_res_trigram, d2_conv_trigram).squeeze(0)
