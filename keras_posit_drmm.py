@@ -1,11 +1,125 @@
 
-
+import re
 import numpy as np
 import tensorflow as tf
+import keras
 import keras.backend as K
+import random
 from keras.layers import Embedding, Conv1D, Input, LeakyReLU, Lambda, Concatenate, Dense
 from keras.layers import Add, TimeDistributed, PReLU, GlobalAveragePooling1D
 from keras.models import Model
+from keras.preprocessing.sequence import pad_sequences
+
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
+def get_index(token, t2i):
+    try:
+        return t2i[token]
+    except KeyError:
+        return t2i['UNKN']
+
+def get_sim_mat(stoks, qtoks):
+    sm = np.zeros((len(stoks), len(qtoks)))
+    for i in range(len(qtoks)):
+        for j in range(len(stoks)):
+            if(qtoks[i] == stoks[j]):
+                sm[j,i] = 1.
+    return sm
+
+def get_item_inds(item, question, t2i):
+    passage     = item['title'] + ' ' + item['abstractText']
+    all_sims    = get_sim_mat(bioclean(passage), bioclean(question))
+    sents_inds  = [get_index(token, t2i) for token in bioclean(passage)]
+    quest_inds  = [get_index(token, t2i) for token in bioclean(question)]
+    return sents_inds, quest_inds, all_sims
+
+def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
+    for quer in bm25_scores[u'queries']:
+        quest       = quer['query_text']
+        ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
+        if(len(bad_pmids)>0):
+            for i in range(how_many_loops):
+                for gid in good_pmids:
+                    bid                                             = random.choice(bad_pmids)
+                    good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
+                    bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
+                    yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
+
+def load_data():
+    print('Loading abs texts...')
+    logger.info('Loading abs texts...')
+    train_all_abs = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl', 'rb'))
+    dev_all_abs = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl', 'rb'))
+    test_all_abs = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl', 'rb'))
+    print('Loading retrieved docsc...')
+    logger.info('Loading retrieved docsc...')
+    train_bm25_scores = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
+    dev_bm25_scores = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
+    test_bm25_scores = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
+    print('Loading token to index files...')
+    logger.info('Loading token to index files...')
+    token_to_index_f = '/home/dpappas/joint_task_list_batches/t2i.p'
+    t2i = pickle.load(open(token_to_index_f, 'rb'))
+    print('yielding data')
+    logger.info('yielding data')
+    return train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i
+
+train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
+
+
+
+def myGenerator():
+    for f in fs:
+        d = pickle.load(open(f,'rb'))
+        yield d['x'],d['y']
+
+pad_sequences(xs, maxlen=story_maxlen)
+
+class DataGenerator(keras.utils.Sequence):
+    'Generates data for Keras'
+    def __init__(
+            self,
+            list_IDs,
+            labels,
+            batch_size=32,
+            dim=(32,32,32),
+            n_channels=1,
+            n_classes=10,
+            shuffle=True
+    ):
+        'Initialization'
+        self.dim = dim
+        self.batch_size = batch_size
+        self.labels = labels
+        self.list_IDs = list_IDs
+        self.n_channels = n_channels
+        self.n_classes = n_classes
+        self.shuffle = shuffle
+        self.on_epoch_end()
+    def __len__(self):
+        'Denotes the number of batches per epoch'
+        return int(np.floor(len(self.list_IDs) / self.batch_size))
+    def __getitem__(self, index):
+        'Generate one batch of data'
+        indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
+        list_IDs_temp = [self.list_IDs[k] for k in indexes]
+        X, y = self.__data_generation(list_IDs_temp)
+        return X, y
+    def on_epoch_end(self):
+        'Updates indexes after each epoch'
+        self.indexes = np.arange(len(self.list_IDs))
+        if self.shuffle == True:
+            np.random.shuffle(self.indexes)
+    def __data_generation(self, list_IDs_temp):
+        'Generates data containing batch_size samples' # X : (n_samples, *dim, n_channels)
+        X = np.empty((self.batch_size, self.dim, self.n_channels))
+        y = np.empty((self.batch_size), dtype=int)
+        for i, ID in enumerate(list_IDs_temp):
+            X[i,] = np.load('data/' + ID + '.npy')
+            y[i] = self.labels[ID]
+        return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
 
 k = 5
 
