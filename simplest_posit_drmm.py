@@ -389,7 +389,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 print('Compiling model...')
 logger.info('Compiling model...')
 model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
-# params = list(set(model.parameters()) - set([model.word_embeddings.weight, model.idf_embeddings.weight]))
 params = list(set(model.parameters()) - set([model.word_embeddings.weight]))
 print_params(model)
 del(matrix)
