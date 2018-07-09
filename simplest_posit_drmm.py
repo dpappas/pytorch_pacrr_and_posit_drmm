@@ -40,10 +40,10 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # print(idf_mat.shape)
-matrix          = np.random.random((150, 10))
+# matrix          = np.random.random((150, 10))
 # idf_mat          = np.random.random((150))
 print(matrix.shape)
 
@@ -262,15 +262,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
-        # self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 2, padding=1)
-        # self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2)
-        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 4, padding=3)
+        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2)
         self.trigram_conv_activation                = torch.nn.Sigmoid()
         #
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
-        self.my_relu1                               = torch.nn.PReLU()
-        self.my_relu2                               = torch.nn.PReLU()
+        self.my_relu1                               = torch.nn.LeakyReLU()
+        self.my_relu2                               = torch.nn.LeakyReLU()
         self.my_drop1                               = nn.Dropout(p=0.2)
         self.margin_loss                            = nn.MarginRankingLoss(margin=0.9)
     def apply_convolution(self, the_input, the_filters, activation):
@@ -334,8 +332,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         question_embeds                             = self.word_embeddings(question)
         doc1_embeds                                 = self.word_embeddings(doc1)
         similarity_insensitive_doc1                 = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        q_conv_res_trigram                          = self.apply_convolution(question_embeds,   self.quest_filters_conv_trigram,    self.conv_activation_trigram)
-        doc1_conv_trigram                           = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_trigram,     self.conv_activation_trigram)
+        q_conv_res_trigram                          = self.apply_convolution(question_embeds, self.trigram_conv, self.conv_activation_trigram)
+        doc1_conv_trigram                           = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.conv_activation_trigram)
         similarity_sensitive_doc1_trigram           = self.my_cosine_sim(q_conv_res_trigram, doc1_conv_trigram).squeeze(0)
         similarity_insensitive_pooled_doc1          = self.pooling_method(similarity_insensitive_doc1)
         similarity_sensitive_pooled_doc1_trigram    = self.pooling_method(similarity_sensitive_doc1_trigram)
@@ -389,8 +387,8 @@ print_params(model)
 del(matrix)
 optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-dummy_test()
-exit()
+# dummy_test()
+# exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
