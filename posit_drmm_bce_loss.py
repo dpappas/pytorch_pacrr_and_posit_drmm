@@ -156,26 +156,22 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
 def train_one(train_instances):
     costs   = []
     optimizer.zero_grad()
-    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
-        #
+    instance_metr, average_total_loss = 0.0, 0.0
+    for sents_inds, all_sims, quest_inds, target in train_instances:
+        instance_cost, doc1_emit = model(sents_inds, quest_inds, all_sims, target)
         average_total_loss  += instance_cost.cpu().item()
-        average_task_loss   += loss1.cpu().item()
-        average_reg_loss    += loss2.cpu().item()
-        #
         instance_metr       += 1
         costs.append(instance_cost)
         if(len(costs) == bsize):
             batch_loss      = compute_the_cost(costs, True)
             costs = []
-            print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
-            logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
+            print('train epoch:{}, batch:{}, average_total_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr)))
+            logger.info('train epoch:{}, batch:{}, average_total_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr)))
     if(len(costs)>0):
         batch_loss = compute_the_cost(costs, True)
-        print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-        logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-    return average_task_loss / instance_metr
+        print('train epoch:{}, batch:{}, average_total_loss:{}'.format(epoch, instance_metr, average_total_loss / (1. * instance_metr)))
+        logger.info('train epoch:{}, batch:{}, average_total_loss:{}'.format(epoch, instance_metr, average_total_loss / (1. * instance_metr)))
+    return average_total_loss / instance_metr
 
 def get_one_map(prefix, bm25_scores, all_abs):
     data = {}
