@@ -117,7 +117,7 @@ def dummy_test():
     good_all_sims       = np.zeros((36, 40))
     for epoch in range(200):
         optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_, loss1_, loss2_ = model(
+        cost_, doc1_emit_ = model(
             doc1        = good_sents_inds,
             question    = quest_inds,
             doc1_sim    = good_all_sims,
@@ -126,7 +126,7 @@ def dummy_test():
         cost_.backward()
         optimizer.step()
         the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
+        print(the_cost, float(doc1_emit_))
     print(20 * '-')
 
 def compute_the_cost(costs, back_prop=True):
