@@ -194,17 +194,11 @@ def get_one_map(prefix, bm25_scores, all_abs):
     if(prefix=='dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
             f.write(json.dumps(data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json',
-            odir+'elk_relevant_abs_posit_drmm_lists_dev.json'
-        )
+        res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json',odir+'elk_relevant_abs_posit_drmm_lists_dev.json')
     else:
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
             f.write(json.dumps(data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json',
-            odir+'elk_relevant_abs_posit_drmm_lists_test.json'
-        )
+        res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json', odir+'elk_relevant_abs_posit_drmm_lists_test.json')
     return res_map
 
 def load_data():
