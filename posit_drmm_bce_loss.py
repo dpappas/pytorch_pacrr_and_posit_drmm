@@ -26,7 +26,7 @@ if not os.path.exists(odir):
 
 od              = 'posit_drmm_bce'
 k_for_maxpool   = 5
-lr              = 0.001
+lr              = 0.01
 bsize           = 32
 reg_lambda      = 0.1
 
