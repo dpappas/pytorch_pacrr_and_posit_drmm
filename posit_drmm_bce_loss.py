@@ -177,19 +177,19 @@ def get_one_map(prefix, bm25_scores, all_abs):
     data = {}
     data['questions'] = []
     for quer in tqdm(bm25_scores['queries']):
-        dato = {'body': quer['query_text'],'id': quer['query_id'],'documents': []}
+        dato    = {'body': quer['query_text'],'id': quer['query_id'],'documents': []}
         doc_res = {}
         for retr in quer['retrieved_documents']:
-            doc_id      = retr['doc_id']
-            passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
-            all_sims    = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
-            sents_inds  = [get_index(token, t2i) for token in bioclean(passage)]
-            quest_inds  = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
-            doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims)
+            doc_id          = retr['doc_id']
+            passage         = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
+            all_sims        = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
+            sents_inds      = [get_index(token, t2i) for token in bioclean(passage)]
+            quest_inds      = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
+            doc1_emit_      = model(sents_inds, quest_inds, all_sims)
             doc_res[doc_id] = float(doc1_emit_)
-        doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-        doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-        dato['documents'] = doc_res
+        doc_res             = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+        doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+        dato['documents']   = doc_res
         data['questions'].append(dato)
     if(prefix=='dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
