@@ -66,56 +66,21 @@ def load_data():
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
-def myGenerator(bm25_scores, all_abs, t2i, how_many_loops):
-    for f in data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
-        d = pickle.load(open(f,'rb'))
-        yield d['x'],d['y']
+def myGenerator(bm25_scores, all_abs, t2i, how_many_loops, story_maxlen, b_size):
+    x1, x2, y = [], [], []
+    for sents_inds, _, quest_inds, label in data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
+        x1.append(sents_inds)
+        x2.append(quest_inds)
+        y.append(label)
+        if(len(y) == b_size):
+            yield [
+                      np.array(pad_sequences(x1, maxlen=story_maxlen)),
+                      np.array(pad_sequences(x2, maxlen=story_maxlen))
+                  ], np.array(y)
+            x1, x2, y = [], [], []
 
-pad_sequences(xs, maxlen=story_maxlen)
-
-class DataGenerator(keras.utils.Sequence):
-    'Generates data for Keras'
-    def __init__(
-            self,
-            list_IDs,
-            labels,
-            batch_size=32,
-            dim=(32,32,32),
-            n_channels=1,
-            n_classes=10,
-            shuffle=True
-    ):
-        'Initialization'
-        self.dim = dim
-        self.batch_size = batch_size
-        self.labels = labels
-        self.list_IDs = list_IDs
-        self.n_channels = n_channels
-        self.n_classes = n_classes
-        self.shuffle = shuffle
-        self.on_epoch_end()
-    def __len__(self):
-        'Denotes the number of batches per epoch'
-        return int(np.floor(len(self.list_IDs) / self.batch_size))
-    def __getitem__(self, index):
-        'Generate one batch of data'
-        indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
-        list_IDs_temp = [self.list_IDs[k] for k in indexes]
-        X, y = self.__data_generation(list_IDs_temp)
-        return X, y
-    def on_epoch_end(self):
-        'Updates indexes after each epoch'
-        self.indexes = np.arange(len(self.list_IDs))
-        if self.shuffle == True:
-            np.random.shuffle(self.indexes)
-    def __data_generation(self, list_IDs_temp):
-        'Generates data containing batch_size samples' # X : (n_samples, *dim, n_channels)
-        X = np.empty((self.batch_size, self.dim, self.n_channels))
-        y = np.empty((self.batch_size), dtype=int)
-        for i, ID in enumerate(list_IDs_temp):
-            X[i,] = np.load('data/' + ID + '.npy')
-            y[i] = self.labels[ID]
-        return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
+# d = myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=500, b_size=32)
+# aa = d.next()
 
 k = 5
 
@@ -158,8 +123,8 @@ vocab_size          = embedding_weights.shape[0]
 emb_size            = embedding_weights.shape[1]
 
 
-doc1                = Input(shape=(500,), dtype='int32')
-quest               = Input(shape=(200,), dtype='int32')
+doc1                = Input(shape=(1500,), dtype='int32')
+quest               = Input(shape=(1500,), dtype='int32')
 emb_layer           = Embedding(vocab_size, emb_size, weights=[embedding_weights])
 d1_embeds           = emb_layer(doc1)
 q_embeds            = emb_layer(quest)
@@ -188,11 +153,15 @@ doc2_               = np.random.randint(0,vocab_size, (1000, 500))
 quest_              = np.random.randint(0,vocab_size, (1000, 200))
 labels              = np.random.randint(0,2,(1000))
 
-H                   = model.fit([doc1_,quest_],labels,validation_data=None, epochs=5,verbose=1,batch_size=32)
+# H                   = model.fit([doc1_,quest_],labels,validation_data=None, epochs=5,verbose=1,batch_size=32)
 
-
-
-
+H                   = model.fit_generator(
+    myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
+    steps_per_epoch  = 10000,
+    epochs           = 5,
+    validation_data  = None,
+    validation_steps = None,
+)
 
 
 
