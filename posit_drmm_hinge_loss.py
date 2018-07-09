@@ -40,11 +40,8 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-# idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
-# print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
-# idf_mat          = np.random.random((150))
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+matrix          = np.random.random((150, 10))
 print(matrix.shape)
 
 def get_index(token, t2i):
@@ -118,16 +115,13 @@ def dummy_test():
     quest_inds          = np.random.randint(0,100,(40))
     good_sents_inds     = np.random.randint(0,100,(36))
     good_all_sims       = np.zeros((36, 40))
-    bad_sents_inds      = np.random.randint(0,100,(37))
-    bad_all_sims        = np.zeros((37, 40))
     for epoch in range(200):
         optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_, loss1_, loss2_ = model(
             doc1        = good_sents_inds,
-            doc2        = bad_sents_inds,
             question    = quest_inds,
             doc1_sim    = good_all_sims,
-            doc2_sim    = bad_all_sims
+            target      = [0]
         )
         cost_.backward()
         optimizer.step()
@@ -270,7 +264,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.PReLU()
         self.my_relu2                               = torch.nn.PReLU()
         self.my_drop1                               = nn.Dropout(p=0.2)
-        self.margin_loss                            = nn.MarginRankingLoss(margin=0.9)
+        self.hinge_loss                             = torch.nn.HingeEmbeddingLoss()
     def apply_convolution(self, the_input, the_filters, activation):
         conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
         conv_res    = activation(conv_res)
@@ -322,59 +316,23 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 else:
                     l2_reg = l2_reg + W.norm(2)
         return l2_reg
-    def emit_one(self, doc1, question, doc1_sim):
-        question                                    = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        doc1                                        = autograd.Variable(torch.LongTensor(doc1), requires_grad=False)
-        similarity_one_hot_doc1                     = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
-        question_embeds                             = self.word_embeddings(question)
-        doc1_embeds                                 = self.word_embeddings(doc1)
-        similarity_insensitive_doc1                 = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        q_conv_res_trigram                          = self.apply_convolution(question_embeds,   self.quest_filters_conv_trigram,    self.conv_activation_trigram)
-        doc1_conv_trigram                           = self.apply_convolution(doc1_embeds,       self.sent_filters_conv_trigram,     self.conv_activation_trigram)
-        similarity_sensitive_doc1_trigram           = self.my_cosine_sim(q_conv_res_trigram, doc1_conv_trigram).squeeze(0)
-        similarity_insensitive_pooled_doc1          = self.pooling_method(similarity_insensitive_doc1)
-        similarity_sensitive_pooled_doc1_trigram    = self.pooling_method(similarity_sensitive_doc1_trigram)
-        similarity_one_hot_pooled_doc1              = self.pooling_method(similarity_one_hot_doc1)
-        doc1_emit                                   = self.get_output([similarity_one_hot_pooled_doc1, similarity_insensitive_pooled_doc1, similarity_sensitive_pooled_doc1_trigram])
-        return doc1_emit
-    def forward(self, doc1, doc2, question, doc1_sim, doc2_sim):
+    def forward(self, doc1, question, doc1_sim, target):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
-        doc2                            = autograd.Variable(torch.LongTensor(doc2),     requires_grad=False)
-        #
         sim_oh_d1                       = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
-        sim_oh_d2                       = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
-        #
+        target                          = autograd.Variable(torch.FloatTensor(target), requires_grad=False)
         question_embeds                 = self.word_embeddings(question)
         doc1_embeds                     = self.word_embeddings(doc1)
-        doc2_embeds                     = self.word_embeddings(doc2)
-        #
         sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        sim_insensitive_d2              = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
-        #
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
-        d2_conv_trigram                 = self.apply_convolution(doc2_embeds,     self.trigram_conv, self.trigram_conv_activation)
-        #
         sim_sensitive_d1_trigram        = self.my_cosine_sim(q_conv_res_trigram, d1_conv_trigram).squeeze(0)
-        sim_sensitive_d2_trigram        = self.my_cosine_sim(q_conv_res_trigram, d2_conv_trigram).squeeze(0)
-        #
         sim_insensitive_pooled_d1       = self.pooling_method(sim_insensitive_d1)
         sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
         sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
-        #
-        sim_insensitive_pooled_d2       = self.pooling_method(sim_insensitive_d2)
-        sim_sensitive_pooled_d2_trigram = self.pooling_method(sim_sensitive_d2_trigram)
-        sim_oh_pooled_d2                = self.pooling_method(sim_oh_d2)
-        #
         doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram])
-        doc2_emit                       = self.get_output([sim_oh_pooled_d2, sim_insensitive_pooled_d2, sim_sensitive_pooled_d2_trigram])
-        #
-        loss1                           = self.margin_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
-        # loss2                           = self.get_reg_loss() * reg_lambda
-        loss2                           = loss1 * 0.
-        loss                            = loss1 #+ loss2 + loss3
-        return loss, doc1_emit, doc2_emit, loss1, loss2
+        loss                            = self.hinge_loss(doc1_emit, target)
+        return loss, doc1_emit
 
 print('Compiling model...')
 logger.info('Compiling model...')
@@ -384,8 +342,8 @@ print_params(model)
 del(matrix)
 optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
