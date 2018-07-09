@@ -20,11 +20,11 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir            = '/home/dpappas/posit_drmm_hinge_loss/'
+odir            = '/home/dpappas/posit_drmm_bce_loss/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
-od              = 'posit_drmm_hinge'
+od              = 'posit_drmm_bce'
 k_for_maxpool   = 5
 lr              = 0.001
 bsize           = 32
@@ -301,8 +301,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = self.my_relu1(lo)
         lo      = self.my_drop1(lo)
         lo      = self.linear_per_q2(lo)
-        # lo      = F.sigmoid(lo)
-        lo      = self.my_relu2(lo)
+        lo      = F.sigmoid(lo)
+        # lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
@@ -330,7 +330,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
         sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
         doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram])
-        loss                            = F.hinge_embedding_loss(doc1_emit, target)
+        loss                            = F.binary_cross_entropy_with_logits(doc1_emit.unsqueeze(-1), target)
         return loss, doc1_emit
 
 print('Compiling model...')
