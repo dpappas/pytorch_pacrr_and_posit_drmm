@@ -264,7 +264,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.PReLU()
         self.my_relu2                               = torch.nn.PReLU()
         self.my_drop1                               = nn.Dropout(p=0.2)
-        self.hinge_loss                             = torch.nn.HingeEmbeddingLoss()
     def apply_convolution(self, the_input, the_filters, activation):
         conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
         conv_res    = activation(conv_res)
@@ -331,7 +330,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
         sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
         doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram])
-        loss                            = self.hinge_loss(doc1_emit, target)
+        loss                            = F.hinge_embedding_loss(doc1_emit, target)
         return loss, doc1_emit
 
 print('Compiling model...')
