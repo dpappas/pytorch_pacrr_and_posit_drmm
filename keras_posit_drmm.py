@@ -153,7 +153,7 @@ doc2_               = np.random.randint(0,vocab_size, (1000, 500))
 quest_              = np.random.randint(0,vocab_size, (1000, 200))
 labels              = np.random.randint(0,2,(1000))
 
-# H                   = model.fit([doc1_,quest_],labels,validation_data=None, epochs=5,verbose=1,batch_size=32)
+# H = model.fit([doc1_,quest_],labels,validation_data=None, epochs=5,verbose=1,batch_size=32)
 
 H                   = model.fit_generator(
     myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
