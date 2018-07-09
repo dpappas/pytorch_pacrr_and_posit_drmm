@@ -185,7 +185,7 @@ def get_one_map(prefix, bm25_scores, all_abs):
             all_sims        = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
             sents_inds      = [get_index(token, t2i) for token in bioclean(passage)]
             quest_inds      = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
-           _,  doc1_emit_   = model(sents_inds, quest_inds, all_sims, [0])
+            _,  doc1_emit_   = model(sents_inds, quest_inds, all_sims, [0])
             doc_res[doc_id] = float(doc1_emit_)
         doc_res             = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
         doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
