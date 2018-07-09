@@ -3,8 +3,8 @@ import os
 import re
 import sys
 import json
-import subprocess
 import random
+import subprocess
 import numpy as np
 import cPickle as pickle
 from pprint import pprint
@@ -40,10 +40,10 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
+matrix          = np.random.random((150, 10))
 # idf_mat          = np.random.random((150))
 print(matrix.shape)
 
@@ -262,7 +262,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
-        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=3)
+        # self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 2, padding=1)
+        # self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2)
+        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 4, padding=3)
         self.trigram_conv_activation                = torch.nn.Sigmoid()
         #
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
@@ -274,7 +276,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def apply_convolution(self, the_input, the_filters, activation):
         conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
         conv_res    = activation(conv_res)
-        conv_res    = conv_res[:, :, -1*the_input.size(0):]
+        pad         = the_filters.padding[0]
+        ind_from    = int(np.floor(pad/2.0))
+        ind_to      = ind_from + the_input.size(0)
+        conv_res    = conv_res[:, :, ind_from:ind_to]
         conv_res    = conv_res.transpose(1, 2)
         conv_res    = conv_res + the_input
         return conv_res.squeeze(0)
@@ -384,8 +389,8 @@ print_params(model)
 del(matrix)
 optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
