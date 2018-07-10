@@ -18,7 +18,7 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir            = '/home/dpappas/simplest_posit_drmm_2/'
+odir            = '/home/dpappas/simplest_posit_drmm_3/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
@@ -89,7 +89,7 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
                     bid = random.choice(bad_pmids)
                     good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
                     bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
-                    yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
+                    yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds, np.array(additional_features_good), np.array(additional_features_bad)
 
 def dummy_test():
     quest_inds          = np.random.randint(0,100,(40))
@@ -140,7 +140,10 @@ def train_one(train_instances):
     costs   = []
     optimizer.zero_grad()
     instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds in train_instances:
+    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in train_instances:
+        print(gaf)
+        print(baf)
+        exit()
         instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         #
         average_total_loss  += instance_cost.cpu().item()
