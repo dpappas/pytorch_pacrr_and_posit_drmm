@@ -59,7 +59,7 @@ def get_index(token, t2i):
     try:
         return t2i[token]
     except KeyError:
-        return t2i['UNKN']
+        return t2i[unk_tok]
 
 def get_sim_mat(stoks, qtoks):
     sm = np.zeros((len(stoks), len(qtoks)))
