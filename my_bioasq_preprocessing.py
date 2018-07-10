@@ -88,3 +88,4 @@ def get_item_inds(item, question, t2i, remove_stopwords=False):
     return sents_inds, quest_inds, all_sims
 
 
+
