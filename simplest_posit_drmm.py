@@ -14,6 +14,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.autograd as autograd
 from tqdm import tqdm
+from my_bioasq_preprocessing import get_item_inds
 
 my_seed = 1989
 random.seed(my_seed)

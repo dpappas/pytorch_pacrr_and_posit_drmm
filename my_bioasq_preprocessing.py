@@ -68,14 +68,19 @@ def get_sim_mat(stoks, qtoks):
                 sm[j,i] = 1.
     return sm
 
-def get_item_inds(item, question, t2i):
-    passage     = item['title'] + ' ' + item['abstractText']
-    all_sims    = get_sim_mat(bioclean(passage), bioclean(question))
-    sents_inds  = [get_index(token, t2i) for token in bioclean(passage)]
-    quest_inds  = [get_index(token, t2i) for token in bioclean(question)]
-    return sents_inds, quest_inds, all_sims
-
-def remove_stopwords(tokens):
+def remove_stopw(tokens):
     return [tok if( tok.lower() not in stop) else 'UNKN' for tok in tokens]
+
+def get_item_inds(item, question, t2i, remove_stopwords=False):
+    passage         = item['title'] + ' ' + item['abstractText']
+    all_sims        = get_sim_mat(bioclean(passage), bioclean(question))
+    passage_toks    = bioclean(passage)
+    question_toks   = bioclean(question)
+    if(remove_stopwords):
+        passage_toks    = remove_stopw(passage_toks)
+        question_toks   = remove_stopw(question_toks)
+    sents_inds      = [get_index(token, t2i) for token in passage_toks]
+    quest_inds      = [get_index(token, t2i) for token in question_toks]
+    return sents_inds, quest_inds, all_sims
 
 
