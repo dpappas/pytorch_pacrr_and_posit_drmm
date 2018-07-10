@@ -73,11 +73,11 @@ def get_overlap_features_mode_1(q_tokens, d_tokens):
     #
     return [unigram_overlap, bigram_overlap, idf_uni_overlap]
 
-def get_index(token, t2i, q_or_d ='q'):
+def get_index(token, t2i, q_or_d):
     try:
         return t2i[token]
     except KeyError:
-        if():
+        if(q_or_d == 'q'):
             return t2i[q_unk_tok]
         else:
             return t2i[d_unk_tok]
@@ -90,7 +90,11 @@ def get_sim_mat(stoks, qtoks):
                 sm[j,i] = 1.
     return sm
 
-def remove_stopw(tokens):
+def remove_stopw(tokens, q_or_d):
+    if(q_or_d == 'q'):
+        unk_tok = q_unk_tok
+    else:
+        unk_tok = d_unk_tok
     return [
         tok if( tok.lower() not in stop) else unk_tok
         for tok in tokens
