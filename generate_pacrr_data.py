@@ -49,6 +49,7 @@ def bioasq_query_processing(q_text, max_q_len):
     #
     return q_text_inds, q_text
 
+# To swsto!!!
 def get_overlap_features_mode_1(q_tokens, d_tokens, q_idf):
     # Map term to idf before set() change the term order
     q_terms_idf = {}
