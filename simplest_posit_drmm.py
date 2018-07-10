@@ -85,10 +85,10 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
         if(len(bad_pmids)>0):
             for i in range(how_many_loops):
                 for gid in good_pmids:
-                    # bid                                             = bad_pmids[i%len(bad_pmids)]
-                    bid                                             = random.choice(bad_pmids)
-                    good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
-                    bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
+                    # bid = bad_pmids[i%len(bad_pmids)]
+                    bid = random.choice(bad_pmids)
+                    good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
+                    bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
                     yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds
 
 def dummy_test():
