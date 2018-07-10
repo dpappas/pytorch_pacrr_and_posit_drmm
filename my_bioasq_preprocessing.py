@@ -29,7 +29,8 @@ def get_idf_list(tokens):
     #
     return idf_list
 
-def get_overlap_features_mode_1(q_tokens, d_tokens, q_idf):
+def get_overlap_features_mode_1(q_tokens, d_tokens):
+    q_idf       = get_idf_list(q_tokens)
     # Map term to idf before set() change the term order
     q_terms_idf = {}
     for i in range(len(q_tokens)):
