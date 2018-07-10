@@ -69,7 +69,10 @@ def get_sim_mat(stoks, qtoks):
     return sm
 
 def remove_stopw(tokens):
-    return [tok if( tok.lower() not in stop) else 'UNKN' for tok in tokens]
+    return [
+        tok if( tok.lower() not in stop) else 'UNKN'
+        for tok in tokens
+    ]
 
 def get_item_inds(item, question, t2i, remove_stopwords=False):
     passage         = item['title'] + ' ' + item['abstractText']
