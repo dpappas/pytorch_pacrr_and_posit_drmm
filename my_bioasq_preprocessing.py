@@ -7,7 +7,7 @@ import re
 import operator
 from gensim.models import KeyedVectors
 
-w2v_path        = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
+# w2v_path        = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
 bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords1      = list([t.strip() for t in open('/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/stopwords.txt').readlines()])
 stopwords2      = list(stopwords.words('english'))
@@ -75,6 +75,10 @@ def get_item_inds(item, question, t2i):
     quest_inds  = [get_index(token, t2i) for token in bioclean(question)]
     return sents_inds, quest_inds, all_sims
 
-def remove_stopwords():
+def remove_stopwords(tokens):
+    return [
+        tok if() else 'UNKN'
+        for tok in tokens
+    ]
 
 
