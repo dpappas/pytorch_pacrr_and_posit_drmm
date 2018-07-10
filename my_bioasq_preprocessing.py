@@ -77,7 +77,7 @@ def get_item_inds(item, question, t2i):
 
 def remove_stopwords(tokens):
     return [
-        tok if() else 'UNKN'
+        tok if( tok.lower() not in stop) else 'UNKN'
         for tok in tokens
     ]
 
