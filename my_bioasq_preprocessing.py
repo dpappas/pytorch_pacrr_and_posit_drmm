@@ -8,14 +8,16 @@ import re
 import operator
 from gensim.models import KeyedVectors
 
+idf_path        = '/home/DATA/Biomedical/bioasq6/bioasq6_data/IDF.pkl'
+stopw_path      = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/stopwords.txt'
+
 bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
-stopwords1      = list([t.strip() for t in open('/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/stopwords.txt').readlines()])
+stopwords1      = list([t.strip() for t in open(stopw_path).readlines()])
 stopwords2      = list(stopwords.words('english'))
 stop            = set(stopwords1 + stopwords2)
 unk_tok         = 'UNKN'
-idf_path        = '/home/DATA/Biomedical/bioasq6/bioasq6_data/IDF.pkl'
 idf             = pickle.load(open(idf_path, 'rb'))
-max_idf = max(idf.items(), key=operator.itemgetter(1))[1]
+max_idf         = max(idf.items(), key=operator.itemgetter(1))[1]
 
 def get_idf_list(tokens):
     idf_list = []
