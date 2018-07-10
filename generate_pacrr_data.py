@@ -375,12 +375,14 @@ def produce_reranking_inputs(data, docset, max_year):
         query_data['token_inds'] = query_inds
         query_data['query_len'] = len(query_inds)
         query_data['idf'] = query_idf
-        query_data['retrieved_samples'] = {'documents': doc_id_list,
-                                           'doc_list': doc_list,
-                                           'doc_BM25': doc_BM25_list,
-                                           'doc_normBM25': doc_norm_BM25_list,
-                                           'doc_overlap': doc_overlap_list,
-                                           'n_ret_docs': len(doc_id_list)}
+        query_data['retrieved_samples'] = {
+            'documents': doc_id_list,
+            'doc_list': doc_list,
+            'doc_BM25': doc_BM25_list,
+            'doc_normBM25': doc_norm_BM25_list,
+            'doc_overlap': doc_overlap_list,
+            'n_ret_docs': len(doc_id_list)
+        }
         #
         query_data_list.append(query_data)
         #
