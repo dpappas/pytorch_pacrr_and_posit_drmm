@@ -21,9 +21,9 @@ def similar(a, b):
     )
 
 def map_term2ind(w2v_path):
-    word_vectors = KeyedVectors.load_word2vec_format(w2v_path, binary=True)
-    vocabulary  = sorted(list(word_vectors.vocab.keys()))
-    term2ind = dict([t[::-1] for t in enumerate(vocabulary, start=1)])
+    word_vectors        = KeyedVectors.load_word2vec_format(w2v_path, binary=True)
+    vocabulary          = sorted(list(word_vectors.vocab.keys()))
+    term2ind            = dict([t[::-1] for t in enumerate(vocabulary, start=1)])
     term2ind[UNK_TOKEN] = max(term2ind.items(), key=operator.itemgetter(1))[1] + 1	# Index of *UNK* token
     print('Size of voc: {0}'.format(len(vocabulary)))
     print('Unknown terms\'s id: {0}'.format(term2ind['*UNK*']))
