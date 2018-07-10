@@ -76,9 +76,6 @@ def get_item_inds(item, question, t2i):
     return sents_inds, quest_inds, all_sims
 
 def remove_stopwords(tokens):
-    return [
-        tok if( tok.lower() not in stop) else 'UNKN'
-        for tok in tokens
-    ]
+    return [tok if( tok.lower() not in stop) else 'UNKN' for tok in tokens]
 
 
