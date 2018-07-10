@@ -14,7 +14,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.autograd as autograd
 from tqdm import tqdm
-from my_bioasq_preprocessing import get_item_inds
+from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat, bioclean
 
 my_seed = 1989
 random.seed(my_seed)
@@ -172,8 +172,8 @@ def get_one_map(prefix, bm25_scores, all_abs):
             doc_id      = retr['doc_id']
             passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
             all_sims    = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
-            sents_inds  = [get_index(token, t2i) for token in bioclean(passage)]
-            quest_inds  = [get_index(token, t2i) for token in bioclean(quer['query_text'])]
+            sents_inds  = text2indices(passage, t2i)
+            quest_inds  = text2indices(quer['query_text'], t2i)
             doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims)
             doc_res[doc_id] = float(doc1_emit_)
         doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)

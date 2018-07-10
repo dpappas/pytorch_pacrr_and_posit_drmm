@@ -86,5 +86,9 @@ def get_item_inds(item, question, t2i, remove_stopwords=False):
     quest_inds      = [get_index(token, t2i) for token in question_toks]
     return sents_inds, quest_inds, all_sims
 
+def text2indices(text, t2i):
+    return [get_index(token, t2i) for token in bioclean(text)]
+
+
 
 
