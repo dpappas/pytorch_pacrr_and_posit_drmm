@@ -9,12 +9,17 @@ import numpy as np
 import cPickle as pickle
 from pprint import pprint
 from nltk.tokenize import sent_tokenize
+from nltk.corpus import stopwords
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.autograd as autograd
 from tqdm import tqdm
+
+stopwords1  = list([t.strip() for t in open('/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/stopwords.txt').readlines()])
+stopwords2  = list(stopwords.words('english'))
+stop        = set(stopwords1 + stopwords2)
 
 my_seed = 1989
 random.seed(my_seed)
@@ -404,8 +409,6 @@ for item in dev_bm25_scores['queries']:
     rd = [t for t in rd if(int(dev_all_abs[t]['publicationDate'].split('-')[0])>2016)]
     if(len(rd)>0):
         print rd
-
-
 
 max_dev_map     = 0.0
 max_epochs      = 30
