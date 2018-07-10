@@ -1,6 +1,7 @@
 
 
 from nltk.tokenize import sent_tokenize
+import cPickle as pickle
 from nltk.corpus import stopwords
 import numpy as np
 import re
@@ -12,6 +13,19 @@ stopwords1      = list([t.strip() for t in open('/home/DATA/Biomedical/other/Bio
 stopwords2      = list(stopwords.words('english'))
 stop            = set(stopwords1 + stopwords2)
 unk_tok         = 'UNKN'
+idf_path        = '/home/DATA/Biomedical/bioasq6/bioasq6_data/IDF.pkl'
+idf             = pickle.load(open(idf_path, 'rb'))
+max_idf = max(idf.items(), key=operator.itemgetter(1))[1]
+
+def get_idf_list(tokens):
+    idf_list = []
+    for t in tokens:
+        if t in idf:
+            idf_list.append(idf[t])
+        else:
+            idf_list.append(max_idf)
+    #
+    return idf_list
 
 def get_overlap_features_mode_1(q_tokens, d_tokens, q_idf):
     # Map term to idf before set() change the term order
