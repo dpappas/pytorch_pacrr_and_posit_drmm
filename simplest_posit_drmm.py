@@ -1,17 +1,15 @@
 
 import os
-import re
-import sys
 import json
 import random
 import subprocess
 import numpy as np
 import cPickle as pickle
-from pprint import pprint
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
 from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat, bioclean
