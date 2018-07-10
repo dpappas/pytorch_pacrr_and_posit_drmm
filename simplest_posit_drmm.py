@@ -52,6 +52,47 @@ matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matri
 # idf_mat          = np.random.random((150))
 print(matrix.shape)
 
+def get_overlap_features_mode_1(q_tokens, d_tokens, q_idf):
+    # Map term to idf before set() change the term order
+    q_terms_idf = {}
+    for i in range(len(q_tokens)):
+        q_terms_idf[q_tokens[i]] = q_idf[i]
+    #
+    # Query Uni and Bi gram sets
+    query_uni_set = set()
+    query_bi_set = set()
+    for i in range(len(q_tokens) - 1):
+        query_uni_set.add(q_tokens[i])
+        query_bi_set.add((q_tokens[i], q_tokens[i + 1]))
+    query_uni_set.add(q_tokens[-1])
+    #
+    # Doc Uni and Bi gram sets
+    doc_uni_set = set()
+    doc_bi_set = set()
+    for i in range(len(d_tokens) - 1):
+        doc_uni_set.add(d_tokens[i])
+        doc_bi_set.add((d_tokens[i], d_tokens[i + 1]))
+    doc_uni_set.add(d_tokens[-1])
+    #
+    unigram_overlap = 0
+    idf_uni_overlap = 0
+    idf_uni_sum = 0
+    for ug in query_uni_set:
+        if ug in doc_uni_set:
+            unigram_overlap += 1
+            idf_uni_overlap += q_terms_idf[ug]
+        idf_uni_sum += q_terms_idf[ug]
+    unigram_overlap /= len(query_uni_set)
+    idf_uni_overlap /= idf_uni_sum
+    #
+    bigram_overlap = 0
+    for bg in query_bi_set:
+        if bg in doc_bi_set:
+            bigram_overlap += 1
+    bigram_overlap /= len(query_bi_set)
+    #
+    return [unigram_overlap, bigram_overlap, idf_uni_overlap]
+
 def get_index(token, t2i):
     try:
         return t2i[token]
