@@ -16,7 +16,8 @@ bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"',
 stopwords1      = list([t.strip() for t in open(stopw_path).readlines()])
 stopwords2      = list(stopwords.words('english'))
 stop            = set(stopwords1 + stopwords2)
-unk_tok         = 'UNKN'
+q_unk_tok       = 'QUNKN'
+d_unk_tok       = 'DUNKN'
 idf             = pickle.load(open(idf_path, 'rb'))
 max_idf         = max(idf.items(), key=operator.itemgetter(1))[1]
 
@@ -72,11 +73,14 @@ def get_overlap_features_mode_1(q_tokens, d_tokens):
     #
     return [unigram_overlap, bigram_overlap, idf_uni_overlap]
 
-def get_index(token, t2i):
+def get_index(token, t2i, q_or_d ='q'):
     try:
         return t2i[token]
     except KeyError:
-        return t2i[unk_tok]
+        if():
+            return t2i[q_unk_tok]
+        else:
+            return t2i[d_unk_tok]
 
 def get_sim_mat(stoks, qtoks):
     sm = np.zeros((len(stoks), len(qtoks)))
@@ -102,7 +106,7 @@ def get_item_inds(item, question, t2i, remove_stopwords=False):
         question_toks   = remove_stopw(question_toks)
     sents_inds          = [get_index(token, t2i) for token in passage_toks]
     quest_inds          = [get_index(token, t2i) for token in question_toks]
-    additional_features = get_overlap_features_mode_1(bioclean(question_toks), passage_toks)
+    additional_features = get_overlap_features_mode_1(question_toks, passage_toks)
     return sents_inds, quest_inds, all_sims, additional_features
 
 def text2indices(text, t2i):
