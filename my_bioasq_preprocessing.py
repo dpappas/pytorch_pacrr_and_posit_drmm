@@ -12,6 +12,7 @@ bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"',
 stopwords1      = list([t.strip() for t in open('/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/stopwords.txt').readlines()])
 stopwords2      = list(stopwords.words('english'))
 stop            = set(stopwords1 + stopwords2)
+unk_tok         = 'UNKN'
 
 def get_overlap_features_mode_1(q_tokens, d_tokens, q_idf):
     # Map term to idf before set() change the term order
@@ -70,7 +71,7 @@ def get_sim_mat(stoks, qtoks):
 
 def remove_stopw(tokens):
     return [
-        tok if( tok.lower() not in stop) else 'UNKN'
+        tok if( tok.lower() not in stop) else unk_tok
         for tok in tokens
     ]
 
