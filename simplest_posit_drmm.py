@@ -367,12 +367,6 @@ optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_deca
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
-for item in dev_bm25_scores['queries']:
-    rd = [t['doc_id'] for t in item['retrieved_documents']]
-    rd = [t for t in rd if(int(dev_all_abs[t]['publicationDate'].split('-')[0])>2016)]
-    if(len(rd)>0):
-        print rd
-
 max_dev_map     = 0.0
 max_epochs      = 30
 loopes          = [1,0,0]
