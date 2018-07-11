@@ -259,7 +259,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.requires_grad   = False
         #
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2)
-        self.trigram_conv_activation                = torch.nn.Sigmoid()
+        # self.trigram_conv_activation                = torch.nn.Sigmoid()
+        self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
