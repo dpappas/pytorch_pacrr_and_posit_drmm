@@ -12,7 +12,6 @@ import torch.nn.functional as F
 from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
-from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat, bioclean
 
 my_seed = 1989
 random.seed(my_seed)
@@ -38,10 +37,11 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat, bioclean
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
+matrix          = np.random.random((150, 10))
 # idf_mat          = np.random.random((150))
 print(matrix.shape)
 
@@ -97,6 +97,8 @@ def dummy_test():
     good_all_sims       = np.zeros((36, 40))
     bad_sents_inds      = np.random.randint(0,100,(37))
     bad_all_sims        = np.zeros((37, 40))
+    gaf                 = np.random.rand(4)
+    baf                 = np.random.rand(4)
     for epoch in range(200):
         optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_, loss1_, loss2_ = model(
@@ -104,7 +106,9 @@ def dummy_test():
             doc2        = bad_sents_inds,
             question    = quest_inds,
             doc1_sim    = good_all_sims,
-            doc2_sim    = bad_all_sims
+            doc2_sim    = bad_all_sims,
+            gaf         = gaf,
+            baf         = baf,
         )
         cost_.backward()
         optimizer.step()
@@ -173,8 +177,8 @@ def get_one_map(prefix, bm25_scores, all_abs):
             doc_id      = retr['doc_id']
             passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
             all_sims    = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
-            sents_inds  = text2indices(passage, t2i)
-            quest_inds  = text2indices(quer['query_text'], t2i)
+            sents_inds  = text2indices(passage, t2i, 'd')
+            quest_inds  = text2indices(quer['query_text'], t2i, 'q')
             doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims)
             doc_res[doc_id] = float(doc1_emit_)
         doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
@@ -249,6 +253,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu2                               = torch.nn.LeakyReLU()
         self.my_drop1                               = nn.Dropout(p=0.2)
         self.margin_loss                            = nn.MarginRankingLoss(margin=0.9)
+        self.out_layer                              = nn.Linear(5, 1, bias=False)
     def apply_convolution(self, the_input, the_filters, activation):
         conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
         conv_res    = activation(conv_res)
@@ -318,10 +323,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
         doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram])
         return doc1_emit
-    def forward(self, doc1, doc2, question, doc1_sim, doc2_sim):
+    def forward(self, doc1, doc2, question, doc1_sim, doc2_sim, gaf, baf):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
         doc2                            = autograd.Variable(torch.LongTensor(doc2),     requires_grad=False)
+        #
+        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
+        baf                             = autograd.Variable(torch.FloatTensor(baf),     requires_grad=False)
         #
         sim_oh_d1                       = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
         sim_oh_d2                       = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
@@ -351,7 +359,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram])
         doc2_emit                       = self.get_output([sim_oh_pooled_d2, sim_insensitive_pooled_d2, sim_sensitive_pooled_d2_trigram])
         #
-        loss1                           = self.margin_loss(doc1_emit.unsqueeze(0), doc2_emit.unsqueeze(0), torch.ones(1))
+        good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
+        bad_add_feats                   = torch.cat([baf, doc2_emit.unsqueeze(-1)])
+        good_out                        = self.out_layer(good_add_feats)
+        bad_out                         = self.out_layer(bad_add_feats)
+        #
+        loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
         # loss2                           = self.get_reg_loss() * reg_lambda
         loss2                           = loss1 * 0.
         loss                            = loss1 #+ loss2 + loss3
@@ -365,8 +378,8 @@ print_params(model)
 del(matrix)
 optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 

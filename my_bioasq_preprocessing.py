@@ -108,13 +108,13 @@ def get_item_inds(item, question, t2i, remove_stopwords=False):
     if(remove_stopwords):
         passage_toks    = remove_stopw(passage_toks)
         question_toks   = remove_stopw(question_toks)
-    sents_inds          = [get_index(token, t2i) for token in passage_toks]
-    quest_inds          = [get_index(token, t2i) for token in question_toks]
+    sents_inds          = [get_index(token, t2i, 'd') for token in passage_toks]
+    quest_inds          = [get_index(token, t2i, 'q') for token in question_toks]
     additional_features = get_overlap_features_mode_1(question_toks, passage_toks)
     return sents_inds, quest_inds, all_sims, additional_features
 
-def text2indices(text, t2i):
-    return [get_index(token, t2i) for token in bioclean(text)]
+def text2indices(text, t2i, q_or_d):
+    return [get_index(token, t2i, q_or_d) for token in bioclean(text)]
 
 
 
