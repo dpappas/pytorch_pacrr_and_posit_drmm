@@ -35,9 +35,9 @@ hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
+from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat, bioclean
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat, bioclean
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # print(idf_mat.shape)
