@@ -17,7 +17,7 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir            = '/home/dpappas/simplest_posit_drmm_3/'
+odir            = '/home/dpappas/simplest_posit_drmm_4/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
