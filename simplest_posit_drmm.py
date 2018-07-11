@@ -148,7 +148,15 @@ def train_one(train_instances):
     optimizer.zero_grad()
     instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in train_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(
+            good_sents_inds,
+            bad_sents_inds,
+            quest_inds,
+            good_all_sims,
+            bad_all_sims,
+            gaf,
+            baf
+        )
         #
         average_total_loss  += instance_cost.cpu().item()
         average_task_loss   += loss1.cpu().item()
@@ -182,7 +190,7 @@ def get_one_map(prefix, bm25_scores, all_abs):
             quest_inds  = text2indices(quer['query_text'], t2i, 'q')
             #
             gaf         = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
-            gaf.append(bm25s['doc_id'])
+            gaf.append(bm25s[doc_id])
             #
             doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims, gaf=gaf)
             #
