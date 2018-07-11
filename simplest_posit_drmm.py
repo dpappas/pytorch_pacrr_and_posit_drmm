@@ -417,3 +417,6 @@ for epoch in range(max_epochs):
     logger.info("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_map, test_map))
     logger.info(20 * '-')
 
+'''
+grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_3/model.log 
+'''
