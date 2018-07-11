@@ -311,9 +311,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 else:
                     l2_reg = l2_reg + W.norm(2)
         return l2_reg
-    def emit_one(self, doc1, question, doc1_sim):
+    def emit_one(self, doc1, question, doc1_sim, gaf):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
+        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
         sim_oh_d1                       = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
         question_embeds                 = self.word_embeddings(question)
         doc1_embeds                     = self.word_embeddings(doc1)
@@ -325,7 +326,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
         sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
         doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram])
-        return doc1_emit
+        good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
+        good_out                        = self.out_layer(good_add_feats)
+        return good_out
     def forward(self, doc1, doc2, question, doc1_sim, doc2_sim, gaf, baf):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
@@ -371,7 +374,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # loss2                           = self.get_reg_loss() * reg_lambda
         loss2                           = loss1 * 0.
         loss                            = loss1 #+ loss2 + loss3
-        return loss, doc1_emit, doc2_emit, loss1, loss2
+        return loss, good_out, bad_out, loss1, loss2
 
 print('Compiling model...')
 logger.info('Compiling model...')
