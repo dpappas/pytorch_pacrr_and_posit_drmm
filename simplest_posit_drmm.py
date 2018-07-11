@@ -148,9 +148,6 @@ def train_one(train_instances):
     optimizer.zero_grad()
     instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in train_instances:
-        print(gaf)
-        print(baf)
-        exit()
         instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims)
         #
         average_total_loss  += instance_cost.cpu().item()
