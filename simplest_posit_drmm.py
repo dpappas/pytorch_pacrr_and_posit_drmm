@@ -79,6 +79,7 @@ def print_params(model):
 def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
     for quer in bm25_scores[u'queries']:
         quest       = quer['query_text']
+        bm25s       = { t['doc_id']:t['bm25_score'] for t in quer[u'retrieved_documents'] }
         ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
         bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
@@ -88,7 +89,9 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
                     # bid = bad_pmids[i%len(bad_pmids)]
                     bid = random.choice(bad_pmids)
                     good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
+                    additional_features_good.append(bm25s[gid])
                     bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
+                    additional_features_bad.append(bm25s[bid])
                     yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds, np.array(additional_features_good), np.array(additional_features_bad)
 
 def dummy_test():
