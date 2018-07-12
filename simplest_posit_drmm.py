@@ -260,7 +260,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2)
         # self.trigram_conv_activation                = torch.nn.Sigmoid()
-        self.trigram_conv_activation                = torch.nn.LeakyReLU()
+        # self.trigram_conv_activation                = torch.nn.LeakyReLU()
+        self.trigram_conv_activation                = None
         #
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
@@ -271,7 +272,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.out_layer                              = nn.Linear(5, 1, bias=False)
     def apply_convolution(self, the_input, the_filters, activation):
         conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
-        conv_res    = activation(conv_res)
+        if(activation is not None):
+            conv_res = activation(conv_res)
         pad         = the_filters.padding[0]
         ind_from    = int(np.floor(pad/2.0))
         ind_to      = ind_from + the_input.size(0)
