@@ -18,7 +18,7 @@ random.seed(my_seed)
 torch.manual_seed(my_seed)
 
 # odir            = '/home/dpappas/simplest_posit_drmm_6/'
-odir            = '/home/dpappas/simplest_posit_drmm_no_activation_dif_unkn/'
+odir            = '/home/dpappas/simplest_posit_drmm_sigmoid_dif_unkn_sum/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
@@ -424,7 +424,8 @@ for epoch in range(max_epochs):
 
 '''
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_3/model.log 
-grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_no_activation_dif_unkn//model.log 
+grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_no_activation_dif_unkn//model.log
+grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_sigmoid_dif_unkn_sum//model.log 
 
 
 python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
@@ -454,7 +455,6 @@ python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
 /home/dpappas/simplest_posit_drmm_no_activation_dif_unkn/elk_relevant_abs_posit_drmm_lists_test.json
-
 
 
 '''
