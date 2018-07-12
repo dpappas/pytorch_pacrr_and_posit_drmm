@@ -17,7 +17,8 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir            = '/home/dpappas/simplest_posit_drmm_6/'
+# odir            = '/home/dpappas/simplest_posit_drmm_6/'
+odir            = '/home/dpappas/simplest_posit_drmm_no_activation_dif_unkn/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
@@ -422,6 +423,7 @@ for epoch in range(max_epochs):
 
 '''
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_3/model.log 
+grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_no_activation_dif_unkn//model.log 
 
 
 python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
