@@ -312,10 +312,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = self.my_relu1(lo)
         lo      = self.my_drop1(lo)
         lo      = self.linear_per_q2(lo)
-        # lo      = F.sigmoid(lo)
+        lo      = F.sigmoid(lo)
         lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
-        sr      = lo.sum(-1) / lo.size(-1)
+        # sr      = lo.sum(-1) / lo.size(-1)
+        sr      = lo.sum(-1)
         return sr
     def get_reg_loss(self):
         l2_reg = None
