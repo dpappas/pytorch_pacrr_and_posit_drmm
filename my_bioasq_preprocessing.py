@@ -18,6 +18,7 @@ stopwords2      = list(stopwords.words('english'))
 stop            = set(stopwords1 + stopwords2)
 q_unk_tok       = 'QUNKN'
 d_unk_tok       = 'DUNKN'
+# d_unk_tok       = q_unk_tok
 idf             = pickle.load(open(idf_path, 'rb'))
 max_idf         = max(idf.items(), key=operator.itemgetter(1))[1]
 

@@ -434,6 +434,18 @@ python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
 /home/dpappas/simplest_posit_drmm_3/elk_relevant_abs_posit_drmm_lists_test.json
 
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/simplest_posit_drmm_4/elk_relevant_abs_posit_drmm_lists_test.json
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/simplest_posit_drmm_5/elk_relevant_abs_posit_drmm_lists_test.json
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/simplest_posit_drmm_6/elk_relevant_abs_posit_drmm_lists_test.json
+
 
 
 '''
