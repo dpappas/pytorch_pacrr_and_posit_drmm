@@ -409,6 +409,7 @@ for epoch in range(max_epochs):
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_3/model.log 
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_no_activation_dif_unkn//model.log
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_sigmoid_dif_unkn_sum//model.log 
+grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_sigmoid_sum/model.log 
 
 
 python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
