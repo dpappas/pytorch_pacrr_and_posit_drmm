@@ -15,13 +15,11 @@ from tqdm import tqdm
 from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
 from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1, q_unk_tok, d_unk_tok
 
-
 my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-# odir            = '/home/dpappas/simplest_posit_drmm_6/'
-odir            = '/home/dpappas/simplest_posit_drmm_sigmoid_dif_unkn_sum/'
+odir            = '/home/dpappas/simplest_posit_drmm_sigmoid_sum/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
