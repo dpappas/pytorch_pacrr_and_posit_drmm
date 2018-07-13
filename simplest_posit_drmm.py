@@ -27,7 +27,6 @@ od              = 'sent_posit_drmm_MarginRankingLoss'
 k_for_maxpool   = 5
 lr              = 0.01
 bsize           = 32
-reg_lambda      = 0.1
 
 import logging
 logger = logging.getLogger(od)
@@ -261,14 +260,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2)
         self.trigram_conv_activation                = torch.nn.Sigmoid()
-        # self.trigram_conv_activation                = torch.nn.LeakyReLU()
-        # self.trigram_conv_activation                = None
         #
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_relu1                               = torch.nn.LeakyReLU()
         self.my_relu2                               = torch.nn.LeakyReLU()
-        self.my_drop1                               = nn.Dropout(p=0.2)
         self.margin_loss                            = nn.MarginRankingLoss(margin=0.9)
         self.out_layer                              = nn.Linear(5, 1, bias=False)
     def apply_convolution(self, the_input, the_filters, activation):
@@ -310,7 +306,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
-        lo      = self.my_drop1(lo)
         lo      = self.linear_per_q2(lo)
         lo      = F.sigmoid(lo)
         lo      = self.my_relu2(lo)
@@ -318,15 +313,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # sr      = lo.sum(-1) / lo.size(-1)
         sr      = lo.sum(-1)
         return sr
-    def get_reg_loss(self):
-        l2_reg = None
-        for W in self.parameters():
-            if(W.requires_grad):
-                if l2_reg is None:
-                    l2_reg = W.norm(2)
-                else:
-                    l2_reg = l2_reg + W.norm(2)
-        return l2_reg
     def emit_one(self, doc1, question, doc1_sim, gaf):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
@@ -387,10 +373,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         bad_out                         = self.out_layer(bad_add_feats)
         #
         loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
-        # loss2                           = self.get_reg_loss() * reg_lambda
-        loss2                           = loss1 * 0.
-        loss                            = loss1 #+ loss2 + loss3
-        return loss, good_out, bad_out, loss1, loss2
+        return loss1, good_out, bad_out, loss1, loss1
 
 print('Compiling model...')
 logger.info('Compiling model...')
