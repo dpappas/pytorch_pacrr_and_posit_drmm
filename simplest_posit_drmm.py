@@ -19,7 +19,7 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir            = '/home/dpappas/simplest_posit_drmm_sigmoid_sum/'
+odir = '/home/dpappas/simplest_posit_drmm_sigmoid_sum/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
