@@ -12,6 +12,9 @@ import torch.nn.functional as F
 from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
+from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
+from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1, q_unk_tok, d_unk_tok
+
 
 my_seed = 1989
 random.seed(my_seed)
@@ -24,7 +27,7 @@ if not os.path.exists(odir):
 
 od              = 'sent_posit_drmm_MarginRankingLoss'
 k_for_maxpool   = 5
-lr              = 0.001
+lr              = 0.01
 bsize           = 32
 reg_lambda      = 0.1
 
@@ -36,7 +39,6 @@ hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
-from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat, bioclean, get_overlap_features_mode_1
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
 matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
