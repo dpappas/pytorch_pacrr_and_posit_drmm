@@ -26,7 +26,7 @@ if not os.path.exists(odir):
 od              = 'sent_posit_drmm_MarginRankingLoss'
 k_for_maxpool   = 5
 lr              = 0.01
-bsize           = 32
+bsize           = 60
 
 import logging
 logger = logging.getLogger(od)
@@ -93,8 +93,8 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
                     additional_features_good.append(bm25s[gid])
                     bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
                     additional_features_bad.append(bm25s[bid])
-                    print(additional_features_good)
-                    print(additional_features_bad)
+                    # print(additional_features_good)
+                    # print(additional_features_bad)
                     yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds, np.array(additional_features_good), np.array(additional_features_bad)
 
 def dummy_test():
