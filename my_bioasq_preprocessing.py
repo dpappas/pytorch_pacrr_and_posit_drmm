@@ -70,7 +70,7 @@ def get_overlap_features_mode_1(q_tokens, d_tokens):
     for bg in query_bi_set:
         if bg in doc_bi_set:
             bigram_overlap += 1
-    bigram_overlap /= len(query_bi_set)
+    bigram_overlap = float(bigram_overlap) / float(len(query_bi_set))
     #
     return [unigram_overlap, bigram_overlap, idf_uni_overlap]
 
