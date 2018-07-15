@@ -19,7 +19,7 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir = '/home/dpappas/simplest_posit_drmm_sigmoid_sum_2/'
+odir = '/home/dpappas/simplest_posit_drmm_noactiv_sum_normbm25/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
@@ -260,7 +260,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.requires_grad   = False
         #
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2)
-        self.trigram_conv_activation                = torch.nn.Sigmoid()
+        # self.trigram_conv_activation                = torch.nn.Sigmoid()
+        self.trigram_conv_activation                = None
         #
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
@@ -308,7 +309,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
         lo      = self.linear_per_q2(lo)
-        lo      = F.sigmoid(lo)
+        # lo      = F.sigmoid(lo)
         lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
         # sr      = lo.sum(-1) / lo.size(-1)
