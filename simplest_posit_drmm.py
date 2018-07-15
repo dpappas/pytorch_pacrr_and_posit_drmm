@@ -414,6 +414,7 @@ grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_no_activation_dif_un
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_sigmoid_dif_unkn_sum//model.log 
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_sigmoid_sum/model.log 
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_noactiv_sum_normbm25/model.log 
+grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/model.log 
 
 
 
