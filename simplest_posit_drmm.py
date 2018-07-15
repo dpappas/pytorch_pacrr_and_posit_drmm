@@ -93,6 +93,8 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
                     additional_features_good.append(bm25s[gid])
                     bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
                     additional_features_bad.append(bm25s[bid])
+                    print(additional_features_good)
+                    print(additional_features_bad)
                     yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds, np.array(additional_features_good), np.array(additional_features_bad)
 
 def dummy_test():
@@ -392,7 +394,7 @@ train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, te
 
 max_dev_map     = 0.0
 max_epochs      = 30
-loopes          = [1,0,0]
+loopes          = [1, 0, 0]
 for epoch in range(max_epochs):
     train_instances         = data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0])
     train_average_loss      = train_one(train_instances)

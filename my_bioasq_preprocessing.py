@@ -63,8 +63,8 @@ def get_overlap_features_mode_1(q_tokens, d_tokens):
             unigram_overlap += 1
             idf_uni_overlap += q_terms_idf[ug]
         idf_uni_sum += q_terms_idf[ug]
-    unigram_overlap /= len(query_uni_set)
-    idf_uni_overlap /= idf_uni_sum
+    unigram_overlap = float(unigram_overlap) / float(len(query_uni_set))
+    idf_uni_overlap = float(idf_uni_overlap) / float(idf_uni_sum)
     #
     bigram_overlap = 0
     for bg in query_bi_set:
