@@ -4,7 +4,10 @@ import json
 import random
 import subprocess
 import numpy as np
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -19,7 +22,7 @@ my_seed = 1989
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir = '/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/'
+odir = '/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25_p3/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 

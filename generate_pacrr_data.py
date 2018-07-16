@@ -319,19 +319,19 @@ def produce_pos_neg_pairs(data, docset, max_year):
             print('{0} relevant documents are not in the docset.'.format(not_found_pos))
     #
     pairs_data = {
-        'queries': query_list,
-        'queries_len': query_len_list,
-        'queries_idf': query_idf_list,
-        'pos_docs': pos_doc_list,
-        'neg_docs': neg_doc_list,
-        'pos_docs_BM25': pos_doc_bm25_list,
-        'pos_docs_normBM25': pos_doc_normBM25_list,
-        'pos_docs_overlap': pos_doc_overlap_list,
-        'neg_docs_BM25': neg_doc_bm25_list,
-        'neg_docs_normBM25': neg_doc_normBM25_list,
-        'neg_docs_overlap': neg_doc_overlap_list,
-        'pairs': pairs_list,
-        'num_pairs': len(pairs_list)
+        'queries':              query_list,
+        'queries_len':          query_len_list,
+        'queries_idf':          query_idf_list,
+        'pos_docs':             pos_doc_list,
+        'neg_docs':             neg_doc_list,
+        'pos_docs_BM25':        pos_doc_bm25_list,
+        'pos_docs_normBM25':    pos_doc_normBM25_list,
+        'pos_docs_overlap':     pos_doc_overlap_list,
+        'neg_docs_BM25':        neg_doc_bm25_list,
+        'neg_docs_normBM25':    neg_doc_normBM25_list,
+        'neg_docs_overlap':     neg_doc_overlap_list,
+        'pairs':                pairs_list,
+        'num_pairs':            len(pairs_list)
     }
     #
     return pairs_data
