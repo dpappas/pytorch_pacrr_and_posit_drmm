@@ -247,7 +247,7 @@ def load_data():
     return train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i
 
 def get_map_res(fgold, femit):
-    trec_eval_res   = subprocess.Popen( [ 'python3.6', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit ], stdout=subprocess.PIPE, shell=False)
+    trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err)      = trec_eval_res.communicate()
     map_res         = float([l for l in out.split('\n') if(l.startswith('map '))][0].split('\t')[-1])
     return map_res
