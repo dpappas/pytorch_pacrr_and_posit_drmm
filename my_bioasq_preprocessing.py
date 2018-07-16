@@ -1,7 +1,14 @@
 
 
+import platform
+python_version = platform.python_version().strip()
+print(python_version)
+if(python_version.startswith('3')):
+    import pickle
+else:
+    import cPickle as pickle
+
 from nltk.tokenize import sent_tokenize
-import cPickle as pickle
 from nltk.corpus import stopwords
 import numpy as np
 import re

@@ -1,13 +1,19 @@
 
+# import sys
+# print(sys.version)
+import platform
+python_version = platform.python_version().strip()
+print(python_version)
+if(python_version.startswith('3')):
+    import pickle
+else:
+    import cPickle as pickle
+
 import os
 import json
 import random
 import subprocess
 import numpy as np
-try:
-    import cPickle as pickle
-except:
-    import pickle
 import torch
 import torch.nn as nn
 import torch.optim as optim
