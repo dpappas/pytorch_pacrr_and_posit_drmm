@@ -254,7 +254,9 @@ def get_map_res(fgold, femit):
             fgold,
             femit
         ],
-        stdout=subprocess.PIPE, shell=False)
+        stdout=subprocess.PIPE,
+        shell=False
+    )
     (out, err) = trec_eval_res.communicate()
     map_res = float([ l for l in out.split('\n') if(l.startswith('map '))][0].split('\t')[-1])
     return map_res
@@ -458,3 +460,9 @@ python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 
 
 '''
+
+'''
+fgold = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
+femit = '/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25_p3/elk_relevant_abs_posit_drmm_lists_dev.json'
+'''
+
