@@ -43,7 +43,7 @@ def load_w2v_embs(w2v_path):
     pad             = np.zeros(av.shape)
     #
     vocabulary      = ['PAD', 'UNKN'] + vocabulary
-    t2i             = dict(t[::-1] for t in  enumerate(vocabulary))
+    t2i             = dict(t[::-1] for t in enumerate(vocabulary))
     i2t             = dict(enumerate(vocabulary))
     #
     matrix          = [word_vectors[t] for t in vocabulary[2:]]
