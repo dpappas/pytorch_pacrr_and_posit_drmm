@@ -110,9 +110,11 @@ def myGenerator(bm25_scores, all_abs, t2i, how_many_loops, story_maxlen, b_size)
                   ], np.array(y)
             x1, x2, y = [], [], []
 
-def the_objective(negatives, positives, margin=1.0):
-    delta      = negatives - positives
-    loss_q_pos = tf.reduce_sum(tf.nn.relu(margin + delta), axis=2)
+def the_objective(negatives_positives):
+    negatives, positives = negatives_positives
+    margin               = 1.0
+    delta                = negatives - positives
+    loss_q_pos           = tf.reduce_sum(tf.nn.relu(margin + delta), axis=-1)
     return loss_q_pos
 
 story_maxlen = 500
@@ -130,38 +132,63 @@ vocab_size          = embedding_weights.shape[0]
 emb_size            = embedding_weights.shape[1]
 
 
-doc1                = Input(shape=(story_maxlen,), dtype='int32')
 quest               = Input(shape=(story_maxlen,), dtype='int32')
+doc1                = Input(shape=(story_maxlen,), dtype='int32')
+doc2                = Input(shape=(story_maxlen,), dtype='int32')
+#
+hidden              = Dense(8, activation=LeakyReLU())
+out_layer           = Dense(1, activation=None)
+#
 emb_layer           = Embedding(vocab_size, emb_size, weights=[embedding_weights])
-d1_embeds           = emb_layer(doc1)
 q_embeds            = emb_layer(quest)
 trigram_conv        = Conv1D(emb_size, 3, padding="same")
 conv_activation     = LeakyReLU()
-d1_trigrams         = conv_activation(trigram_conv(d1_embeds))
 q_trigrams          = conv_activation(trigram_conv(q_embeds))
-d1_trigrams         = Add()([d1_trigrams, d1_embeds])
 q_trigrams          = Add()([q_trigrams, q_embeds])
+#
+d1_embeds           = emb_layer(doc1)
+d1_trigrams         = conv_activation(trigram_conv(d1_embeds))
+d1_trigrams         = Add()([d1_trigrams, d1_embeds])
 sim_insens_d1       = Lambda(pairwise_cosine_sim)([q_embeds, d1_embeds])
 sim_sens_d1         = Lambda(pairwise_cosine_sim)([q_embeds, d1_trigrams])
 pooled_d1_insens    = Lambda(average_k_max_pool)(sim_insens_d1)
 pooled_d1_sens      = Lambda(average_k_max_pool)(sim_sens_d1)
 concated_d1         = Concatenate()([pooled_d1_insens, pooled_d1_sens])
-hidden              = Dense(8, activation=LeakyReLU())
 hd1                 = TimeDistributed(hidden)(concated_d1)
-out_layer           = Dense(1, activation=LeakyReLU())
 od1                 = TimeDistributed(out_layer)(hd1)
 od1                 = GlobalAveragePooling1D()(od1)
-
-
-model               = Model(inputs=[doc1, quest], outputs=od1)
-model.compile(optimizer='adam', loss='hinge', metrics=['accuracy'])
+#
+d2_embeds           = emb_layer(doc2)
+d2_trigrams         = conv_activation(trigram_conv(d2_embeds))
+d2_trigrams         = Add()([d2_trigrams, d2_embeds])
+sim_insens_d2       = Lambda(pairwise_cosine_sim)([q_embeds, d2_embeds])
+sim_sens_d2         = Lambda(pairwise_cosine_sim)([q_embeds, d2_trigrams])
+pooled_d2_insens    = Lambda(average_k_max_pool)(sim_insens_d2)
+pooled_d2_sens      = Lambda(average_k_max_pool)(sim_sens_d2)
+concated_d2         = Concatenate()([pooled_d2_insens, pooled_d2_sens])
+hd2                 = TimeDistributed(hidden)(concated_d2)
+od2                 = TimeDistributed(out_layer)(hd2)
+od2                 = GlobalAveragePooling1D()(od2)
+#
+the_loss            = Lambda(the_objective)([od2, od1])
+#
+model               = Model(inputs=[doc1, doc2, quest], outputs=the_loss)
+model.compile(optimizer='adam', loss='mae')
 
 doc1_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
 doc2_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
 quest_              = np.random.randint(0,vocab_size, (1000, story_maxlen))
-labels              = np.random.randint(0,2,(1000))
+# labels              = np.random.randint(0,2,(1000))
+labels              = np.zeros((1000,1))
 
-H = model.fit([doc1_,quest_],labels,validation_data=None, epochs=5,verbose=1,batch_size=32)
+H = model.fit(
+    [doc1_, doc2_, quest_],
+    labels,
+    validation_data=None,
+    epochs=5,
+    verbose=1,
+    batch_size=32
+)
 
 # H                   = model.fit_generator(
 #     myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
