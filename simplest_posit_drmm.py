@@ -338,7 +338,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_insensitive_pooled_d1       = self.pooling_method(sim_insensitive_d1)
         sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
         sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
-        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram])
+        q_idfs                          = self.my_idfs(question)
+        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights                       = F.softmax(q_weights)
+        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
         good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
         good_out                        = self.out_layer(good_add_feats)
         return good_out
