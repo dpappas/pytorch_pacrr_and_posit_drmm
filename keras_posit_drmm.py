@@ -178,9 +178,9 @@ k = 5
 embedding_weights   = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 idf_weights         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # embedding_weights   = np.random.rand(100,20)
-# vocab_size          = embedding_weights.shape[0]
-# emb_size            = embedding_weights.shape[1]
 # idf_weights         = np.random.rand(100,1)
+vocab_size          = embedding_weights.shape[0]
+emb_size            = embedding_weights.shape[1]
 
 quest               = Input(shape=(quest_maxlen,), dtype='int32')
 doc1                = Input(shape=(story_maxlen,), dtype='int32')
