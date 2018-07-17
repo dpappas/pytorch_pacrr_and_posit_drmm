@@ -341,7 +341,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs                          = self.my_idfs(question)
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights                       = F.softmax(q_weights)
+        q_weights                       = F.softmax(q_weights, dim=-1)
         doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
         good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
         good_out                        = self.out_layer(good_add_feats)
@@ -382,7 +382,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs                          = self.my_idfs(question)
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights                       = F.softmax(q_weights)
+        q_weights                       = F.softmax(q_weights, dim=-1)
         # concatenate and pass through mlps
         doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
         doc2_emit                       = self.get_output([sim_oh_pooled_d2, sim_insensitive_pooled_d2, sim_sensitive_pooled_d2_trigram], q_weights)
