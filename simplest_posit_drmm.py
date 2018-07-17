@@ -441,7 +441,8 @@ optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_deca
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
-max_dev_map     = 0.0
+# max_dev_map     = 0.0
+min_dev_loss    = 0.0
 max_epochs      = 30
 loopes          = [1, 0, 0]
 for epoch in range(max_epochs):
@@ -449,16 +450,16 @@ for epoch in range(max_epochs):
     dev_instances           = random_data_yielder(dev_bm25_scores, dev_all_abs, t2i, bsize * 100)
     #train_instances         = data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0])
     train_average_loss      = train_one(train_instances)
-    train_average_loss      = train_one(train_instances)
-    dev_map                 = get_one_map('dev', dev_bm25_scores, dev_all_abs)
-    if(max_dev_map < dev_map):
-        max_dev_map         = dev_map
+    dev_average_loss        = dev_one(dev_instances)
+    # dev_map                 = get_one_map('dev', dev_bm25_scores, dev_all_abs)
+    if(min_dev_loss > dev_average_loss):
+        min_dev_loss        = dev_average_loss
         min_loss_epoch      = epoch+1
         test_map            = get_one_map('test', test_bm25_scores, test_all_abs)
-        save_checkpoint(epoch, model, max_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    print("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_map, test_map))
+        save_checkpoint(epoch, model, dev_average_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
+    print("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_average_loss, test_map))
     print(20 * '-')
-    logger.info("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_map, test_map))
+    logger.info("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_average_loss, test_map))
     logger.info(20 * '-')
 
 '''
