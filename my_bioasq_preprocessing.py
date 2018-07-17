@@ -19,7 +19,8 @@ from gensim.models import KeyedVectors
 idf_path        = '/home/dpappas/IDF_python_v2.pkl'
 stopw_path      = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/stopwords.txt'
 
-bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+bioclean        = lambda t: re.sub(r'[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
 stopwords1      = list([t.strip() for t in open(stopw_path).readlines()])
 stopwords2      = list(stopwords.words('english'))
 stop            = set(stopwords1 + stopwords2)
