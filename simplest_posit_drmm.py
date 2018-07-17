@@ -155,7 +155,7 @@ def compute_the_cost(costs, back_prop=True):
     if(back_prop):
         cost_.backward()
         optimizer.step()
-        # optimizer.zero_grad()
+        optimizer.zero_grad()
     the_cost = cost_.cpu().item()
     return the_cost
 
