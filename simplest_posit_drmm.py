@@ -22,7 +22,7 @@ from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
 from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
-from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1, q_unk_tok, d_unk_tok
+from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
 
 my_seed = 1989
 random.seed(my_seed)
@@ -208,6 +208,7 @@ def get_one_map(prefix, bm25_scores, all_abs):
             doc_id      = retr['doc_id']
             passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
             all_sims    = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
+            #
             sents_inds  = text2indices(passage, t2i, 'd')
             quest_inds  = text2indices(quer['query_text'], t2i, 'q')
             #

@@ -25,8 +25,8 @@ stopwords1      = list([t.strip() for t in open(stopw_path).readlines()])
 stopwords2      = list(stopwords.words('english'))
 stop            = set(stopwords1 + stopwords2)
 q_unk_tok       = 'QUNKN'
-d_unk_tok       = 'DUNKN'
-# d_unk_tok       = q_unk_tok
+# d_unk_tok       = 'DUNKN'
+d_unk_tok       = q_unk_tok
 idf             = pickle.load(open(idf_path, 'rb'))
 max_idf         = max(idf.items(), key=operator.itemgetter(1))[1]
 
@@ -123,8 +123,12 @@ def get_item_inds(item, question, t2i, remove_stopwords=False):
     return sents_inds, quest_inds, all_sims, additional_features
 
 def text2indices(text, t2i, q_or_d):
-    return [get_index(token, t2i, q_or_d) for token in bioclean(text)]
-
+    i2t = {v: k for k, v in t2i.items()}
+    ret = [get_index(token, t2i, q_or_d) for token in bioclean(text)]
+    # testing = [i2t[ind] for ind in ret]
+    # print(text)
+    # print(' '.join(testing))
+    return ret
 
 
 
