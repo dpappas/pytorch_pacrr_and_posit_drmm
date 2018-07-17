@@ -209,7 +209,9 @@ def get_one_map(prefix, bm25_scores, all_abs):
             doc_res[doc_id] = float(doc1_emit_)
         doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
         doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-        dato['documents'] = doc_res
+        doc_res = doc_res[:100]
+        filler  = sorted([-i - 1 for i in range(100 - len(doc_res))])
+        dato['documents'] = doc_res+filler
         data['questions'].append(dato)
     if(prefix=='dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
@@ -419,8 +421,6 @@ grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_sigmoid_sum/model.lo
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_noactiv_sum_normbm25/model.log 
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/model.log 
 
-
-
 python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
 /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.bioasq.oracle.json
@@ -455,6 +455,14 @@ python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 '''
 fgold = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
 femit = '/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25_p3/elk_relevant_abs_posit_drmm_lists_dev.json'
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25_p3/elk_relevant_abs_posit_drmm_lists_dev.json
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/elk_relevant_abs_posit_drmm_lists_dev.json
 
 '''
 
