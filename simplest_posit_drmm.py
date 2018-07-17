@@ -431,7 +431,7 @@ max_dev_map     = 0.0
 max_epochs      = 30
 loopes          = [1, 0, 0]
 for epoch in range(max_epochs):
-    train_instances         = random_data_yielder(train_bm25_scores, train_all_abs, t2i, bsize * 500)
+    train_instances         = random_data_yielder(train_bm25_scores, train_all_abs, t2i, bsize * 100)
     #train_instances         = data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0])
     train_average_loss      = train_one(train_instances)
     dev_map                 = get_one_map('dev', dev_bm25_scores, dev_all_abs)
