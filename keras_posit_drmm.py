@@ -217,15 +217,15 @@ doc1_af_            = np.random.randn(1000, 4)
 doc2_af_            = np.random.randn(1000, 4)
 labels              = np.zeros((1000,1))
 
-H = model.fit([doc1_, doc2_, quest_, doc1_af_, doc2_af_], labels, validation_data=None, epochs=5, verbose=1, batch_size=32)
+# H = model.fit([doc1_, doc2_, quest_, doc1_af_, doc2_af_], labels, validation_data=None, epochs=5, verbose=1, batch_size=32)
 
-# H                   = model.fit_generator(
-#     myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
-#     steps_per_epoch  = 10000,
-#     epochs           = 5,
-#     validation_data  = None,
-#     validation_steps = None,
-# )
+H                   = model.fit_generator(
+    myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
+    steps_per_epoch  = 10000,
+    epochs           = 5,
+    validation_data  = None,
+    validation_steps = None,
+)
 
 
 
