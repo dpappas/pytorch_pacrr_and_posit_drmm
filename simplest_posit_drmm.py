@@ -21,8 +21,8 @@ import torch.nn.functional as F
 from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
-from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
-from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1, q_unk_tok, d_unk_tok
+# from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
+# from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1, q_unk_tok, d_unk_tok
 
 my_seed = 1989
 random.seed(my_seed)
@@ -38,20 +38,20 @@ lr              = 0.01
 bsize           = 32
 
 import logging
-logger = logging.getLogger(od)
-hdlr = logging.FileHandler(odir+'model.log')
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+logger      = logging.getLogger(od)
+hdlr        = logging.FileHandler(odir+'model.log')
+formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
-# idf_mat          = np.random.random((150))
+matrix          = np.random.random((150, 10))
+idf_mat         = np.random.random((150))
 print(matrix.shape)
 
 def print_params(model):
@@ -256,7 +256,7 @@ def get_map_res(fgold, femit):
     return map_res
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, pretrained_embeds, k_for_maxpool):
+    def __init__(self, pretrained_embeds, k_for_maxpool, idf_matrix):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool         # k is for the average k pooling
         #
@@ -266,9 +266,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
+        idf_matrix                                  = idf_matrix.reshape((-1, 1))
+        self.my_idfs                                = nn.Embedding(self.vocab_size, 1)
+        self.my_idfs.weight.data.copy_(torch.from_numpy(idf_matrix))
+        self.my_idfs.weight.requires_grad           = False
+        #
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2)
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
+        self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=True)
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.my_relu1                               = torch.nn.LeakyReLU()
@@ -310,7 +316,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity      *= sim_mask1
         similarity      *= sim_mask2
         return similarity
-    def get_output(self, input_list):
+    def get_output(self, input_list, weights):
         temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
@@ -371,9 +377,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_insensitive_pooled_d2       = self.pooling_method(sim_insensitive_d2)
         sim_sensitive_pooled_d2_trigram = self.pooling_method(sim_sensitive_d2_trigram)
         sim_oh_pooled_d2                = self.pooling_method(sim_oh_d2)
+        # create the weights for weighted average
+        q_idfs                          = self.my_idfs(question)
+        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights                       = F.softmax(q_weights)
         # concatenate and pass through mlps
-        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram])
-        doc2_emit                       = self.get_output([sim_oh_pooled_d2, sim_insensitive_pooled_d2, sim_sensitive_pooled_d2_trigram])
+        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
+        doc2_emit                       = self.get_output([sim_oh_pooled_d2, sim_insensitive_pooled_d2, sim_sensitive_pooled_d2_trigram], q_weights)
         # concatenate the mlps' output to the additional features
         good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
         bad_add_feats                   = torch.cat([baf, doc2_emit.unsqueeze(-1)])
@@ -386,14 +397,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 print('Compiling model...')
 logger.info('Compiling model...')
-model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool)
-params = list(set(model.parameters()) - set([model.word_embeddings.weight]))
+model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool, idf_matrix=idf_mat)
+params = list(set(model.parameters()) - set([model.word_embeddings.weight, model.my_idfs.weight]))
 print_params(model)
 del(matrix)
 optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
