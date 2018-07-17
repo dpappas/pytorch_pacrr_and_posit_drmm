@@ -152,7 +152,6 @@ out_layer           = Dense(1, activation=LeakyReLU())
 od1                 = TimeDistributed(out_layer)(hd1)
 od1                 = GlobalAveragePooling1D()(od1)
 
-the_objective(negatives, positives, margin=1.0)
 
 model               = Model(inputs=[doc1, quest], outputs=od1)
 model.compile(optimizer='adam', loss='hinge', metrics=['accuracy'])
