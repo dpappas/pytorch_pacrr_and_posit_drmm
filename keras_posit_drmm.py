@@ -14,10 +14,6 @@ from my_bioasq_preprocessing import get_item_inds
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
-q_unk_tok       = 'QUNKN'
-d_unk_tok       = 'DUNKN'
-# d_unk_tok       = q_unk_tok
-
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
     while(how_many>0):
         quer        = random.choice(bm25_scores[u'queries'])
