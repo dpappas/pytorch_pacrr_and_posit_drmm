@@ -271,14 +271,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_idfs.weight.data.copy_(torch.from_numpy(idf_matrix))
         self.my_idfs.weight.requires_grad           = False
         #
-        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2)
+        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
         self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=True)
-        self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
-        self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
+        self.linear_per_q1                          = nn.Linear(6, 8, bias=False)
+        self.linear_per_q2                          = nn.Linear(8, 1, bias=False)
         self.my_relu1                               = torch.nn.LeakyReLU()
-        self.my_relu2                               = torch.nn.LeakyReLU()
+        # self.my_relu2                               = torch.nn.LeakyReLU()
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=False)
     def apply_convolution(self, the_input, the_filters, activation):
@@ -321,12 +321,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
         lo      = self.linear_per_q2(lo)
-        # lo      = F.sigmoid(lo)
         lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
-        # sr      = lo.sum(-1)
         return sr
     def emit_one(self, doc1, question, doc1_sim, gaf):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
