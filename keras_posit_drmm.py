@@ -184,7 +184,7 @@ od2                             = compute_doc_output(doc2, q_embeds, q_trigrams,
 the_loss            = Lambda(the_objective)([od2, od1])
 #
 model               = Model(inputs=[doc1, doc2, quest, doc1_af, doc2_af], outputs=the_loss)
-optimizer           = keras.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+optimizer           = keras.optimizers.Adam(lr=0.01)
 model.compile(optimizer=optimizer, loss='mean_squared_error')
 model.summary()
 
