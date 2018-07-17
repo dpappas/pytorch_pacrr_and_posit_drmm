@@ -110,21 +110,28 @@ def myGenerator(bm25_scores, all_abs, t2i, how_many_loops, story_maxlen, b_size)
                   ], np.array(y)
             x1, x2, y = [], [], []
 
-train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
+def the_objective(negatives, positives, margin=1.0):
+    delta      = negatives - positives
+    loss_q_pos = tf.reduce_sum(tf.nn.relu(margin + delta), axis=2)
+    return loss_q_pos
 
-# d = myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=500, b_size=32)
+story_maxlen = 500
+
+# train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
+
+# d = myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=story_maxlen, b_size=32)
 # aa = d.next()
 
 k = 5
 
-embedding_weights   = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-# embedding_weights = np.random.rand(100,20)
+# embedding_weights   = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+embedding_weights   = np.random.rand(100,20)
 vocab_size          = embedding_weights.shape[0]
 emb_size            = embedding_weights.shape[1]
 
 
-doc1                = Input(shape=(1500,), dtype='int32')
-quest               = Input(shape=(1500,), dtype='int32')
+doc1                = Input(shape=(story_maxlen,), dtype='int32')
+quest               = Input(shape=(story_maxlen,), dtype='int32')
 emb_layer           = Embedding(vocab_size, emb_size, weights=[embedding_weights])
 d1_embeds           = emb_layer(doc1)
 q_embeds            = emb_layer(quest)
@@ -145,23 +152,25 @@ out_layer           = Dense(1, activation=LeakyReLU())
 od1                 = TimeDistributed(out_layer)(hd1)
 od1                 = GlobalAveragePooling1D()(od1)
 
+the_objective(negatives, positives, margin=1.0)
+
 model               = Model(inputs=[doc1, quest], outputs=od1)
 model.compile(optimizer='adam', loss='hinge', metrics=['accuracy'])
 
-doc1_               = np.random.randint(0,vocab_size, (1000, 500))
-doc2_               = np.random.randint(0,vocab_size, (1000, 500))
-quest_              = np.random.randint(0,vocab_size, (1000, 200))
+doc1_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
+doc2_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
+quest_              = np.random.randint(0,vocab_size, (1000, story_maxlen))
 labels              = np.random.randint(0,2,(1000))
 
-# H = model.fit([doc1_,quest_],labels,validation_data=None, epochs=5,verbose=1,batch_size=32)
+H = model.fit([doc1_,quest_],labels,validation_data=None, epochs=5,verbose=1,batch_size=32)
 
-H                   = model.fit_generator(
-    myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
-    steps_per_epoch  = 10000,
-    epochs           = 5,
-    validation_data  = None,
-    validation_steps = None,
-)
+# H                   = model.fit_generator(
+#     myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
+#     steps_per_epoch  = 10000,
+#     epochs           = 5,
+#     validation_data  = None,
+#     validation_steps = None,
+# )
 
 
 

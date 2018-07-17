@@ -293,6 +293,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.LeakyReLU()
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=False)
+    def my_hinge_loss(self, positives, negatives, margin=1.0):
+        delta      = negatives - positives
+        loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
+        return loss_q_pos
     def apply_convolution(self, the_input, the_filters, activation):
         conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
         if(activation is not None):
@@ -406,7 +410,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out                        = self.out_layer(good_add_feats)
         bad_out                         = self.out_layer(bad_add_feats)
         # compute the loss
-        loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
+        # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
+        loss1                           = self.my_hinge_loss(good_out, bad_out)
         return loss1, good_out, bad_out, loss1, loss1
 
 print('Compiling model...')
