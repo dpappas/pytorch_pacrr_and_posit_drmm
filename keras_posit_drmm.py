@@ -167,8 +167,7 @@ def compute_masking(quest_doc):
     res         = K.batch_dot(quest, K.permute_dimensions(doc, (0, 2, 1)))
     return res
 
-
-story_maxlen = 500
+story_maxlen = 1500
 quest_maxlen = 100
 
 # train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
