@@ -118,12 +118,14 @@ def the_objective(negatives_positives):
     loss_q_pos           = tf.reshape(loss_q_pos,(-1,1))
     return loss_q_pos
 
-def compute_doc_output(doc, q_embeds, q_trigrams, weights, doc_af):
+def compute_doc_output(doc, q_embeds, q_trigrams, weights, doc_af, doc_mask):
     d_embeds        = emb_layer(doc)
     d_trigrams      = trigram_conv(d_embeds)
     d_trigrams      = Add()([d_trigrams, d_embeds])
     sim_insens_d    = Lambda(pairwise_cosine_sim)([q_embeds, d_embeds])
+    sim_insens_d    = multiply([sim_insens_d, doc_mask])
     sim_sens_d      = Lambda(pairwise_cosine_sim)([q_trigrams, d_trigrams])
+    sim_sens_d      = multiply([sim_sens_d, doc_mask])
     pooled_d_insens = Lambda(average_k_max_pool)(sim_insens_d)
     pooled_d_sens   = Lambda(average_k_max_pool)(sim_sens_d)
     concated_d      = Concatenate()([pooled_d_insens, pooled_d_sens])
@@ -144,7 +146,18 @@ def process_question(quest):
     weights         = weights_layer(weight_input)
     return q_embeds, q_trigrams, weights
 
+def compute_masking(quest_doc):
+    quest, doc  = quest_doc
+    quest       = tf.to_float(quest>0)
+    quest       = tf.reshape(quest, (-1, quest.shape[1], 1))
+    doc         = tf.to_float(doc>0)
+    doc         = tf.reshape(doc, (-1, doc.shape[1], 1))
+    res         = K.batch_dot(quest, K.permute_dimensions(doc, (0, 2, 1)))
+    return res
+
+
 story_maxlen = 500
+quest_maxlen = 100
 
 # train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
@@ -159,7 +172,7 @@ vocab_size          = embedding_weights.shape[0]
 emb_size            = embedding_weights.shape[1]
 idf_weights         = np.random.rand(100,1)
 
-quest               = Input(shape=(story_maxlen,), dtype='int32')
+quest               = Input(shape=(quest_maxlen,), dtype='int32')
 doc1                = Input(shape=(story_maxlen,), dtype='int32')
 doc2                = Input(shape=(story_maxlen,), dtype='int32')
 doc1_af             = Input(shape=(4,), dtype='float32')
@@ -173,9 +186,12 @@ hidden2             = Dense(1, activation=LeakyReLU())
 weights_layer       = Dense(1, activation=LeakyReLU())
 out_layer           = Dense(1, activation=None)
 #
+doc1_mask           = Lambda(compute_masking)([quest, doc1])
+doc2_mask           = Lambda(compute_masking)([quest, doc2])
+#
 q_embeds, q_trigrams, weights   = process_question(quest)
-od1                             = compute_doc_output(doc1, q_embeds, q_trigrams, weights, doc1_af)
-od2                             = compute_doc_output(doc2, q_embeds, q_trigrams, weights, doc2_af)
+od1                             = compute_doc_output(doc1, q_embeds, q_trigrams, weights, doc1_af, doc1_mask)
+od2                             = compute_doc_output(doc2, q_embeds, q_trigrams, weights, doc2_af, doc2_mask)
 #
 the_loss            = Lambda(the_objective)([od2, od1])
 #
@@ -184,9 +200,9 @@ optimizer           = keras.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, e
 model.compile(optimizer=optimizer, loss='mean_squared_error')
 model.summary()
 
+quest_              = np.random.randint(0,vocab_size, (1000, quest_maxlen))
 doc1_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
 doc2_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
-quest_              = np.random.randint(0,vocab_size, (1000, story_maxlen))
 doc1_af_            = np.random.randn(1000, 4)
 doc2_af_            = np.random.randn(1000, 4)
 labels              = np.zeros((1000,1))
