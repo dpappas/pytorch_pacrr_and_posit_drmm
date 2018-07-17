@@ -173,7 +173,7 @@ od2                 = GlobalAveragePooling1D()(od2)
 the_loss            = Lambda(the_objective)([od2, od1])
 #
 model               = Model(inputs=[doc1, doc2, quest], outputs=the_loss)
-model.compile(optimizer='adam', loss='mae')
+model.compile(optimizer='adam', loss='mean_squared_error')
 
 doc1_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
 doc2_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
