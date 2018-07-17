@@ -12,6 +12,7 @@ from keras.models import Model
 from keras.preprocessing.sequence import pad_sequences
 from my_bioasq_preprocessing import get_item_inds
 from pprint import pprint
+from keras.callbacks import ModelCheckpoint
 
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
     while(how_many>0):
@@ -204,6 +205,21 @@ model.summary()
 # labels              = np.zeros((1000,1))
 # H = model.fit([doc1_, doc2_, quest_, doc1_af_, doc2_af_], labels, validation_data=None, epochs=5, verbose=1, batch_size=32)
 
+filepath="weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
+checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+callbacks_list = [checkpoint]
+
+train_history   = model.fit_generator(
+    generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
+    steps_per_epoch     = 5,
+    epochs              = 30,
+    validation_data     = myGenerator(dev_bm25_scores, dev_all_abs, t2i, story_maxlen, quest_maxlen, 32),
+    validation_steps    = 2,
+    callbacks           = callbacks_list
+)
+
+'''
+
 class SaveTheModel(keras.callbacks.Callback):
     best_valid_loss = 10e5
     def on_epoch_end(self, epoch, logs):
@@ -215,17 +231,7 @@ class SaveTheModel(keras.callbacks.Callback):
 
 callbacks_list = [SaveTheModel()]
 
-train_history   = model.fit_generator(
-    generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    steps_per_epoch     = 200,
-    epochs              = 30,
-    validation_data     = myGenerator(dev_bm25_scores, dev_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    validation_steps    = 50,
-    callbacks           = callbacks_list
-)
-
-
-
+'''
 
 '''
 
