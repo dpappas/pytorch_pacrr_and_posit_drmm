@@ -221,7 +221,7 @@ labels              = np.zeros((1000,1))
 
 H                   = model.fit_generator(
     myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
-    steps_per_epoch  = 10000,
+    steps_per_epoch  = 100,
     epochs           = 5,
     validation_data  = None,
     validation_steps = None,
