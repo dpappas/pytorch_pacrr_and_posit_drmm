@@ -34,20 +34,23 @@ def get_item_inds(item, question, t2i):
     quest_inds  = [get_index(token, t2i) for token in bioclean(question)]
     return sents_inds, quest_inds, all_sims
 
-def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
-    for quer in bm25_scores[u'queries']:
+def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
+    while(how_many>0):
+        quer        = random.choice(bm25_scores[u'queries'])
         quest       = quer['query_text']
+        bm25s       = {t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents']}
         ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
         bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-        if(len(bad_pmids)>0):
-            for i in range(how_many_loops):
-                for gid in good_pmids:
-                    bid                                             = random.choice(bad_pmids)
-                    good_sents_inds, good_quest_inds, good_all_sims = get_item_inds(all_abs[gid], quest, t2i)
-                    bad_sents_inds, bad_quest_inds, bad_all_sims    = get_item_inds(all_abs[bid], quest, t2i)
-                    yield good_sents_inds,  good_all_sims,  good_quest_inds,    1
-                    yield bad_sents_inds,   bad_all_sims,   bad_quest_inds,     0
+        if(len(bad_pmids)>0 and len(good_pmids)>0):
+            how_many -= 1
+            gid = random.choice(good_pmids)
+            bid = random.choice(bad_pmids)
+            good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
+            additional_features_good.append(bm25s[gid])
+            bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
+            additional_features_bad.append(bm25s[bid])
+            yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds, np.array(additional_features_good), np.array(additional_features_bad)
 
 def load_data():
     print('Loading abs texts...')
@@ -97,18 +100,27 @@ def average_k_max_pool(inputs):
     concatenated    = tf.concat([maxim, average_top_k],axis=-1)
     return concatenated
 
-def myGenerator(bm25_scores, all_abs, t2i, how_many_loops, story_maxlen, b_size):
-    x1, x2, y = [], [], []
-    for sents_inds, _, quest_inds, label in data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
-        x1.append(sents_inds)
-        x2.append(quest_inds)
-        y.append(label)
-        if(len(y) == b_size):
+def myGenerator(bm25_scores, all_abs, t2i, story_maxlen, b_size):
+    gsi, gas, bsi, bas, qis, gafs, bafs = [], [], [], [], [], [], []
+    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in random_data_yielder(
+        bm25_scores, all_abs, t2i, 3200
+    ):
+        gsi.append(good_sents_inds)
+        bsi.append(bad_sents_inds)
+        qis.append(quest_inds)
+        gas.append(good_all_sims)
+        bas.append(bad_all_sims)
+        gafs.append(gaf)
+        bafs.append(baf)
+        if(len(gsi) == b_size):
             yield [
-                      np.array(pad_sequences(x1, maxlen=story_maxlen)),
-                      np.array(pad_sequences(x2, maxlen=story_maxlen))
-                  ], np.array(y)
-            x1, x2, y = [], [], []
+                      np.array(pad_sequences(gsi, maxlen=story_maxlen)),
+                      np.array(pad_sequences(bsi, maxlen=story_maxlen)),
+                      np.array(pad_sequences(qis, maxlen=quest_maxlen)),
+                      np.array(gafs),
+                      np.array(bafs)
+            ], np.zeros((len(gsi),1))
+            gsi, gas, bsi, bas, qis, gafs, bafs = [], [], [], [], [], [], []
 
 def the_objective(negatives_positives):
     margin               = 1.0
@@ -161,7 +173,7 @@ quest_maxlen = 100
 
 # train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
-# d = myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=story_maxlen, b_size=32)
+# d = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen=story_maxlen, b_size=32)
 # aa = d.next()
 
 k = 5
@@ -207,14 +219,7 @@ doc1_af_            = np.random.randn(1000, 4)
 doc2_af_            = np.random.randn(1000, 4)
 labels              = np.zeros((1000,1))
 
-H = model.fit(
-    [doc1_, doc2_, quest_, doc1_af_, doc2_af_],
-    labels,
-    validation_data=None,
-    epochs=5,
-    verbose=1,
-    batch_size=32
-)
+H = model.fit([doc1_, doc2_, quest_, doc1_af_, doc2_af_], labels, validation_data=None, epochs=5, verbose=1, batch_size=32)
 
 # H                   = model.fit_generator(
 #     myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
