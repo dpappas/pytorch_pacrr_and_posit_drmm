@@ -11,7 +11,6 @@ from keras.layers import Add, TimeDistributed, PReLU, GlobalAveragePooling1D, mu
 from keras.models import Model
 from keras.preprocessing.sequence import pad_sequences
 from my_bioasq_preprocessing import get_item_inds
-from keras.callbacks import ModelCheckpoint
 from pprint import pprint
 
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
