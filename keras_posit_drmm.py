@@ -100,7 +100,7 @@ def average_k_max_pool(inputs):
     concatenated    = tf.concat([maxim, average_top_k],axis=-1)
     return concatenated
 
-def myGenerator(bm25_scores, all_abs, t2i, story_maxlen, b_size):
+def myGenerator(bm25_scores, all_abs, t2i, story_maxlen, quest_maxlen, b_size):
     gsi, gas, bsi, bas, qis, gafs, bafs = [], [], [], [], [], [], []
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in random_data_yielder(
         bm25_scores, all_abs, t2i, 3200
@@ -170,18 +170,17 @@ def compute_masking(quest_doc):
 story_maxlen = 1500
 quest_maxlen = 100
 
-# train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
-
-# d = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen=story_maxlen, b_size=32)
-# aa = d.next()
+train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
+d = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen=story_maxlen, quest_maxlen=quest_maxlen, b_size=32)
 
 k = 5
 
-# embedding_weights   = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-embedding_weights   = np.random.rand(100,20)
-vocab_size          = embedding_weights.shape[0]
-emb_size            = embedding_weights.shape[1]
-idf_weights         = np.random.rand(100,1)
+embedding_weights   = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+idf_weights         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
+# embedding_weights   = np.random.rand(100,20)
+# vocab_size          = embedding_weights.shape[0]
+# emb_size            = embedding_weights.shape[1]
+# idf_weights         = np.random.rand(100,1)
 
 quest               = Input(shape=(quest_maxlen,), dtype='int32')
 doc1                = Input(shape=(story_maxlen,), dtype='int32')

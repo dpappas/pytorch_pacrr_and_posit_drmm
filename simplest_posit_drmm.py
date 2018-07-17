@@ -210,7 +210,6 @@ def dev_one(dev_instances):
     logger.info('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
     return average_task_loss / instance_metr
 
-
 def get_one_map(prefix, bm25_scores, all_abs):
     data = {}
     data['questions'] = []
