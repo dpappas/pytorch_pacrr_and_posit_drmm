@@ -12,8 +12,6 @@ from keras.models import Model
 from keras.preprocessing.sequence import pad_sequences
 from my_bioasq_preprocessing import get_item_inds
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
-
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
     while(how_many>0):
         quer        = random.choice(bm25_scores[u'queries'])
@@ -175,14 +173,14 @@ hidden2             = Dense(1, activation=LeakyReLU())
 weights_layer       = Dense(1, activation=LeakyReLU())
 out_layer           = Dense(1, activation=None)
 #
-doc1_mask           = Lambda(compute_masking)([quest, doc1])
-doc2_mask           = Lambda(compute_masking)([quest, doc2])
-#
+doc1_mask                       = Lambda(compute_masking)([quest, doc1])
+doc2_mask                       = Lambda(compute_masking)([quest, doc2])
 q_embeds, q_trigrams, weights   = process_question(quest)
 od1                             = compute_doc_output(doc1, q_embeds, q_trigrams, weights, doc1_af, doc1_mask)
 od2                             = compute_doc_output(doc2, q_embeds, q_trigrams, weights, doc2_af, doc2_mask)
 #
 the_loss            = Lambda(the_objective)([od2, od1])
+#
 model               = Model(inputs=[doc1, doc2, quest, doc1_af, doc2_af], outputs=the_loss)
 optimizer           = keras.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 model.compile(optimizer=optimizer, loss='mean_squared_error')
@@ -198,16 +196,9 @@ labels              = np.zeros((1000,1))
 # H = model.fit([doc1_, doc2_, quest_, doc1_af_, doc2_af_], labels, validation_data=None, epochs=5, verbose=1, batch_size=32)
 
 H                   = model.fit_generator(
-    myGenerator(
-        train_bm25_scores,
-        train_all_abs,
-        t2i,
-        story_maxlen=story_maxlen,
-        quest_maxlen=quest_maxlen,
-        b_size=32
-    ),
+    myGenerator(train_bm25_scores, train_all_abs,t2i, story_maxlen=story_maxlen, quest_maxlen=quest_maxlen, b_size=32),
     steps_per_epoch  = 100,
-    epochs           = 5,
+    epochs           = 30,
     validation_data  = None,
     validation_steps = None,
 )
