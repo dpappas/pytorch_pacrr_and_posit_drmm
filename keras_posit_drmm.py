@@ -210,9 +210,9 @@ optimizer           = keras.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, e
 model.compile(optimizer=optimizer, loss='mean_squared_error')
 model.summary()
 
-quest_              = np.random.randint(0,vocab_size, (1000, quest_maxlen))
-doc1_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
-doc2_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
+quest_              = np.random.randint(0, vocab_size, (1000, quest_maxlen))
+doc1_               = np.random.randint(0, vocab_size, (1000, story_maxlen))
+doc2_               = np.random.randint(0, vocab_size, (1000, story_maxlen))
 doc1_af_            = np.random.randn(1000, 4)
 doc2_af_            = np.random.randn(1000, 4)
 labels              = np.zeros((1000,1))
