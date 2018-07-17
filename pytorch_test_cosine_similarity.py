@@ -1,7 +1,7 @@
 
 import torch
-A           = torch.ones(10,5)
-B           = torch.ones(10,5)
+A           = torch.rand(10,5)
+B           = torch.rand(10,5)
 A           = A.unsqueeze(0)
 B           = B.unsqueeze(0)
 A_mag       = torch.norm(A, 2, dim=2)
