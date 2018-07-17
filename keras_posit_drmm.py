@@ -118,7 +118,7 @@ def the_objective(negatives_positives):
     loss_q_pos           = tf.reshape(loss_q_pos,(-1,1))
     return loss_q_pos
 
-def compute_doc_output(doc, q_embeds, q_trigrams, weights):
+def compute_doc_output(doc, q_embeds, q_trigrams, weights, doc_af):
     d_embeds        = emb_layer(doc)
     d_trigrams      = trigram_conv(d_embeds)
     d_trigrams      = Add()([d_trigrams, d_embeds])
@@ -127,10 +127,12 @@ def compute_doc_output(doc, q_embeds, q_trigrams, weights):
     pooled_d_insens = Lambda(average_k_max_pool)(sim_insens_d)
     pooled_d_sens   = Lambda(average_k_max_pool)(sim_sens_d)
     concated_d      = Concatenate()([pooled_d_insens, pooled_d_sens])
-    hd              = TimeDistributed(hidden)(concated_d)
-    od              = TimeDistributed(out_layer)(hd)
-    od              = multiply([od, weights])
-    od              = GlobalAveragePooling1D()(od)
+    hd              = TimeDistributed(hidden1)(concated_d)
+    iod             = TimeDistributed(hidden2)(hd)
+    iod             = multiply([iod, weights])
+    iod             = GlobalAveragePooling1D()(iod)
+    concated_iod_af = Concatenate()([iod, doc_af])
+    od              = out_layer(concated_iod_af)
     return od
 
 story_maxlen = 500
@@ -146,28 +148,34 @@ k = 5
 embedding_weights   = np.random.rand(100,20)
 vocab_size          = embedding_weights.shape[0]
 emb_size            = embedding_weights.shape[1]
+idf_weights         = np.random.rand(100,1)
 
 quest               = Input(shape=(story_maxlen,), dtype='int32')
 doc1                = Input(shape=(story_maxlen,), dtype='int32')
 doc2                = Input(shape=(story_maxlen,), dtype='int32')
+doc1_af             = Input(shape=(4,), dtype='float32')
+doc2_af             = Input(shape=(4,), dtype='float32')
 #
-emb_layer           = Embedding(vocab_size, emb_size, weights=[embedding_weights])
+emb_layer           = Embedding(vocab_size, emb_size,   weights=[embedding_weights], trainable=False)
+idf_layer           = Embedding(vocab_size, 1,          weights=[idf_weights],       trainable=False)
+#
 trigram_conv        = Conv1D(emb_size, 3, padding="same", activation=LeakyReLU())
-hidden              = Dense(8, activation=LeakyReLU())
-out_layer           = Dense(1, activation=None)
+hidden1             = Dense(8, activation=LeakyReLU())
+hidden2             = Dense(1, activation=LeakyReLU())
 weights_layer       = Dense(1, activation=LeakyReLU())
+out_layer           = Dense(1, activation=None)
 #
 q_embeds            = emb_layer(quest)
 q_trigrams          = trigram_conv(q_embeds)
 q_trigrams          = Add()([q_trigrams, q_embeds])
 weights             = weights_layer(q_trigrams)
 #
-od1                 = compute_doc_output(doc1, q_embeds, q_trigrams, weights)
-od2                 = compute_doc_output(doc2, q_embeds, q_trigrams, weights)
+od1                 = compute_doc_output(doc1, q_embeds, q_trigrams, weights, doc1_af)
+od2                 = compute_doc_output(doc2, q_embeds, q_trigrams, weights, doc2_af)
 #
 the_loss            = Lambda(the_objective)([od2, od1])
 #
-model               = Model(inputs=[doc1, doc2, quest], outputs=the_loss)
+model               = Model(inputs=[doc1, doc2, quest, doc1_af, doc2_af], outputs=the_loss)
 optimizer           = keras.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 model.compile(optimizer=optimizer, loss='mean_squared_error')
 model.summary()
@@ -175,10 +183,12 @@ model.summary()
 doc1_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
 doc2_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
 quest_              = np.random.randint(0,vocab_size, (1000, story_maxlen))
+doc1_af_            = np.random.randn(1000, 4)
+doc2_af_            = np.random.randn(1000, 4)
 labels              = np.zeros((1000,1))
 
 H = model.fit(
-    [doc1_, doc2_, quest_],
+    [doc1_, doc2_, quest_, doc1_af_, doc2_af_],
     labels,
     validation_data=None,
     epochs=5,
