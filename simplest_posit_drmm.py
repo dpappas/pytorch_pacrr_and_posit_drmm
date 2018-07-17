@@ -108,13 +108,13 @@ def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
 
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
     while(how_many>0):
-        quer        = bm25_scores[u'queries']
+        quer        = random.choice(bm25_scores[u'queries'])
         quest       = quer['query_text']
         bm25s       = {t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents']}
         ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
         bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-        if(len(bad_pmids)>0):
+        if(len(bad_pmids)>0 and len(good_pmids)>0):
             how_many -= 1
             gid = random.choice(good_pmids)
             bid = random.choice(bad_pmids)
