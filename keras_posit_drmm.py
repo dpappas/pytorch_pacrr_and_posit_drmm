@@ -198,19 +198,22 @@ model.summary()
 
 
 class SaveTheModel(keras.callbacks.Callback):
+    best_valid_loss = 10e5
     def on_epoch_end(self, epoch, logs):
-        print(epoch)
-        pprint(logs)
+        if(self.best_valid_loss>logs['val_loss']):
+            print('saving model on epoch:{}'.format(epoch))
+            self.best_valid_loss = logs['val_loss']
+            open('keras_posit_drmm_model.json', 'w').write(model.to_json())
+            model.save_weights('keras_posit_drmm_weights.h5')
 
 callbacks_list = [SaveTheModel()]
 
-
 train_history   = model.fit_generator(
     generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    steps_per_epoch     = 10,
+    steps_per_epoch     = 200,
     epochs              = 30,
     validation_data     = myGenerator(dev_bm25_scores, dev_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    validation_steps    = 2,
+    validation_steps    = 50,
     callbacks           = callbacks_list
 )
 
