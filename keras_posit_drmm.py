@@ -111,8 +111,8 @@ def myGenerator(bm25_scores, all_abs, t2i, how_many_loops, story_maxlen, b_size)
             x1, x2, y = [], [], []
 
 def the_objective(negatives_positives):
-    negatives, positives = negatives_positives
     margin               = 1.0
+    negatives, positives = negatives_positives
     delta                = negatives - positives
     loss_q_pos           = tf.reduce_sum(tf.nn.relu(margin + delta), axis=-1)
     loss_q_pos           = tf.reshape(loss_q_pos,(-1,1))
@@ -132,7 +132,6 @@ embedding_weights   = np.random.rand(100,20)
 vocab_size          = embedding_weights.shape[0]
 emb_size            = embedding_weights.shape[1]
 
-
 quest               = Input(shape=(story_maxlen,), dtype='int32')
 doc1                = Input(shape=(story_maxlen,), dtype='int32')
 doc2                = Input(shape=(story_maxlen,), dtype='int32')
@@ -148,10 +147,11 @@ q_trigrams          = conv_activation(trigram_conv(q_embeds))
 q_trigrams          = Add()([q_trigrams, q_embeds])
 #
 d1_embeds           = emb_layer(doc1)
-d1_trigrams         = conv_activation(trigram_conv(d1_embeds))
+d1_trigrams         = trigram_conv(d1_embeds)
+d1_trigrams         = conv_activation(d1_trigrams)
 d1_trigrams         = Add()([d1_trigrams, d1_embeds])
 sim_insens_d1       = Lambda(pairwise_cosine_sim)([q_embeds, d1_embeds])
-sim_sens_d1         = Lambda(pairwise_cosine_sim)([q_embeds, d1_trigrams])
+sim_sens_d1         = Lambda(pairwise_cosine_sim)([q_trigrams, d1_trigrams])
 pooled_d1_insens    = Lambda(average_k_max_pool)(sim_insens_d1)
 pooled_d1_sens      = Lambda(average_k_max_pool)(sim_sens_d1)
 concated_d1         = Concatenate()([pooled_d1_insens, pooled_d1_sens])
@@ -160,10 +160,11 @@ od1                 = TimeDistributed(out_layer)(hd1)
 od1                 = GlobalAveragePooling1D()(od1)
 #
 d2_embeds           = emb_layer(doc2)
-d2_trigrams         = conv_activation(trigram_conv(d2_embeds))
+d2_trigrams         = trigram_conv(d2_embeds)
+d2_trigrams         = conv_activation(d2_trigrams)
 d2_trigrams         = Add()([d2_trigrams, d2_embeds])
 sim_insens_d2       = Lambda(pairwise_cosine_sim)([q_embeds, d2_embeds])
-sim_sens_d2         = Lambda(pairwise_cosine_sim)([q_embeds, d2_trigrams])
+sim_sens_d2         = Lambda(pairwise_cosine_sim)([q_trigrams, d2_trigrams])
 pooled_d2_insens    = Lambda(average_k_max_pool)(sim_insens_d2)
 pooled_d2_sens      = Lambda(average_k_max_pool)(sim_sens_d2)
 concated_d2         = Concatenate()([pooled_d2_insens, pooled_d2_sens])
@@ -174,7 +175,8 @@ od2                 = GlobalAveragePooling1D()(od2)
 the_loss            = Lambda(the_objective)([od2, od1])
 #
 model               = Model(inputs=[doc1, doc2, quest], outputs=the_loss)
-model.compile(optimizer='adam', loss='mean_squared_error')
+optimizer           = keras.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+model.compile(optimizer=optimizer, loss='mean_squared_error')
 model.summary()
 
 doc1_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
