@@ -197,6 +197,20 @@ def train_one(train_instances):
         logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
     return average_task_loss / instance_metr
 
+def dev_one(dev_instances):
+    optimizer.zero_grad()
+    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
+    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in dev_instances:
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims, gaf, baf)
+        average_total_loss  += instance_cost.cpu().item()
+        average_task_loss   += loss1.cpu().item()
+        average_reg_loss    += loss2.cpu().item()
+        instance_metr       += 1
+    print('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
+    logger.info('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
+    return average_task_loss / instance_metr
+
+
 def get_one_map(prefix, bm25_scores, all_abs):
     data = {}
     data['questions'] = []
@@ -432,7 +446,9 @@ max_epochs      = 30
 loopes          = [1, 0, 0]
 for epoch in range(max_epochs):
     train_instances         = random_data_yielder(train_bm25_scores, train_all_abs, t2i, bsize * 100)
+    dev_instances           = random_data_yielder(dev_bm25_scores, dev_all_abs, t2i, bsize * 100)
     #train_instances         = data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0])
+    train_average_loss      = train_one(train_instances)
     train_average_loss      = train_one(train_instances)
     dev_map                 = get_one_map('dev', dev_bm25_scores, dev_all_abs)
     if(max_dev_map < dev_map):
