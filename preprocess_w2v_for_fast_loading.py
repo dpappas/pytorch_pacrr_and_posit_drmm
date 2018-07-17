@@ -1,7 +1,8 @@
 
 import numpy as np
 from gensim.models import KeyedVectors
-import cPickle as pickle
+# import cPickle as pickle
+import pickle
 from sklearn.metrics.pairwise import cosine_similarity
 
 w2v_path        = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
