@@ -115,6 +115,7 @@ def the_objective(negatives_positives):
     margin               = 1.0
     delta                = negatives - positives
     loss_q_pos           = tf.reduce_sum(tf.nn.relu(margin + delta), axis=-1)
+    loss_q_pos           = tf.reshape(loss_q_pos,(-1,1))
     return loss_q_pos
 
 story_maxlen = 500
@@ -174,6 +175,7 @@ the_loss            = Lambda(the_objective)([od2, od1])
 #
 model               = Model(inputs=[doc1, doc2, quest], outputs=the_loss)
 model.compile(optimizer='adam', loss='mean_squared_error')
+model.summary()
 
 doc1_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
 doc2_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
