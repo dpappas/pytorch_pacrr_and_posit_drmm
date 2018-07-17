@@ -81,7 +81,7 @@ def average_k_max_pool(inputs):
 def myGenerator(bm25_scores, all_abs, t2i, story_maxlen, quest_maxlen, b_size):
     gsi, gas, bsi, bas, qis, gafs, bafs = [], [], [], [], [], [], []
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in random_data_yielder(
-        bm25_scores, all_abs, t2i, 3200
+        bm25_scores, all_abs, t2i, 150000
     ):
         gsi.append(good_sents_inds)
         bsi.append(bad_sents_inds)
