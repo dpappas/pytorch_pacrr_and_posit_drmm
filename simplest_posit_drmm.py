@@ -442,7 +442,7 @@ optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_deca
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
 # max_dev_map     = 0.0
-min_dev_loss    = 0.0
+min_dev_loss    = 10e5
 max_epochs      = 30
 loopes          = [1, 0, 0]
 for epoch in range(max_epochs):
