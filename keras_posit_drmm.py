@@ -12,6 +12,7 @@ from keras.models import Model
 from keras.preprocessing.sequence import pad_sequences
 from my_bioasq_preprocessing import get_item_inds
 from keras.callbacks import ModelCheckpoint
+from pprint import pprint
 
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
     while(how_many>0):
@@ -195,14 +196,21 @@ model.summary()
 # labels              = np.zeros((1000,1))
 # H = model.fit([doc1_, doc2_, quest_, doc1_af_, doc2_af_], labels, validation_data=None, epochs=5, verbose=1, batch_size=32)
 
-filepath        = "weights-improvement-{epoch:02d}-{val_loss:.2f}.hdf5"
-callbacks_list  = [ModelCheckpoint(filepath, monitor='val_loss', save_best_only=True, save_weights_only=False)]
+
+class SaveTheModel(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs):
+        print(epoch)
+        pprint(logs)
+
+callbacks_list = [SaveTheModel()]
+
+
 train_history   = model.fit_generator(
     generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    steps_per_epoch     = 100,
+    steps_per_epoch     = 10,
     epochs              = 30,
     validation_data     = myGenerator(dev_bm25_scores, dev_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    validation_steps    = 50,
+    validation_steps    = 2,
     callbacks           = callbacks_list
 )
 
