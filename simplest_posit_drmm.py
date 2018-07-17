@@ -270,7 +270,9 @@ def load_data():
 def get_map_res(fgold, femit):
     trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err)      = trec_eval_res.communicate()
-    map_res         = float([l for l in out.decode("utf-8").split('\n') if (l.startswith('map '))][0].split('\t')[-1])
+    lines           = out.decode("utf-8").split('\n')
+    map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
+    map_res         = float(map_res[-1])
     return map_res
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
