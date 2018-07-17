@@ -215,7 +215,8 @@ train_history   = model.fit_generator(
     epochs              = 30,
     validation_data     = myGenerator(dev_bm25_scores, dev_all_abs, t2i, story_maxlen, quest_maxlen, 32),
     validation_steps    = 50,
-    callbacks           = callbacks_list
+    callbacks           = callbacks_list,
+    verbose             = 1
 )
 
 '''
