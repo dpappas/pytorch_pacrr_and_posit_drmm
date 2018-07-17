@@ -121,7 +121,9 @@ def compute_doc_output(doc, q_embeds, q_trigrams, weights, doc_af, doc_mask):
     pooled_d_sens   = Lambda(average_k_max_pool)(sim_sens_d)
     concated_d      = Concatenate()([pooled_d_insens, pooled_d_sens])
     hd              = TimeDistributed(hidden1)(concated_d)
+    hd              = TimeDistributed(h1_activ)(hd)
     iod             = TimeDistributed(hidden2)(hd)
+    iod             = TimeDistributed(h2_activ)(iod)
     iod             = multiply([iod, weights])
     iod             = GlobalAveragePooling1D()(iod)
     concated_iod_af = Concatenate()([iod, doc_af])
@@ -135,6 +137,7 @@ def process_question(quest):
     q_trigrams      = Add()([q_trigrams, q_embeds])
     weight_input    = Concatenate()([q_trigrams, q_idfs])
     weights         = weights_layer(weight_input)
+    weights         = w_activ(weights)
     return q_embeds, q_trigrams, weights
 
 def compute_masking(quest_doc):
@@ -169,9 +172,12 @@ doc2_af             = Input(shape=(4,), dtype='float32')
 emb_layer           = Embedding(vocab_size, emb_size,   weights=[embedding_weights], trainable=False)
 idf_layer           = Embedding(vocab_size, 1,          weights=[idf_weights],       trainable=False)
 trigram_conv        = Conv1D(emb_size, 3, padding="same", activation=LeakyReLU())
-hidden1             = Dense(8, activation=LeakyReLU())
+hidden1             = Dense(8)
+h1_activ            = LeakyReLU()
 hidden2             = Dense(1, activation=LeakyReLU())
+h2_activ            = LeakyReLU()
 weights_layer       = Dense(1, activation=LeakyReLU())
+w_activ             = LeakyReLU()
 out_layer           = Dense(1, activation=None)
 #
 doc1_mask                       = Lambda(compute_masking)([quest, doc1])
