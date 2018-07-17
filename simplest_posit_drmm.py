@@ -155,7 +155,7 @@ def compute_the_cost(costs, back_prop=True):
     if(back_prop):
         cost_.backward()
         optimizer.step()
-        optimizer.zero_grad()
+        # optimizer.zero_grad()
     the_cost = cost_.cpu().item()
     return the_cost
 
@@ -178,15 +178,7 @@ def train_one(train_instances):
     optimizer.zero_grad()
     instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
     for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in train_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(
-            good_sents_inds,
-            bad_sents_inds,
-            quest_inds,
-            good_all_sims,
-            bad_all_sims,
-            gaf,
-            baf
-        )
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims, gaf, baf)
         #
         average_total_loss  += instance_cost.cpu().item()
         average_task_loss   += loss1.cpu().item()

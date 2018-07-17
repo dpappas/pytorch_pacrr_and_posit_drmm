@@ -64,26 +64,6 @@ def load_data():
     print('yielding data')
     return train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i
 
-train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
-
-def myGenerator(bm25_scores, all_abs, t2i, how_many_loops, story_maxlen, b_size):
-    x1, x2, y = [], [], []
-    for sents_inds, _, quest_inds, label in data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
-        x1.append(sents_inds)
-        x2.append(quest_inds)
-        y.append(label)
-        if(len(y) == b_size):
-            yield [
-                      np.array(pad_sequences(x1, maxlen=story_maxlen)),
-                      np.array(pad_sequences(x2, maxlen=story_maxlen))
-                  ], np.array(y)
-            x1, x2, y = [], [], []
-
-# d = myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=500, b_size=32)
-# aa = d.next()
-
-k = 5
-
 def l2_norm(x, axis=None):
     """
     takes an input tensor and returns the l2 norm along specified axis
@@ -117,6 +97,26 @@ def average_k_max_pool(inputs):
     concatenated    = tf.concat([maxim, average_top_k],axis=-1)
     return concatenated
 
+def myGenerator(bm25_scores, all_abs, t2i, how_many_loops, story_maxlen, b_size):
+    x1, x2, y = [], [], []
+    for sents_inds, _, quest_inds, label in data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
+        x1.append(sents_inds)
+        x2.append(quest_inds)
+        y.append(label)
+        if(len(y) == b_size):
+            yield [
+                      np.array(pad_sequences(x1, maxlen=story_maxlen)),
+                      np.array(pad_sequences(x2, maxlen=story_maxlen))
+                  ], np.array(y)
+            x1, x2, y = [], [], []
+
+train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
+
+# d = myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=500, b_size=32)
+# aa = d.next()
+
+k = 5
+
 embedding_weights   = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 # embedding_weights = np.random.rand(100,20)
 vocab_size          = embedding_weights.shape[0]
@@ -146,7 +146,7 @@ od1                 = TimeDistributed(out_layer)(hd1)
 od1                 = GlobalAveragePooling1D()(od1)
 
 model               = Model(inputs=[doc1, quest], outputs=od1)
-model.compile(optimizer='sgd', loss='hinge', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='hinge', metrics=['accuracy'])
 
 doc1_               = np.random.randint(0,vocab_size, (1000, 500))
 doc2_               = np.random.randint(0,vocab_size, (1000, 500))
