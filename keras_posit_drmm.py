@@ -167,17 +167,15 @@ doc2_af             = Input(shape=(4,), dtype='float32')
 #
 emb_layer           = Embedding(vocab_size, emb_size,   weights=[embedding_weights], trainable=False)
 idf_layer           = Embedding(vocab_size, 1,          weights=[idf_weights],       trainable=False)
-#
 trigram_conv        = Conv1D(emb_size, 3, padding="same", activation=LeakyReLU())
 hidden1             = Dense(8, activation=LeakyReLU())
 hidden2             = Dense(1, activation=LeakyReLU())
 weights_layer       = Dense(1, activation=LeakyReLU())
 out_layer           = Dense(1, activation=None)
 #
-q_embeds, q_trigrams, weights = process_question(quest)
-#
-od1                 = compute_doc_output(doc1, q_embeds, q_trigrams, weights, doc1_af)
-od2                 = compute_doc_output(doc2, q_embeds, q_trigrams, weights, doc2_af)
+q_embeds, q_trigrams, weights   = process_question(quest)
+od1                             = compute_doc_output(doc1, q_embeds, q_trigrams, weights, doc1_af)
+od2                             = compute_doc_output(doc2, q_embeds, q_trigrams, weights, doc2_af)
 #
 the_loss            = Lambda(the_objective)([od2, od1])
 #
