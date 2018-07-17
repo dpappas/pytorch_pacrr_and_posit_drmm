@@ -324,8 +324,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # lo      = F.sigmoid(lo)
         lo      = self.my_relu2(lo)
         lo      = lo.squeeze(-1)
-        # sr      = lo.sum(-1) / lo.size(-1)
-        sr      = lo.sum(-1)
+        lo      = lo * weights
+        sr      = lo.sum(-1) / lo.size(-1)
+        # sr      = lo.sum(-1)
         return sr
     def emit_one(self, doc1, question, doc1_sim, gaf):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
