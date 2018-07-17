@@ -21,8 +21,8 @@ import torch.nn.functional as F
 from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
-from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
-from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1, q_unk_tok, d_unk_tok
+# from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
+# from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1, q_unk_tok, d_unk_tok
 
 my_seed = 1989
 random.seed(my_seed)
@@ -47,11 +47,11 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
-# idf_mat         = np.random.random((150))
+matrix          = np.random.random((150, 10))
+idf_mat         = np.random.random((150))
 print(matrix.shape)
 
 def print_params(model):
@@ -422,8 +422,8 @@ print_params(model)
 del(matrix)
 optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
@@ -481,6 +481,10 @@ python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
 /home/dpappas/simplest_posit_drmm_no_activation_dif_unkn/elk_relevant_abs_posit_drmm_lists_test.json
 
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/elk_relevant_abs_posit_drmm_lists_test.json
 
 '''
 
