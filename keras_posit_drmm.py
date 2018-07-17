@@ -7,7 +7,7 @@ import tensorflow as tf
 import keras.backend as K
 import cPickle as pickle
 from keras.layers import Embedding, Conv1D, Input, LeakyReLU, Lambda, Concatenate, Dense
-from keras.layers import Add, TimeDistributed, PReLU, GlobalAveragePooling1D
+from keras.layers import Add, TimeDistributed, PReLU, GlobalAveragePooling1D, multiply
 from keras.models import Model
 from keras.preprocessing.sequence import pad_sequences
 
@@ -118,6 +118,21 @@ def the_objective(negatives_positives):
     loss_q_pos           = tf.reshape(loss_q_pos,(-1,1))
     return loss_q_pos
 
+def compute_doc_output(doc, q_embeds, q_trigrams, weights):
+    d_embeds        = emb_layer(doc)
+    d_trigrams      = trigram_conv(d_embeds)
+    d_trigrams      = Add()([d_trigrams, d_embeds])
+    sim_insens_d    = Lambda(pairwise_cosine_sim)([q_embeds, d_embeds])
+    sim_sens_d      = Lambda(pairwise_cosine_sim)([q_trigrams, d_trigrams])
+    pooled_d_insens = Lambda(average_k_max_pool)(sim_insens_d)
+    pooled_d_sens   = Lambda(average_k_max_pool)(sim_sens_d)
+    concated_d      = Concatenate()([pooled_d_insens, pooled_d_sens])
+    hd              = TimeDistributed(hidden)(concated_d)
+    od              = TimeDistributed(out_layer)(hd)
+    od              = multiply([od, weights])
+    od              = GlobalAveragePooling1D()(od)
+    return od
+
 story_maxlen = 500
 
 # train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
@@ -136,41 +151,19 @@ quest               = Input(shape=(story_maxlen,), dtype='int32')
 doc1                = Input(shape=(story_maxlen,), dtype='int32')
 doc2                = Input(shape=(story_maxlen,), dtype='int32')
 #
+emb_layer           = Embedding(vocab_size, emb_size, weights=[embedding_weights])
+trigram_conv        = Conv1D(emb_size, 3, padding="same", activation=LeakyReLU())
 hidden              = Dense(8, activation=LeakyReLU())
 out_layer           = Dense(1, activation=None)
+weights_layer       = Dense(1, activation=LeakyReLU())
 #
-emb_layer           = Embedding(vocab_size, emb_size, weights=[embedding_weights])
 q_embeds            = emb_layer(quest)
-trigram_conv        = Conv1D(emb_size, 3, padding="same")
-conv_activation     = LeakyReLU()
-q_trigrams          = conv_activation(trigram_conv(q_embeds))
+q_trigrams          = trigram_conv(q_embeds)
 q_trigrams          = Add()([q_trigrams, q_embeds])
+weights             = weights_layer(q_trigrams)
 #
-d1_embeds           = emb_layer(doc1)
-d1_trigrams         = trigram_conv(d1_embeds)
-d1_trigrams         = conv_activation(d1_trigrams)
-d1_trigrams         = Add()([d1_trigrams, d1_embeds])
-sim_insens_d1       = Lambda(pairwise_cosine_sim)([q_embeds, d1_embeds])
-sim_sens_d1         = Lambda(pairwise_cosine_sim)([q_trigrams, d1_trigrams])
-pooled_d1_insens    = Lambda(average_k_max_pool)(sim_insens_d1)
-pooled_d1_sens      = Lambda(average_k_max_pool)(sim_sens_d1)
-concated_d1         = Concatenate()([pooled_d1_insens, pooled_d1_sens])
-hd1                 = TimeDistributed(hidden)(concated_d1)
-od1                 = TimeDistributed(out_layer)(hd1)
-od1                 = GlobalAveragePooling1D()(od1)
-#
-d2_embeds           = emb_layer(doc2)
-d2_trigrams         = trigram_conv(d2_embeds)
-d2_trigrams         = conv_activation(d2_trigrams)
-d2_trigrams         = Add()([d2_trigrams, d2_embeds])
-sim_insens_d2       = Lambda(pairwise_cosine_sim)([q_embeds, d2_embeds])
-sim_sens_d2         = Lambda(pairwise_cosine_sim)([q_trigrams, d2_trigrams])
-pooled_d2_insens    = Lambda(average_k_max_pool)(sim_insens_d2)
-pooled_d2_sens      = Lambda(average_k_max_pool)(sim_sens_d2)
-concated_d2         = Concatenate()([pooled_d2_insens, pooled_d2_sens])
-hd2                 = TimeDistributed(hidden)(concated_d2)
-od2                 = TimeDistributed(out_layer)(hd2)
-od2                 = GlobalAveragePooling1D()(od2)
+od1                 = compute_doc_output(doc1, q_embeds, q_trigrams, weights)
+od2                 = compute_doc_output(doc2, q_embeds, q_trigrams, weights)
 #
 the_loss            = Lambda(the_objective)([od2, od1])
 #
@@ -182,7 +175,6 @@ model.summary()
 doc1_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
 doc2_               = np.random.randint(0,vocab_size, (1000, story_maxlen))
 quest_              = np.random.randint(0,vocab_size, (1000, story_maxlen))
-# labels              = np.random.randint(0,2,(1000))
 labels              = np.zeros((1000,1))
 
 H = model.fit(
