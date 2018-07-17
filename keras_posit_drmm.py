@@ -196,7 +196,6 @@ model.summary()
 # labels              = np.zeros((1000,1))
 # H = model.fit([doc1_, doc2_, quest_, doc1_af_, doc2_af_], labels, validation_data=None, epochs=5, verbose=1, batch_size=32)
 
-
 class SaveTheModel(keras.callbacks.Callback):
     best_valid_loss = 10e5
     def on_epoch_end(self, epoch, logs):
