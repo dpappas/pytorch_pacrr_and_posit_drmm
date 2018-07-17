@@ -210,8 +210,9 @@ def get_one_map(prefix, bm25_scores, all_abs):
         doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
         doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         doc_res = doc_res[:100]
-        filler  = sorted([-i - 1 for i in range(100 - len(doc_res))])
-        dato['documents'] = doc_res+filler
+        # filler  = sorted([-i - 1 for i in range(100 - len(doc_res))])
+        # doc_res = doc_res+filler
+        dato['documents'] = doc_res
         data['questions'].append(dato)
     if(prefix=='dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
@@ -463,6 +464,19 @@ python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
 /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
 /home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/elk_relevant_abs_posit_drmm_lists_dev.json
+
+max(
+[
+    len(
+        [
+            d
+            for d in item['documents']
+            if(type(d) is str) 
+        ]
+    )
+    for item in t['questions'] 
+]
+)
 
 '''
 
