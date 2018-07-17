@@ -166,9 +166,11 @@ weights_layer       = Dense(1, activation=LeakyReLU())
 out_layer           = Dense(1, activation=None)
 #
 q_embeds            = emb_layer(quest)
+q_idfs              = idf_layer(quest)
 q_trigrams          = trigram_conv(q_embeds)
 q_trigrams          = Add()([q_trigrams, q_embeds])
-weights             = weights_layer(q_trigrams)
+weight_input        = Concatenate()([q_trigrams, q_idfs])
+weights             = weights_layer(weight_input)
 #
 od1                 = compute_doc_output(doc1, q_embeds, q_trigrams, weights, doc1_af)
 od2                 = compute_doc_output(doc2, q_embeds, q_trigrams, weights, doc2_af)
