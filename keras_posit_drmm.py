@@ -13,11 +13,18 @@ from keras.preprocessing.sequence import pad_sequences
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
-def get_index(token, t2i):
+q_unk_tok       = 'QUNKN'
+d_unk_tok       = 'DUNKN'
+# d_unk_tok       = q_unk_tok
+
+def get_index(token, t2i, q_or_d):
     try:
         return t2i[token]
     except KeyError:
-        return t2i['UNKN']
+        if(q_or_d == 'q'):
+            return t2i[q_unk_tok]
+        else:
+            return t2i[d_unk_tok]
 
 def get_sim_mat(stoks, qtoks):
     sm = np.zeros((len(stoks), len(qtoks)))
@@ -30,8 +37,8 @@ def get_sim_mat(stoks, qtoks):
 def get_item_inds(item, question, t2i):
     passage     = item['title'] + ' ' + item['abstractText']
     all_sims    = get_sim_mat(bioclean(passage), bioclean(question))
-    sents_inds  = [get_index(token, t2i) for token in bioclean(passage)]
-    quest_inds  = [get_index(token, t2i) for token in bioclean(question)]
+    sents_inds  = [get_index(token, t2i, 'd') for token in bioclean(passage)]
+    quest_inds  = [get_index(token, t2i, 'q') for token in bioclean(question)]
     return sents_inds, quest_inds, all_sims
 
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
@@ -203,7 +210,6 @@ od1                             = compute_doc_output(doc1, q_embeds, q_trigrams,
 od2                             = compute_doc_output(doc2, q_embeds, q_trigrams, weights, doc2_af, doc2_mask)
 #
 the_loss            = Lambda(the_objective)([od2, od1])
-#
 model               = Model(inputs=[doc1, doc2, quest, doc1_af, doc2_af], outputs=the_loss)
 optimizer           = keras.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 model.compile(optimizer=optimizer, loss='mean_squared_error')
