@@ -10,36 +10,13 @@ from keras.layers import Embedding, Conv1D, Input, LeakyReLU, Lambda, Concatenat
 from keras.layers import Add, TimeDistributed, PReLU, GlobalAveragePooling1D, multiply
 from keras.models import Model
 from keras.preprocessing.sequence import pad_sequences
+from my_bioasq_preprocessing import get_item_inds
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 q_unk_tok       = 'QUNKN'
 d_unk_tok       = 'DUNKN'
 # d_unk_tok       = q_unk_tok
-
-def get_index(token, t2i, q_or_d):
-    try:
-        return t2i[token]
-    except KeyError:
-        if(q_or_d == 'q'):
-            return t2i[q_unk_tok]
-        else:
-            return t2i[d_unk_tok]
-
-def get_sim_mat(stoks, qtoks):
-    sm = np.zeros((len(stoks), len(qtoks)))
-    for i in range(len(qtoks)):
-        for j in range(len(stoks)):
-            if(qtoks[i] == stoks[j]):
-                sm[j,i] = 1.
-    return sm
-
-def get_item_inds(item, question, t2i):
-    passage     = item['title'] + ' ' + item['abstractText']
-    all_sims    = get_sim_mat(bioclean(passage), bioclean(question))
-    sents_inds  = [get_index(token, t2i, 'd') for token in bioclean(passage)]
-    quest_inds  = [get_index(token, t2i, 'q') for token in bioclean(question)]
-    return sents_inds, quest_inds, all_sims
 
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
     while(how_many>0):
