@@ -171,14 +171,14 @@ story_maxlen = 1500
 quest_maxlen = 100
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
-d = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen=story_maxlen, quest_maxlen=quest_maxlen, b_size=32)
 
 k = 5
 
 embedding_weights   = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
 idf_weights         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # embedding_weights   = np.random.rand(100,20)
-# idf_weights         = np.random.rand(100,1)
+# idf_weights         = np.random.rand(100)
+idf_weights         = idf_weights.reshape((-1, 1))
 vocab_size          = embedding_weights.shape[0]
 emb_size            = embedding_weights.shape[1]
 
@@ -220,7 +220,14 @@ labels              = np.zeros((1000,1))
 # H = model.fit([doc1_, doc2_, quest_, doc1_af_, doc2_af_], labels, validation_data=None, epochs=5, verbose=1, batch_size=32)
 
 H                   = model.fit_generator(
-    myGenerator(train_bm25_scores, train_all_abs, t2i, 1, story_maxlen=1500, b_size=32),
+    myGenerator(
+        train_bm25_scores,
+        train_all_abs,
+        t2i,
+        story_maxlen=story_maxlen,
+        quest_maxlen=quest_maxlen,
+        b_size=32
+    ),
     steps_per_epoch  = 100,
     epochs           = 5,
     validation_data  = None,
