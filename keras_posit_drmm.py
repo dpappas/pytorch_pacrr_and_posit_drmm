@@ -171,7 +171,6 @@ story_maxlen = 1500
 quest_maxlen = 100
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
-
 k = 5
 
 embedding_weights   = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
