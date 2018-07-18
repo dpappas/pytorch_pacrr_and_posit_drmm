@@ -219,6 +219,13 @@ train_history   = model.fit_generator(
     verbose             = 1
 )
 
+get_doc_emit = K.function(model.inputs, [od1.output])
+quest_       = np.random.randint(0, vocab_size, (1000, quest_maxlen))
+doc1_        = np.random.randint(0, vocab_size, (1000, story_maxlen))
+doc1_af_     = np.random.randn(1000, 4)
+test_inputs  = [doc1_, doc1_, quest_, doc1_af_, doc1_af_]
+C1           = get_doc_emit(test_inputs)
+
 '''
 
 class SaveTheModel(keras.callbacks.Callback):
