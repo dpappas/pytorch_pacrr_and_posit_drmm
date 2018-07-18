@@ -193,8 +193,8 @@ def get_one_map(prefix, bm25_scores, all_abs):
             gafs.append(gaf)
             docs_ids.append(doc_id)
         #
-        gsi             = np.array(pad_sequences(gsi,        maxlen=story_maxlen))
-        qis             = np.array(pad_sequences(quest_inds, maxlen=quest_maxlen))
+        gsi             = pad_sequences(gsi,        maxlen=story_maxlen)
+        qis             = pad_sequences(quest_inds, maxlen=quest_maxlen)
         gafs            = np.array(gafs)
         doc1_emit_      = test_one(gsi, qis, gafs)
         for i in range(len(docs_ids)):
