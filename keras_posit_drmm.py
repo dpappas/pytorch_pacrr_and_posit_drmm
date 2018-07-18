@@ -221,6 +221,13 @@ def get_one_map(prefix, bm25_scores, all_abs):
         )
     return res_map
 
+class TestTheModel(keras.callbacks.Callback):
+    best_valid_loss = None
+    def on_epoch_end(self, epoch, logs):
+        if(self.best_valid_loss is None or (self.best_valid_loss>logs['val_loss'])):
+            test_map = get_one_map('test', test_bm25_scores, test_all_abs)
+            print(test_map)
+
 odir = '/home/dpappas/simplest_posit_drmm_keras/'
 if not os.path.exists(odir):
     os.makedirs(odir)
@@ -280,7 +287,8 @@ model.summary()
 
 filepath        ="weights-improvement-{epoch:02d}-{val_loss:.2f}.hdf5"
 checkpoint      = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True)
-callbacks_list  = [checkpoint]
+
+callbacks_list = [checkpoint, TestTheModel()]
 
 train_history   = model.fit_generator(
     generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
@@ -292,8 +300,6 @@ train_history   = model.fit_generator(
     verbose             = 1
 )
 
-test_map    = get_one_map('test', test_bm25_scores, test_all_abs)
-print(test_map)
 
 '''
 
@@ -311,7 +317,6 @@ callbacks_list = [SaveTheModel()]
 '''
 
 '''
-
 
 # doc2                = Input(shape=(500,), dtype='int32')
 # d2_embeds           = emb_layer(doc2)
