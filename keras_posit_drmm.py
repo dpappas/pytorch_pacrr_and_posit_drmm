@@ -192,7 +192,7 @@ def get_one_map(prefix, bm25_scores, all_abs):
             gaf             = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
             gaf.append(bm25s[doc_id])
             doc1_emit_      = test_one(np.array(sents_inds), np.array(quest_inds), np.array([gaf]))
-            doc_res[doc_id] = float(doc1_emit_)
+            doc_res[doc_id] = doc1_emit_[0]
         doc_res             = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
         doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         doc_res             = doc_res[:100]
@@ -337,7 +337,9 @@ H = model.fit(
 
 '''
 
-
+'''
+Epoch 00001: val_loss improved from inf to 2.52525, saving model to weights-improvement-01-2.53.hdf5
+'''
 
 
 
