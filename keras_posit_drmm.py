@@ -176,15 +176,15 @@ def get_one_map(prefix, bm25_scores, all_abs):
     data = {}
     data['questions'] = []
     for quer in tqdm(bm25_scores['queries']):
-        dato    = {'body': quer['query_text'], 'id': quer['query_id'], 'documents': []}
-        bm25s   = {t['doc_id']: t['bm25_score'] for t in quer[u'retrieved_documents']}
-        doc_res = {}
+        dato        = {'body': quer['query_text'], 'id': quer['query_id'], 'documents': []}
+        bm25s       = {t['doc_id']: t['bm25_score'] for t in quer[u'retrieved_documents']}
+        doc_res     = {}
+        quest_inds  = text2indices(quer['query_text'], t2i, 'q')
         gsi, gas, qis, gafs, docs_ids = [], [], [], [], []
         for retr in quer['retrieved_documents']:
             doc_id          = retr['doc_id']
             passage         = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
             sents_inds      = text2indices(passage, t2i, 'd')
-            quest_inds      = text2indices(quer['query_text'], t2i, 'q')
             gaf             = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
             gaf.append(bm25s[doc_id])
             #
