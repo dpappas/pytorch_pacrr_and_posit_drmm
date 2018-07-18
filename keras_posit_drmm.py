@@ -170,7 +170,7 @@ def test_one(doc1_, quest_, doc1_af_):
     get_doc_emit = K.function(model.inputs, [od1])
     test_inputs  = [doc1_, doc1_, quest_, doc1_af_, doc1_af_]
     out          = get_doc_emit(test_inputs)
-    return out
+    return out[0]
 
 def get_one_map(prefix, bm25_scores, all_abs):
     data = {}
@@ -193,8 +193,8 @@ def get_one_map(prefix, bm25_scores, all_abs):
             gafs.append(gaf)
             docs_ids.append(doc_id)
         #
-        gsi             = pad_sequences(gsi,        maxlen=story_maxlen)
-        qis             = pad_sequences(quest_inds, maxlen=quest_maxlen)
+        gsi             = pad_sequences(gsi, maxlen=story_maxlen)
+        qis             = pad_sequences(qis, maxlen=quest_maxlen)
         gafs            = np.array(gafs)
         doc1_emit_      = test_one(gsi, qis, gafs)
         for i in range(len(docs_ids)):
