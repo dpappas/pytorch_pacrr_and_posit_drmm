@@ -1,11 +1,15 @@
 
+import os
 import re
+import json
 import keras
 import random
+import subprocess
 import numpy as np
 import tensorflow as tf
 import keras.backend as K
 import cPickle as pickle
+from tqdm import tqdm
 from keras.layers import Embedding, Conv1D, Input, LeakyReLU, Lambda, Concatenate, Dense
 from keras.layers import Add, TimeDistributed, PReLU, GlobalAveragePooling1D, multiply
 from keras.models import Model
@@ -13,6 +17,8 @@ from keras.preprocessing.sequence import pad_sequences
 from my_bioasq_preprocessing import get_item_inds
 from pprint import pprint
 from keras.callbacks import ModelCheckpoint
+from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
+from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
 
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
     while(how_many>0):
@@ -152,6 +158,10 @@ def compute_masking(quest_doc):
     res         = K.batch_dot(quest, K.permute_dimensions(doc, (0, 2, 1)))
     return res
 
+odir = '/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
+
 story_maxlen = 1500
 quest_maxlen = 100
 
@@ -211,20 +221,75 @@ callbacks_list  = [checkpoint]
 
 train_history   = model.fit_generator(
     generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    steps_per_epoch     = 100,
-    epochs              = 30,
+    steps_per_epoch     = 5, #100,
+    epochs              = 3,  #30,
     validation_data     = myGenerator(dev_bm25_scores, dev_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    validation_steps    = 20,
+    validation_steps    = 2, #20,
     callbacks           = callbacks_list,
     verbose             = 1
 )
 
-get_doc_emit = K.function(model.inputs, [od1.output])
+def get_map_res(fgold, femit):
+    trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
+    (out, err)      = trec_eval_res.communicate()
+    lines           = out.decode("utf-8").split('\n')
+    map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
+    map_res         = float(map_res[-1])
+    return map_res
+
+def test_time():
+    def get_one_map(prefix, bm25_scores, all_abs):
+        data = {}
+        data['questions'] = []
+        for quer in tqdm(bm25_scores['queries']):
+            dato = {'body': quer['query_text'], 'id': quer['query_id'], 'documents': []}
+            bm25s = {t['doc_id']: t['bm25_score'] for t in quer[u'retrieved_documents']}
+            doc_res = {}
+            for retr in quer['retrieved_documents']:
+                doc_id = retr['doc_id']
+                passage = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
+                all_sims = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
+                #
+                sents_inds = text2indices(passage, t2i, 'd')
+                quest_inds = text2indices(quer['query_text'], t2i, 'q')
+                #
+                gaf = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
+                gaf.append(bm25s[doc_id])
+                #
+                doc1_emit_ = model.emit_one(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims, gaf=gaf)
+                #
+                doc_res[doc_id] = float(doc1_emit_)
+            doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+            doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+            doc_res = doc_res[:100]
+            # filler  = sorted([-i - 1 for i in range(100 - len(doc_res))])
+            # doc_res = doc_res+filler
+            dato['documents'] = doc_res
+            data['questions'].append(dato)
+        if (prefix == 'dev'):
+            with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
+                f.write(json.dumps(data, indent=4, sort_keys=True))
+            res_map = get_map_res(
+                '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json',
+                odir + 'elk_relevant_abs_posit_drmm_lists_dev.json'
+            )
+        else:
+            with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
+                f.write(json.dumps(data, indent=4, sort_keys=True))
+            res_map = get_map_res(
+                '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json',
+                odir + 'elk_relevant_abs_posit_drmm_lists_test.json'
+            )
+        return res_map
+
+
+get_doc_emit = K.function(model.inputs, [od1])
 quest_       = np.random.randint(0, vocab_size, (1000, quest_maxlen))
 doc1_        = np.random.randint(0, vocab_size, (1000, story_maxlen))
 doc1_af_     = np.random.randn(1000, 4)
 test_inputs  = [doc1_, doc1_, quest_, doc1_af_, doc1_af_]
 C1           = get_doc_emit(test_inputs)
+print(C1.shape)
 
 '''
 
