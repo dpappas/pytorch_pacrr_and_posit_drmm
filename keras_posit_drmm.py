@@ -181,15 +181,20 @@ def get_one_map(prefix, bm25_scores, all_abs):
         doc_res = {}
         for retr in quer['retrieved_documents']:
             doc_id          = retr['doc_id']
+            #
             passage         = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
             sents_inds      = text2indices(passage, t2i, 'd')
+            sents_inds      = np.array(pad_sequences([sents_inds], maxlen=story_maxlen))
+            #
             quest_inds      = text2indices(quer['query_text'], t2i, 'q')
+            quest_inds      = np.array(pad_sequences([quest_inds], maxlen=quest_maxlen))
+            #
             gaf             = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
             gaf.append(bm25s[doc_id])
             doc1_emit_      = test_one(
-                np.expand_dims(sents_inds,0),
-                np.expand_dims(quest_inds,0),
-                np.expand_dims(gaf,0)
+                np.array(sents_inds),
+                np.array(quest_inds),
+                np.array([gaf])
             )
             doc_res[doc_id] = float(doc1_emit_)
         doc_res             = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
@@ -213,8 +218,7 @@ def get_one_map(prefix, bm25_scores, all_abs):
         )
     return res_map
 
-
-odir = '/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/'
+odir = '/home/dpappas/simplest_posit_drmm_keras/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
