@@ -257,7 +257,11 @@ def get_one_map(prefix, bm25_scores, all_abs):
             quest_inds      = text2indices(quer['query_text'], t2i, 'q')
             gaf             = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
             gaf.append(bm25s[doc_id])
-            doc1_emit_      = test_one(sents_inds, quest_inds, gaf)
+            doc1_emit_      = test_one(
+                np.expand_dims(sents_inds,0),
+                np.expand_dims(quest_inds,0),
+                np.expand_dims(gaf,0)
+            )
             doc_res[doc_id] = float(doc1_emit_)
         doc_res             = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
         doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
