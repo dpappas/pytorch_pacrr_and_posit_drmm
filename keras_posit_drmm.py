@@ -253,18 +253,16 @@ def get_one_map(prefix, bm25_scores, all_abs):
         for retr in quer['retrieved_documents']:
             doc_id          = retr['doc_id']
             passage         = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
-            all_sims        = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
             sents_inds      = text2indices(passage, t2i, 'd')
             quest_inds      = text2indices(quer['query_text'], t2i, 'q')
             gaf             = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
             gaf.append(bm25s[doc_id])
-            test_one(sents_inds, quest_inds, gaf)
-            doc1_emit_      = model.emit_one(doc1=, question=, doc1_sim=all_sims, gaf=)
+            doc1_emit_      = test_one(sents_inds, quest_inds, gaf)
             doc_res[doc_id] = float(doc1_emit_)
-        doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-        doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-        doc_res = doc_res[:100]
-        dato['documents'] = doc_res
+        doc_res             = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+        doc_res             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+        doc_res             = doc_res[:100]
+        dato['documents']   = doc_res
         data['questions'].append(dato)
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
