@@ -225,6 +225,7 @@ class TestTheModel(keras.callbacks.Callback):
     best_valid_loss = None
     def on_epoch_end(self, epoch, logs):
         if(self.best_valid_loss is None or (self.best_valid_loss>logs['val_loss'])):
+            self.best_valid_loss = logs['val_loss']
             test_map = get_one_map('test', test_bm25_scores, test_all_abs)
             print(test_map)
 
@@ -292,10 +293,10 @@ callbacks_list = [checkpoint, TestTheModel()]
 
 train_history   = model.fit_generator(
     generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    steps_per_epoch     = 5, #100,
-    epochs              = 3,  #30,
+    steps_per_epoch     = 100,
+    epochs              = 30,
     validation_data     = myGenerator(dev_bm25_scores, dev_all_abs, t2i, story_maxlen, quest_maxlen, 32),
-    validation_steps    = 2, #20,
+    validation_steps    = 20,
     callbacks           = callbacks_list,
     verbose             = 1
 )
