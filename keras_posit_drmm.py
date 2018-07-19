@@ -300,6 +300,19 @@ checkpoint      = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_
 
 callbacks_list = [checkpoint, TestTheModel()]
 
+dev_data        = myGenerator(dev_bm25_scores, dev_all_abs, t2i, story_maxlen, quest_maxlen, 32*50).next()
+
+train_history   = model.fit_generator(
+    generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
+    steps_per_epoch     = 100,
+    epochs              = 30,
+    validation_data     = dev_data,
+    callbacks           = callbacks_list,
+    verbose             = 1
+)
+
+'''
+
 train_history   = model.fit_generator(
     generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
     steps_per_epoch     = 100,
@@ -309,6 +322,8 @@ train_history   = model.fit_generator(
     callbacks           = callbacks_list,
     verbose             = 1
 )
+
+'''
 
 
 '''
