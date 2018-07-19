@@ -124,8 +124,7 @@ def compute_doc_output(doc, q_embeds, q_trigrams, weights, doc_af, doc_mask):
     #
     sim_insens_d    = Lambda(pairwise_cosine_sim)([q_embeds, d_embeds])
     sim_insens_d    = multiply([sim_insens_d, doc_mask])
-    sim_one_hot     = K.greater_equal(sim_insens_d,  1e-03)
-    sim_one_hot     = K.cast(sim_one_hot, K.floatx())
+    sim_oh_d        = Lambda(create_one_hot)(sim_insens_d)
     sim_sens_d      = Lambda(pairwise_cosine_sim)([q_trigrams, d_trigrams])
     sim_sens_d      = multiply([sim_sens_d, doc_mask])
     #
@@ -163,6 +162,10 @@ def compute_masking(quest_doc):
     doc         = tf.reshape(doc, (-1, doc.shape[1], 1))
     res         = K.batch_dot(quest, K.permute_dimensions(doc, (0, 2, 1)))
     return res
+
+def create_one_hot(matrix):
+    sim_one_hot = tf.to_float(matrix >1-1e-03)
+    return sim_one_hot
 
 def get_map_res(fgold, femit):
     trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
