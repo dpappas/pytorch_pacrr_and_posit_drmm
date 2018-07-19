@@ -246,7 +246,7 @@ idf_weights         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.
 idf_weights         = idf_weights.reshape((-1, 1))
 vocab_size          = embedding_weights.shape[0]
 emb_size            = embedding_weights.shape[1]
-
+#
 quest               = Input(shape=(quest_maxlen,), dtype='int32')
 doc1                = Input(shape=(story_maxlen,), dtype='int32')
 doc2                = Input(shape=(story_maxlen,), dtype='int32')
