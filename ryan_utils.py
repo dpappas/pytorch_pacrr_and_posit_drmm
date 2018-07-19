@@ -178,3 +178,13 @@ for i in range(len(data['queries'])):
     if year == '2017' or year == '2018' or (year == '2016'):
       print(year)
 
+words = {}
+GetWords(tr_data, tr_docs, words)
+GetWords(data, docs, words)
+
+train_examples = GetTrainData(tr_data, 1)
+random.shuffle(train_examples)
+
+
+
+
