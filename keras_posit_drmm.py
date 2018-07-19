@@ -130,7 +130,7 @@ def compute_doc_output(doc, q_embeds, q_trigrams, weights, doc_af, doc_mask):
     #
     pooled_d_insens = Lambda(average_k_max_pool)(sim_insens_d)
     pooled_d_sens   = Lambda(average_k_max_pool)(sim_sens_d)
-    pooled_d_oh     = Lambda(average_k_max_pool)(sim_one_hot)
+    pooled_d_oh     = Lambda(average_k_max_pool)(sim_oh_d)
     #
     concated_d      = Concatenate()([pooled_d_insens, pooled_d_sens, pooled_d_oh])
     hd              = TimeDistributed(hidden1)(concated_d)
