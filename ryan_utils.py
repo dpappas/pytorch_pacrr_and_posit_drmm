@@ -149,3 +149,32 @@ def JsonPredsAppend(preds, data, i, top):
   preds['questions'].append(qdict)
 
 
+import cPickle as pickle
+dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+
+with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+  data = pickle.load(f)
+
+with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+  docs = pickle.load(f)
+
+with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+  tr_data = pickle.load(f)
+
+with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+  tr_docs = pickle.load(f)
+
+RemoveBadYears(tr_data, tr_docs, True)
+RemoveTrainLargeYears(tr_data, tr_docs)
+RemoveBadYears(data, docs, False)
+train_examples = GetTrainData(tr_data, 1)
+random.shuffle(train_examples)
+
+for i in range(len(data['queries'])):
+  j = 0
+  while True:
+    doc_id  = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
+    year    = tr_docs[doc_id]['publicationDate'].split('-')[0]
+    if year == '2017' or year == '2018' or (year == '2016'):
+      print(year)
+
