@@ -124,7 +124,8 @@ def compute_doc_output(doc, q_embeds, q_trigrams, weights, doc_af, doc_mask):
     #
     sim_insens_d    = Lambda(pairwise_cosine_sim)([q_embeds, d_embeds])
     sim_insens_d    = multiply([sim_insens_d, doc_mask])
-    sim_one_hot     = K.cast_to_floatx(sim_insens_d >= (1- K.epsilon()))
+    sim_one_hot     = K.greater_equal(sim_insens_d,  1e-03)
+    sim_one_hot     = K.cast(sim_one_hot, K.floatx())
     sim_sens_d      = Lambda(pairwise_cosine_sim)([q_trigrams, d_trigrams])
     sim_sens_d      = multiply([sim_sens_d, doc_mask])
     #
