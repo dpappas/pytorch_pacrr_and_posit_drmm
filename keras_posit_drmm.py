@@ -121,13 +121,18 @@ def compute_doc_output(doc, q_embeds, q_trigrams, weights, doc_af, doc_mask):
     d_trigrams      = trigram_conv(d_embeds)
     d_trigrams      = conv_activ(d_trigrams)
     d_trigrams      = Add()([d_trigrams, d_embeds])
+    #
     sim_insens_d    = Lambda(pairwise_cosine_sim)([q_embeds, d_embeds])
     sim_insens_d    = multiply([sim_insens_d, doc_mask])
+    sim_one_hot     = K.cast_to_floatx(sim_insens_d >= (1- K.epsilon()))
     sim_sens_d      = Lambda(pairwise_cosine_sim)([q_trigrams, d_trigrams])
     sim_sens_d      = multiply([sim_sens_d, doc_mask])
+    #
     pooled_d_insens = Lambda(average_k_max_pool)(sim_insens_d)
     pooled_d_sens   = Lambda(average_k_max_pool)(sim_sens_d)
-    concated_d      = Concatenate()([pooled_d_insens, pooled_d_sens])
+    pooled_d_oh     = Lambda(average_k_max_pool)(sim_one_hot)
+    #
+    concated_d      = Concatenate()([pooled_d_insens, pooled_d_sens, pooled_d_oh])
     hd              = TimeDistributed(hidden1)(concated_d)
     hd              = TimeDistributed(h1_activ)(hd)
     iod             = TimeDistributed(hidden2)(hd)
