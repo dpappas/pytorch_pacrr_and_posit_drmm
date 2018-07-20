@@ -178,7 +178,7 @@ def load_idfs(idf_path):
     print('Loaded idf tables with max idf %f' % max_idf)
     return ret, max_idf
 
-def get_embeds():
+def get_embeds(words):
   wds   = []
   vecs  = []
   for w in words:
@@ -187,7 +187,6 @@ def get_embeds():
       vecs.append(vec)
       wds.append(w)
   return wds, vecs
-
 
 import cPickle as pickle
 dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
