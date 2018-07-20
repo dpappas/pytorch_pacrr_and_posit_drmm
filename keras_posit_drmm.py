@@ -242,12 +242,18 @@ def get_one_map(prefix, bm25_scores, all_abs):
 
 class TestTheModel(keras.callbacks.Callback):
     best_valid_map = None
+    def save_the_model(self):
+        model_json = model.to_json()
+        with open("model.json", "w") as json_file:
+            json_file.write(model_json)
+        model.save_weights("model.h5")
     def on_epoch_end(self, epoch, logs):
         valid_map = get_one_map('valid', test_bm25_scores, test_all_abs)
         if (self.best_valid_map is None or (self.best_valid_map < valid_map)):
             print('Best Valid Map changed from {} to {}'.format(self.best_valid_map, valid_map))
             test_map = get_one_map('test', test_bm25_scores, test_all_abs)
             print('Epoch {}: best_dev_map:{} test_map: {}'.format(epoch, self.best_valid_map, test_map))
+            self.save_the_model()
 
 odir = '/home/dpappas/simplest_posit_drmm_keras/'
 if not os.path.exists(odir):
