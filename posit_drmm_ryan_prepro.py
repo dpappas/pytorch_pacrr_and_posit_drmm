@@ -464,7 +464,7 @@ for epoch in range(max_epochs):
     for ex in train_examples:
         i           = ex[0]
         qtext       = tr_data['queries'][i]['query_text']
-        words, _   = get_words(qtext)
+        words, _    = get_words(qtext)
         qvecs       = get_embeds(words, wv)
         for j in ex[1]:
             is_rel      = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
