@@ -121,18 +121,18 @@ def get_words(s):
 def get_embeds(tokens, wv):
     return np.array([wv[w] for w in tokens if w in wv], 'float64')
 
+def uwords(words):
+  uw = {}
+  for w in words:
+    uw[w] = 1
+  return [w for w in uw]
+
 def ubigrams(words):
   uw = {}
   prevw = "<pw>"
   for w in words:
     uw[prevw + '_' + w] = 1
     prevw = w
-  return [w for w in uw]
-
-def uwords(words):
-  uw = {}
-  for w in words:
-    uw[w] = 1
   return [w for w in uw]
 
 def query_doc_overlap(self, qwords, dwords):
@@ -151,7 +151,7 @@ def query_doc_overlap(self, qwords, dwords):
       qwords_in_doc_val = 0.0
     else:
       qwords_in_doc_val = (float(qwords_in_doc) /
-                           float(len(utils.uwords(qwords))))
+                           float(len(uwords(qwords))))
     if idf_qwords <= 0.0:
       idf_qwords_in_doc_val = 0.0
     else:
@@ -326,68 +326,6 @@ def dev_one(dev_instances):
     logger.info('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
     return average_task_loss / instance_metr
 
-def get_one_map(prefix, bm25_scores, all_abs):
-    data = {}
-    data['questions'] = []
-    for quer in tqdm(bm25_scores['queries']):
-        dato    = {'body': quer['query_text'],'id': quer['query_id'],'documents': []}
-        bm25s   = { t['doc_id']:t['bm25_score'] for t in quer[u'retrieved_documents'] }
-        doc_res = {}
-        for retr in quer['retrieved_documents']:
-            doc_id      = retr['doc_id']
-            passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
-            #
-            sents_inds  = text2indices(passage, t2i, 'd')
-            quest_inds  = text2indices(quer['query_text'], t2i, 'q')
-            #
-            gaf         = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
-            gaf.append(bm25s[doc_id])
-            #
-            doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, gaf=gaf)
-            #
-            doc_res[doc_id] = float(doc1_emit_)
-        doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-        doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-        doc_res = doc_res[:100]
-        # filler  = sorted([-i - 1 for i in range(100 - len(doc_res))])
-        # doc_res = doc_res+filler
-        dato['documents'] = doc_res
-        data['questions'].append(dato)
-    if(prefix=='dev'):
-        with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
-            f.write(json.dumps(data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json',
-            odir+'elk_relevant_abs_posit_drmm_lists_dev.json'
-        )
-    else:
-        with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
-            f.write(json.dumps(data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json',
-            odir+'elk_relevant_abs_posit_drmm_lists_test.json'
-        )
-    return res_map
-
-def load_data():
-    print('Loading abs texts...')
-    logger.info('Loading abs texts...')
-    train_all_abs   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl', 'rb'))
-    dev_all_abs     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl', 'rb'))
-    test_all_abs    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl', 'rb'))
-    print('Loading retrieved docsc...')
-    logger.info('Loading retrieved docsc...')
-    train_bm25_scores   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
-    dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
-    test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
-    print('Loading token to index files...')
-    logger.info('Loading token to index files...')
-    token_to_index_f = '/home/dpappas/joint_task_list_batches/t2i.p'
-    t2i = pickle.load(open(token_to_index_f, 'rb'))
-    print('yielding data')
-    logger.info('yielding data')
-    return train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i
-
 def get_map_res(fgold, femit):
     trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err)      = trec_eval_res.communicate()
@@ -536,21 +474,6 @@ for epoch in range(max_epochs):
             words, _    = get_words(dtext)
             dvecs       = get_embeds(words, wv)
 
-
-
-    train_instances         = random_data_yielder(train_bm25_scores, train_all_abs, t2i, bsize * 100)
-    train_average_loss      = train_one(train_instances)
-    dev_average_loss        = dev_one(dev_instances)
-    # dev_map                 = get_one_map('dev', dev_bm25_scores, dev_all_abs)
-    if(min_dev_loss > dev_average_loss):
-        min_dev_loss        = dev_average_loss
-        min_loss_epoch      = epoch+1
-        test_map            = get_one_map('test', test_bm25_scores, test_all_abs)
-        save_checkpoint(epoch, model, dev_average_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    print("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_average_loss, test_map))
-    print(20 * '-')
-    logger.info("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_average_loss, test_map))
-    logger.info(20 * '-')
 
 '''
 grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_3/model.log
