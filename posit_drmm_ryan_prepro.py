@@ -21,8 +21,6 @@ import torch.nn.functional as F
 from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
-from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
-from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
 
 my_seed = 1
 random.seed(my_seed)
@@ -47,11 +45,11 @@ logger.setLevel(logging.INFO)
 
 print('LOADING embedding_matrix (14GB)...')
 logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
+# matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+# idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
 # print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
-# idf_mat         = np.random.random((150))
+matrix          = np.random.random((150, 10))
+idf_mat         = np.random.random((150))
 print(matrix.shape)
 
 def print_params(model):
@@ -394,9 +392,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
         good_out                        = self.out_layer(good_add_feats)
         return good_out
-    def do_for_one_doc(self, doc, sim_oh_d, question_embeds, q_conv_res_trigram, q_weights, af):
+    def do_for_one_doc(self, doc, question_embeds, q_conv_res_trigram, q_weights, af):
         doc_embeds                      = self.word_embeddings(doc)
         sim_insensitive_d               = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
+        sim_oh_d                        = (sim_insensitive_d > 1).double()
         d_conv_trigram                  = self.apply_convolution(doc_embeds,     self.trigram_conv, self.trigram_conv_activation)
         sim_sensitive_d_trigram         = self.my_cosine_sim(q_conv_res_trigram, d_conv_trigram).squeeze(0)
         sim_insensitive_pooled_d        = self.pooling_method(sim_insensitive_d)
@@ -406,7 +405,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         add_feats                       = torch.cat([af, doc_emit.unsqueeze(-1)])
         out                             = self.out_layer(add_feats)
         return out
-    def forward(self, doc1, doc2, question, doc1_sim, doc2_sim, gaf, baf):
+    def forward(self, doc1, doc2, question, gaf, baf):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         question_embeds                 = self.word_embeddings(question)
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
@@ -417,16 +416,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
         baf                             = autograd.Variable(torch.FloatTensor(baf),     requires_grad=False)
         # one hot similarity matrix
-        sim_oh_d                        = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
-        sim_oh_d2                       = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
-        # create the weights for weighted average
         q_idfs                          = self.my_idfs(question)
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         # concatenate and pass through mlps
-        good_out                        = self.do_for_one_doc(doc1, sim_oh_d,    question_embeds, q_conv_res_trigram, q_weights, gaf)
-        bad_out                         = self.do_for_one_doc(doc2, sim_oh_d2,   question_embeds, q_conv_res_trigram, q_weights, baf)
+        good_out                        = self.do_for_one_doc(doc1,    question_embeds, q_conv_res_trigram, q_weights, gaf)
+        bad_out                         = self.do_for_one_doc(doc2,   question_embeds, q_conv_res_trigram, q_weights, baf)
         # compute the loss
         # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
         loss1                           = self.my_hinge_loss(good_out, bad_out)
@@ -440,8 +436,8 @@ print_params(model)
 del(matrix)
 optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
