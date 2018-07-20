@@ -121,18 +121,74 @@ def get_words(s):
 def get_embeds(tokens, wv):
     return np.array([wv[w] for w in tokens if w in wv], 'float64')
 
+def ubigrams(words):
+  uw = {}
+  prevw = "<pw>"
+  for w in words:
+    uw[prevw + '_' + w] = 1
+    prevw = w
+  return [w for w in uw]
+
+def uwords(words):
+  uw = {}
+  for w in words:
+    uw[w] = 1
+  return [w for w in uw]
+
+def query_doc_overlap(self, qwords, dwords):
+    # % Query words in doc.
+    qwords_in_doc = 0
+    idf_qwords_in_doc = 0.0
+    idf_qwords = 0.0
+    for qword in uwords(qwords):
+      idf_qwords += self.idf_val(qword)
+      for dword in uwords(dwords):
+        if qword == dword:
+          idf_qwords_in_doc += self.idf_val(qword)
+          qwords_in_doc += 1
+          break
+    if len(qwords) <= 0:
+      qwords_in_doc_val = 0.0
+    else:
+      qwords_in_doc_val = (float(qwords_in_doc) /
+                           float(len(utils.uwords(qwords))))
+    if idf_qwords <= 0.0:
+      idf_qwords_in_doc_val = 0.0
+    else:
+      idf_qwords_in_doc_val = float(idf_qwords_in_doc) / float(idf_qwords)
+    # % Query bigrams  in doc.
+    qwords_bigrams_in_doc = 0
+    idf_qwords_bigrams_in_doc = 0.0
+    idf_bigrams = 0.0
+    for qword in ubigrams(qwords):
+      wrds = qword.split('_')
+      idf_bigrams += self.idf_val(wrds[0]) * self.idf_val(wrds[1])
+      for dword in ubigrams(dwords):
+        if qword == dword:
+          qwords_bigrams_in_doc += 1
+          idf_qwords_bigrams_in_doc += (self.idf_val(wrds[0]) * self.idf_val(wrds[1]))
+          break
+    if len(qwords) <= 0:
+      qwords_bigrams_in_doc_val = 0.0
+    else:
+      qwords_bigrams_in_doc_val = (float(qwords_bigrams_in_doc) / float(len(ubigrams(qwords))))
+    if idf_bigrams <= 0.0:
+      idf_qwords_bigrams_in_doc_val = 0.0
+    else:
+      idf_qwords_bigrams_in_doc_val = (float(idf_qwords_bigrams_in_doc) / float(idf_bigrams))
+    return [qwords_in_doc_val,
+            qwords_bigrams_in_doc_val,
+            idf_qwords_in_doc_val,
+            idf_qwords_bigrams_in_doc_val]
+
+def GetScores(qtext, dtext, bm25):
+    qwords, qw2 = get_words(qtext)
+    dwords, dw2 = get_words(dtext)
+    qd1         = query_doc_overlap(qwords, dwords)
+    bm25        = [bm25]
+    return qd1[0:3] + bm25
+
 data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
-
-train_examples = GetTrainData(tr_data, 1)
-random.shuffle(train_examples)
-
-for ex in train_examples:
-    i         = ex[0]
-    qtext     = tr_data['queries'][i]['query_text']
-    words, w2 = get_words(qtext)
-
-
-
 
 my_seed = 1
 random.seed(my_seed)
@@ -457,17 +513,31 @@ logger.info('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool, embedding_dim=200)
 optimizer   = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-dummy_test()
-exit()
+# dummy_test()
+# exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
-# max_dev_map     = 0.0
-min_dev_loss    = 10e5
+max_dev_map     = 0.0
 max_epochs      = 30
 loopes          = [1, 0, 0]
-dev_instances   = list(random_data_yielder(dev_bm25_scores, dev_all_abs, t2i, bsize * 50))
 for epoch in range(max_epochs):
+    train_examples = GetTrainData(tr_data, 1)
+    random.shuffle(train_examples)
+    for ex in train_examples:
+        i           = ex[0]
+        qtext       = tr_data['queries'][i]['query_text']
+        words, _   = get_words(qtext)
+        qvecs       = get_embeds(words, wv)
+        for j in ex[1]:
+            is_rel      = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
+            doc_id      = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
+            dtext       = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
+            words, _    = get_words(dtext)
+            dvecs       = get_embeds(words, wv)
+
+
+
     train_instances         = random_data_yielder(train_bm25_scores, train_all_abs, t2i, bsize * 100)
     train_average_loss      = train_one(train_instances)
     dev_average_loss        = dev_one(dev_instances)
