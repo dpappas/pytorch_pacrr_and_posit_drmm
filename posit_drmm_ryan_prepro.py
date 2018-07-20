@@ -451,8 +451,6 @@ optimizer   = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-0
 # dummy_test()
 # exit()
 
-train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
-
 max_dev_map     = 0.0
 max_epochs      = 30
 loopes          = [1, 0, 0]
@@ -470,6 +468,8 @@ for epoch in range(max_epochs):
             dtext       = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
             words, _    = get_words(dtext)
             dvecs       = get_embeds(words, wv)
+            bm25        = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
+            escores     = GetScores(qtext, dtext, bm25)
 
 
 '''
