@@ -288,8 +288,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
-    def do_for_one_doc(self, doc, question_embeds, q_conv_res_trigram, q_weights, af):
-        doc_embeds                      = self.word_embeddings(doc)
+    def do_for_one_doc(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights, af):
         sim_insensitive_d               = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
         sim_oh_d                        = (sim_insensitive_d >= 1 - 1e-3).float()
         d_conv_trigram                  = self.apply_convolution(doc_embeds,     self.trigram_conv, self.trigram_conv_activation)
@@ -329,8 +328,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         # concatenate and pass through mlps
-        good_out                        = self.do_for_one_doc(doc1,    question_embeds, q_conv_res_trigram, q_weights, gaf)
-        bad_out                         = self.do_for_one_doc(doc2,   question_embeds, q_conv_res_trigram, q_weights, baf)
+        good_out                        = self.do_for_one_doc(doc1_embeds, question_embeds, q_conv_res_trigram, q_weights, gaf)
+        bad_out                         = self.do_for_one_doc(doc2_embeds, question_embeds, q_conv_res_trigram, q_weights, baf)
         # compute the loss
         # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
         loss1                           = self.my_hinge_loss(good_out, bad_out)
