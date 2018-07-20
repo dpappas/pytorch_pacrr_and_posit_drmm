@@ -460,10 +460,9 @@ train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, te
 min_dev_loss    = 10e5
 max_epochs      = 30
 loopes          = [1, 0, 0]
+dev_instances   = list(random_data_yielder(dev_bm25_scores, dev_all_abs, t2i, bsize * 50))
 for epoch in range(max_epochs):
     train_instances         = random_data_yielder(train_bm25_scores, train_all_abs, t2i, bsize * 100)
-    dev_instances           = random_data_yielder(dev_bm25_scores, dev_all_abs, t2i, bsize * 100)
-    #train_instances         = data_yielder(train_bm25_scores, train_all_abs, t2i, loopes[0])
     train_average_loss      = train_one(train_instances)
     dev_average_loss        = dev_one(dev_instances)
     # dev_map                 = get_one_map('dev', dev_bm25_scores, dev_all_abs)
