@@ -60,8 +60,6 @@ def load_idfs(idf_path, words):
     return ret, max_idf
 
 def load_all_data(dataloc):
-    # dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-    #
     with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
       data = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
@@ -80,7 +78,7 @@ def load_all_data(dataloc):
     GetWords(tr_data, tr_docs, words)
     GetWords(data, docs, words)
     #
-    return data, docs, tr_data, tr_docs
+    return data, docs, tr_data, tr_docs, idf, max_idf, wv
 
 def GetTrainData(data, max_neg=1):
   train_data = []
@@ -108,8 +106,28 @@ def GetTrainData(data, max_neg=1):
         train_data.append(inst)
   return train_data
 
-data, docs, tr_data, tr_docs = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
+def idf_val(w):
+    if w in idf:
+        return idf[w]
+    return max_idf
+
+def get_words(s):
+    sl  = tokenize(s)
+    sl  = [s for s in sl]
+    sl2 = [s for s in sl if idf_val(s) >= 2.0]
+    return sl, sl2
+
+data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
+
 train_examples = GetTrainData(tr_data, 1)
+random.shuffle(train_examples)
+
+for ex in train_examples:
+    i         = ex[0]
+    qtext     = tr_data['queries'][i]['query_text']
+    words, w2 = get_words(qtext)
+
+
 
 my_seed = 1
 random.seed(my_seed)
