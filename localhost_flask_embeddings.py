@@ -37,3 +37,14 @@ def hello():
 if __name__ == '__main__':
     app.run(port=1234, debug=True)
 
+'''
+import urllib2, json
+from pprint import pprint
+data    = {'tokens' : ['hello darkness my old friend ...'.split()]}
+req     = urllib2.Request('http://127.0.0.1:1234/get_bioasq_w2v_embeds')
+req.add_header('Content-Type', 'applications/json')
+response = urllib2.urlopen(req, json.dumps(data))
+pprint(response)
+'''
+
+
