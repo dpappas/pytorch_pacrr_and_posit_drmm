@@ -69,16 +69,16 @@ def load_all_data(dataloc):
       tr_data = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
       tr_docs = pickle.load(f)
-    print('loading idfs')
-    idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
-    idf, max_idf    = load_idfs(idf_pickle_path)
-    print('loading w2v')
-    w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     print('loading words')
     words = {}
     GetWords(tr_data, tr_docs, words)
     GetWords(data, docs, words)
+    print('loading idfs')
+    idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    print('loading w2v')
+    w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     return data, docs, tr_data, tr_docs, idf, max_idf, wv
 
 def GetTrainData(data, max_neg=1):
