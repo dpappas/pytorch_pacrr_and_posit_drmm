@@ -4,7 +4,7 @@
 from flask import Flask
 from flask import request
 from flask import redirect, url_for, jsonify
-from flask.ext.cors import CORS, cross_origin
+from flask_cors import CORS, cross_origin
 from gensim.models.keyedvectors import KeyedVectors
 
 w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
