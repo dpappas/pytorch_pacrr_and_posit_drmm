@@ -466,7 +466,9 @@ for epoch in range(max_epochs):
         qtext       = tr_data['queries'][i]['query_text']
         words, _    = get_words(qtext)
         qvecs       = get_embeds(words, wv)
+        pos, neg    = [], []
         for j in ex[1]:
+            # ex[1] has two elements. One positive and one negative.
             is_rel      = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
             doc_id      = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
             dtext       = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
@@ -474,7 +476,12 @@ for epoch in range(max_epochs):
             dvecs       = get_embeds(words, wv)
             bm25        = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
             escores     = GetScores(qtext, dtext, bm25)
-            print escores
+            score       = # must call the model here for one doc-quest sore
+            print escores, is_rel
+            if is_rel:
+              pos.append(score)
+            else:
+              neg.append(score)
 
 
 
