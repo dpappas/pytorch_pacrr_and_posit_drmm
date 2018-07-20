@@ -178,6 +178,17 @@ def load_idfs(idf_path):
     print('Loaded idf tables with max idf %f' % max_idf)
     return ret, max_idf
 
+def get_embeds():
+  wds   = []
+  vecs  = []
+  for w in words:
+    if w in wv:
+      vec = wv[w]
+      vecs.append(vec)
+      wds.append(w)
+  return wds, vecs
+
+
 import cPickle as pickle
 dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
 
@@ -214,16 +225,5 @@ random.shuffle(train_examples)
 # qtext     = tr_data['queries'][i]['query_text']
 # words, w2 = get_words(qtext)
 #
-
-def get_embeds():
-  wds   = []
-  vecs  = []
-  for w in words:
-    if w in wv:
-      vec = wv[w]
-      vecs.append(vec)
-      wds.append(w)
-  return wds, vecs
-
 
 
