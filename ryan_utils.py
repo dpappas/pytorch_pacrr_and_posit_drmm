@@ -148,6 +148,33 @@ def JsonPredsAppend(preds, data, i, top):
   qdict['documents'] = doc_list
   preds['questions'].append(qdict)
 
+def idf_val(w):
+    if w in idf:
+        return idf[w]
+    return max_idf
+
+def get_words(s):
+    sl = tokenize(s)
+    sl = [s for s in sl]
+    sl2 = [s for s in sl if idf_val(s) >= 2.0]
+    return sl, sl2
+
+def load_idfs(idf_path):
+    print('Loading IDF tables')
+    # with open(dataloc + 'idf.pkl', 'rb') as f:
+    with open(idf_path, 'rb') as f:
+        idf = pickle.load(f)
+    ret = {}
+    for w in words:
+        if w in idf:
+            ret[w] = idf[w]
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    idf = None
+    print('Loaded idf tables with max idf %f' % max_idf)
+    return ret, max_idf
 
 import cPickle as pickle
 dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
@@ -175,10 +202,16 @@ GetWords(data, docs, words)
 train_examples = GetTrainData(tr_data, 1)
 random.shuffle(train_examples)
 
+ex = train_examples[0]
 
+from gensim.models.keyedvectors import KeyedVectors
 
+idf_pickle_path = ''
+w2v_bin_path    = ''
+wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+idf, max_idf = load_idfs(idf_pickle_path)
 
-
-
-
+i = ex[0]
+qtext = tr_data['queries'][i]['query_text']
+words, w2 = get_words(qtext)
 
