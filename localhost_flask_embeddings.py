@@ -10,6 +10,8 @@ from gensim.models.keyedvectors import KeyedVectors
 w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
 wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 
+print("Let's get started")
+
 def get_vecs(words):
     wds, vecs  = [], []
     for w in words:
@@ -32,8 +34,10 @@ def hello():
         if(request.json):
             mydata = request.json
             if('tokens' in mydata):
+                t = get_vecs(mydata['tokens'])
                 ret = {
-                    'embeds': get_vecs(mydata['tokens'])
+                    'toks': t[0],
+                    'embeds': t[1]
                 }
             else:
                 ret = {}
