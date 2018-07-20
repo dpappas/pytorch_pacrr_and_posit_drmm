@@ -316,7 +316,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
-        self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=True)
+        self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=False)
         self.linear_per_q1                          = nn.Linear(6, 8, bias=False)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=False)
         self.my_relu1                               = torch.nn.LeakyReLU()
