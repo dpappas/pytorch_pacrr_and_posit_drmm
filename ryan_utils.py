@@ -209,18 +209,21 @@ GetWords(data, docs, words)
 train_examples = GetTrainData(tr_data, 1)
 random.shuffle(train_examples)
 
-ex        = train_examples[0]
-i         = ex[0]
-qtext     = tr_data['queries'][i]['query_text']
-words, w2 = get_words(qtext)
+# ex        = train_examples[0]
+# i         = ex[0]
+# qtext     = tr_data['queries'][i]['query_text']
+# words, w2 = get_words(qtext)
+#
 
-wds   = []
-vecs  = []
-for w in words:
-  if w in wv:
-    vec = wv[w]
-    vecs.append(vec)
-    wds.append(w)
+def get_embeds():
+  wds   = []
+  vecs  = []
+  for w in words:
+    if w in wv:
+      vec = wv[w]
+      vecs.append(vec)
+      wds.append(w)
+  return wds, vecs
 
 
 
