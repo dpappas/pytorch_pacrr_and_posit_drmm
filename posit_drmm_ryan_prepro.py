@@ -227,10 +227,12 @@ def get_map_res(fgold, femit):
     return map_res
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, k_for_maxpool):
+    def __init__(self, k_for_maxpool, embedding_dim):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.k                                      = k_for_maxpool         # k is for the average k pooling
-        #
+        self.embedding_dim                          = embedding_dim
+        # k is for the average k pooling
+        self.k                                      = k_for_maxpool
+        # Conv1d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
@@ -322,8 +324,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
     def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
         doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf = self.fix_input(doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf)
+        #
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        # one hot similarity matrix
+        #
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
@@ -340,8 +343,8 @@ logger.info('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool)
 optimizer   = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
 train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
