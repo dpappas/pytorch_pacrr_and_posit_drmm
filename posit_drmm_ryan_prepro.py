@@ -116,7 +116,11 @@ def get_words(s):
     return sl, sl2
 
 def get_embeds(tokens, wv):
-    return np.array([wv[w] for w in tokens if w in wv], 'float64')
+    ret = []
+    for tok in tokens:
+        if(tok in wv):
+            ret.append(wv[tok])
+    return np.array(ret, 'float64')
 
 def uwords(words):
   uw = {}
@@ -132,16 +136,16 @@ def ubigrams(words):
     prevw = w
   return [w for w in uw]
 
-def query_doc_overlap(self, qwords, dwords):
+def query_doc_overlap(qwords, dwords):
     # % Query words in doc.
     qwords_in_doc = 0
     idf_qwords_in_doc = 0.0
     idf_qwords = 0.0
     for qword in uwords(qwords):
-      idf_qwords += self.idf_val(qword)
+      idf_qwords += idf_val(qword)
       for dword in uwords(dwords):
         if qword == dword:
-          idf_qwords_in_doc += self.idf_val(qword)
+          idf_qwords_in_doc += idf_val(qword)
           qwords_in_doc += 1
           break
     if len(qwords) <= 0:
@@ -159,11 +163,11 @@ def query_doc_overlap(self, qwords, dwords):
     idf_bigrams = 0.0
     for qword in ubigrams(qwords):
       wrds = qword.split('_')
-      idf_bigrams += self.idf_val(wrds[0]) * self.idf_val(wrds[1])
+      idf_bigrams += idf_val(wrds[0]) * idf_val(wrds[1])
       for dword in ubigrams(dwords):
         if qword == dword:
           qwords_bigrams_in_doc += 1
-          idf_qwords_bigrams_in_doc += (self.idf_val(wrds[0]) * self.idf_val(wrds[1]))
+          idf_qwords_bigrams_in_doc += (idf_val(wrds[0]) * idf_val(wrds[1]))
           break
     if len(qwords) <= 0:
       qwords_bigrams_in_doc_val = 0.0
@@ -470,6 +474,8 @@ for epoch in range(max_epochs):
             dvecs       = get_embeds(words, wv)
             bm25        = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
             escores     = GetScores(qtext, dtext, bm25)
+            print escores
+
 
 
 '''
