@@ -28,9 +28,12 @@ def hello():
         if(request.json):
             mydata = request.json
             if('tokens' in mydata):
-                return jsonify({'embeds':get_vecs(mydata['tokens'])})
+                ret = {
+                    'embeds': get_vecs(mydata['tokens'])
+                }
             else:
-                return jsonify({})
+                ret = {}
+            return jsonify(ret)
     except Exception as e:
         app.logger.debug(e.message)
 
