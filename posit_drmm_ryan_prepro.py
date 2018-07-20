@@ -75,19 +75,21 @@ def print_params(model):
     logger.info(40 * '=')
 
 def dummy_test():
-    quest_inds          = np.random.randint(0,100,(40))
-    good_sents_inds     = np.random.randint(0,100,(36))
-    bad_sents_inds      = np.random.randint(0,100,(37))
-    gaf                 = np.random.rand(4)
-    baf                 = np.random.rand(4)
+    qe      = np.random.rand(10, 200)
+    qidfs   = np.random.rand(10, 1)
+    d1e     = np.random.rand(40, 200)
+    d2e     = np.random.rand(37, 200)
+    gaf     = np.random.rand(4)
+    baf     = np.random.rand(4)
     for epoch in range(200):
         optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_, loss1_, loss2_ = model(
-            doc1        = good_sents_inds,
-            doc2        = bad_sents_inds,
-            question    = quest_inds,
-            gaf         = gaf,
-            baf         = baf,
+            doc1_embeds     = d2e,
+            doc2_embeds     = d1e,
+            question_embeds = qe,
+            q_idfs          = qidfs,
+            gaf             = gaf,
+            baf             = baf
         )
         cost_.backward()
         optimizer.step()
@@ -233,15 +235,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # k is for the average k pooling
         self.k                                      = k_for_maxpool
         # Conv1d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
-        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).double()
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
-        self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=False)
-        self.linear_per_q1                          = nn.Linear(6, 8, bias=False)
-        self.linear_per_q2                          = nn.Linear(8, 1, bias=False)
+        self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=False).double()
+        self.linear_per_q1                          = nn.Linear(6, 8, bias=False).double()
+        self.linear_per_q2                          = nn.Linear(8, 1, bias=False).double()
+        self.out_layer                              = nn.Linear(5, 1, bias=False).double()
         self.my_relu1                               = torch.nn.LeakyReLU()
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-        self.out_layer                              = nn.Linear(5, 1, bias=False)
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
@@ -292,7 +294,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return sr
     def do_for_one_doc(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights, af):
         sim_insensitive_d               = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
-        sim_oh_d                        = (sim_insensitive_d >= 1 - 1e-3).float()
+        sim_oh_d                        = (sim_insensitive_d >= 1 - 1e-3).double()
         d_conv_trigram                  = self.apply_convolution(doc_embeds,     self.trigram_conv, self.trigram_conv_activation)
         sim_sensitive_d_trigram         = self.my_cosine_sim(q_conv_res_trigram, d_conv_trigram).squeeze(0)
         sim_insensitive_pooled_d        = self.pooling_method(sim_insensitive_d)
@@ -340,7 +342,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 print('Compiling model...')
 logger.info('Compiling model...')
-model       = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool)
+model       = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool, embedding_dim=200)
 optimizer   = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
 dummy_test()
