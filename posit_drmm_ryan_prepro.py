@@ -313,18 +313,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = F.softmax(q_weights, dim=-1)
         good_out                        = self.do_for_one_doc(doc1,    question_embeds, q_conv_res_trigram, q_weights, gaf)
         return good_out
-    def forward(self, doc1, doc2, question, gaf, baf):
-        question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        question_embeds                 = self.word_embeddings(question)
+    def fix_input(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
+        q_idfs                          = autograd.Variable(torch.DoubleTensor(q_idfs),     requires_grad=False)
+        doc1_embeds                     = autograd.Variable(torch.DoubleTensor(doc1_embeds),     requires_grad=False)
+        doc2_embeds                     = autograd.Variable(torch.DoubleTensor(doc2_embeds),     requires_grad=False)
+        question_embeds                 = autograd.Variable(torch.DoubleTensor(question_embeds),     requires_grad=False)
+        gaf                             = autograd.Variable(torch.DoubleTensor(gaf),     requires_grad=False)
+        baf                             = autograd.Variable(torch.DoubleTensor(baf),     requires_grad=False)
+        return doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
+    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
+        doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf = self.fix_input(doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf)
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        #
-        doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
-        doc2                            = autograd.Variable(torch.LongTensor(doc2),     requires_grad=False)
-        # additional features for positive (good) and negative (bad) examples
-        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
-        baf                             = autograd.Variable(torch.FloatTensor(baf),     requires_grad=False)
         # one hot similarity matrix
-        q_idfs                          = self.my_idfs(question)
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
