@@ -368,7 +368,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def do_for_one_doc(self, doc, question_embeds, q_conv_res_trigram, q_weights, af):
         doc_embeds                      = self.word_embeddings(doc)
         sim_insensitive_d               = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
-        sim_oh_d                        = (sim_insensitive_d >= 1 - 1e-3).double()
+        sim_oh_d                        = (sim_insensitive_d >= 1 - 1e-3).float()
         d_conv_trigram                  = self.apply_convolution(doc_embeds,     self.trigram_conv, self.trigram_conv_activation)
         sim_sensitive_d_trigram         = self.my_cosine_sim(q_conv_res_trigram, d_conv_trigram).squeeze(0)
         sim_insensitive_pooled_d        = self.pooling_method(sim_insensitive_d)
@@ -383,7 +383,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         question_embeds                 = self.word_embeddings(question)
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
-        gaf                             = autograd.Variable(torch.DoubleTensor(gaf),     requires_grad=False)
+        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
         q_idfs                          = self.my_idfs(question)
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
@@ -398,8 +398,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
         doc2                            = autograd.Variable(torch.LongTensor(doc2),     requires_grad=False)
         # additional features for positive (good) and negative (bad) examples
-        gaf                             = autograd.Variable(torch.DoubleTensor(gaf),     requires_grad=False)
-        baf                             = autograd.Variable(torch.DoubleTensor(baf),     requires_grad=False)
+        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
+        baf                             = autograd.Variable(torch.FloatTensor(baf),     requires_grad=False)
         # one hot similarity matrix
         q_idfs                          = self.my_idfs(question)
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
