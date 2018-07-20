@@ -118,6 +118,9 @@ def get_words(s):
     sl2 = [s for s in sl if idf_val(s) >= 2.0]
     return sl, sl2
 
+def get_embeds(tokens, wv):
+    return np.array([wv[w] for w in tokens if w in wv], 'float64')
+
 data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
 
 train_examples = GetTrainData(tr_data, 1)
@@ -127,6 +130,7 @@ for ex in train_examples:
     i         = ex[0]
     qtext     = tr_data['queries'][i]['query_text']
     words, w2 = get_words(qtext)
+
 
 
 
