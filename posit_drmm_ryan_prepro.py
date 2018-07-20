@@ -141,9 +141,7 @@ def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
 def dummy_test():
     quest_inds          = np.random.randint(0,100,(40))
     good_sents_inds     = np.random.randint(0,100,(36))
-    good_all_sims       = np.zeros((36, 40))
     bad_sents_inds      = np.random.randint(0,100,(37))
-    bad_all_sims        = np.zeros((37, 40))
     gaf                 = np.random.rand(4)
     baf                 = np.random.rand(4)
     for epoch in range(200):
@@ -152,8 +150,6 @@ def dummy_test():
             doc1        = good_sents_inds,
             doc2        = bad_sents_inds,
             question    = quest_inds,
-            doc1_sim    = good_all_sims,
-            doc2_sim    = bad_all_sims,
             gaf         = gaf,
             baf         = baf,
         )
@@ -370,28 +366,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
-    def emit_one(self, doc1, question, doc1_sim, gaf):
-        question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
-        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
-        sim_oh_d1                       = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
-        question_embeds                 = self.word_embeddings(question)
-        doc1_embeds                     = self.word_embeddings(doc1)
-        sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
-        sim_sensitive_d1_trigram        = self.my_cosine_sim(q_conv_res_trigram, d1_conv_trigram).squeeze(0)
-        sim_insensitive_pooled_d1       = self.pooling_method(sim_insensitive_d1)
-        sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
-        sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
-        q_idfs                          = self.my_idfs(question)
-        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
-        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights                       = F.softmax(q_weights, dim=-1)
-        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
-        good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
-        good_out                        = self.out_layer(good_add_feats)
-        return good_out
     def do_for_one_doc(self, doc, question_embeds, q_conv_res_trigram, q_weights, af):
         doc_embeds                      = self.word_embeddings(doc)
         sim_insensitive_d               = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
@@ -405,6 +379,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         add_feats                       = torch.cat([af, doc_emit.unsqueeze(-1)])
         out                             = self.out_layer(add_feats)
         return out
+    def emit_one(self, doc1, question, gaf):
+        question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
+        question_embeds                 = self.word_embeddings(question)
+        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+        doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
+        gaf                             = autograd.Variable(torch.DoubleTensor(gaf),     requires_grad=False)
+        q_idfs                          = self.my_idfs(question)
+        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights                       = F.softmax(q_weights, dim=-1)
+        good_out                        = self.do_for_one_doc(doc1,    question_embeds, q_conv_res_trigram, q_weights, gaf)
+        return good_out
     def forward(self, doc1, doc2, question, gaf, baf):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
         question_embeds                 = self.word_embeddings(question)
@@ -413,8 +399,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
         doc2                            = autograd.Variable(torch.LongTensor(doc2),     requires_grad=False)
         # additional features for positive (good) and negative (bad) examples
-        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
-        baf                             = autograd.Variable(torch.FloatTensor(baf),     requires_grad=False)
+        gaf                             = autograd.Variable(torch.DoubleTensor(gaf),     requires_grad=False)
+        baf                             = autograd.Variable(torch.DoubleTensor(baf),     requires_grad=False)
         # one hot similarity matrix
         q_idfs                          = self.my_idfs(question)
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
