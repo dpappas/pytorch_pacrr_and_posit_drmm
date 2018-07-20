@@ -16,7 +16,7 @@ def get_vecs(words):
     wds, vecs  = [], []
     for w in words:
       if w in wv:
-        vec = wv[w]
+        vec = wv[w].tolist()
         vecs.append(vec)
         wds.append(w)
     return wds, vecs
