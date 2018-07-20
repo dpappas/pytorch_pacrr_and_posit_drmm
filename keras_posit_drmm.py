@@ -19,6 +19,8 @@ from pprint import pprint
 from keras.callbacks import ModelCheckpoint
 from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
 from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
+import random
+random.seed(1)
 
 def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
     while(how_many>0):

@@ -3,6 +3,7 @@ import re
 import numpy
 import random
 from gensim.models.keyedvectors import KeyedVectors
+random.seed(1)
 
 def uwords(words):
   uw = {}

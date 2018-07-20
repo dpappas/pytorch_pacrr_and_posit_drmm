@@ -1,5 +1,4 @@
 
-
 import platform
 python_version = platform.python_version().strip()
 print(python_version)
@@ -14,6 +13,8 @@ import numpy as np
 import re
 import operator
 from gensim.models import KeyedVectors
+import random
+random.seed(1)
 
 # idf_path        = '/home/DATA/Biomedical/bioasq6/bioasq6_data/IDF.pkl'
 idf_path        = '/home/dpappas/IDF_python_v2.pkl'
