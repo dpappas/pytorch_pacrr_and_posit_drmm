@@ -155,8 +155,8 @@ def idf_val(w):
     return max_idf
 
 def get_words(s):
-    sl = tokenize(s)
-    sl = [s for s in sl]
+    sl  = tokenize(s)
+    sl  = [s for s in sl]
     sl2 = [s for s in sl if idf_val(s) >= 2.0]
     return sl, sl2
 
@@ -209,8 +209,6 @@ train_examples = GetTrainData(tr_data, 1)
 random.shuffle(train_examples)
 
 ex = train_examples[0]
-
-
 i = ex[0]
 qtext = tr_data['queries'][i]['query_text']
 words, w2 = get_words(qtext)
