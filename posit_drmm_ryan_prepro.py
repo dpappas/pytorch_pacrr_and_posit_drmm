@@ -21,8 +21,6 @@ import torch.nn.functional as F
 from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
-from my_bioasq_preprocessing import get_item_inds, text2indices
-from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
 
 my_seed = 1
 random.seed(my_seed)
@@ -44,15 +42,6 @@ formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
-
-print('LOADING embedding_matrix (14GB)...')
-logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
-# print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
-# idf_mat         = np.random.random((150))
-print(matrix.shape)
 
 def print_params(model):
     '''
@@ -84,61 +73,6 @@ def print_params(model):
     logger.info(40 * '=')
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
-
-def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
-    for quer in bm25_scores[u'queries']:
-        quest       = quer['query_text']
-        # bm25s       = { t['doc_id']:t['bm25_score'] for t in quer[u'retrieved_documents'] }
-        bm25s       = { t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents'] }
-        ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-        if(len(bad_pmids)>0):
-            for gid in good_pmids:
-                for i in range(how_many_loops):
-                    # bid = bad_pmids[i%len(bad_pmids)]
-                    bid = random.choice(bad_pmids)
-                    good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
-                    additional_features_good.append(bm25s[gid])
-                    bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
-                    additional_features_bad.append(bm25s[bid])
-                    # print(additional_features_good)
-                    # print(additional_features_bad)
-                    yield [
-                        good_sents_inds,
-                        good_all_sims,
-                        bad_sents_inds,
-                        bad_all_sims,
-                        bad_quest_inds,
-                        np.array(additional_features_good, 'float64'),
-                        np.array(additional_features_bad, 'float64')
-                    ]
-
-def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
-    while(how_many>0):
-        quer        = random.choice(bm25_scores[u'queries'])
-        quest       = quer['query_text']
-        bm25s       = {t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents']}
-        ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-        if(len(bad_pmids)>0 and len(good_pmids)>0):
-            how_many -= 1
-            gid = random.choice(good_pmids)
-            bid = random.choice(bad_pmids)
-            good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
-            additional_features_good.append(bm25s[gid])
-            bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
-            additional_features_bad.append(bm25s[bid])
-            yield [
-                good_sents_inds,
-                good_all_sims,
-                bad_sents_inds,
-                bad_all_sims,
-                bad_quest_inds,
-                np.array(additional_features_good, 'float64'),
-                np.array(additional_features_bad,  'float64')
-            ]
 
 def dummy_test():
     quest_inds          = np.random.randint(0,100,(40))
@@ -293,20 +227,9 @@ def get_map_res(fgold, femit):
     return map_res
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, pretrained_embeds, k_for_maxpool, idf_matrix):
+    def __init__(self, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool         # k is for the average k pooling
-        #
-        self.vocab_size                             = pretrained_embeds.shape[0]
-        self.embedding_dim                          = pretrained_embeds.shape[1]
-        self.word_embeddings                        = nn.Embedding(self.vocab_size, self.embedding_dim)
-        self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
-        self.word_embeddings.weight.requires_grad   = False
-        #
-        idf_matrix                                  = idf_matrix.reshape((-1, 1))
-        self.my_idfs                                = nn.Embedding(self.vocab_size, 1)
-        self.my_idfs.weight.data.copy_(torch.from_numpy(idf_matrix))
-        self.my_idfs.weight.requires_grad           = False
         #
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
@@ -415,11 +338,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 print('Compiling model...')
 logger.info('Compiling model...')
-model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool, idf_matrix=idf_mat)
-params = list(set(model.parameters()) - set([model.word_embeddings.weight, model.my_idfs.weight]))
-print_params(model)
-del(matrix)
-optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+model       = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool)
+optimizer   = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
 # dummy_test()
 # exit()
