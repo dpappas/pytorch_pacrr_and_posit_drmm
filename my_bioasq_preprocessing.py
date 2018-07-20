@@ -87,10 +87,11 @@ def get_index(token, t2i, q_or_d):
     try:
         return t2i[token]
     except KeyError:
-        if(q_or_d == 'q'):
-            return t2i[q_unk_tok]
-        else:
-            return t2i[d_unk_tok]
+        return None
+        # if(q_or_d == 'q'):
+        #     return t2i[q_unk_tok]
+        # else:
+        #     return t2i[d_unk_tok]
 
 def get_sim_mat(stoks, qtoks):
     sm = np.zeros((len(stoks), len(qtoks)))
@@ -119,16 +120,15 @@ def get_item_inds(item, question, t2i, remove_stopwords=False):
         passage_toks    = remove_stopw(passage_toks)
         question_toks   = remove_stopw(question_toks)
     sents_inds          = [get_index(token, t2i, 'd') for token in passage_toks]
+    sents_inds          = [token for token in sents_inds is not None]
     quest_inds          = [get_index(token, t2i, 'q') for token in question_toks]
+    quest_inds          = [token for token in quest_inds is not None]
     additional_features = get_overlap_features_mode_1(question_toks, passage_toks)
     return sents_inds, quest_inds, all_sims, additional_features
 
 def text2indices(text, t2i, q_or_d):
     ret = [get_index(token, t2i, q_or_d) for token in bioclean(text)]
-    # i2t = {v: k for k, v in t2i.items()}
-    # testing = [i2t[ind] for ind in ret]
-    # print(text)
-    # print(' '.join(testing))
+    ret = [token for token in ret is not None]
     return ret
 
 

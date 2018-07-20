@@ -10,7 +10,7 @@ import tensorflow as tf
 import keras.backend as K
 import cPickle as pickle
 from tqdm import tqdm
-from keras.layers import Embedding, Conv1D, Input, LeakyReLU, Lambda, Concatenate, Dense
+from keras.layers import Embedding, Conv1D, Input, LeakyReLU, Lambda, Concatenate, Dense, Softmax
 from keras.layers import Add, TimeDistributed, PReLU, GlobalAveragePooling1D, multiply
 from keras.models import Model
 from keras.preprocessing.sequence import pad_sequences
@@ -38,7 +38,15 @@ def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
             additional_features_good.append(bm25s[gid])
             bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
             additional_features_bad.append(bm25s[bid])
-            yield good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds, np.array(additional_features_good), np.array(additional_features_bad)
+            yield [
+                good_sents_inds,
+                good_all_sims,
+                bad_sents_inds,
+                bad_all_sims,
+                bad_quest_inds,
+                np.array(additional_features_good, 'float64'),
+                np.array(additional_features_bad , 'float64')
+            ]
 
 def load_data():
     print('Loading abs texts...')
@@ -102,11 +110,11 @@ def myGenerator(bm25_scores, all_abs, t2i, story_maxlen, quest_maxlen, b_size):
         bafs.append(baf)
         if(len(gsi) == b_size):
             yield [
-                      np.array(pad_sequences(gsi, maxlen=story_maxlen)),
-                      np.array(pad_sequences(bsi, maxlen=story_maxlen)),
-                      np.array(pad_sequences(qis, maxlen=quest_maxlen)),
-                      np.array(gafs),
-                      np.array(bafs)
+                      np.array(pad_sequences(gsi, maxlen=story_maxlen), 'float64'),
+                      np.array(pad_sequences(bsi, maxlen=story_maxlen), 'float64'),
+                      np.array(pad_sequences(qis, maxlen=quest_maxlen), 'float64'),
+                      np.array(gafs, 'float64'),
+                      np.array(bafs, 'float64')
             ], np.zeros((len(gsi),1))
             gsi, gas, bsi, bas, qis, gafs, bafs = [], [], [], [], [], [], []
 
@@ -206,7 +214,7 @@ def get_one_map(prefix, bm25_scores, all_abs):
         #
         gsi             = pad_sequences(gsi, maxlen=story_maxlen)
         qis             = pad_sequences(qis, maxlen=quest_maxlen)
-        gafs            = np.array(gafs)
+        gafs            = np.array(gafs, 'float64')
         doc1_emit_      = test_one(gsi, qis, gafs)
         for i in range(len(docs_ids)):
             doc_res[docs_ids[i]] = doc1_emit_[i]
@@ -273,7 +281,7 @@ h1_activ            = LeakyReLU()
 hidden2             = Dense(1)
 h2_activ            = LeakyReLU()
 weights_layer       = Dense(1)
-w_activ             = LeakyReLU()
+w_activ             = Softmax()
 out_layer           = Dense(1)
 #
 doc1_mask                       = Lambda(compute_masking)([quest, doc1])
