@@ -369,7 +369,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def do_for_one_doc(self, doc, question_embeds, q_conv_res_trigram, q_weights, af):
         doc_embeds                      = self.word_embeddings(doc)
         sim_insensitive_d               = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
-        sim_oh_d                        = (sim_insensitive_d > 1).double()
+        sim_oh_d                        = (sim_insensitive_d >= 1 - 1e-3).double()
         d_conv_trigram                  = self.apply_convolution(doc_embeds,     self.trigram_conv, self.trigram_conv_activation)
         sim_sensitive_d_trigram         = self.my_cosine_sim(q_conv_res_trigram, d_conv_trigram).squeeze(0)
         sim_insensitive_pooled_d        = self.pooling_method(sim_insensitive_d)
