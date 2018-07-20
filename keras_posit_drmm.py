@@ -282,7 +282,7 @@ hidden2             = Dense(1)
 h2_activ            = LeakyReLU()
 weights_layer       = Dense(1)
 w_activ             = Softmax()
-out_layer           = Dense(1)
+out_layer           = Dense(1, use_bias=False)
 #
 doc1_mask                       = Lambda(compute_masking)([quest, doc1])
 doc2_mask                       = Lambda(compute_masking)([quest, doc2])
