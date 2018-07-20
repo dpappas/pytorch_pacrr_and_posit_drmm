@@ -21,9 +21,8 @@ import torch.nn.functional as F
 from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
-from ryan_utils import GetTrainData
-from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
-from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
+# from my_bioasq_preprocessing import get_item_inds, text2indices
+# from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
 
 my_seed = 1
 random.seed(my_seed)
@@ -190,8 +189,8 @@ def train_one(train_instances):
     costs   = []
     optimizer.zero_grad()
     instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in train_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims, gaf, baf)
+    for good_sents_inds, _, bad_sents_inds, _, quest_inds, gaf, baf in train_instances:
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, gaf, baf)
         #
         average_total_loss  += instance_cost.cpu().item()
         average_task_loss   += loss1.cpu().item()
@@ -213,8 +212,8 @@ def train_one(train_instances):
 def dev_one(dev_instances):
     optimizer.zero_grad()
     instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in dev_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims, gaf, baf)
+    for good_sents_inds, _, bad_sents_inds, _, quest_inds, gaf, baf in dev_instances:
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, gaf, baf)
         average_total_loss  += instance_cost.cpu().item()
         average_task_loss   += loss1.cpu().item()
         average_reg_loss    += loss2.cpu().item()
@@ -233,7 +232,6 @@ def get_one_map(prefix, bm25_scores, all_abs):
         for retr in quer['retrieved_documents']:
             doc_id      = retr['doc_id']
             passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
-            all_sims    = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
             #
             sents_inds  = text2indices(passage, t2i, 'd')
             quest_inds  = text2indices(quer['query_text'], t2i, 'q')
@@ -241,7 +239,7 @@ def get_one_map(prefix, bm25_scores, all_abs):
             gaf         = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
             gaf.append(bm25s[doc_id])
             #
-            doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims, gaf=gaf)
+            doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, gaf=gaf)
             #
             doc_res[doc_id] = float(doc1_emit_)
         doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
@@ -359,8 +357,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity      *= sim_mask2
         return similarity
     def get_output(self, input_list, weights):
-        for t in input_list:
-            print(t.size())
         temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
