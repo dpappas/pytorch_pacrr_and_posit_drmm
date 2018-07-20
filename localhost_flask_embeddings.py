@@ -4,9 +4,8 @@
 from flask import Flask
 from flask import request
 from flask import redirect, url_for, jsonify
+from flask.ext.cors import CORS, cross_origin
 from gensim.models.keyedvectors import KeyedVectors
-
-app = Flask(__name__)
 
 w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
 wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
@@ -20,7 +19,12 @@ def get_vecs(words):
         wds.append(w)
     return wds, vecs
 
+app     = Flask(__name__)
+cors    = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 @app.route('/get_bioasq_w2v_embeds', methods=['GET', 'POST'])
+@cross_origin()
 def hello():
     try:
         app.logger.debug('JOSN received')
