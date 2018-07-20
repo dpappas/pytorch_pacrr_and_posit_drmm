@@ -9,11 +9,8 @@ if(python_version.startswith('3')):
 else:
     import cPickle as pickle
 
-import re
-import os
-import json
+import re, os, json, subprocess
 import random
-import subprocess
 import numpy as np
 import torch
 import torch.nn as nn
