@@ -27,7 +27,7 @@ def hello():
         app.logger.debug(request.json)
         if(request.json):
             mydata = request.json
-            if( 'tokens' in mydata):
+            if('tokens' in mydata):
                 return jsonify({'embeds':get_vecs(mydata['tokens'])})
             else:
                 return jsonify({})
