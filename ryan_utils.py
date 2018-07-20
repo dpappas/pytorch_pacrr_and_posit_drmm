@@ -2,6 +2,7 @@ import json
 import re
 import numpy
 import random
+from gensim.models.keyedvectors import KeyedVectors
 
 def uwords(words):
   uw = {}
@@ -191,6 +192,11 @@ with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
 with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
   tr_docs = pickle.load(f)
 
+idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
+w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
+wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+idf, max_idf = load_idfs(idf_pickle_path)
+
 RemoveBadYears(tr_data, tr_docs, True)
 RemoveTrainLargeYears(tr_data, tr_docs)
 RemoveBadYears(data, docs, False)
@@ -204,12 +210,6 @@ random.shuffle(train_examples)
 
 ex = train_examples[0]
 
-from gensim.models.keyedvectors import KeyedVectors
-
-idf_pickle_path = ''
-w2v_bin_path    = ''
-wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-idf, max_idf = load_idfs(idf_pickle_path)
 
 i = ex[0]
 qtext = tr_data['queries'][i]['query_text']
