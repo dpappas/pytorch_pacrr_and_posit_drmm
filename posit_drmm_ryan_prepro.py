@@ -362,6 +362,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         similarity      *= sim_mask2
         return similarity
     def get_output(self, input_list, weights):
+        for t in input_list:
+            print(t.size())
         temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
@@ -392,52 +394,39 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
         good_out                        = self.out_layer(good_add_feats)
         return good_out
+    def do_for_one_doc(self, doc, sim_oh_d, question_embeds, q_conv_res_trigram, q_weights, af):
+        doc_embeds                      = self.word_embeddings(doc)
+        sim_insensitive_d               = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
+        d_conv_trigram                  = self.apply_convolution(doc_embeds,     self.trigram_conv, self.trigram_conv_activation)
+        sim_sensitive_d_trigram         = self.my_cosine_sim(q_conv_res_trigram, d_conv_trigram).squeeze(0)
+        sim_insensitive_pooled_d        = self.pooling_method(sim_insensitive_d)
+        sim_sensitive_pooled_d_trigram  = self.pooling_method(sim_sensitive_d_trigram)
+        sim_oh_pooled_d                 = self.pooling_method(sim_oh_d)
+        doc_emit                        = self.get_output([sim_oh_pooled_d, sim_insensitive_pooled_d, sim_sensitive_pooled_d_trigram], q_weights)
+        add_feats                       = torch.cat([af, doc_emit.unsqueeze(-1)])
+        out                             = self.out_layer(add_feats)
+        return out
     def forward(self, doc1, doc2, question, doc1_sim, doc2_sim, gaf, baf):
         question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
+        question_embeds                 = self.word_embeddings(question)
+        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+        #
         doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
         doc2                            = autograd.Variable(torch.LongTensor(doc2),     requires_grad=False)
         # additional features for positive (good) and negative (bad) examples
         gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
         baf                             = autograd.Variable(torch.FloatTensor(baf),     requires_grad=False)
         # one hot similarity matrix
-        sim_oh_d1                       = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
+        sim_oh_d                        = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
         sim_oh_d2                       = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
-        # create word embeddings
-        question_embeds                 = self.word_embeddings(question)
-        doc1_embeds                     = self.word_embeddings(doc1)
-        doc2_embeds                     = self.word_embeddings(doc2)
-        # cosine similarity on pretrained word embeddings
-        sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        sim_insensitive_d2              = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
-        # 3gram convolution on the embedding matrix
-        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
-        d2_conv_trigram                 = self.apply_convolution(doc2_embeds,     self.trigram_conv, self.trigram_conv_activation)
-        # cosine similairy on the contextual embeddings
-        sim_sensitive_d1_trigram        = self.my_cosine_sim(q_conv_res_trigram, d1_conv_trigram).squeeze(0)
-        sim_sensitive_d2_trigram        = self.my_cosine_sim(q_conv_res_trigram, d2_conv_trigram).squeeze(0)
-        # pooling 3 * 2 fetures from the similarity matrices for the good doc
-        sim_insensitive_pooled_d1       = self.pooling_method(sim_insensitive_d1)
-        sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
-        sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
-        # pooling 3 * 2 fetures from the similarity matrices for the bad doc
-        sim_insensitive_pooled_d2       = self.pooling_method(sim_insensitive_d2)
-        sim_sensitive_pooled_d2_trigram = self.pooling_method(sim_sensitive_d2_trigram)
-        sim_oh_pooled_d2                = self.pooling_method(sim_oh_d2)
         # create the weights for weighted average
         q_idfs                          = self.my_idfs(question)
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         # concatenate and pass through mlps
-        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
-        doc2_emit                       = self.get_output([sim_oh_pooled_d2, sim_insensitive_pooled_d2, sim_sensitive_pooled_d2_trigram], q_weights)
-        # concatenate the mlps' output to the additional features
-        good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
-        bad_add_feats                   = torch.cat([baf, doc2_emit.unsqueeze(-1)])
-        # apply output layer
-        good_out                        = self.out_layer(good_add_feats)
-        bad_out                         = self.out_layer(bad_add_feats)
+        good_out                        = self.do_for_one_doc(doc1, sim_oh_d,    question_embeds, q_conv_res_trigram, q_weights, gaf)
+        bad_out                         = self.do_for_one_doc(doc2, sim_oh_d2,   question_embeds, q_conv_res_trigram, q_weights, baf)
         # compute the loss
         # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
         loss1                           = self.my_hinge_loss(good_out, bad_out)
