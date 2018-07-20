@@ -241,12 +241,13 @@ def get_one_map(prefix, bm25_scores, all_abs):
     return res_map
 
 class TestTheModel(keras.callbacks.Callback):
-    best_valid_loss = None
+    best_valid_map = None
     def on_epoch_end(self, epoch, logs):
-        if(self.best_valid_loss is None or (self.best_valid_loss>logs['val_loss'])):
-            self.best_valid_loss = logs['val_loss']
+        valid_map = get_one_map('valid', test_bm25_scores, test_all_abs)
+        if (self.best_valid_map is None or (self.best_valid_map < valid_map)):
+            print('Best Valid Map changed from {} to {}'.format(self.best_valid_map, valid_map))
             test_map = get_one_map('test', test_bm25_scores, test_all_abs)
-            print(test_map)
+            print('Epoch {}: best_dev_map:{} test_map: {}'.format(epoch, self.best_valid_map, test_map))
 
 odir = '/home/dpappas/simplest_posit_drmm_keras/'
 if not os.path.exists(odir):
@@ -305,6 +306,19 @@ model.summary()
 # labels              = np.zeros((1000,1))
 # H = model.fit([doc1_, doc2_, quest_, doc1_af_, doc2_af_], labels, validation_data=None, epochs=5, verbose=1, batch_size=32)
 
+callbacks_list = [TestTheModel()]
+
+train_history   = model.fit_generator(
+    generator           = myGenerator(train_bm25_scores, train_all_abs, t2i, story_maxlen, quest_maxlen, 32),
+    steps_per_epoch     = 100,
+    epochs              = 30,
+    callbacks           = callbacks_list,
+    verbose             = 1
+)
+
+
+'''
+
 filepath        ="weights-improvement-{epoch:02d}-{val_loss:.2f}.hdf5"
 checkpoint      = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True)
 
@@ -321,6 +335,7 @@ train_history   = model.fit_generator(
     verbose             = 1
 )
 
+'''
 '''
 
 train_history   = model.fit_generator(
