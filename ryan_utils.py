@@ -205,8 +205,8 @@ with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
 
 idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
 w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
-wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-idf, max_idf = load_idfs(idf_pickle_path)
+wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+idf, max_idf    = load_idfs(idf_pickle_path)
 
 RemoveBadYears(tr_data, tr_docs, True)
 RemoveTrainLargeYears(tr_data, tr_docs)
@@ -216,8 +216,8 @@ words = {}
 GetWords(tr_data, tr_docs, words)
 GetWords(data, docs, words)
 
-train_examples = GetTrainData(tr_data, 1)
-random.shuffle(train_examples)
+# train_examples = GetTrainData(tr_data, 1)
+# random.shuffle(train_examples)
 
 # ex        = train_examples[0]
 # i         = ex[0]
