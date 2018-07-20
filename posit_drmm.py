@@ -1,65 +1,58 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import print_function
 
-__author__ = 'Dimitris'
+# import sys
+# print(sys.version)
+import platform
+python_version = platform.python_version().strip()
+print(python_version)
+if(python_version.startswith('3')):
+    import pickle
+else:
+    import cPickle as pickle
 
-my_seed = 1989
+import os
+import json
+import random
+import subprocess
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from pprint import pprint
 import torch.autograd as autograd
-from torch.autograd import Variable
-import torch.backends.cudnn as cudnn
-import cPickle as pickle
-import numpy as np
-import random
+from tqdm import tqdm
+from my_bioasq_preprocessing import get_item_inds, text2indices
+from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
+
+my_seed = 1
 random.seed(my_seed)
-from joblib import Parallel, delayed
-
-cudnn.benchmark = True
 torch.manual_seed(my_seed)
-print(torch.get_num_threads())
-print(torch.cuda.is_available())
-print(torch.cuda.device_count())
 
-gpu_device = 0
-use_cuda = torch.cuda.is_available()
-if(use_cuda):
-    torch.cuda.manual_seed(my_seed)
+odir = '/home/dpappas/simplest_posit_drmm/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
 
-def loadGloveModel(w2v_voc, w2v_vec):
-    '''
-    :param w2v_voc: the txt file with the vocabulary extracted from gensim
-    :param w2v_vec: the txt file with the vectors extracted from gensim
-    :return: vocab is a python dictionary with the indices of each word. matrix is a numpy matrix with all the vectors.
-             PAD is special token for padding to maximum length. It has a vector of zeros.
-             UNK is special token for any token not found in the vocab. It has a vector equal to the average of all other vectors.
-    '''
-    temp_vocab  = pickle.load(open(w2v_voc,'rb'))
-    temp_matrix = pickle.load(open(w2v_vec,'rb'))
-    print("Loading Glove Model")
-    vocab, matrix   = {}, []
-    vocab['PAD']    = 0
-    vocab['UNKN']   = len(vocab)
-    for i in range(len(temp_vocab)):
-        matrix.append(temp_matrix[i])
-        vocab[temp_vocab[i]] = len(vocab)
-    matrix          = np.array(matrix)
-    av              = np.average(matrix,0)
-    pad             = np.zeros(av.shape)
-    matrix          = np.vstack([pad, av, matrix])
-    print("Done.",len(vocab)," words loaded!")
-    return vocab, matrix
+od              = 'sent_posit_drmm_MarginRankingLoss'
+k_for_maxpool   = 5
+lr              = 0.01
+bsize           = 32
 
-def save_checkpoint(state, filename='checkpoint.pth.tar'):
-    '''
-    :param state:       the stete of the pytorch mode
-    :param filename:    the name of the file in which we will store the model.
-    :return:            Nothing. It just saves the model.
-    '''
-    torch.save(state, filename)
+import logging
+logger      = logging.getLogger(od)
+hdlr        = logging.FileHandler(odir+'model.log')
+formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
+
+print('LOADING embedding_matrix (14GB)...')
+logger.info('LOADING embedding_matrix (14GB)...')
+matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
+idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
+# print(idf_mat.shape)
+# matrix          = np.random.random((150, 10))
+# idf_mat         = np.random.random((150))
+print(matrix.shape)
 
 def print_params(model):
     '''
@@ -70,268 +63,402 @@ def print_params(model):
     print(40 * '=')
     print(model)
     print(40 * '=')
-    total_params = 0
+    logger.info(40 * '=')
+    logger.info(model)
+    logger.info(40 * '=')
+    trainable       = 0
+    untrainable     = 0
     for parameter in model.parameters():
         # print(parameter.size())
         v = 1
         for s in parameter.size():
             v *= s
-        total_params += v
+        if(parameter.requires_grad):
+            trainable   += v
+        else:
+            untrainable += v
+    total_params = trainable + untrainable
     print(40 * '=')
-    print(total_params)
+    print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
+    logger.info(40 * '=')
+    logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
+    logger.info(40 * '=')
 
-class Posit_Drmm_Modeler(nn.Module):
-    def __init__( self, nof_filters, filters_size, pretrained_embeds, k_for_maxpool):
-        super(Posit_Drmm_Modeler, self).__init__()
+def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
+    for quer in bm25_scores[u'queries']:
+        quest       = quer['query_text']
+        # bm25s       = { t['doc_id']:t['bm25_score'] for t in quer[u'retrieved_documents'] }
+        bm25s       = { t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents'] }
+        ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
+        if(len(bad_pmids)>0):
+            for gid in good_pmids:
+                for i in range(how_many_loops):
+                    # bid = bad_pmids[i%len(bad_pmids)]
+                    bid = random.choice(bad_pmids)
+                    good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
+                    additional_features_good.append(bm25s[gid])
+                    bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
+                    additional_features_bad.append(bm25s[bid])
+                    # print(additional_features_good)
+                    # print(additional_features_bad)
+                    yield [
+                        good_sents_inds,
+                        good_all_sims,
+                        bad_sents_inds,
+                        bad_all_sims,
+                        bad_quest_inds,
+                        np.array(additional_features_good, 'float64'),
+                        np.array(additional_features_bad, 'float64')
+                    ]
+
+def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
+    while(how_many>0):
+        quer        = random.choice(bm25_scores[u'queries'])
+        quest       = quer['query_text']
+        bm25s       = {t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents']}
+        ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
+        if(len(bad_pmids)>0 and len(good_pmids)>0):
+            how_many -= 1
+            gid = random.choice(good_pmids)
+            bid = random.choice(bad_pmids)
+            good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
+            additional_features_good.append(bm25s[gid])
+            bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
+            additional_features_bad.append(bm25s[bid])
+            yield [
+                good_sents_inds,
+                good_all_sims,
+                bad_sents_inds,
+                bad_all_sims,
+                bad_quest_inds,
+                np.array(additional_features_good, 'float64'),
+                np.array(additional_features_bad,  'float64')
+            ]
+
+def dummy_test():
+    quest_inds          = np.random.randint(0,100,(40))
+    good_sents_inds     = np.random.randint(0,100,(36))
+    bad_sents_inds      = np.random.randint(0,100,(37))
+    gaf                 = np.random.rand(4)
+    baf                 = np.random.rand(4)
+    for epoch in range(200):
+        optimizer.zero_grad()
+        cost_, doc1_emit_, doc2_emit_, loss1_, loss2_ = model(
+            doc1        = good_sents_inds,
+            doc2        = bad_sents_inds,
+            question    = quest_inds,
+            gaf         = gaf,
+            baf         = baf,
+        )
+        cost_.backward()
+        optimizer.step()
+        the_cost = cost_.cpu().item()
+        print(the_cost, float(doc1_emit_), float(doc2_emit_))
+    print(20 * '-')
+
+def compute_the_cost(costs, back_prop=True):
+    cost_ = torch.stack(costs)
+    cost_ = cost_.sum() / (1.0 * cost_.size(0))
+    if(back_prop):
+        cost_.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+    the_cost = cost_.cpu().item()
+    return the_cost
+
+def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
+    '''
+    :param state:       the stete of the pytorch mode
+    :param filename:    the name of the file in which we will store the model.
+    :return:            Nothing. It just saves the model.
+    '''
+    state = {
+        'epoch':            epoch,
+        'state_dict':       model.state_dict(),
+        'best_valid_score': max_dev_map,
+        'optimizer':        optimizer.state_dict(),
+    }
+    torch.save(state, filename)
+
+def train_one(train_instances):
+    costs   = []
+    optimizer.zero_grad()
+    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
+    for good_sents_inds, _, bad_sents_inds, _, quest_inds, gaf, baf in train_instances:
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, gaf, baf)
         #
-        self.nof_sent_filters                       = nof_filters           # number of filters for the convolution of sentences
-        self.sent_filters_size                      = filters_size          # The size of the ngram filters we will apply on sentences
-        self.nof_quest_filters                      = nof_filters           # number of filters for the convolution of the question
-        self.quest_filters_size                     = filters_size          # The size of the ngram filters we will apply on question
+        average_total_loss  += instance_cost.cpu().item()
+        average_task_loss   += loss1.cpu().item()
+        average_reg_loss    += loss2.cpu().item()
+        #
+        instance_metr       += 1
+        costs.append(instance_cost)
+        if(len(costs) == bsize):
+            batch_loss      = compute_the_cost(costs, True)
+            costs = []
+            print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
+            logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
+    if(len(costs)>0):
+        batch_loss = compute_the_cost(costs, True)
+        print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
+        logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
+    return average_task_loss / instance_metr
+
+def dev_one(dev_instances):
+    optimizer.zero_grad()
+    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
+    for good_sents_inds, _, bad_sents_inds, _, quest_inds, gaf, baf in dev_instances:
+        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, gaf, baf)
+        average_total_loss  += instance_cost.cpu().item()
+        average_task_loss   += loss1.cpu().item()
+        average_reg_loss    += loss2.cpu().item()
+        instance_metr       += 1
+    print('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
+    logger.info('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
+    return average_task_loss / instance_metr
+
+def get_one_map(prefix, bm25_scores, all_abs):
+    data = {}
+    data['questions'] = []
+    for quer in tqdm(bm25_scores['queries']):
+        dato    = {'body': quer['query_text'],'id': quer['query_id'],'documents': []}
+        bm25s   = { t['doc_id']:t['bm25_score'] for t in quer[u'retrieved_documents'] }
+        doc_res = {}
+        for retr in quer['retrieved_documents']:
+            doc_id      = retr['doc_id']
+            passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
+            #
+            sents_inds  = text2indices(passage, t2i, 'd')
+            quest_inds  = text2indices(quer['query_text'], t2i, 'q')
+            #
+            gaf         = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
+            gaf.append(bm25s[doc_id])
+            #
+            doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, gaf=gaf)
+            #
+            doc_res[doc_id] = float(doc1_emit_)
+        doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+        doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+        doc_res = doc_res[:100]
+        # filler  = sorted([-i - 1 for i in range(100 - len(doc_res))])
+        # doc_res = doc_res+filler
+        dato['documents'] = doc_res
+        data['questions'].append(dato)
+    if(prefix=='dev'):
+        with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
+            f.write(json.dumps(data, indent=4, sort_keys=True))
+        res_map = get_map_res(
+            '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json',
+            odir+'elk_relevant_abs_posit_drmm_lists_dev.json'
+        )
+    else:
+        with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
+            f.write(json.dumps(data, indent=4, sort_keys=True))
+        res_map = get_map_res(
+            '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json',
+            odir+'elk_relevant_abs_posit_drmm_lists_test.json'
+        )
+    return res_map
+
+def load_data():
+    print('Loading abs texts...')
+    logger.info('Loading abs texts...')
+    train_all_abs   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl', 'rb'))
+    dev_all_abs     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl', 'rb'))
+    test_all_abs    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl', 'rb'))
+    print('Loading retrieved docsc...')
+    logger.info('Loading retrieved docsc...')
+    train_bm25_scores   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
+    dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
+    test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
+    print('Loading token to index files...')
+    logger.info('Loading token to index files...')
+    token_to_index_f = '/home/dpappas/joint_task_list_batches/t2i.p'
+    t2i = pickle.load(open(token_to_index_f, 'rb'))
+    print('yielding data')
+    logger.info('yielding data')
+    return train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i
+
+def get_map_res(fgold, femit):
+    trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
+    (out, err)      = trec_eval_res.communicate()
+    lines           = out.decode("utf-8").split('\n')
+    map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
+    map_res         = float(map_res[-1])
+    return map_res
+
+class Sent_Posit_Drmm_Modeler(nn.Module):
+    def __init__(self, pretrained_embeds, k_for_maxpool, idf_matrix):
+        super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool         # k is for the average k pooling
         #
-        # if we have a matrix of pretrained embeddings we load it into an Embedding Layer
         self.vocab_size                             = pretrained_embeds.shape[0]
         self.embedding_dim                          = pretrained_embeds.shape[1]
         self.word_embeddings                        = nn.Embedding(self.vocab_size, self.embedding_dim)
         self.word_embeddings.weight.data.copy_(torch.from_numpy(pretrained_embeds))
         self.word_embeddings.weight.requires_grad   = False
         #
-        # We create randomly initialized convolutional filters for the sentences
-        self.sent_filters_conv  = torch.nn.Parameter(
-            torch.randn(
-                self.nof_sent_filters,
-                1,                          # the number of is channels is one
-                self.sent_filters_size,
-                self.embedding_dim
-            )
-        )
+        idf_matrix                                  = idf_matrix.reshape((-1, 1))
+        self.my_idfs                                = nn.Embedding(self.vocab_size, 1)
+        self.my_idfs.weight.data.copy_(torch.from_numpy(idf_matrix))
+        self.my_idfs.weight.requires_grad           = False
         #
-        # We use the same filters for sentences and questions
-        self.quest_filters_conv = self.sent_filters_conv
+        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
-        # a linear function (MLP) that we will apply on the Doc-Aware Query Term Encodings
-        self.linear_per_q       = nn.Linear(6, 1, bias=True)
-        #
-        # Our loss is Binary CrossEntropy loss.
-        self.bce_loss           = torch.nn.BCELoss()
-        #
-        # if we have a gpu we move any function on the gpu.
-        if(use_cuda):
-            # self.word_embeddings.cuda(gpu_device)
-            self.linear_per_q   = self.linear_per_q.cuda(gpu_device)
-            self.bce_loss       = self.bce_loss.cuda(gpu_device)
-    def one_hot_sim_matrix_one_sent(self, sentence, question):
-        '''
-        This function takes forever. I am not using it. I just leave it here.
-        It is used along with the function get_one_hot_sim_matrix
-        :param sentence:    The sentence's indices
-        :param question:    The question's indices
-        :return:            The one hot similarity matrix between the sentence and the question
-        '''
-        ret = torch.zeros(sentence.size(0), question.size(0), sentence.size(1))
-        for k in range(question.size(0)):
-            # if(question[k].data[0]>0):
-            if(question[k].item()>0):
-                for i in range(sentence.size(0)):
-                    for j in range(sentence.size(1)):
-                            # if(sentence[i,j] == question[k]).data[0] == True:
-                            if(sentence[i,j] == question[k]).item() == True:
-                                ret[i][k][j] += 1.
-        return ret
-    def get_one_hot_sim_matrix(self, sentences, question):
-        '''
-        This function takes forever. I am not using it. I just leave it here.
-        It uses the former one multiple times (one for each sentence in the document).
-        :param sentences:
-        :param question:
-        :return:
-        '''
-        ret = []
-        for i in range(sentences.size(0)):
-            ret.append(self.one_hot_sim_matrix_one_sent(sentences[i], question[i]))
-        ret = torch.stack(ret)
-        ret = ret.transpose(0,1)
-        ret = autograd.Variable(ret, requires_grad=False)
-        if(use_cuda):
-            ret = ret.cuda(gpu_device)
-        return ret
-    def apply_convolution(self, the_input, the_filters, filter_size):
-        '''
-        :param the_input:   The matrix that we will apply the filters on.
-        :param the_filters: The filters we will apply on the input.
-        :param filter_size: Since we operate on a text i pad the sequence using this parameter.
-        :return:            The output of the convolution
-        '''
-        conv_res = F.conv2d(
-            the_input.unsqueeze(1),
-            the_filters,
-            bias        = None,
-            stride      = 1,
-            padding     = (int(filter_size/2)+1, 0)             # pad the sequence
-        )
-        conv_res = conv_res[:, :, -1*the_input.size(1):, :]     # just take the output of the text convolution ignoring the first rows that came from the padding
-        conv_res = conv_res.squeeze(-1).transpose(1,2)          # transpose to get an output of (batch_size, nof_sents, ... )
-        return conv_res
-    def pooling_method(self, sim_matrix):
-        '''
-        Returns two numbers i.e. the maximum value concatenated to the average of the k-maximum values of the input
-        :param sim_matrix:      just an input matrix. In our case is a similarity matrix
-        :return:
-        '''
-        sorted_res              = torch.sort(sim_matrix, -1)[0]             # sort the input minimum to maximum
-        k_max_pooled            = sorted_res[:,:,:,-self.k:]                # select the last k of each instance in our data
-        average_k_max_pooled    = k_max_pooled.sum(-1)/float(self.k)        # average these k values
-        the_maximum             = k_max_pooled[:, :, :, -1]                 # select the maximum value of each instance
-        the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
-        return the_concatenation     # return the concatenation
+        self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=False)
+        self.linear_per_q1                          = nn.Linear(6, 8, bias=False)
+        self.linear_per_q2                          = nn.Linear(8, 1, bias=False)
+        self.my_relu1                               = torch.nn.LeakyReLU()
+        self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
+        self.out_layer                              = nn.Linear(5, 1, bias=False)
+    def my_hinge_loss(self, positives, negatives, margin=1.0):
+        delta      = negatives - positives
+        loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
+        return loss_q_pos
+    def apply_convolution(self, the_input, the_filters, activation):
+        conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
+        if(activation is not None):
+            conv_res = activation(conv_res)
+        pad         = the_filters.padding[0]
+        ind_from    = int(np.floor(pad/2.0))
+        ind_to      = ind_from + the_input.size(0)
+        conv_res    = conv_res[:, :, ind_from:ind_to]
+        conv_res    = conv_res.transpose(1, 2)
+        conv_res    = conv_res + the_input
+        return conv_res.squeeze(0)
     def my_cosine_sim(self,A,B):
-        '''
-        Computes the cosine similarity of A and B
-        :param A:
-        :param B:
-        :return:
-        '''
+        A           = A.unsqueeze(0)
+        B           = B.unsqueeze(0)
         A_mag       = torch.norm(A, 2, dim=2)
         B_mag       = torch.norm(B, 2, dim=2)
         num         = torch.bmm(A, B.transpose(-1,-2))
         den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
         dist_mat    = num / den
         return dist_mat
-    def apply_masks_on_similarity(self, sentences, question, similarity):
-        sim_mask1                = (sentences > 1).float().transpose(0,1).unsqueeze(2).expand_as(similarity)
-        sim_mask2                = (question > 1).float().unsqueeze(0).unsqueeze(-1).expand_as(similarity)
-        return similarity*sim_mask1*sim_mask2
-    def forward(self, sentences, question, target_sents, target_docs):
+    def pooling_method(self, sim_matrix):
+        sorted_res              = torch.sort(sim_matrix, -1)[0]             # sort the input minimum to maximum
+        k_max_pooled            = sorted_res[:,-self.k:]                    # select the last k of each instance in our data
+        average_k_max_pooled    = k_max_pooled.sum(-1)/float(self.k)        # average these k values
+        the_maximum             = k_max_pooled[:, -1]                       # select the maximum value of each instance
+        the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
+        return the_concatenation     # return the concatenation
+    def apply_masks_on_similarity(self, document, question, similarity):
+        qq = (question > 1).float()
+        ss              = (document > 1).float()
+        sim_mask1       = qq.unsqueeze(-1).expand_as(similarity)
+        sim_mask2       = ss.unsqueeze(0).expand_as(similarity)
+        similarity      *= sim_mask1
+        similarity      *= sim_mask2
+        return similarity
+    def get_output(self, input_list, weights):
+        temp    = torch.cat(input_list, -1)
+        lo      = self.linear_per_q1(temp)
+        lo      = self.my_relu1(lo)
+        lo      = self.linear_per_q2(lo)
+        lo      = lo.squeeze(-1)
+        lo      = lo * weights
+        sr      = lo.sum(-1) / lo.size(-1)
+        return sr
+    def do_for_one_doc(self, doc, question_embeds, q_conv_res_trigram, q_weights, af):
+        doc_embeds                      = self.word_embeddings(doc)
+        sim_insensitive_d               = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
+        sim_oh_d                        = (sim_insensitive_d >= 1 - 1e-3).float()
+        d_conv_trigram                  = self.apply_convolution(doc_embeds,     self.trigram_conv, self.trigram_conv_activation)
+        sim_sensitive_d_trigram         = self.my_cosine_sim(q_conv_res_trigram, d_conv_trigram).squeeze(0)
+        sim_insensitive_pooled_d        = self.pooling_method(sim_insensitive_d)
+        sim_sensitive_pooled_d_trigram  = self.pooling_method(sim_sensitive_d_trigram)
+        sim_oh_pooled_d                 = self.pooling_method(sim_oh_d)
+        doc_emit                        = self.get_output([sim_oh_pooled_d, sim_insensitive_pooled_d, sim_sensitive_pooled_d_trigram], q_weights)
+        add_feats                       = torch.cat([af, doc_emit.unsqueeze(-1)])
+        out                             = self.out_layer(add_feats)
+        return out
+    def emit_one(self, doc1, question, gaf):
+        question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
+        question_embeds                 = self.word_embeddings(question)
+        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+        doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
+        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
+        q_idfs                          = self.my_idfs(question)
+        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights                       = F.softmax(q_weights, dim=-1)
+        good_out                        = self.do_for_one_doc(doc1,    question_embeds, q_conv_res_trigram, q_weights, gaf)
+        return good_out
+    def forward(self, doc1, doc2, question, gaf, baf):
+        question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
+        question_embeds                 = self.word_embeddings(question)
+        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         #
-        # The inputs are numpy arrays so i transform them in the appropriate format
-        sentences               = autograd.Variable(torch.LongTensor(sentences), requires_grad=False)
-        question                = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        target_sents            = autograd.Variable(torch.LongTensor(target_sents), requires_grad=False)
-        target_docs             = autograd.Variable(torch.LongTensor(target_docs), requires_grad=False)
-        #
-        # Move the data to the gpu if i can use one.
-        if(use_cuda):
-            sentences           = sentences.cuda(gpu_device)
-            question            = question.cuda(gpu_device)
-            target_sents        = target_sents.cuda(gpu_device)
-            target_docs         = target_docs.cuda(gpu_device)
-        #
-        # get the question embeddings
-        question_embeds         = self.word_embeddings(question)
-        #
-        # get the sentences embeddings
-        sentence_embeds         = self.word_embeddings(sentences.view(sentences.size(0), -1))
-        sentence_embeds         = sentence_embeds.view(sentences.size(0), sentences.size(1), sentences.size(2), -1)
-        #
-        # get the similarity matrix of the "out of context" embeddings. I call it insensitive
-        similarity_insensitive  = torch.stack([self.my_cosine_sim(question_embeds, s) for s in sentence_embeds.transpose(0, 1)])
-        # when the insensitive score is one, then the embeddings are identical therefore the tokens are the same.
-        # So i get the one hot similarity matrix
-        similarity_one_hot      = (similarity_insensitive >= (1.0-(1e-05))).float()
-        #
-        # We apply the convolution on the embeddings to get contextual embeddings
-        # Apply it on the question
-        q_conv_res              = self.apply_convolution(question_embeds, self.quest_filters_conv, self.quest_filters_size)
-        # Apply it on each sentence
-        s_conv_res              = torch.stack([self.apply_convolution(s, self.sent_filters_conv, self.sent_filters_size) for s in sentence_embeds])
-        # Compute the similarity of the contextual embeddings of the question and each of the sentences.
-        similarity_sensitive    = torch.stack([self.my_cosine_sim(q_conv_res, s) for s in s_conv_res.transpose(0, 1)])
-        #
-        # apply a mask on the similarities because we might have high similarity with UNKN and PAD tokens
-        similarity_insensitive  = self.apply_masks_on_similarity(sentences, question, similarity_insensitive)
-        similarity_sensitive    = self.apply_masks_on_similarity(sentences, question, similarity_sensitive)
-        #
-        # print(similarity_insensitive.size())
-        # print(similarity_sensitive.size())
-        # print(similarity_one_hot.size())
-        #
-        # Use the pooling function on each one of the similarity matrices. Each one returns 2 values for each sentence
-        similarity_insensitive_pooled   = self.pooling_method(similarity_insensitive)
-        similarity_sensitive_pooled     = self.pooling_method(similarity_sensitive)
-        similarity_one_hot_pooled       = self.pooling_method(similarity_one_hot)
-        #
-        # Concatenate the pooled features to create a vector of 6 numbers for each sentence.
-        similarities_concatenated       = torch.cat([similarity_insensitive_pooled, similarity_sensitive_pooled,similarity_one_hot_pooled],-1)
-        similarities_concatenated       = similarities_concatenated.transpose(0,1)
-        #
-        # Apply an MLP on the concatenated pooled features. Sigmoid(W*X)
-        sent_out                        = self.linear_per_q(similarities_concatenated)
-        sent_out                        = sent_out.squeeze(-1)
-        # sent_out                        = F.relu(sent_out)
-        sent_out                        = F.sigmoid(sent_out)
-        #
-        # Average the output of each sentence just like we did for the document.
-        sentence_relevance              = sent_out.sum(-1) / sent_out.size(-1)
-        # Compute the loss of the sentences
-        sentences_average_loss          = self.bce_loss(sentence_relevance, target_sents.float())
-        #
-        # We define the document relevance as the maximum value of sentences emitions
-        document_emitions               = sentence_relevance.max(-1)[0]
-        # Compute the loss of the documents
-        document_average_loss           = self.bce_loss(document_emitions, target_docs.float())
-        #
-        # Average the two computed losses (sentences average loss and document average loss)
-        total_loss                      = (sentences_average_loss + document_average_loss) / 2.0
-        #
-        return(total_loss, sentence_relevance, document_emitions) # return the general loss, the sentences' relevance score and the documents' relevance scores
+        doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
+        doc2                            = autograd.Variable(torch.LongTensor(doc2),     requires_grad=False)
+        # additional features for positive (good) and negative (bad) examples
+        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
+        baf                             = autograd.Variable(torch.FloatTensor(baf),     requires_grad=False)
+        # one hot similarity matrix
+        q_idfs                          = self.my_idfs(question)
+        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights                       = F.softmax(q_weights, dim=-1)
+        # concatenate and pass through mlps
+        good_out                        = self.do_for_one_doc(doc1,    question_embeds, q_conv_res_trigram, q_weights, gaf)
+        bad_out                         = self.do_for_one_doc(doc2,   question_embeds, q_conv_res_trigram, q_weights, baf)
+        # compute the loss
+        # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
+        loss1                           = self.my_hinge_loss(good_out, bad_out)
+        return loss1, good_out, bad_out, loss1, loss1
 
-# We create some random dummy data fo testing
-vocab_size          = 40000
-# print(vocab_size)
-b_size              = 20
-max_sents           = 15
-max_sent_tokens     = 50
-max_quest_tokens    = 30
-emb_size            = 100
-matrix              = np.random.rand(vocab_size, emb_size)
-b_sents             = np.random.randint(1, vocab_size, size=(b_size, max_sents, max_sent_tokens))
-b_quest             = np.random.randint(1, vocab_size, size=(b_size, max_quest_tokens))
-b_tar_sent          = np.zeros((b_size, max_sents))
-b_tar_sent[:10,:5]  = 1.0
-b_tar_docs          = np.zeros((b_size))
-b_tar_docs[:10]     = 1.0
-#
+print('Compiling model...')
+logger.info('Compiling model...')
+model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool, idf_matrix=idf_mat)
+params = list(set(model.parameters()) - set([model.word_embeddings.weight, model.my_idfs.weight]))
+print_params(model)
+del(matrix)
+optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# create the model
-k_for_maxpool       = 3
-nof_cnn_filters     = 10
-filters_size        = 3         # n-gram convolution
-model               = Posit_Drmm_Modeler(
-    nof_filters         = nof_cnn_filters,
-    filters_size        = filters_size,
-    pretrained_embeds   = matrix,
-    k_for_maxpool       = k_for_maxpool
-)
-# model.to(device)
+# dummy_test()
+# exit()
 
-if(use_cuda):
-    # model = torch.nn.DataParallel(model).cuda()
-    model.cuda(gpu_device)
+train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
 
-lr          = 0.1
-# freeze the embeddings
-params      = list(set(model.parameters()) - set([model.word_embeddings.weight]))
-# params      = list(set(model.parameters()))
-optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-
-# feed the same batch for some "epochs" to see if the model converges
-for i in range(2000):
-    optimizer.zero_grad()
-    cost_, sent_ems, doc_ems = model(
-        sentences   = b_sents,
-        question    = b_quest,
-        target_sents= b_tar_sent,
-        target_docs = b_tar_docs
-    )
-    cost_.backward()
-    optimizer.step()
-    the_cost = cost_.cpu().item()
-    print(the_cost)
-
+# max_dev_map     = 0.0
+min_dev_loss    = 10e5
+max_epochs      = 30
+loopes          = [1, 0, 0]
+dev_instances   = list(random_data_yielder(dev_bm25_scores, dev_all_abs, t2i, bsize * 50))
+for epoch in range(max_epochs):
+    train_instances         = random_data_yielder(train_bm25_scores, train_all_abs, t2i, bsize * 100)
+    train_average_loss      = train_one(train_instances)
+    dev_average_loss        = dev_one(dev_instances)
+    # dev_map                 = get_one_map('dev', dev_bm25_scores, dev_all_abs)
+    if(min_dev_loss > dev_average_loss):
+        min_dev_loss        = dev_average_loss
+        min_loss_epoch      = epoch+1
+        test_map            = get_one_map('test', test_bm25_scores, test_all_abs)
+        save_checkpoint(epoch, model, dev_average_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
+    print("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_average_loss, test_map))
+    print(20 * '-')
+    logger.info("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_average_loss, test_map))
+    logger.info(20 * '-')
 
 '''
-1. use mapping for zeros, since PAD similarities will always be one 
-2. also similarities and exact matching should be precomputed since we have unknown words
+grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_3/model.log
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.bioasq.oracle.json
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.bioasq.json
+
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
+/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
+/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/elk_relevant_abs_posit_drmm_lists_test.json
+
 '''
