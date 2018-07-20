@@ -9,6 +9,7 @@ if(python_version.startswith('3')):
 else:
     import cPickle as pickle
 
+import re
 import os
 import json
 import random
@@ -21,6 +22,94 @@ import torch.nn.functional as F
 from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
+from gensim.models.keyedvectors import KeyedVectors
+
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
+def tokenize(x):
+  return bioclean(x)
+
+def GetWords(data, doc_text, words):
+  for i in range(len(data['queries'])):
+    qwds = tokenize(data['queries'][i]['query_text'])
+    for w in qwds:
+      words[w] = 1
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      dtext = (doc_text[doc_id]['title'] + ' <title> ' +
+               doc_text[doc_id]['abstractText'])
+      dwds = tokenize(dtext)
+      for w in dwds:
+        words[w] = 1
+
+def load_idfs(idf_path, words):
+    print('Loading IDF tables')
+    # with open(dataloc + 'idf.pkl', 'rb') as f:
+    with open(idf_path, 'rb') as f:
+        idf = pickle.load(f)
+    ret = {}
+    for w in words:
+        if w in idf:
+            ret[w] = idf[w]
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    idf = None
+    print('Loaded idf tables with max idf %f' % max_idf)
+    return ret, max_idf
+
+def load_all_data(dataloc):
+    # dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+    #
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+      data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+      docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+      tr_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+      tr_docs = pickle.load(f)
+    #
+    idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
+    w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    idf, max_idf    = load_idfs(idf_pickle_path)
+    #
+    words = {}
+    GetWords(tr_data, tr_docs, words)
+    GetWords(data, docs, words)
+    #
+    return data, docs, tr_data, tr_docs
+
+def GetTrainData(data, max_neg=1):
+  train_data = []
+  for i in range(len(data['queries'])):
+    pos, neg = [], []
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      is_rel = data['queries'][i]['retrieved_documents'][j]['is_relevant']
+      if is_rel:
+        pos.append(j)
+      else:
+        neg.append(j)
+    if len(pos) > 0 and len(neg) > 0:
+      for p in pos:
+        neg_ex = []
+        if len(neg) <= max_neg:
+          neg_ex = neg
+        else:
+          used = {}
+          while len(neg_ex) < max_neg:
+            n = random.randint(0, len(neg)-1)
+            if n not in used:
+              neg_ex.append(neg[n])
+              used[n] = 1
+        inst = [i, [p] + neg_ex]
+        train_data.append(inst)
+  return train_data
+
+data, docs, tr_data, tr_docs = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
+train_examples = GetTrainData(tr_data, 1)
 
 my_seed = 1
 random.seed(my_seed)

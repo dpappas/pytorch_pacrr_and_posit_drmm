@@ -189,32 +189,32 @@ def get_embeds(words):
   return wds, vecs
 
 import cPickle as pickle
-dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+#
+# with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+#   data = pickle.load(f)
+#
+# with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+#   docs = pickle.load(f)
+#
+# with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+#   tr_data = pickle.load(f)
+#
+# with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+#   tr_docs = pickle.load(f)
 
-with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
-  data = pickle.load(f)
+# idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
+# w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
+# wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+# idf, max_idf    = load_idfs(idf_pickle_path)
 
-with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
-  docs = pickle.load(f)
-
-with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
-  tr_data = pickle.load(f)
-
-with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
-  tr_docs = pickle.load(f)
-
-idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
-w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
-wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-idf, max_idf    = load_idfs(idf_pickle_path)
-
-RemoveBadYears(tr_data, tr_docs, True)
-RemoveTrainLargeYears(tr_data, tr_docs)
-RemoveBadYears(data, docs, False)
-
-words = {}
-GetWords(tr_data, tr_docs, words)
-GetWords(data, docs, words)
+# RemoveBadYears(tr_data, tr_docs, True)
+# RemoveTrainLargeYears(tr_data, tr_docs)
+# RemoveBadYears(data, docs, False)
+#
+# words = {}
+# GetWords(tr_data, tr_docs, words)
+# GetWords(data, docs, words)
 
 # train_examples = GetTrainData(tr_data, 1)
 # random.shuffle(train_examples)
