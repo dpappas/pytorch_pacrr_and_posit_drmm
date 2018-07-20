@@ -28,7 +28,7 @@ my_seed = 1
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir = '/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/'
+odir = '/home/dpappas/simplest_posit_drmm/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
