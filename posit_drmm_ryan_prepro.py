@@ -420,9 +420,9 @@ for epoch in range(max_epochs):
         qtext, qvecs, q_idfs    = handle_tr_quest(i)
         pos, neg, best_neg      = [], [], -1000000.0
         for j in ex[1]:
-            is_rel, doc_id, dtext, dvecs, bm25 = handle_tr_doc(i, j)
-            escores         = GetScores(qtext, dtext, bm25)
-            score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
+            is_rel, doc_id, dtext, dvecs, bm25  = handle_tr_doc(i, j)
+            escores                             = GetScores(qtext, dtext, bm25)
+            score                               = model.emit_one(dvecs, qvecs, q_idfs, escores)
             if is_rel:
                 pos.append(score)
             else:
@@ -461,6 +461,6 @@ for epoch in range(max_epochs):
             rel_scores[j]       = score.cpu().item()
         top = heapq.nlargest(100, rel_scores, key=rel_scores.get)
         JsonPredsAppend(json_preds, data, i, top)
-    DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
+    DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev_{}.json'.format(epoch+1))
     print('Done')
 
