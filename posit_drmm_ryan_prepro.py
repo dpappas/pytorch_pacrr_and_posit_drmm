@@ -391,8 +391,6 @@ for epoch in range(max_epochs):
         words, qvecs        = get_embeds(words, wv)
         q_idfs              = np.array([[idf_val(qw)] for qw in words], 'float64')
         pos, neg, best_neg  = [], [], -1000000.0
-        print(qvecs.shape)
-        print(q_idfs.shape)
         for j in ex[1]:
             is_rel          = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
             doc_id          = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
@@ -435,7 +433,7 @@ for epoch in range(max_epochs):
         words, _    = get_words(qtext)
         qvecs       = get_embeds(words, wv)
         q_idfs      = np.array([[idf_val(qw)] for qw in words], 'float64')
-        rel_scores, rel_scores_sum, sim_matrix = {},{},{}
+        rel_scores, rel_scores_sum, sim_matrix = {}, {}, {}
         for j in range(len(data['queries'][i]['retrieved_documents'])):
             doc_id          = data['queries'][i]['retrieved_documents'][j]['doc_id']
             dtext           = docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText']
