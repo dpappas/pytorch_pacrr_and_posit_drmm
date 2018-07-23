@@ -419,8 +419,7 @@ for epoch in range(max_epochs):
             loss = []
         if num_docs % b_size == 0:
             print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
-            brelevant = 0
-            breturned = 0
+            brelevant, breturned = 0, 0
     print('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
     print('Saving model')
     save_checkpoint(epoch, model, max_dev_map, optimizer)
