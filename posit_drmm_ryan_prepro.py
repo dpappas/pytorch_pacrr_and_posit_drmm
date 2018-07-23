@@ -214,6 +214,7 @@ random.seed(my_seed)
 torch.manual_seed(my_seed)
 
 data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
+fgold = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
 
 odir = '/home/dpappas/simplest_posit_drmm/'
 if not os.path.exists(odir):
@@ -276,14 +277,6 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     }
     torch.save(state, filename)
 
-def get_map_res(fgold, femit):
-    trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
-    (out, err)      = trec_eval_res.communicate()
-    lines           = out.decode("utf-8").split('\n')
-    map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
-    map_res         = float(map_res[-1])
-    return map_res
-
 def handle_tr_quest(i):
     qtext           = tr_data['queries'][i]['query_text']
     words, _        = get_words(qtext)
@@ -314,6 +307,14 @@ def handle_dev_doc(i, j):
     words, dvecs    = get_embeds(words, wv)
     bm25            = tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
     return dtext, dvecs, bm25
+
+def get_map_res(fgold, femit):
+    trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
+    (out, err)      = trec_eval_res.communicate()
+    lines           = out.decode("utf-8").split('\n')
+    map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
+    map_res         = float(map_res[-1])
+    return map_res
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, k_for_maxpool, embedding_dim):
@@ -461,6 +462,7 @@ for epoch in range(max_epochs):
             rel_scores[j]       = score.cpu().item()
         top = heapq.nlargest(100, rel_scores, key=rel_scores.get)
         JsonPredsAppend(json_preds, data, i, top)
-    DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev_{}.json'.format(epoch+1))
+    DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
+    print 'DEV MAP: {} epoch: {}'.format(get_map_res(fgold, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json'), epoch+1)
     print('Done')
 
