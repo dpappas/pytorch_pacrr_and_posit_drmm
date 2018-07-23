@@ -395,7 +395,7 @@ for epoch in range(max_epochs):
             is_rel          = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
             doc_id          = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
             dtext           = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
-            words           = get_words(dtext)
+            words, _        = get_words(dtext)
             words, dvecs    = get_embeds(words, wv)
             bm25            = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
             escores         = GetScores(qtext, dtext, bm25)
@@ -428,17 +428,17 @@ for epoch in range(max_epochs):
     print('Making Dev preds')
     json_preds, json_preds['questions'], num_docs = {}, [], 0
     for i in range(len(data['queries'])):
-        num_docs    += 1
-        qtext       = data['queries'][i]['query_text']
-        words, _    = get_words(qtext)
-        qvecs       = get_embeds(words, wv)
-        q_idfs      = np.array([[idf_val(qw)] for qw in words], 'float64')
+        num_docs     += 1
+        qtext        = data['queries'][i]['query_text']
+        words, _     = get_words(qtext)
+        words, qvecs = get_embeds(words, wv)
+        q_idfs       = np.array([[idf_val(qw)] for qw in words], 'float64')
         rel_scores, rel_scores_sum, sim_matrix = {}, {}, {}
         for j in range(len(data['queries'][i]['retrieved_documents'])):
             doc_id          = data['queries'][i]['retrieved_documents'][j]['doc_id']
             dtext           = docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText']
             words, _        = get_words(dtext)
-            dvecs           = get_embeds(words, wv)
+            words, dvecs    = get_embeds(words, wv)
             bm25            = tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
             escores         = GetScores(qtext, dtext, bm25)
             score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
