@@ -221,7 +221,6 @@ if not os.path.exists(odir):
 od              = 'sent_posit_drmm_MarginRankingLoss'
 k_for_maxpool   = 5
 lr              = 0.01
-bsize           = 32
 
 import logging
 logger      = logging.getLogger(od)
@@ -308,43 +307,6 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
         'optimizer':        optimizer.state_dict(),
     }
     torch.save(state, filename)
-
-def train_one(train_instances):
-    costs   = []
-    optimizer.zero_grad()
-    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
-    for good_sents_inds, _, bad_sents_inds, _, quest_inds, gaf, baf in train_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, gaf, baf)
-        #
-        average_total_loss  += instance_cost.cpu().item()
-        average_task_loss   += loss1.cpu().item()
-        average_reg_loss    += loss2.cpu().item()
-        #
-        instance_metr       += 1
-        costs.append(instance_cost)
-        if(len(costs) == bsize):
-            batch_loss      = compute_the_cost(costs, True)
-            costs = []
-            print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
-            logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
-    if(len(costs)>0):
-        batch_loss = compute_the_cost(costs, True)
-        print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-        logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-    return average_task_loss / instance_metr
-
-def dev_one(dev_instances):
-    optimizer.zero_grad()
-    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
-    for good_sents_inds, _, bad_sents_inds, _, quest_inds, gaf, baf in dev_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, gaf, baf)
-        average_total_loss  += instance_cost.cpu().item()
-        average_task_loss   += loss1.cpu().item()
-        average_reg_loss    += loss2.cpu().item()
-        instance_metr       += 1
-    print('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-    logger.info('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-    return average_task_loss / instance_metr
 
 def get_map_res(fgold, femit):
     trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
