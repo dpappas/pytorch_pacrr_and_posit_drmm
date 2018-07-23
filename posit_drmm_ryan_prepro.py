@@ -482,6 +482,7 @@ optimizer   = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-0
 # dummy_test()
 # exit()
 
+b_size          = 32
 max_dev_map     = 0.0
 max_epochs      = 30
 for epoch in range(max_epochs):
@@ -512,10 +513,10 @@ for epoch in range(max_epochs):
         num_docs += 1
         if len(pos) > 0 and len(neg) > 0:
             loss.append(model.my_hinge_loss(pos, neg, margin=1.0))
-        if num_docs % 32 == 0 or num_docs == len(train_examples):
+        if num_docs % b_size == 0 or num_docs == len(train_examples):
             model.UpdateBatch(loss)
             loss = []
-        if num_docs % 32 == 0:
+        if num_docs % b_size == 0:
             print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
             brelevant = 0
             breturned = 0
