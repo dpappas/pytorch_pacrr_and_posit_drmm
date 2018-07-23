@@ -466,7 +466,7 @@ for epoch in range(max_epochs):
     dev_map = get_map_res(fgold, fout)
     print 'DEV MAP: {} epoch: {}'.format(dev_map, epoch+1)
     if(dev_map >= max_dev_map):
-        print 'new dev map: {} detter than max_dev_map: {}'.format(dev_map, max_dev_map)
+        print 'new dev map: {} better than max_dev_map: {}'.format(dev_map, max_dev_map)
         max_dev_map = dev_map
         print('Saving model')
         save_checkpoint(epoch, model, max_dev_map, optimizer)
