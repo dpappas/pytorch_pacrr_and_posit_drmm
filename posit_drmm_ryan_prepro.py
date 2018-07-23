@@ -165,7 +165,7 @@ def query_doc_overlap(qwords, dwords):
       for dword in uwords(dwords):
         if qword == dword:
           idf_qwords_in_doc += idf_val(qword)
-          qwords_in_doc += 1
+          qwords_in_doc     += 1
           break
     if len(qwords) <= 0:
       qwords_in_doc_val = 0.0
