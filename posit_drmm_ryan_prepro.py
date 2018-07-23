@@ -413,6 +413,7 @@ b_size              = 32
 max_dev_map         = 0.0
 max_epochs          = 30
 for epoch in range(max_epochs):
+    model.train()
     num_docs, relevant, returned, brelevant, breturned, loss = 0.0, 0.0, 0.0, 0.0, 0.0, []
     train_examples  = GetTrainData(tr_data, 1)
     random.shuffle(train_examples)
@@ -446,6 +447,7 @@ for epoch in range(max_epochs):
             brelevant, breturned = 0, 0
     print('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
     #
+    model.eval()
     print('Making Dev preds')
     json_preds, json_preds['questions'], num_docs = {}, [], 0
     for i in range(len(data['queries'])):
