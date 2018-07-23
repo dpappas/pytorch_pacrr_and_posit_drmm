@@ -389,7 +389,7 @@ for epoch in range(max_epochs):
         qtext           = tr_data['queries'][i]['query_text']
         words, _        = get_words(qtext)
         words, qvecs    = get_embeds(words, wv)
-        q_idfs          = np.array([[idf_val(qw)] for qw in words2], 'float64')
+        q_idfs          = np.array([[idf_val(qw)] for qw in words], 'float64')
         pos, neg        = [], []
         best_neg        = -1000000.0
         print(qvecs.shape)
