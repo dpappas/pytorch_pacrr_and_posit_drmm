@@ -313,12 +313,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
-    def UpdateBatch(self, loss):
-        if len(loss) > 0:
-            optimizer.zero_grad()
-            sum_loss = sum(loss)
-            sum_loss.backward()
-            optimizer.step()
     def apply_convolution(self, the_input, the_filters, activation):
         conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
         if(activation is not None):
@@ -346,14 +340,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_maximum             = k_max_pooled[:, -1]                       # select the maximum value of each instance
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
-    def apply_masks_on_similarity(self, document, question, similarity):
-        qq = (question > 1).float()
-        ss              = (document > 1).float()
-        sim_mask1       = qq.unsqueeze(-1).expand_as(similarity)
-        sim_mask2       = ss.unsqueeze(0).expand_as(similarity)
-        similarity      *= sim_mask1
-        similarity      *= sim_mask2
-        return similarity
     def get_output(self, input_list, weights):
         temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
@@ -389,14 +375,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         good_out                        = self.do_for_one_doc(doc1_embeds, question_embeds, q_conv_res_trigram, q_weights, gaf)
         return good_out
-    def fix_input(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
-        q_idfs                          = autograd.Variable(torch.DoubleTensor(q_idfs),     requires_grad=False)
-        doc1_embeds                     = autograd.Variable(torch.DoubleTensor(doc1_embeds),     requires_grad=False)
-        doc2_embeds                     = autograd.Variable(torch.DoubleTensor(doc2_embeds),     requires_grad=False)
-        question_embeds                 = autograd.Variable(torch.DoubleTensor(question_embeds),     requires_grad=False)
-        gaf                             = autograd.Variable(torch.DoubleTensor(gaf),     requires_grad=False)
-        baf                             = autograd.Variable(torch.DoubleTensor(baf),     requires_grad=False)
-        return doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
+    def UpdateBatch(self, loss):
+        if len(loss) > 0:
+            optimizer.zero_grad()
+            sum_loss = sum(loss)
+            sum_loss.backward()
+            optimizer.step()
 
 print('Compiling model...')
 logger.info('Compiling model...')
