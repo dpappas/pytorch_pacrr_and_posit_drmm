@@ -510,14 +510,26 @@ for epoch in range(max_epochs):
                 pos.append(score)
             else:
                 neg.append(score)
-        num_docs += 1
+                if score.value() > best_neg:
+                    best_neg = score.value()
+        if pos[0].value() > best_neg:
+            relevant    += 1
+            brelevant   += 1
+        returned        += 1
+        breturned       += 1
+        num_docs        += 1
         if len(pos) > 0 and len(neg) > 0:
             loss.append(model.my_hinge_loss(pos, neg, margin=1.0))
         if num_docs % b_size == 0 or num_docs == len(train_examples):
             model.UpdateBatch(loss)
             loss = []
         if num_docs % b_size == 0:
-            print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
+            print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(
+                epoch,
+                num_docs,
+                (float(relevant)/float(returned)),
+                (float(brelevant)/float(breturned)))
+            )
             brelevant = 0
             breturned = 0
     print('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
