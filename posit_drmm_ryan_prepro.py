@@ -480,7 +480,7 @@ max_dev_map     = 0.0
 max_epochs      = 30
 loopes          = [1, 0, 0]
 for epoch in range(max_epochs):
-    num_docs, relevant, returned, brelevant, breturned = 0.0, 0.0, 0.0, 0.0, 0.0
+    num_docs, relevant, returned, brelevant, breturned, loss = 0.0, 0.0, 0.0, 0.0, 0.0, []
     train_examples  = GetTrainData(tr_data, 1)
     random.shuffle(train_examples)
     for ex in train_examples:
@@ -501,7 +501,7 @@ for epoch in range(max_epochs):
             bm25        = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
             escores     = GetScores(qtext, dtext, bm25)
             #
-            score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
+            score       = model.emit_one(dvecs, qvecs, q_idfs, escores)
             if is_rel:
                 pos.append(score)
             else:
