@@ -17,10 +17,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from pprint import pprint
 import torch.autograd as autograd
-from tqdm import tqdm
 from gensim.models.keyedvectors import KeyedVectors
+from pprint import pprint
+from tqdm import tqdm
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -261,29 +261,6 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def dummy_test():
-    qe      = np.random.rand(10, 200)
-    qidfs   = np.random.rand(10)
-    d1e     = np.random.rand(40, 200)
-    d2e     = np.random.rand(37, 200)
-    gaf     = np.random.rand(4)
-    baf     = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_, loss1_, loss2_ = model(
-            doc1_embeds     = d2e,
-            doc2_embeds     = d1e,
-            question_embeds = qe,
-            q_idfs          = qidfs,
-            gaf             = gaf,
-            baf             = baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -440,9 +417,6 @@ print('Compiling model...')
 logger.info('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool, embedding_dim=200)
 optimizer   = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-
-# dummy_test()
-# exit()
 
 b_size          = 32
 max_dev_map     = 0.0
