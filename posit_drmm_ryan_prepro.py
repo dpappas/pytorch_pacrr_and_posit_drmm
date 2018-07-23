@@ -448,22 +448,3 @@ for epoch in range(max_epochs):
     DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
     print('Done')
 
-
-
-
-'''
-grep 'train_average_loss' /home/dpappas/simplest_posit_drmm_3/model.log
-
-python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
-/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
-/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.bioasq.oracle.json
-
-python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
-/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
-/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.bioasq.json
-
-python /home/DATA/Biomedical/document_ranking/eval/run_eval.py \
-/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json \
-/home/dpappas/simplest_posit_drmm_leaky_sum_normbm25/elk_relevant_abs_posit_drmm_lists_test.json
-
-'''
