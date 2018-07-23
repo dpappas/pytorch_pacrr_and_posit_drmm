@@ -411,17 +411,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         add_feats                       = torch.cat([af, doc_emit.unsqueeze(-1)])
         out                             = self.out_layer(add_feats)
         return out
-    def emit_one(self, doc1, question, gaf):
-        question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        question_embeds                 = self.word_embeddings(question)
+    def emit_one(self, doc1_embeds, question_embeds, q_idfs, gaf):
+        q_idfs                          = autograd.Variable(torch.DoubleTensor(q_idfs),          requires_grad=False)
+        doc1_embeds                     = autograd.Variable(torch.DoubleTensor(doc1_embeds),     requires_grad=False)
+        question_embeds                 = autograd.Variable(torch.DoubleTensor(question_embeds), requires_grad=False)
+        gaf                             = autograd.Variable(torch.DoubleTensor(gaf),             requires_grad=False)
+        #
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
-        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
-        q_idfs                          = self.my_idfs(question)
+        #
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
-        good_out                        = self.do_for_one_doc(doc1,    question_embeds, q_conv_res_trigram, q_weights, gaf)
+        #
+        good_out                        = self.do_for_one_doc(doc1_embeds, question_embeds, q_conv_res_trigram, q_weights, gaf)
         return good_out
     def fix_input(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
         q_idfs                          = autograd.Variable(torch.DoubleTensor(q_idfs),     requires_grad=False)
@@ -476,7 +478,7 @@ for epoch in range(max_epochs):
             dvecs       = get_embeds(words, wv)
             bm25        = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
             escores     = GetScores(qtext, dtext, bm25)
-            score       = # must call the model here for one doc-quest sore
+            score       = # must call the model here for one doc-quest score
             print escores, is_rel
             if is_rel:
               pos.append(score)
