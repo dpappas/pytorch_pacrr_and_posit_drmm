@@ -135,11 +135,12 @@ def get_words(s):
     return sl, sl2
 
 def get_embeds(tokens, wv):
-    ret = []
+    ret1, ret2 = [], []
     for tok in tokens:
         if(tok in wv):
-            ret.append(wv[tok])
-    return np.array(ret, 'float64')
+            ret1.append(tok)
+            ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
 
 def uwords(words):
   uw = {}
@@ -384,22 +385,24 @@ for epoch in range(max_epochs):
     train_examples  = GetTrainData(tr_data, 1)
     random.shuffle(train_examples)
     for ex in train_examples:
-        i           = ex[0]
-        qtext       = tr_data['queries'][i]['query_text']
-        words, _    = get_words(qtext)
-        qvecs       = get_embeds(words, wv)
-        q_idfs      = np.array([[idf_val(qw)] for qw in words], 'float64')
-        pos, neg    = [], []
-        best_neg    = -1000000.0
+        i               = ex[0]
+        qtext           = tr_data['queries'][i]['query_text']
+        words, _        = get_words(qtext)
+        words, qvecs    = get_embeds(words, wv)
+        q_idfs          = np.array([[idf_val(qw)] for qw in words2], 'float64')
+        pos, neg        = [], []
+        best_neg        = -1000000.0
+        print(qvecs.shape)
+        print(q_idfs.shape)
         for j in ex[1]:
-            is_rel      = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
-            doc_id      = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
-            dtext       = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
-            words, _    = get_words(dtext)
-            dvecs       = get_embeds(words, wv)
-            bm25        = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
-            escores     = GetScores(qtext, dtext, bm25)
-            score       = model.emit_one(dvecs, qvecs, q_idfs, escores)
+            is_rel          = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
+            doc_id          = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
+            dtext           = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
+            words           = get_words(dtext)
+            words, dvecs    = get_embeds(words, wv)
+            bm25            = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
+            escores         = GetScores(qtext, dtext, bm25)
+            score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
             if is_rel:
                 pos.append(score)
             else:
