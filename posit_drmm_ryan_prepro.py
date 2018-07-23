@@ -351,9 +351,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         add_feats                       = torch.cat([af, doc_emit.unsqueeze(-1)])
         out                             = self.out_layer(add_feats)
         return out
-    def emit_one(self, doc1_embeds, question_embeds, q_idfs, gaf):
+    def emit_one(self, doc_embeds, question_embeds, q_idfs, gaf):
         q_idfs                          = autograd.Variable(torch.DoubleTensor(q_idfs),          requires_grad=False)
-        doc1_embeds                     = autograd.Variable(torch.DoubleTensor(doc1_embeds),     requires_grad=False)
+        doc_embeds                      = autograd.Variable(torch.DoubleTensor(doc_embeds),      requires_grad=False)
         question_embeds                 = autograd.Variable(torch.DoubleTensor(question_embeds), requires_grad=False)
         gaf                             = autograd.Variable(torch.DoubleTensor(gaf),             requires_grad=False)
         #
@@ -363,7 +363,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        good_out                        = self.do_for_one_doc(doc1_embeds, question_embeds, q_conv_res_trigram, q_weights, gaf)
+        good_out                        = self.do_for_one_doc(doc_embeds, question_embeds, q_conv_res_trigram, q_weights, gaf)
         return good_out
     def UpdateBatch(self, loss):
         if len(loss) > 0:
