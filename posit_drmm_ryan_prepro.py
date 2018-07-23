@@ -374,6 +374,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
+    def UpdateBatch(self, loss):
+        if len(loss) > 0:
+            optimizer.zero_grad()
+            sum_loss = sum(loss)
+            sum_loss.backward()
+            optimizer.step()
     def apply_convolution(self, the_input, the_filters, activation):
         conv_res    = the_filters(the_input.transpose(0,1).unsqueeze(0))
         if(activation is not None):
@@ -478,7 +484,6 @@ optimizer   = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-0
 
 max_dev_map     = 0.0
 max_epochs      = 30
-loopes          = [1, 0, 0]
 for epoch in range(max_epochs):
     num_docs, relevant, returned, brelevant, breturned, loss = 0.0, 0.0, 0.0, 0.0, 0.0, []
     train_examples  = GetTrainData(tr_data, 1)
@@ -499,22 +504,14 @@ for epoch in range(max_epochs):
             dvecs       = get_embeds(words, wv)
             bm25        = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
             escores     = GetScores(qtext, dtext, bm25)
-            #
             score       = model.emit_one(dvecs, qvecs, q_idfs, escores)
             if is_rel:
                 pos.append(score)
             else:
                 neg.append(score)
-                if score.value() > best_neg:
-                    best_neg = score.value()
-        if pos[0].value() > best_neg:
-            relevant    += 1
-            brelevant   += 1
-        returned  += 1
-        breturned += 1
-        num_docs  += 1
+        num_docs += 1
         if len(pos) > 0 and len(neg) > 0:
-            model.PairAppendToLoss(pos, neg, loss)
+            loss.append(model.my_hinge_loss(pos, neg, margin=1.0))
         if num_docs % 32 == 0 or num_docs == len(train_examples):
             model.UpdateBatch(loss)
             loss = []
