@@ -472,9 +472,9 @@ for epoch in range(max_epochs):
                 pos.append(score)
             else:
                 neg.append(score)
-                if score.value() > best_neg:
-                    best_neg = score.value()
-        if pos[0].value() > best_neg:
+                if score.cpu().item() > best_neg:
+                    best_neg = score.cpu().item()
+        if pos[0].cpu().item() > best_neg:
             relevant    += 1
             brelevant   += 1
         returned        += 1
