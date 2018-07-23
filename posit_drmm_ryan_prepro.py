@@ -245,7 +245,7 @@ def print_params(model):
 
 def dummy_test():
     qe      = np.random.rand(10, 200)
-    qidfs   = np.random.rand(10, 1)
+    qidfs   = np.random.rand(10)
     d1e     = np.random.rand(40, 200)
     d2e     = np.random.rand(37, 200)
     gaf     = np.random.rand(4)
@@ -468,7 +468,7 @@ for epoch in range(max_epochs):
         qtext       = tr_data['queries'][i]['query_text']
         words, _    = get_words(qtext)
         qvecs       = get_embeds(words, wv)
-        q_idfs      = [idf_val(qw) for qw in words]
+        q_idfs      = np.array([[idf_val(qw)] for qw in words], 'float64')
         pos, neg    = [], []
         for j in ex[1]:
             # ex[1] has two elements. One positive and one negative.
@@ -482,7 +482,7 @@ for epoch in range(max_epochs):
             #
             #
             score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
-            print escores, is_rel
+            print score, escores, is_rel
             if is_rel:
               pos.append(score)
             else:
