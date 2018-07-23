@@ -214,7 +214,7 @@ random.seed(my_seed)
 torch.manual_seed(my_seed)
 
 data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
-fgold = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json'
+fgold = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json'
 
 odir = '/home/dpappas/simplest_posit_drmm/'
 if not os.path.exists(odir):
@@ -459,8 +459,9 @@ for epoch in range(max_epochs):
             rel_scores[j]       = score.cpu().item()
         top = heapq.nlargest(100, rel_scores, key=rel_scores.get)
         JsonPredsAppend(json_preds, data, i, top)
-    DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
-    dev_map = get_map_res(fgold, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
+    fout    = odir + 'elk_relevant_abs_posit_drmm_lists_dev.json'
+    DumpJson(json_preds, fout)
+    dev_map = get_map_res(fgold, fout)
     print 'DEV MAP: {} epoch: {}'.format(dev_map, epoch+1)
     if(dev_map >= max_dev_map):
         print 'new dev map: {} detter than max_dev_map: {}'.format(dev_map, max_dev_map)
