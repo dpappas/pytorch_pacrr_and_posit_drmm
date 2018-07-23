@@ -492,7 +492,6 @@ for epoch in range(max_epochs):
         pos, neg    = [], []
         best_neg    = -1000000.0
         for j in ex[1]:
-            # ex[1] has two elements. One positive and one negative.
             is_rel      = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
             doc_id      = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
             dtext       = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
