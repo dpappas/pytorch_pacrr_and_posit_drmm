@@ -11,6 +11,7 @@ else:
 
 import re, os, json, subprocess
 import random
+import heapq
 import numpy as np
 import torch
 import torch.nn as nn
@@ -22,6 +23,24 @@ from tqdm import tqdm
 from gensim.models.keyedvectors import KeyedVectors
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
+def JsonPredsAppend(preds, data, i, top):
+    pref            = "http://www.ncbi.nlm.nih.gov/pubmed/"
+    qid             = data['queries'][i]['query_id']
+    query           = data['queries'][i]['query_text']
+    qdict           = {}
+    qdict['body']   = query
+    qdict['id']     = qid
+    doc_list        = []
+    for j in top:
+        doc_id      = data['queries'][i]['retrieved_documents'][j]['doc_id']
+        doc_list.append(pref + doc_id)
+    qdict['documents'] = doc_list
+    preds['questions'].append(qdict)
+
+def DumpJson(data, fname):
+    with open(fname, 'w') as fw:
+        json.dump(data, fw, indent=4)
 
 def tokenize(x):
   return bioclean(x)
@@ -492,11 +511,49 @@ for epoch in range(max_epochs):
         if pos[0].value() > best_neg:
             relevant    += 1
             brelevant   += 1
-      returned  += 1
-      breturned += 1
-      num_docs  += 1
+        returned  += 1
+        breturned += 1
+        num_docs  += 1
+        if len(pos) > 0 and len(neg) > 0:
+            model.PairAppendToLoss(pos, neg, loss)
+        if num_docs % 32 == 0 or num_docs == len(train_examples):
+            model.UpdateBatch(loss)
+            loss = []
+        if num_docs % 32 == 0:
+            print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
+            brelevant = 0
+            breturned = 0
+    print('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
+    print('Saving model')
+    save_checkpoint(epoch, model, max_dev_map, optimizer)
+    print('Model saved')
+    #
+    print('Making Dev preds')
+    json_preds, json_preds['questions'], num_docs = {}, [], 0
+    for i in range(len(data['queries'])):
+        num_docs += 1
+        qtext = data['queries'][i]['query_text']
+        words, _    = get_words(qtext)
+        qvecs       = get_embeds(words, wv)
+        q_idfs      = np.array([[idf_val(qw)] for qw in words], 'float64')
+        rel_scores, rel_scores_sum, sim_matrix = {},{},{}
+        for j in range(len(data['queries'][i]['retrieved_documents'])):
+            doc_id          = data['queries'][i]['retrieved_documents'][j]['doc_id']
+            dtext           = docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText']
+            words, _        = get_words(dtext)
+            dvecs           = get_embeds(words, wv)
+            bm25            = tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
+            escores         = GetScores(qtext, dtext, bm25)
+            score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
+            rel_scores[j]   = score.value()
+        top     = heapq.nlargest(100, rel_scores, key=rel_scores.get)
+        JsonPredsAppend(json_preds, data, i, top)
+    DumpJson(json_preds, odir + '.json')
+    print('Done')
 
 
+
+/home/dpappas/simplest_posit_drmm_5/elk_relevant_abs_posit_drmm_lists_test.json
 
 
 '''
