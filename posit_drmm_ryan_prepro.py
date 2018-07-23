@@ -461,7 +461,8 @@ max_dev_map     = 0.0
 max_epochs      = 30
 loopes          = [1, 0, 0]
 for epoch in range(max_epochs):
-    train_examples = GetTrainData(tr_data, 1)
+    num_docs, relevant, returned, brelevant, breturned = 0.0, 0.0, 0.0, 0.0, 0.0
+    train_examples  = GetTrainData(tr_data, 1)
     random.shuffle(train_examples)
     for ex in train_examples:
         i           = ex[0]
@@ -470,6 +471,7 @@ for epoch in range(max_epochs):
         qvecs       = get_embeds(words, wv)
         q_idfs      = np.array([[idf_val(qw)] for qw in words], 'float64')
         pos, neg    = [], []
+        best_neg    = -1000000.0
         for j in ex[1]:
             # ex[1] has two elements. One positive and one negative.
             is_rel      = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
@@ -480,13 +482,20 @@ for epoch in range(max_epochs):
             bm25        = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
             escores     = GetScores(qtext, dtext, bm25)
             #
-            #
             score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
-            print score, escores, is_rel
             if is_rel:
-              pos.append(score)
+                pos.append(score)
             else:
-              neg.append(score)
+                neg.append(score)
+                if score.value() > best_neg:
+                    best_neg = score.value()
+        if pos[0].value() > best_neg:
+            relevant    += 1
+            brelevant   += 1
+      returned  += 1
+      breturned += 1
+      num_docs  += 1
+
 
 
 
