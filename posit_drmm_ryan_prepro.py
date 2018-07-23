@@ -383,7 +383,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         #
-        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_weights                       = torch.cat([question_embeds, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         #
@@ -397,21 +397,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         gaf                             = autograd.Variable(torch.DoubleTensor(gaf),     requires_grad=False)
         baf                             = autograd.Variable(torch.DoubleTensor(baf),     requires_grad=False)
         return doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
-    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
-        doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf = self.fix_input(doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf)
-        #
-        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        #
-        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
-        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights                       = F.softmax(q_weights, dim=-1)
-        # concatenate and pass through mlps
-        good_out                        = self.do_for_one_doc(doc1_embeds, question_embeds, q_conv_res_trigram, q_weights, gaf)
-        bad_out                         = self.do_for_one_doc(doc2_embeds, question_embeds, q_conv_res_trigram, q_weights, baf)
-        # compute the loss
-        # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
-        loss1                           = self.my_hinge_loss(good_out, bad_out)
-        return loss1, good_out, bad_out, loss1, loss1
 
 print('Compiling model...')
 logger.info('Compiling model...')
