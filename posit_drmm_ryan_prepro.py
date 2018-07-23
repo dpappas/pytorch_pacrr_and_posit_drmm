@@ -531,8 +531,8 @@ for epoch in range(max_epochs):
     print('Making Dev preds')
     json_preds, json_preds['questions'], num_docs = {}, [], 0
     for i in range(len(data['queries'])):
-        num_docs += 1
-        qtext = data['queries'][i]['query_text']
+        num_docs    += 1
+        qtext       = data['queries'][i]['query_text']
         words, _    = get_words(qtext)
         qvecs       = get_embeds(words, wv)
         q_idfs      = np.array([[idf_val(qw)] for qw in words], 'float64')
@@ -548,12 +548,10 @@ for epoch in range(max_epochs):
             rel_scores[j]   = score.value()
         top     = heapq.nlargest(100, rel_scores, key=rel_scores.get)
         JsonPredsAppend(json_preds, data, i, top)
-    DumpJson(json_preds, odir + '.json')
+    DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
     print('Done')
 
 
-
-/home/dpappas/simplest_posit_drmm_5/elk_relevant_abs_posit_drmm_lists_test.json
 
 
 '''
