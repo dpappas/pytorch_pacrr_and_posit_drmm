@@ -284,21 +284,37 @@ def get_map_res(fgold, femit):
     map_res         = float(map_res[-1])
     return map_res
 
-def handle_quest(the_data, i):
-    qtext           = the_data['queries'][i]['query_text']
+def handle_tr_quest(i):
+    qtext           = tr_data['queries'][i]['query_text']
     words, _        = get_words(qtext)
     words, qvecs    = get_embeds(words, wv)
     q_idfs          = np.array([[idf_val(qw)] for qw in words], 'float64')
     return qtext, qvecs, q_idfs
 
-def handle_doc(the_data, the_docs, i, j):
-    is_rel          = the_data['queries'][i]['retrieved_documents'][j]['is_relevant']
-    doc_id          = the_data['queries'][i]['retrieved_documents'][j]['doc_id']
-    dtext           = (the_docs[doc_id]['title'] + ' <title> ' + the_data[doc_id]['abstractText'])
+def handle_tr_doc(i, j):
+    is_rel          = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
+    doc_id          = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
+    dtext           = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
     words, _        = get_words(dtext)
     words, dvecs    = get_embeds(words, wv)
-    bm25            = (the_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
+    bm25            = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
     return is_rel, doc_id, dtext, dvecs, bm25
+
+def handle_dev_quest(i):
+    qtext           = data['queries'][i]['query_text']
+    words, _        = get_words(qtext)
+    words, qvecs    = get_embeds(words, wv)
+    q_idfs          = np.array([[idf_val(qw)] for qw in words], 'float64')
+    return qtext, qvecs, q_idfs
+
+def handle_dev_doc(i, j):
+    doc_id          = data['queries'][i]['retrieved_documents'][j]['doc_id']
+    dtext           = docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText']
+    words, _        = get_words(dtext)
+    words, dvecs    = get_embeds(words, wv)
+    bm25            = tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
+    return dtext, dvecs, bm25
+
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, k_for_maxpool, embedding_dim):
@@ -393,7 +409,6 @@ print('Compiling model...')
 logger.info('Compiling model...')
 model               = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool, embedding_dim=200)
 optimizer           = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-
 b_size              = 32
 max_dev_map         = 0.0
 max_epochs          = 30
@@ -403,12 +418,12 @@ for epoch in range(max_epochs):
     random.shuffle(train_examples)
     for ex in train_examples:
         i                       = ex[0]
-        qtext, qvecs, q_idfs    = handle_quest(tr_data, i)
+        qtext, qvecs, q_idfs    = handle_tr_quest(i)
         pos, neg, best_neg      = [], [], -1000000.0
         for j in ex[1]:
-            is_rel, doc_id, dtext, dvecs, bm25 = handle_doc(tr_data, tr_docs, i, j)
-            escores             = GetScores(qtext, dtext, bm25)
-            score               = model.emit_one(dvecs, qvecs, q_idfs, escores)
+            is_rel, doc_id, dtext, dvecs, bm25 = handle_tr_doc(i, j)
+            escores         = GetScores(qtext, dtext, bm25)
+            score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
             if is_rel:
                 pos.append(score)
             else:
@@ -437,18 +452,11 @@ for epoch in range(max_epochs):
     print('Making Dev preds')
     json_preds, json_preds['questions'], num_docs = {}, [], 0
     for i in range(len(data['queries'])):
-        num_docs     += 1
-        qtext        = data['queries'][i]['query_text']
-        words, _     = get_words(qtext)
-        words, qvecs = get_embeds(words, wv)
-        q_idfs       = np.array([[idf_val(qw)] for qw in words], 'float64')
+        num_docs             += 1
+        qtext, qvecs, q_idfs = handle_dev_quest(i)
         rel_scores, rel_scores_sum, sim_matrix = {}, {}, {}
         for j in range(len(data['queries'][i]['retrieved_documents'])):
-            doc_id          = data['queries'][i]['retrieved_documents'][j]['doc_id']
-            dtext           = docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText']
-            words, _        = get_words(dtext)
-            words, dvecs    = get_embeds(words, wv)
-            bm25            = tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
+            dtext, dvecs, bm25 = handle_dev_doc(i,j)
             escores         = GetScores(qtext, dtext, bm25)
             score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
             rel_scores[j]   = score.cpu().item()
