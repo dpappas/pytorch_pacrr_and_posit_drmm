@@ -208,11 +208,11 @@ def GetScores(qtext, dtext, bm25):
     bm25        = [bm25]
     return qd1[0:3] + bm25
 
-data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
-
 my_seed = 1
 random.seed(my_seed)
 torch.manual_seed(my_seed)
+
+data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
 
 odir = '/home/dpappas/simplest_posit_drmm/'
 if not os.path.exists(odir):
