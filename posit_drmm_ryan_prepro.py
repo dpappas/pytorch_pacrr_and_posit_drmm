@@ -385,13 +385,12 @@ for epoch in range(max_epochs):
     train_examples  = GetTrainData(tr_data, 1)
     random.shuffle(train_examples)
     for ex in train_examples:
-        i               = ex[0]
-        qtext           = tr_data['queries'][i]['query_text']
-        words, _        = get_words(qtext)
-        words, qvecs    = get_embeds(words, wv)
-        q_idfs          = np.array([[idf_val(qw)] for qw in words], 'float64')
-        pos, neg        = [], []
-        best_neg        = -1000000.0
+        i                   = ex[0]
+        qtext               = tr_data['queries'][i]['query_text']
+        words, _            = get_words(qtext)
+        words, qvecs        = get_embeds(words, wv)
+        q_idfs              = np.array([[idf_val(qw)] for qw in words], 'float64')
+        pos, neg, best_neg  = [], [], -1000000.0
         print(qvecs.shape)
         print(q_idfs.shape)
         for j in ex[1]:
