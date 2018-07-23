@@ -524,12 +524,7 @@ for epoch in range(max_epochs):
             model.UpdateBatch(loss)
             loss = []
         if num_docs % b_size == 0:
-            print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(
-                epoch,
-                num_docs,
-                (float(relevant)/float(returned)),
-                (float(brelevant)/float(breturned)))
-            )
+            print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
             brelevant = 0
             breturned = 0
     print('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
@@ -555,7 +550,7 @@ for epoch in range(max_epochs):
             escores         = GetScores(qtext, dtext, bm25)
             score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
             rel_scores[j]   = score.value()
-        top     = heapq.nlargest(100, rel_scores, key=rel_scores.get)
+        top = heapq.nlargest(100, rel_scores, key=rel_scores.get)
         JsonPredsAppend(json_preds, data, i, top)
     DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
     print('Done')
