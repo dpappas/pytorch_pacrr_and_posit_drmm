@@ -315,7 +315,6 @@ def handle_dev_doc(i, j):
     bm25            = tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
     return dtext, dvecs, bm25
 
-
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, k_for_maxpool, embedding_dim):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -456,10 +455,10 @@ for epoch in range(max_epochs):
         qtext, qvecs, q_idfs = handle_dev_quest(i)
         rel_scores, rel_scores_sum, sim_matrix = {}, {}, {}
         for j in range(len(data['queries'][i]['retrieved_documents'])):
-            dtext, dvecs, bm25 = handle_dev_doc(i,j)
-            escores         = GetScores(qtext, dtext, bm25)
-            score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
-            rel_scores[j]   = score.cpu().item()
+            dtext, dvecs, bm25  = handle_dev_doc(i,j)
+            escores             = GetScores(qtext, dtext, bm25)
+            score               = model.emit_one(dvecs, qvecs, q_idfs, escores)
+            rel_scores[j]       = score.cpu().item()
         top = heapq.nlargest(100, rel_scores, key=rel_scores.get)
         JsonPredsAppend(json_preds, data, i, top)
     DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
