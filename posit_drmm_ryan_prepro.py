@@ -445,9 +445,6 @@ for epoch in range(max_epochs):
             print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
             brelevant, breturned = 0, 0
     print('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
-    print('Saving model')
-    save_checkpoint(epoch, model, max_dev_map, optimizer)
-    print('Model saved')
     #
     print('Making Dev preds')
     json_preds, json_preds['questions'], num_docs = {}, [], 0
@@ -463,6 +460,13 @@ for epoch in range(max_epochs):
         top = heapq.nlargest(100, rel_scores, key=rel_scores.get)
         JsonPredsAppend(json_preds, data, i, top)
     DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
-    print 'DEV MAP: {} epoch: {}'.format(get_map_res(fgold, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json'), epoch+1)
+    dev_map = get_map_res(fgold, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
+    print 'DEV MAP: {} epoch: {}'.format(dev_map, epoch+1)
+    if(dev_map >= max_dev_map):
+        print 'new dev map: {} detter than max_dev_map: {}'.format(dev_map, max_dev_map)
+        max_dev_map = dev_map
+        print('Saving model')
+        save_checkpoint(epoch, model, max_dev_map, optimizer)
+        print('Model saved')
     print('Done')
 
