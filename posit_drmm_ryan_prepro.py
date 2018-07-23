@@ -284,20 +284,20 @@ def get_map_res(fgold, femit):
     map_res         = float(map_res[-1])
     return map_res
 
-def handle_quest(i):
-    qtext           = tr_data['queries'][i]['query_text']
+def handle_quest(the_data, i):
+    qtext           = the_data['queries'][i]['query_text']
     words, _        = get_words(qtext)
     words, qvecs    = get_embeds(words, wv)
     q_idfs          = np.array([[idf_val(qw)] for qw in words], 'float64')
     return qtext, qvecs, q_idfs
 
-def handle_doc(i, j):
-    is_rel          = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
-    doc_id          = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
-    dtext           = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
+def handle_doc(the_data, the_docs, i, j):
+    is_rel          = the_data['queries'][i]['retrieved_documents'][j]['is_relevant']
+    doc_id          = the_data['queries'][i]['retrieved_documents'][j]['doc_id']
+    dtext           = (the_docs[doc_id]['title'] + ' <title> ' + the_data[doc_id]['abstractText'])
     words, _        = get_words(dtext)
     words, dvecs    = get_embeds(words, wv)
-    bm25            = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
+    bm25            = (the_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
     return is_rel, doc_id, dtext, dvecs, bm25
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
@@ -394,66 +394,66 @@ logger.info('Compiling model...')
 model               = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool, embedding_dim=200)
 optimizer           = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# b_size              = 32
-# max_dev_map         = 0.0
-# max_epochs          = 30
-# for epoch in range(max_epochs):
-#     num_docs, relevant, returned, brelevant, breturned, loss = 0.0, 0.0, 0.0, 0.0, 0.0, []
-#     train_examples  = GetTrainData(tr_data, 1)
-#     random.shuffle(train_examples)
-#     for ex in train_examples:
-#         i                       = ex[0]
-#         qtext, qvecs, q_idfs    = handle_quest(i)
-#         pos, neg, best_neg  = [], [], -1000000.0
-#         for j in ex[1]:
-#             is_rel, doc_id, dtext, dvecs, bm25 = handle_doc(i, j)
-#             escores         = GetScores(qtext, dtext, bm25)
-#             score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
-#             if is_rel:
-#                 pos.append(score)
-#             else:
-#                 neg.append(score)
-#                 if score.cpu().item() > best_neg:
-#                     best_neg = score.cpu().item()
-#         if pos[0].cpu().item() > best_neg:
-#             relevant    += 1
-#             brelevant   += 1
-#         returned        += 1
-#         breturned       += 1
-#         num_docs        += 1
-#         if len(pos) > 0 and len(neg) > 0:
-#             loss.append(model.my_hinge_loss(torch.cat(pos), torch.cat(neg), margin=1.0))
-#         if num_docs % b_size == 0 or num_docs == len(train_examples):
-#             model.UpdateBatch(loss)
-#             loss = []
-#         if num_docs % b_size == 0:
-#             print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
-#             brelevant, breturned = 0, 0
-#     print('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
-#     print('Saving model')
-#     save_checkpoint(epoch, model, max_dev_map, optimizer)
-#     print('Model saved')
-#     #
-#     print('Making Dev preds')
-#     json_preds, json_preds['questions'], num_docs = {}, [], 0
-#     for i in range(len(data['queries'])):
-#         num_docs     += 1
-#         qtext        = data['queries'][i]['query_text']
-#         words, _     = get_words(qtext)
-#         words, qvecs = get_embeds(words, wv)
-#         q_idfs       = np.array([[idf_val(qw)] for qw in words], 'float64')
-#         rel_scores, rel_scores_sum, sim_matrix = {}, {}, {}
-#         for j in range(len(data['queries'][i]['retrieved_documents'])):
-#             doc_id          = data['queries'][i]['retrieved_documents'][j]['doc_id']
-#             dtext           = docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText']
-#             words, _        = get_words(dtext)
-#             words, dvecs    = get_embeds(words, wv)
-#             bm25            = tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
-#             escores         = GetScores(qtext, dtext, bm25)
-#             score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
-#             rel_scores[j]   = score.cpu().item()
-#         top = heapq.nlargest(100, rel_scores, key=rel_scores.get)
-#         JsonPredsAppend(json_preds, data, i, top)
-#     DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
-#     print('Done')
+b_size              = 32
+max_dev_map         = 0.0
+max_epochs          = 30
+for epoch in range(max_epochs):
+    num_docs, relevant, returned, brelevant, breturned, loss = 0.0, 0.0, 0.0, 0.0, 0.0, []
+    train_examples  = GetTrainData(tr_data, 1)
+    random.shuffle(train_examples)
+    for ex in train_examples:
+        i                       = ex[0]
+        qtext, qvecs, q_idfs    = handle_quest(tr_data, i)
+        pos, neg, best_neg      = [], [], -1000000.0
+        for j in ex[1]:
+            is_rel, doc_id, dtext, dvecs, bm25 = handle_doc(tr_data, tr_docs, i, j)
+            escores             = GetScores(qtext, dtext, bm25)
+            score               = model.emit_one(dvecs, qvecs, q_idfs, escores)
+            if is_rel:
+                pos.append(score)
+            else:
+                neg.append(score)
+                if score.cpu().item() > best_neg:
+                    best_neg = score.cpu().item()
+        if pos[0].cpu().item() > best_neg:
+            relevant    += 1
+            brelevant   += 1
+        returned        += 1
+        breturned       += 1
+        num_docs        += 1
+        if len(pos) > 0 and len(neg) > 0:
+            loss.append(model.my_hinge_loss(torch.cat(pos), torch.cat(neg), margin=1.0))
+        if num_docs % b_size == 0 or num_docs == len(train_examples):
+            model.UpdateBatch(loss)
+            loss = []
+        if num_docs % b_size == 0:
+            print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
+            brelevant, breturned = 0, 0
+    print('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
+    print('Saving model')
+    save_checkpoint(epoch, model, max_dev_map, optimizer)
+    print('Model saved')
+    #
+    print('Making Dev preds')
+    json_preds, json_preds['questions'], num_docs = {}, [], 0
+    for i in range(len(data['queries'])):
+        num_docs     += 1
+        qtext        = data['queries'][i]['query_text']
+        words, _     = get_words(qtext)
+        words, qvecs = get_embeds(words, wv)
+        q_idfs       = np.array([[idf_val(qw)] for qw in words], 'float64')
+        rel_scores, rel_scores_sum, sim_matrix = {}, {}, {}
+        for j in range(len(data['queries'][i]['retrieved_documents'])):
+            doc_id          = data['queries'][i]['retrieved_documents'][j]['doc_id']
+            dtext           = docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText']
+            words, _        = get_words(dtext)
+            words, dvecs    = get_embeds(words, wv)
+            bm25            = tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
+            escores         = GetScores(qtext, dtext, bm25)
+            score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
+            rel_scores[j]   = score.cpu().item()
+        top = heapq.nlargest(100, rel_scores, key=rel_scores.get)
+        JsonPredsAppend(json_preds, data, i, top)
+    DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
+    print('Done')
 
