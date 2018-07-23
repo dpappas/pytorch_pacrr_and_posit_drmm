@@ -481,7 +481,7 @@ for epoch in range(max_epochs):
         breturned       += 1
         num_docs        += 1
         if len(pos) > 0 and len(neg) > 0:
-            loss.append(model.my_hinge_loss(pos, neg, margin=1.0))
+            loss.append(model.my_hinge_loss(torch.cat(pos), torch.cat(neg), margin=1.0))
         if num_docs % b_size == 0 or num_docs == len(train_examples):
             model.UpdateBatch(loss)
             loss = []
@@ -511,7 +511,7 @@ for epoch in range(max_epochs):
             bm25            = tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
             escores         = GetScores(qtext, dtext, bm25)
             score           = model.emit_one(dvecs, qvecs, q_idfs, escores)
-            rel_scores[j]   = score.value()
+            rel_scores[j]   = score.cpu().item()
         top = heapq.nlargest(100, rel_scores, key=rel_scores.get)
         JsonPredsAppend(json_preds, data, i, top)
     DumpJson(json_preds, odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
