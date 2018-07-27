@@ -444,11 +444,14 @@ for epoch in range(max_epochs):
             loss = []
         if num_docs % b_size == 0:
             print('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
+            logger.info('Epoch {}, Instances {}, Cumulative Acc {}, Sub-epoch Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned)), (float(brelevant)/float(breturned))))
             brelevant, breturned = 0, 0
     print('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
+    logger.info('End of epoch {}, Total train docs {} Train Acc {}'.format(epoch, num_docs, (float(relevant)/float(returned))))
     #
     model.eval()
     print('Making Dev preds')
+    logger.info('Making Dev preds')
     json_preds, json_preds['questions'], num_docs = {}, [], 0
     for i in range(len(data['queries'])):
         num_docs             += 1
@@ -464,12 +467,17 @@ for epoch in range(max_epochs):
     fout    = odir + 'elk_relevant_abs_posit_drmm_lists_dev.json'
     DumpJson(json_preds, fout)
     dev_map = get_map_res(fgold, fout)
-    print 'DEV MAP: {} epoch: {}'.format(dev_map, epoch+1)
+    print('DEV MAP: {} epoch: {}'.format(dev_map, epoch+1))
+    logger.info('DEV MAP: {} epoch: {}'.format(dev_map, epoch+1))
     if(dev_map >= max_dev_map):
-        print 'new dev map: {} better than max_dev_map: {}'.format(dev_map, max_dev_map)
+        print('new dev map: {} better than max_dev_map: {}'.format(dev_map, max_dev_map))
+        logger.info('new dev map: {} better than max_dev_map: {}'.format(dev_map, max_dev_map))
         max_dev_map = dev_map
         print('Saving model')
+        logger.info('Saving model')
         save_checkpoint(epoch, model, max_dev_map, optimizer)
         print('Model saved')
+        logger.info('Model saved')
     print('Done')
+    logger.info('Done')
 
