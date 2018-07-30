@@ -209,29 +209,6 @@ def GetScores(qtext, dtext, bm25):
     bm25        = [bm25]
     return qd1[0:3] + bm25
 
-my_seed = 1
-random.seed(my_seed)
-torch.manual_seed(my_seed)
-
-data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
-fgold = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json'
-
-odir = '/home/dpappas/simplest_posit_drmm/'
-if not os.path.exists(odir):
-    os.makedirs(odir)
-
-od              = 'sent_posit_drmm_MarginRankingLoss'
-k_for_maxpool   = 5
-lr              = 0.01
-
-import logging
-logger      = logging.getLogger(od)
-hdlr        = logging.FileHandler(odir+'model.log')
-formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-hdlr.setFormatter(formatter)
-logger.addHandler(hdlr)
-logger.setLevel(logging.INFO)
-
 def print_params(model):
     '''
     It just prints the number of parameters in the model.
@@ -315,6 +292,29 @@ def get_map_res(fgold, femit):
     map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
     map_res         = float(map_res[-1])
     return map_res
+
+my_seed = 1
+random.seed(my_seed)
+torch.manual_seed(my_seed)
+
+data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
+fgold = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json'
+
+odir = '/home/dpappas/simplest_posit_drmm/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
+
+od              = 'sent_posit_drmm_MarginRankingLoss'
+k_for_maxpool   = 5
+lr              = 0.01
+
+import logging
+logger      = logging.getLogger(od)
+hdlr        = logging.FileHandler(odir+'model.log')
+formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, k_for_maxpool, embedding_dim):
