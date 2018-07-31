@@ -349,9 +349,9 @@ params      = model.parameters()
 print_params(model)
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-dummy_test()
+# dummy_test()
 
-data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc)
+data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 exit()
 
