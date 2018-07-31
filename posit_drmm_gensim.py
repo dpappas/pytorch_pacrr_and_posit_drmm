@@ -318,7 +318,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return test_data, test_docs, dev_data, dev_docs, tr_data, tr_docs, idf, max_idf, wv
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
@@ -462,14 +462,25 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 
 # dummy_test()
 
-data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data(
+test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(
     dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path
 )
 
-for dato in
+for dato in train_data['queries']:
+    break
+    # quest       = quer['query_text']
+    # bm25s       = {t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents']}
+    # ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
+    # good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
+    # bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
+    # if(len(bad_pmids)>0):
+    #     for gid in good_pmids:
+    #         for i in range(how_many_loops):
+    #             bid                                                                         = random.choice(bad_pmids)
 
-pprint(data['queries'][0])
 
+pprint(train_data['queries'][0])
+pprint(train_docs['queries'][0])
 print(len(idf))
 print(len(wv))
 
