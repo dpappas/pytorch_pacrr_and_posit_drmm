@@ -476,9 +476,12 @@ for dato in train_data['queries']:
         for gid in good_pmids:
             bid         = random.choice(bad_pmids)
             good_text   = train_docs[gid]['title'] + ' <title> ' + train_docs[gid]['abstractText']
+            good_tokens = tokenize(good_text)
+            good_tokens_2, good_embeds  = get_embeds(good_tokens, wv)
             bad_text    = train_docs[bid]['title'] + ' <title> ' + train_docs[bid]['abstractText']
-            print(bid)
-
+            bad_tokens  = tokenize(bad_text)
+            bad_tokens_2, bad_embeds    = get_embeds(bad_tokens, wv)
+            print(bid, good_tokens_2, bad_tokens_2)
 
 pprint(train_data['queries'][0])
 pprint(train_docs['17350655'])
