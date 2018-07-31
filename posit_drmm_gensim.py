@@ -467,20 +467,21 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 )
 
 for dato in train_data['queries']:
-    break
-    # quest       = quer['query_text']
-    # bm25s       = {t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents']}
-    # ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
-    # good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
-    # bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-    # if(len(bad_pmids)>0):
-    #     for gid in good_pmids:
-    #         for i in range(how_many_loops):
-    #             bid                                                                         = random.choice(bad_pmids)
+    quest       = dato['query_text']
+    bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+    ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+    good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+    bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+    if(len(bad_pmids)>0):
+        for gid in good_pmids:
+            bid         = random.choice(bad_pmids)
+            good_text   = train_docs[gid]['title'] + ' <title> ' + train_docs[gid]['abstractText']
+            bad_text    = train_docs[bid]['title'] + ' <title> ' + train_docs[bid]['abstractText']
+            print(bid)
 
 
 pprint(train_data['queries'][0])
-pprint(train_docs['queries'][0])
+pprint(train_docs['17350655'])
 print(len(idf))
 print(len(wv))
 
