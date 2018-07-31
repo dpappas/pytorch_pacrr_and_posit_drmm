@@ -25,16 +25,17 @@ from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
 from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
 from gensim.models.keyedvectors import KeyedVectors
 
-my_seed = 1
+my_seed = random.randint(0,2000000)
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-odir = '/home/dpappas/simplest_posit_drmm/'
+odir = '/home/dpappas/posit_drmm_gensim/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
 od              = 'sent_posit_drmm_MarginRankingLoss'
 k_for_maxpool   = 5
+embedding_dim   = 200
 lr              = 0.01
 bsize           = 32
 
@@ -404,7 +405,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 print('Compiling model...')
 logger.info('Compiling model...')
-model       = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool)
+model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 params      = model.parameters()
 print_params(model)
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
