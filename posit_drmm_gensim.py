@@ -297,7 +297,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.k                                      = k_for_maxpool         # k is for the average k pooling
         #
         self.embedding_dim                          = embedding_dim
-        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv                           = nn.Conv1d(
+            self.embedding_dim,
+            self.embedding_dim,
+            3,
+            padding=2,
+            bias=True
+        )
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
         self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=False)
