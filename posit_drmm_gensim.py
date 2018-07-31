@@ -273,6 +273,20 @@ def GetTrainData(data, max_neg=1):
         train_data.append(inst)
   return train_data
 
+def uwords(words):
+  uw = {}
+  for w in words:
+    uw[w] = 1
+  return [w for w in uw]
+
+def ubigrams(words):
+  uw = {}
+  prevw = "<pw>"
+  for w in words:
+    uw[prevw + '_' + w] = 1
+    prevw = w
+  return [w for w in uw]
+
 def query_doc_overlap(qwords, dwords):
     # % Query words in doc.
     qwords_in_doc = 0
@@ -332,6 +346,15 @@ def handle_tr_quest(i):
     words, qvecs    = get_embeds(words, wv)
     q_idfs          = np.array([[idf_val(qw)] for qw in words], 'float64')
     return qtext, qvecs, q_idfs
+
+def handle_tr_doc(i, j):
+    is_rel          = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
+    doc_id          = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
+    dtext           = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
+    words, _        = get_words(dtext)
+    words, dvecs    = get_embeds(words, wv)
+    bm25            = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
+    return is_rel, doc_id, dtext, dvecs, bm25
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
@@ -464,6 +487,8 @@ random.shuffle(train_examples)
 for ex in train_examples:
     i = ex[0]
     qtext, qvecs, q_idfs = handle_tr_quest(i)
+    for j in ex[1]:
+        is_rel, doc_id, dtext, dvecs, bm25  = handle_tr_doc(i, j)
 
 
 exit()
