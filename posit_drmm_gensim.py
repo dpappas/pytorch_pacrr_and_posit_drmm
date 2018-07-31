@@ -344,14 +344,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_maximum             = k_max_pooled[:, -1]                       # select the maximum value of each instance
         the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
-    def apply_masks_on_similarity(self, document, question, similarity):
-        qq = (question > 1).float()
-        ss              = (document > 1).float()
-        sim_mask1       = qq.unsqueeze(-1).expand_as(similarity)
-        sim_mask2       = ss.unsqueeze(0).expand_as(similarity)
-        similarity      *= sim_mask1
-        similarity      *= sim_mask2
-        return similarity
     def get_output(self, input_list, weights):
         temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
@@ -373,44 +365,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         gaf             = autograd.Variable(torch.FloatTensor(gaf),             requires_grad=False)
         baf             = autograd.Variable(torch.FloatTensor(baf),             requires_grad=False)
         return doc1_embeds, doc2_embeds, question_embeds, gaf, baf
-    def emit_one(self, doc1, question, doc1_sim, gaf):
-        question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
-        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
-        sim_oh_d1                       = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
-
-        sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
-        sim_sensitive_d1_trigram        = self.my_cosine_sim(q_conv_res_trigram, d1_conv_trigram).squeeze(0)
-        sim_insensitive_pooled_d1       = self.pooling_method(sim_insensitive_d1)
-        sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
-        sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
-        q_idfs                          = self.my_idfs(question)
-        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
-        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights                       = F.softmax(q_weights, dim=-1)
-        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
-        good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
-        good_out                        = self.out_layer(good_add_feats)
-        return good_out
+    def emit_one(self, doc1_embeds, question_embeds, gaf):
+        doc1_embeds, question_embeds, gaf = self.fix_input_one(doc1_embeds, question_embeds, gaf)
+        pass
     def forward(self, doc1_embeds, doc2_embeds, question_embeds, gaf, baf):
-        question                        = autograd.Variable(torch.LongTensor(question), requires_grad=False)
-        doc1                            = autograd.Variable(torch.LongTensor(doc1),     requires_grad=False)
-        doc2                            = autograd.Variable(torch.LongTensor(doc2),     requires_grad=False)
-        # additional features for positive (good) and negative (bad) examples
-        gaf                             = autograd.Variable(torch.FloatTensor(gaf),     requires_grad=False)
-        baf                             = autograd.Variable(torch.FloatTensor(baf),     requires_grad=False)
-        # one hot similarity matrix
-        sim_oh_d1                       = autograd.Variable(torch.FloatTensor(doc1_sim).transpose(0,1), requires_grad=False)
-        sim_oh_d2                       = autograd.Variable(torch.FloatTensor(doc2_sim).transpose(0,1), requires_grad=False)
-        # create word embeddings
-        question_embeds                 = self.word_embeddings(question)
-        doc1_embeds                     = self.word_embeddings(doc1)
-        doc2_embeds                     = self.word_embeddings(doc2)
+        doc1_embeds, doc2_embeds, question_embeds, gaf, baf = self.fix_input_two(doc1_embeds, doc2_embeds, question_embeds, gaf, baf)
         # cosine similarity on pretrained word embeddings
         sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         sim_insensitive_d2              = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
+        sim_oh_d1                       = (sim_insensitive_d1 > (1-1e-3)).float()
+        sim_oh_d2                       = (sim_insensitive_d2 > (1-1e-3)).float()
         # 3gram convolution on the embedding matrix
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
