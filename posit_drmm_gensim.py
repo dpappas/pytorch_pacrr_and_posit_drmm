@@ -23,6 +23,7 @@ import torch.autograd as autograd
 from tqdm import tqdm
 from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
 from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
+from gensim.models.keyedvectors import KeyedVectors
 
 my_seed = 1
 random.seed(my_seed)
@@ -45,14 +46,7 @@ hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
-print('LOADING embedding_matrix (14GB)...')
-logger.info('LOADING embedding_matrix (14GB)...')
-matrix          = np.load('/home/dpappas/joint_task_list_batches/embedding_matrix.npy')
-idf_mat         = np.load('/home/dpappas/joint_task_list_batches/idf_matrix.npy')
-# print(idf_mat.shape)
-# matrix          = np.random.random((150, 10))
-# idf_mat         = np.random.random((150))
-print(matrix.shape)
+print('LOADING KeyedVectors (14GB)...')
 
 def print_params(model):
     '''
@@ -264,24 +258,27 @@ def get_one_map(prefix, bm25_scores, all_abs):
         res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json', odir+'elk_relevant_abs_posit_drmm_lists_test.json')
     return res_map
 
-def load_data():
-    print('Loading abs texts...')
-    logger.info('Loading abs texts...')
-    train_all_abs   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.train.pkl', 'rb'))
-    dev_all_abs     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.dev.pkl', 'rb'))
-    test_all_abs    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_docset_top100.test.pkl', 'rb'))
-    print('Loading retrieved docsc...')
-    logger.info('Loading retrieved docsc...')
-    train_bm25_scores   = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.train.pkl', 'rb'))
-    dev_bm25_scores     = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.dev.pkl', 'rb'))
-    test_bm25_scores    = pickle.load(open('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq_bm25_top100.test.pkl', 'rb'))
-    print('Loading token to index files...')
-    logger.info('Loading token to index files...')
-    token_to_index_f = '/home/dpappas/joint_task_list_batches/t2i.p'
-    t2i = pickle.load(open(token_to_index_f, 'rb'))
-    print('yielding data')
-    logger.info('yielding data')
-    return train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i
+def load_all_data(dataloc):
+    print('loading pickle data')
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+      data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+      docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+      tr_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+      tr_docs = pickle.load(f)
+    print('loading words')
+    words = {}
+    GetWords(tr_data, tr_docs, words)
+    GetWords(data, docs, words)
+    print('loading idfs')
+    idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    print('loading w2v')
+    w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    return data, docs, tr_data, tr_docs, idf, max_idf, wv
 
 def get_map_res(fgold, femit):
     trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
@@ -403,20 +400,22 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # compute the loss
         loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
         # loss1                           = self.my_hinge_loss(good_out, bad_out)
-        return loss1, good_out, bad_out, loss1, loss1
+        return loss1, good_out, bad_out
 
 print('Compiling model...')
 logger.info('Compiling model...')
-model  = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool)
-params = model.parameters()
+model       = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool)
+params      = model.parameters()
 print_params(model)
-del(matrix)
-optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
-# dummy_test()
-# exit()
+dummy_test()
+exit()
 
-train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
+# train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
+#
+# data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
+# fgold = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json'
 
 # max_dev_map     = 0.0
 min_dev_loss    = 10e5
