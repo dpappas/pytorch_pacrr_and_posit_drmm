@@ -178,6 +178,25 @@ def get_map_res(fgold, femit):
 def tokenize(x):
   return bioclean(x)
 
+def idf_val(w):
+    if w in idf:
+        return idf[w]
+    return max_idf
+
+def get_words(s):
+    sl  = tokenize(s)
+    sl  = [s for s in sl]
+    sl2 = [s for s in sl if idf_val(s) >= 2.0]
+    return sl, sl2
+
+def get_embeds(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        if(tok in wv):
+            ret1.append(tok)
+            ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
     # with open(dataloc + 'idf.pkl', 'rb') as f:
@@ -227,6 +246,92 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     return data, docs, tr_data, tr_docs, idf, max_idf, wv
+
+def GetTrainData(data, max_neg=1):
+  train_data = []
+  for i in range(len(data['queries'])):
+    pos, neg = [], []
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      is_rel = data['queries'][i]['retrieved_documents'][j]['is_relevant']
+      if is_rel:
+        pos.append(j)
+      else:
+        neg.append(j)
+    if len(pos) > 0 and len(neg) > 0:
+      for p in pos:
+        neg_ex = []
+        if len(neg) <= max_neg:
+          neg_ex = neg
+        else:
+          used = {}
+          while len(neg_ex) < max_neg:
+            n = random.randint(0, len(neg)-1)
+            if n not in used:
+              neg_ex.append(neg[n])
+              used[n] = 1
+        inst = [i, [p] + neg_ex]
+        train_data.append(inst)
+  return train_data
+
+def query_doc_overlap(qwords, dwords):
+    # % Query words in doc.
+    qwords_in_doc = 0
+    idf_qwords_in_doc = 0.0
+    idf_qwords = 0.0
+    for qword in uwords(qwords):
+      idf_qwords += idf_val(qword)
+      for dword in uwords(dwords):
+        if qword == dword:
+          idf_qwords_in_doc += idf_val(qword)
+          qwords_in_doc     += 1
+          break
+    if len(qwords) <= 0:
+      qwords_in_doc_val = 0.0
+    else:
+      qwords_in_doc_val = (float(qwords_in_doc) /
+                           float(len(uwords(qwords))))
+    if idf_qwords <= 0.0:
+      idf_qwords_in_doc_val = 0.0
+    else:
+      idf_qwords_in_doc_val = float(idf_qwords_in_doc) / float(idf_qwords)
+    # % Query bigrams  in doc.
+    qwords_bigrams_in_doc = 0
+    idf_qwords_bigrams_in_doc = 0.0
+    idf_bigrams = 0.0
+    for qword in ubigrams(qwords):
+      wrds = qword.split('_')
+      idf_bigrams += idf_val(wrds[0]) * idf_val(wrds[1])
+      for dword in ubigrams(dwords):
+        if qword == dword:
+          qwords_bigrams_in_doc += 1
+          idf_qwords_bigrams_in_doc += (idf_val(wrds[0]) * idf_val(wrds[1]))
+          break
+    if len(qwords) <= 0:
+      qwords_bigrams_in_doc_val = 0.0
+    else:
+      qwords_bigrams_in_doc_val = (float(qwords_bigrams_in_doc) / float(len(ubigrams(qwords))))
+    if idf_bigrams <= 0.0:
+      idf_qwords_bigrams_in_doc_val = 0.0
+    else:
+      idf_qwords_bigrams_in_doc_val = (float(idf_qwords_bigrams_in_doc) / float(idf_bigrams))
+    return [qwords_in_doc_val,
+            qwords_bigrams_in_doc_val,
+            idf_qwords_in_doc_val,
+            idf_qwords_bigrams_in_doc_val]
+
+def GetScores(qtext, dtext, bm25):
+    qwords, qw2 = get_words(qtext)
+    dwords, dw2 = get_words(dtext)
+    qd1         = query_doc_overlap(qwords, dwords)
+    bm25        = [bm25]
+    return qd1[0:3] + bm25
+
+def handle_tr_quest(i):
+    qtext           = tr_data['queries'][i]['query_text']
+    words, _        = get_words(qtext)
+    words, qvecs    = get_embeds(words, wv)
+    q_idfs          = np.array([[idf_val(qw)] for qw in words], 'float64')
+    return qtext, qvecs, q_idfs
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
@@ -352,6 +457,14 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 # dummy_test()
 
 data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+
+train_examples = GetTrainData(tr_data, 1)
+random.shuffle(train_examples)
+
+for ex in train_examples:
+    i = ex[0]
+    qtext, qvecs, q_idfs = handle_tr_quest(i)
+
 
 exit()
 
