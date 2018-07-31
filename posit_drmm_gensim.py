@@ -403,8 +403,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out                        = self.out_layer(good_add_feats)
         bad_out                         = self.out_layer(bad_add_feats)
         # compute the loss
-        # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
-        loss1                           = self.my_hinge_loss(good_out, bad_out)
+        loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
+        # loss1                           = self.my_hinge_loss(good_out, bad_out)
         return loss1, good_out, bad_out, loss1, loss1
 
 print('Compiling model...')
