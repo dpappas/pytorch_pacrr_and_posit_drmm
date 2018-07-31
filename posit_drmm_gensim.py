@@ -296,6 +296,10 @@ def GetWords(data, doc_text, words):
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
+    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
+      test_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
+        test_docs = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
       data = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
@@ -308,10 +312,12 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     words           = {}
     GetWords(tr_data, tr_docs, words)
     GetWords(data, docs, words)
+    GetWords(test_data, test_docs, words)
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     return data, docs, tr_data, tr_docs, idf, max_idf, wv
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
@@ -461,6 +467,9 @@ data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data(
 )
 
 pprint(data['queries'][0])
+
+print(len(idf))
+print(len(wv))
 
 exit()
 
