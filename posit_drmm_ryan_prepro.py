@@ -481,3 +481,17 @@ for epoch in range(max_epochs):
     print('Done')
     logger.info('Done')
 
+'''
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json /home/dpappas/venvs/ryan_drmm/outputs/my_model-r1_0.json | grep map | head -1
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json /home/dpappas/venvs/ryan_drmm/outputs/my_model-r1_1.json | grep map | head -1
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json /home/dpappas/venvs/ryan_drmm/outputs/my_model-r1_2.json | grep map | head -1
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json /home/dpappas/venvs/ryan_drmm/outputs/my_model-r1_3.json | grep map | head -1
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json /home/dpappas/venvs/ryan_drmm/outputs/my_model-r1_4.json | grep map | head -1
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json /home/dpappas/venvs/ryan_drmm/outputs/my_model-r1_5.json | grep map | head -1
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json /home/dpappas/venvs/ryan_drmm/outputs/my_model-r1_6.json | grep map | head -1
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json /home/dpappas/venvs/ryan_drmm/outputs/my_model-r1_7.json | grep map | head -1
+python /home/DATA/Biomedical/document_ranking/eval/run_eval.py /home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json /home/dpappas/venvs/ryan_drmm/outputs/my_model-r1_8.json | grep map | head -1
+
+'''
+
+
