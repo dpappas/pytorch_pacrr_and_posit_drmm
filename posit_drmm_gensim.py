@@ -214,65 +214,6 @@ def load_idfs(idf_path, words):
     print('Loaded idf tables with max idf %f' % max_idf)
     return ret, max_idf
 
-def GetWords(data, doc_text, words):
-  for i in range(len(data['queries'])):
-    qwds = tokenize(data['queries'][i]['query_text'])
-    for w in qwds:
-      words[w] = 1
-    for j in range(len(data['queries'][i]['retrieved_documents'])):
-      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      dtext = (doc_text[doc_id]['title'] + ' <title> ' +
-               doc_text[doc_id]['abstractText'])
-      dwds = tokenize(dtext)
-      for w in dwds:
-        words[w] = 1
-
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
-    print('loading pickle data')
-    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
-      data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
-      docs = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
-      tr_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
-      tr_docs = pickle.load(f)
-    print('loading words')
-    words = {}
-    GetWords(tr_data, tr_docs, words)
-    GetWords(data, docs, words)
-    print('loading idfs')
-    idf, max_idf    = load_idfs(idf_pickle_path, words)
-    print('loading w2v')
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    return data, docs, tr_data, tr_docs, idf, max_idf, wv
-
-def GetTrainData(data, max_neg=1):
-  train_data = []
-  for i in range(len(data['queries'])):
-    pos, neg = [], []
-    for j in range(len(data['queries'][i]['retrieved_documents'])):
-      is_rel = data['queries'][i]['retrieved_documents'][j]['is_relevant']
-      if is_rel:
-        pos.append(j)
-      else:
-        neg.append(j)
-    if len(pos) > 0 and len(neg) > 0:
-      for p in pos:
-        neg_ex = []
-        if len(neg) <= max_neg:
-          neg_ex = neg
-        else:
-          used = {}
-          while len(neg_ex) < max_neg:
-            n = random.randint(0, len(neg)-1)
-            if n not in used:
-              neg_ex.append(neg[n])
-              used[n] = 1
-        inst = [i, [p] + neg_ex]
-        train_data.append(inst)
-  return train_data
-
 def uwords(words):
   uw = {}
   for w in words:
@@ -340,21 +281,38 @@ def GetScores(qtext, dtext, bm25):
     bm25        = [bm25]
     return qd1[0:3] + bm25
 
-def handle_tr_quest(i):
-    qtext           = tr_data['queries'][i]['query_text']
-    words, _        = get_words(qtext)
-    words, qvecs    = get_embeds(words, wv)
-    q_idfs          = np.array([[idf_val(qw)] for qw in words], 'float64')
-    return qtext, qvecs, q_idfs
+def GetWords(data, doc_text, words):
+  for i in range(len(data['queries'])):
+    qwds = tokenize(data['queries'][i]['query_text'])
+    for w in qwds:
+      words[w] = 1
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      dtext = (doc_text[doc_id]['title'] + ' <title> ' +
+               doc_text[doc_id]['abstractText'])
+      dwds = tokenize(dtext)
+      for w in dwds:
+        words[w] = 1
 
-def handle_tr_doc(i, j):
-    is_rel          = tr_data['queries'][i]['retrieved_documents'][j]['is_relevant']
-    doc_id          = tr_data['queries'][i]['retrieved_documents'][j]['doc_id']
-    dtext           = (tr_docs[doc_id]['title'] + ' <title> ' + tr_docs[doc_id]['abstractText'])
-    words, _        = get_words(dtext)
-    words, dvecs    = get_embeds(words, wv)
-    bm25            = (tr_data['queries'][i]['retrieved_documents'][j]['norm_bm25_score'])
-    return is_rel, doc_id, dtext, dvecs, bm25
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+    print('loading pickle data')
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+      data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+      docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+      tr_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+      tr_docs = pickle.load(f)
+    print('loading words')
+    words           = {}
+    GetWords(tr_data, tr_docs, words)
+    GetWords(data, docs, words)
+    print('loading idfs')
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    print('loading w2v')
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    return data, docs, tr_data, tr_docs, idf, max_idf, wv
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
@@ -479,17 +437,11 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 
 # dummy_test()
 
-data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data(
+    dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path
+)
 
-train_examples = GetTrainData(tr_data, 1)
-random.shuffle(train_examples)
-
-for ex in train_examples:
-    i = ex[0]
-    qtext, qvecs, q_idfs = handle_tr_quest(i)
-    for j in ex[1]:
-        is_rel, doc_id, dtext, dvecs, bm25  = handle_tr_doc(i, j)
-
+print(data['queries'][0])
 
 exit()
 
