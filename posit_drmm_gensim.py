@@ -136,23 +136,21 @@ def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
             ]
 
 def dummy_test():
-    quest_inds          = np.random.randint(0,100,(40))
-    good_sents_inds     = np.random.randint(0,100,(36))
-    good_all_sims       = np.zeros((36, 40))
-    bad_sents_inds      = np.random.randint(0,100,(37))
-    bad_all_sims        = np.zeros((37, 40))
+    doc1_embeds         = np.random.rand(40, 200)
+    doc2_embeds         = np.random.rand(30, 200)
+    question_embeds     = np.random.rand(20, 200)
+    q_idfs              = np.random.rand(20, 1)
     gaf                 = np.random.rand(4)
     baf                 = np.random.rand(4)
     for epoch in range(200):
         optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_, loss1_, loss2_ = model(
-            doc1        = good_sents_inds,
-            doc2        = bad_sents_inds,
-            question    = quest_inds,
-            doc1_sim    = good_all_sims,
-            doc2_sim    = bad_all_sims,
-            gaf         = gaf,
-            baf         = baf,
+        cost_, doc1_emit_, doc2_emit_ = model(
+            doc1_embeds     = doc1_embeds,
+            doc2_embeds     = doc2_embeds,
+            question_embeds = question_embeds,
+            q_idfs          = q_idfs,
+            gaf             = gaf,
+            baf             = baf
         )
         cost_.backward()
         optimizer.step()
@@ -258,28 +256,6 @@ def get_one_map(prefix, bm25_scores, all_abs):
             f.write(json.dumps(data, indent=4, sort_keys=True))
         res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json', odir+'elk_relevant_abs_posit_drmm_lists_test.json')
     return res_map
-
-def load_all_data(dataloc):
-    print('loading pickle data')
-    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
-      data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
-      docs = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
-      tr_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
-      tr_docs = pickle.load(f)
-    print('loading words')
-    words = {}
-    GetWords(tr_data, tr_docs, words)
-    GetWords(data, docs, words)
-    print('loading idfs')
-    idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
-    idf, max_idf    = load_idfs(idf_pickle_path, words)
-    print('loading w2v')
-    w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    return data, docs, tr_data, tr_docs, idf, max_idf, wv
 
 def get_map_res(fgold, femit):
     trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
