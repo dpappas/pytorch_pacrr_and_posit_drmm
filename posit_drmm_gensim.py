@@ -30,6 +30,9 @@ my_seed = random.randint(0,2000000)
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
+w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
+idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
+
 odir = '/home/dpappas/posit_drmm_gensim/'
 if not os.path.exists(odir):
     os.makedirs(odir)
@@ -80,61 +83,6 @@ def print_params(model):
     logger.info(40 * '=')
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
-
-def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
-    for quer in bm25_scores[u'queries']:
-        quest       = quer['query_text']
-        # bm25s       = { t['doc_id']:t['bm25_score'] for t in quer[u'retrieved_documents'] }
-        bm25s       = { t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents'] }
-        ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-        if(len(bad_pmids)>0):
-            for gid in good_pmids:
-                for i in range(how_many_loops):
-                    # bid = bad_pmids[i%len(bad_pmids)]
-                    bid = random.choice(bad_pmids)
-                    good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
-                    additional_features_good.append(bm25s[gid])
-                    bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
-                    additional_features_bad.append(bm25s[bid])
-                    # print(additional_features_good)
-                    # print(additional_features_bad)
-                    yield [
-                        good_sents_inds,
-                        good_all_sims,
-                        bad_sents_inds,
-                        bad_all_sims,
-                        bad_quest_inds,
-                        np.array(additional_features_good, 'float64'),
-                        np.array(additional_features_bad, 'float64')
-                    ]
-
-def random_data_yielder(bm25_scores, all_abs, t2i, how_many):
-    while(how_many>0):
-        quer        = random.choice(bm25_scores[u'queries'])
-        quest       = quer['query_text']
-        bm25s       = {t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents']}
-        ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-        if(len(bad_pmids)>0 and len(good_pmids)>0):
-            how_many -= 1
-            gid = random.choice(good_pmids)
-            bid = random.choice(bad_pmids)
-            good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
-            additional_features_good.append(bm25s[gid])
-            bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
-            additional_features_bad.append(bm25s[bid])
-            yield [
-                good_sents_inds,
-                good_all_sims,
-                bad_sents_inds,
-                bad_all_sims,
-                bad_quest_inds,
-                np.array(additional_features_good, 'float64'),
-                np.array(additional_features_bad,  'float64')
-            ]
 
 def dummy_test():
     doc1_embeds         = np.random.rand(40, 200)
@@ -220,44 +168,6 @@ def dev_one(dev_instances):
     logger.info('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
     return average_task_loss / instance_metr
 
-def get_one_map(prefix, bm25_scores, all_abs):
-    data = {}
-    data['questions'] = []
-    for quer in tqdm(bm25_scores['queries']):
-        dato    = {'body': quer['query_text'],'id': quer['query_id'],'documents': []}
-        bm25s   = { t['doc_id']:t['bm25_score'] for t in quer[u'retrieved_documents'] }
-        doc_res = {}
-        for retr in quer['retrieved_documents']:
-            doc_id      = retr['doc_id']
-            passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
-            all_sims    = get_sim_mat(bioclean(passage), bioclean(quer['query_text']))
-            #
-            sents_inds  = text2indices(passage, t2i, 'd')
-            quest_inds  = text2indices(quer['query_text'], t2i, 'q')
-            #
-            gaf         = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
-            gaf.append(bm25s[doc_id])
-            #
-            doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims, gaf=gaf)
-            #
-            doc_res[doc_id] = float(doc1_emit_)
-        doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-        doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-        doc_res = doc_res[:100]
-        # filler  = sorted([-i - 1 for i in range(100 - len(doc_res))])
-        # doc_res = doc_res+filler
-        dato['documents'] = doc_res
-        data['questions'].append(dato)
-    if(prefix=='dev'):
-        with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
-            f.write(json.dumps(data, indent=4, sort_keys=True))
-        res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json', odir+'elk_relevant_abs_posit_drmm_lists_dev.json')
-    else:
-        with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
-            f.write(json.dumps(data, indent=4, sort_keys=True))
-        res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json', odir+'elk_relevant_abs_posit_drmm_lists_test.json')
-    return res_map
-
 def get_map_res(fgold, femit):
     trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err)      = trec_eval_res.communicate()
@@ -299,7 +209,7 @@ def GetWords(data, doc_text, words):
       for w in dwds:
         words[w] = 1
 
-def load_all_data(dataloc):
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
     with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
       data = pickle.load(f)
@@ -314,10 +224,8 @@ def load_all_data(dataloc):
     GetWords(tr_data, tr_docs, words)
     GetWords(data, docs, words)
     print('loading idfs')
-    idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
-    w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     return data, docs, tr_data, tr_docs, idf, max_idf, wv
 
