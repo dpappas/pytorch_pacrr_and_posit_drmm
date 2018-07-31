@@ -10,6 +10,7 @@ else:
     import cPickle as pickle
 
 import os
+import re
 import json
 import random
 import subprocess
@@ -21,9 +22,9 @@ import torch.nn.functional as F
 from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
-from my_bioasq_preprocessing import get_item_inds, text2indices, get_sim_mat
-from my_bioasq_preprocessing import bioclean, get_overlap_features_mode_1
 from gensim.models.keyedvectors import KeyedVectors
+
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 my_seed = random.randint(0,2000000)
 random.seed(my_seed)
@@ -265,6 +266,61 @@ def get_map_res(fgold, femit):
     map_res         = float(map_res[-1])
     return map_res
 
+def tokenize(x):
+  return bioclean(x)
+
+def load_idfs(idf_path, words):
+    print('Loading IDF tables')
+    # with open(dataloc + 'idf.pkl', 'rb') as f:
+    with open(idf_path, 'rb') as f:
+        idf = pickle.load(f)
+    ret = {}
+    for w in words:
+        if w in idf:
+            ret[w] = idf[w]
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    idf = None
+    print('Loaded idf tables with max idf %f' % max_idf)
+    return ret, max_idf
+
+def GetWords(data, doc_text, words):
+  for i in range(len(data['queries'])):
+    qwds = tokenize(data['queries'][i]['query_text'])
+    for w in qwds:
+      words[w] = 1
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      dtext = (doc_text[doc_id]['title'] + ' <title> ' +
+               doc_text[doc_id]['abstractText'])
+      dwds = tokenize(dtext)
+      for w in dwds:
+        words[w] = 1
+
+def load_all_data(dataloc):
+    print('loading pickle data')
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+      data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+      docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+      tr_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+      tr_docs = pickle.load(f)
+    print('loading words')
+    words = {}
+    GetWords(tr_data, tr_docs, words)
+    GetWords(data, docs, words)
+    print('loading idfs')
+    idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    print('loading w2v')
+    w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    return data, docs, tr_data, tr_docs, idf, max_idf, wv
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -387,6 +443,9 @@ print_params(model)
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
 dummy_test()
+
+data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
+
 exit()
 
 # train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
