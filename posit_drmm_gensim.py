@@ -30,8 +30,9 @@ my_seed = random.randint(0,2000000)
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
-idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
+w2v_bin_path    = '/home/dpappas/for_ryan/biomedical-vectors-200.bin'
+idf_pickle_path = '/home/dpappas/for_ryan/IDF_python_v2.pkl'
+dataloc         = '/home/dpappas/for_ryan/'
 
 odir            = '/home/dpappas/posit_drmm_gensim/'
 if not os.path.exists(odir):
@@ -50,8 +51,6 @@ formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
-
-print('LOADING KeyedVectors (14GB)...')
 
 def print_params(model):
     '''
@@ -352,7 +351,7 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 
 dummy_test()
 
-data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
+data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc)
 
 exit()
 
