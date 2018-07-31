@@ -370,8 +370,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # cosine similarity on pretrained word embeddings
         sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         sim_insensitive_d2              = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
-        sim_oh_d1                       = (sim_insensitive_d1 > (1-1e-3)).float()
-        sim_oh_d2                       = (sim_insensitive_d2 > (1-1e-3)).float()
+        sim_oh_d1                       = (sim_insensitive_d1 > (1-(1e-3))).float()
+        sim_oh_d2                       = (sim_insensitive_d2 > (1-(1e-3))).float()
         # 3gram convolution on the embedding matrix
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
