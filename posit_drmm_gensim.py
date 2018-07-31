@@ -299,11 +299,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.vocab_size                             = pretrained_embeds.shape[0]
         self.embedding_dim                          = pretrained_embeds.shape[1]
         #
-        idf_matrix                                  = idf_matrix.reshape((-1, 1))
-        self.my_idfs                                = nn.Embedding(self.vocab_size, 1)
-        self.my_idfs.weight.data.copy_(torch.from_numpy(idf_matrix))
-        self.my_idfs.weight.requires_grad           = False
-        #
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
@@ -353,23 +348,27 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
-    def fix_input_one(self, doc1_embeds, question_embeds, gaf):
+    def fix_input_one(self, doc1_embeds, question_embeds, q_idfs, gaf):
         doc1_embeds     = autograd.Variable(torch.FloatTensor(doc1_embeds),     requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         gaf             = autograd.Variable(torch.FloatTensor(gaf),             requires_grad=False)
-        return doc1_embeds, question_embeds, gaf
-    def fix_input_two(self, doc1_embeds, doc2_embeds, question_embeds, gaf, baf):
+        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs),          requires_grad=False)
+        return doc1_embeds, question_embeds, q_idfs, gaf
+    def fix_input_two(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
         doc1_embeds     = autograd.Variable(torch.FloatTensor(doc1_embeds),     requires_grad=False)
         doc2_embeds     = autograd.Variable(torch.FloatTensor(doc2_embeds),     requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         gaf             = autograd.Variable(torch.FloatTensor(gaf),             requires_grad=False)
         baf             = autograd.Variable(torch.FloatTensor(baf),             requires_grad=False)
-        return doc1_embeds, doc2_embeds, question_embeds, gaf, baf
-    def emit_one(self, doc1_embeds, question_embeds, gaf):
-        doc1_embeds, question_embeds, gaf = self.fix_input_one(doc1_embeds, question_embeds, gaf)
+        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs),          requires_grad=False)
+        return doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
+    def emit_one(self, doc1_embeds, question_embeds, q_idfs, gaf):
+        doc1_embeds, question_embeds, q_idfs, gaf = self.fix_input_one(doc1_embeds, question_embeds, q_idfs, gaf)
         pass
-    def forward(self, doc1_embeds, doc2_embeds, question_embeds, gaf, baf):
-        doc1_embeds, doc2_embeds, question_embeds, gaf, baf = self.fix_input_two(doc1_embeds, doc2_embeds, question_embeds, gaf, baf)
+    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
+        doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf = self.fix_input_two(
+            doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
+        )
         # cosine similarity on pretrained word embeddings
         sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         sim_insensitive_d2              = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
@@ -391,7 +390,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_sensitive_pooled_d2_trigram = self.pooling_method(sim_sensitive_d2_trigram)
         sim_oh_pooled_d2                = self.pooling_method(sim_oh_d2)
         # create the weights for weighted average
-        q_idfs                          = self.my_idfs(question)
         q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
