@@ -292,13 +292,11 @@ def get_map_res(fgold, femit):
     return map_res
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, pretrained_embeds, k_for_maxpool, idf_matrix):
+    def __init__(self, embedding_dim, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool         # k is for the average k pooling
         #
-        self.vocab_size                             = pretrained_embeds.shape[0]
-        self.embedding_dim                          = pretrained_embeds.shape[1]
-        #
+        self.embedding_dim                          = embedding_dim
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
@@ -409,8 +407,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 print('Compiling model...')
 logger.info('Compiling model...')
-model  = Sent_Posit_Drmm_Modeler(pretrained_embeds=matrix, k_for_maxpool=k_for_maxpool, idf_matrix=idf_mat)
-# params = list(set(model.parameters()) - set([model.word_embeddings.weight, model.my_idfs.weight]))
+model  = Sent_Posit_Drmm_Modeler(k_for_maxpool=k_for_maxpool)
 params = model.parameters()
 print_params(model)
 del(matrix)
