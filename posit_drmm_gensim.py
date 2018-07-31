@@ -33,7 +33,7 @@ torch.manual_seed(my_seed)
 w2v_bin_path    = '/home/DATA/Biomedical/other/BiomedicalWordEmbeddings/binary/biomedical-vectors-200.bin'
 idf_pickle_path = '/home/dpappas/IDF_python_v2.pkl'
 
-odir = '/home/dpappas/posit_drmm_gensim/'
+odir            = '/home/dpappas/posit_drmm_gensim/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
