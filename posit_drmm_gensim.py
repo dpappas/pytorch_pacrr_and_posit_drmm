@@ -321,7 +321,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         conv_res    = conv_res.transpose(1, 2)
         conv_res    = conv_res + the_input
         return conv_res.squeeze(0)
-    def my_cosine_sim(self,A,B):
+    def my_cosine_sim(self, A, B):
         A           = A.unsqueeze(0)
         B           = B.unsqueeze(0)
         A_mag       = torch.norm(A, 2, dim=2)
