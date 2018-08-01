@@ -342,6 +342,20 @@ def train_data_yielder():
                 bad_escores                 = GetScores(quest, bad_text,  bm25s[bid])
                 yield(good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
 
+def train_data_step1():
+    ret = []
+    for dato in tqdm(train_data['queries']):
+        quest       = dato['query_text']
+        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        if(len(bad_pmids)>0):
+            for gid in good_pmids:
+                bid                         = random.choice(bad_pmids)
+                ret.append((quest, gid, bid, bm25s[gid], bm25s[bid]))
+    return ret
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -466,26 +480,29 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 # dummy_test()
 
 test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(
-    dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path
+    dataloc         = dataloc,
+    w2v_bin_path    = w2v_bin_path,
+    idf_pickle_path = idf_pickle_path
 )
 
 for epoch in range(10):
-    train_instances = list(train_data_yielder())
-    random.shuffle(train_instances)
-    for instance in train_instances:
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds     = instance[0],
-            doc2_embeds     = instance[1],
-            question_embeds = instance[2],
-            q_idfs          = instance[3],
-            gaf             = instance[4],
-            baf             = instance[5]
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost)
+    train_instances = train_data_step1()
+    pprint(train_instances[0])
+    # random.shuffle(train_instances)
+    # for instance in train_instances:
+    #     optimizer.zero_grad()
+    #     cost_, doc1_emit_, doc2_emit_ = model(
+    #         doc1_embeds     = instance[0],
+    #         doc2_embeds     = instance[1],
+    #         question_embeds = instance[2],
+    #         q_idfs          = instance[3],
+    #         gaf             = instance[4],
+    #         baf             = instance[5]
+    #     )
+    #     cost_.backward()
+    #     optimizer.step()
+    #     the_cost = cost_.cpu().item()
+    #     print(the_cost)
 
 # pprint(train_data['queries'][0])
 # pprint(train_docs['17350655'])
