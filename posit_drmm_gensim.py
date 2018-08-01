@@ -419,14 +419,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         self.embedding_dim                          = embedding_dim
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        nn.init.xavier_uniform(self.trigram_conv.weight)
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
         self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=False)
         self.linear_per_q1                          = nn.Linear(6, 8, bias=False)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=False)
+        nn.init.xavier_uniform(self.q_weights_mlp.weight)
+        nn.init.xavier_uniform(self.linear_per_q1.weight)
+        nn.init.xavier_uniform(self.linear_per_q2.weight)
         self.my_relu1                               = torch.nn.LeakyReLU()
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=False)
+        nn.init.xavier_uniform(self.out_layer.weight)
         #
         # MultiMarginLoss
         # MarginRankingLoss
@@ -558,6 +563,7 @@ params      = model.parameters()
 print_params(model)
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
+exit()
 # dummy_test()
 
 test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
