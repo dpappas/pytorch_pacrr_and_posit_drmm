@@ -35,11 +35,11 @@ idf_pickle_path = '/home/dpappas/for_ryan/IDF_python_v2.pkl'
 dataloc         = '/home/dpappas/for_ryan/'
 eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
-odir            = '/home/dpappas/posit_drmm_gensim/'
+odir            = '/home/dpappas/posit_drmm_gensim_marginloss_0p001/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
-od              = 'sent_posit_drmm_MarginRankingLoss_0p001'
+od              = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
 k_for_maxpool   = 5
 embedding_dim   = 200
 lr              = 0.001
