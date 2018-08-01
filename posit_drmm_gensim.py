@@ -501,15 +501,14 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 b_size      = 32
 batch_costs = []
 for epoch in range(10):
+    epoch_cost      = 0.0
     train_instances = train_data_step1()
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
         optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2],
-            q_idfs=instance[3], gaf=instance[4], baf=instance[5]
-        )
+        cost_, doc1_emit_, doc2_emit_ = model(doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2], q_idfs=instance[3], gaf=instance[4], baf=instance[5])
         batch_costs.append(cost_)
+        epoch_cost += cost_.cpu().item()
         if(len(batch_costs)==b_size):
             batch_cost  = sum(batch_costs) / float(len(batch_costs))
             batch_cost.backward()
