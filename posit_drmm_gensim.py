@@ -509,9 +509,7 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 b_size          = 32
 batch_counter   = 0
 for epoch in range(10):
-    batch_costs     = []
-    batch_acc       = []
-    epoch_costs     = []
+    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     train_instances = train_data_step1()
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
