@@ -355,10 +355,11 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
-def train_one():
-    batch_counter   = 0
+def train_one(epoch):
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    train_instances = train_data_step1()
+    batch_counter                   = 0
+    train_instances                 = train_data_step1()
+    epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
         optimizer.zero_grad()
@@ -376,7 +377,7 @@ def train_one():
         batch_counter += 1
         batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
         print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
-        batch_costs, batch_acc = [], []
+    print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
@@ -506,8 +507,6 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
     w2v_bin_path    = w2v_bin_path,
     idf_pickle_path = idf_pickle_path
 )
-
-
 
 b_size          = 32
 for epoch in range(10):
