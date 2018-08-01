@@ -39,10 +39,10 @@ odir            = '/home/dpappas/posit_drmm_gensim/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
-od              = 'sent_posit_drmm_MarginRankingLoss'
+od              = 'sent_posit_drmm_MarginRankingLoss_0p001'
 k_for_maxpool   = 5
 embedding_dim   = 200
-lr              = 0.01
+lr              = 0.001
 bsize           = 32
 
 import logging
@@ -505,9 +505,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out                        = self.out_layer(good_add_feats)
         return good_out
     def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
-        doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf = self.fix_input_two(
-            doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
-        )
+        doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf = self.fix_input_two(doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf)
         # cosine similarity on pretrained word embeddings
         sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         sim_insensitive_d2              = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
