@@ -510,12 +510,14 @@ b_size          = 32
 batch_counter   = 0
 for epoch in range(10):
     batch_costs     = []
+    batch_acc       = []
     epoch_costs     = []
     train_instances = train_data_step1()
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
         optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_ = model(doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2], q_idfs=instance[3], gaf=instance[4], baf=instance[5])
+        batch_acc.append(float(doc1_emit_>doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         if(len(batch_costs)==b_size):
