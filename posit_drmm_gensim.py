@@ -500,22 +500,20 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 for epoch in range(10):
     train_instances = train_data_step1()
     random.shuffle(train_instances)
-    for item in train_data_step2(train_instances):
-
-    # for instance in train_instances:
-    #     optimizer.zero_grad()
-    #     cost_, doc1_emit_, doc2_emit_ = model(
-    #         doc1_embeds     = instance[0],
-    #         doc2_embeds     = instance[1],
-    #         question_embeds = instance[2],
-    #         q_idfs          = instance[3],
-    #         gaf             = instance[4],
-    #         baf             = instance[5]
-    #     )
-    #     cost_.backward()
-    #     optimizer.step()
-    #     the_cost = cost_.cpu().item()
-    #     print(the_cost)
+    for instance in train_data_step2(train_instances):
+        optimizer.zero_grad()
+        cost_, doc1_emit_, doc2_emit_ = model(
+            doc1_embeds     = instance[0],
+            doc2_embeds     = instance[1],
+            question_embeds = instance[2],
+            q_idfs          = instance[3],
+            gaf             = instance[4],
+            baf             = instance[5]
+        )
+        cost_.backward()
+        optimizer.step()
+        the_cost = cost_.cpu().item()
+        print(the_cost)
 
 # pprint(train_data['queries'][0])
 # pprint(train_docs['17350655'])
