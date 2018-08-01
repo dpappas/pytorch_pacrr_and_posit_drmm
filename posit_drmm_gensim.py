@@ -510,6 +510,6 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 
 b_size          = 32
 for epoch in range(10):
-    train_one()
+    train_one(epoch+1)
     exit()
 
