@@ -520,6 +520,8 @@ for epoch in range(10):
         if(len(batch_costs)==b_size):
             print(back_prop(batch_costs, epoch_costs))
             batch_costs = []
-
+    if (len(batch_costs)>0):
+        print(back_prop(batch_costs, epoch_costs))
+        batch_costs = []
 
 
