@@ -130,30 +130,6 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     }
     torch.save(state, filename)
 
-def train_one(train_instances):
-    costs   = []
-    optimizer.zero_grad()
-    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in train_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims, gaf, baf)
-        #
-        average_total_loss  += instance_cost.cpu().item()
-        average_task_loss   += loss1.cpu().item()
-        average_reg_loss    += loss2.cpu().item()
-        #
-        instance_metr       += 1
-        costs.append(instance_cost)
-        if(len(costs) == bsize):
-            batch_loss      = compute_the_cost(costs, True)
-            costs = []
-            print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
-            logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch,instance_metr,average_total_loss/(1.*instance_metr),average_task_loss/(1.*instance_metr),average_reg_loss/(1.*instance_metr)))
-    if(len(costs)>0):
-        batch_loss = compute_the_cost(costs, True)
-        print('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-        logger.info('train epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-    return average_task_loss / instance_metr
-
 def dev_one(dev_instances):
     optimizer.zero_grad()
     instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
@@ -379,6 +355,29 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
+def train_one():
+    batch_counter   = 0
+    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
+    train_instances = train_data_step1()
+    random.shuffle(train_instances)
+    for instance in train_data_step2(train_instances):
+        optimizer.zero_grad()
+        cost_, doc1_emit_, doc2_emit_ = model(doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2], q_idfs=instance[3], gaf=instance[4], baf=instance[5])
+        batch_acc.append(float(doc1_emit_>doc2_emit_))
+        epoch_acc.append(float(doc1_emit_>doc2_emit_))
+        epoch_costs.append(cost_.cpu().item())
+        batch_costs.append(cost_)
+        if(len(batch_costs)==b_size):
+            batch_counter += 1
+            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+            print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
+            batch_costs, batch_acc = [], []
+    if (len(batch_costs)>0):
+        batch_counter += 1
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+        print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
+        batch_costs, batch_acc = [], []
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -508,28 +507,10 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
     idf_pickle_path = idf_pickle_path
 )
 
-b_size          = 32
-batch_counter   = 0
-for epoch in range(10):
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    train_instances = train_data_step1()
-    random.shuffle(train_instances)
-    for instance in train_data_step2(train_instances):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2], q_idfs=instance[3], gaf=instance[4], baf=instance[5])
-        batch_acc.append(float(doc1_emit_>doc2_emit_))
-        epoch_acc.append(float(doc1_emit_>doc2_emit_))
-        epoch_costs.append(cost_.cpu().item())
-        batch_costs.append(cost_)
-        if(len(batch_costs)==b_size):
-            batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-            print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
-            batch_costs, batch_acc = [], []
-    if (len(batch_costs)>0):
-        batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-        print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
-        batch_costs, batch_acc = [], []
 
+
+b_size          = 32
+for epoch in range(10):
+    train_one()
+    exit()
 
