@@ -352,7 +352,7 @@ def train_data_step1():
         bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
         if(len(bad_pmids)>0):
             for gid in good_pmids:
-                bid                         = random.choice(bad_pmids)
+                bid = random.choice(bad_pmids)
                 ret.append((quest, gid, bid, bm25s[gid], bm25s[bid]))
     return ret
 
