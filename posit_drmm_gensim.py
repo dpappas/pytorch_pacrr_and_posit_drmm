@@ -33,6 +33,7 @@ torch.manual_seed(my_seed)
 w2v_bin_path    = '/home/dpappas/for_ryan/biomedical-vectors-200.bin'
 idf_pickle_path = '/home/dpappas/for_ryan/IDF_python_v2.pkl'
 dataloc         = '/home/dpappas/for_ryan/'
+eval_path       = '/home/dpappas/for_ryan/run_eval.py'
 
 odir            = '/home/dpappas/posit_drmm_gensim/'
 if not os.path.exists(odir):
@@ -131,7 +132,7 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     torch.save(state, filename)
 
 def get_map_res(fgold, femit):
-    trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
+    trec_eval_res   = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err)      = trec_eval_res.communicate()
     lines           = out.decode("utf-8").split('\n')
     map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
