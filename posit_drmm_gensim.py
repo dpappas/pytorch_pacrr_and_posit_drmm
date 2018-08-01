@@ -506,7 +506,8 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
     idf_pickle_path = idf_pickle_path
 )
 
-b_size      = 32
+b_size          = 32
+batch_counter   = 0
 for epoch in range(10):
     batch_costs     = []
     epoch_costs     = []
@@ -518,10 +519,14 @@ for epoch in range(10):
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         if(len(batch_costs)==b_size):
-            print(back_prop(batch_costs, epoch_costs))
+            batch_counter += 1
+            batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
+            print(batch_counter, batch_aver_cost, epoch_aver_cost)
             batch_costs = []
     if (len(batch_costs)>0):
-        print(back_prop(batch_costs, epoch_costs))
+        batch_counter += 1
+        batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
+        print(batch_counter, batch_aver_cost, epoch_aver_cost)
         batch_costs = []
 
 
