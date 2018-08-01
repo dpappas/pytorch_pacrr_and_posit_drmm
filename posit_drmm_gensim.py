@@ -515,36 +515,3 @@ for epoch in range(10):
         the_cost = cost_.cpu().item()
         print(the_cost)
 
-# pprint(train_data['queries'][0])
-# pprint(train_docs['17350655'])
-# print(len(idf))
-# print(len(wv))
-
-exit()
-
-# train_all_abs, dev_all_abs, test_all_abs, train_bm25_scores, dev_bm25_scores, test_bm25_scores, t2i = load_data()
-#
-# data, docs, tr_data, tr_docs, idf, max_idf, wv = load_all_data('/home/DATA/Biomedical/document_ranking/bioasq_data/')
-# fgold = '/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json'
-
-# max_dev_map     = 0.0
-min_dev_loss    = 10e5
-max_epochs      = 30
-loopes          = [1, 0, 0]
-dev_instances   = list(random_data_yielder(dev_bm25_scores, dev_all_abs, t2i, bsize * 50))
-for epoch in range(max_epochs):
-    train_instances         = random_data_yielder(train_bm25_scores, train_all_abs, t2i, bsize * 100)
-    train_average_loss      = train_one(train_instances)
-    dev_average_loss        = dev_one(dev_instances)
-    # dev_map                 = get_one_map('dev', dev_bm25_scores, dev_all_abs)
-    if(min_dev_loss > dev_average_loss):
-        min_dev_loss        = dev_average_loss
-        min_loss_epoch      = epoch+1
-        test_map            = get_one_map('test', test_bm25_scores, test_all_abs)
-        save_checkpoint(epoch, model, dev_average_loss, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    print("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_average_loss, test_map))
-    print(20 * '-')
-    logger.info("epoch:{}, train_average_loss:{}, dev_map:{}, test_map:{}".format(epoch+1, train_average_loss, dev_average_loss, test_map))
-    logger.info(20 * '-')
-
-
