@@ -344,7 +344,7 @@ def train_data_yielder():
 
 def train_data_step1():
     ret = []
-    for dato in train_data['queries']:
+    for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
         bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
