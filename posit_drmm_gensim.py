@@ -36,14 +36,14 @@ dataloc         = '/home/dpappas/for_ryan/'
 eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
 # odir            = '/home/dpappas/posit_drmm_gensim_marginloss_0p001/'
-odir            = '/home/dpappas/posit_drmm_gensim_hingeloss_0p001/'
+odir            = '/home/dpappas/posit_drmm_gensim_hingeloss_0p01/'
 if not os.path.exists(odir):
     os.makedirs(odir)
 
 od              = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
 k_for_maxpool   = 5
 embedding_dim   = 200
-lr              = 0.001
+lr              = 0.01
 bsize           = 32
 
 import logging
