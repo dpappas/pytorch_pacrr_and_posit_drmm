@@ -370,6 +370,7 @@ def train_one(epoch):
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
 def get_one_map(prefix, data, docs):
+    model.eval()
     ret_data                = {}
     ret_data['questions']   = []
     for dato in tqdm(data['queries']):
