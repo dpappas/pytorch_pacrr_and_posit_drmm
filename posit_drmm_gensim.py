@@ -369,13 +369,15 @@ def train_data_step2(train_instances):
         bad_escores                             = GetScores(quest, bad_text, bm25s_bid)
         yield (good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
 
-def back_prop(batch_costs, epoch_costs):
+def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
     batch_cost.backward()
     optimizer.step()
     batch_aver_cost = batch_cost.cpu().item()
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    return batch_aver_cost, epoch_aver_cost
+    batch_aver_acc  = sum(batch_acc) / float(len(batch_acc))
+    epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
+    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
@@ -516,18 +518,18 @@ for epoch in range(10):
         optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_ = model(doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2], q_idfs=instance[3], gaf=instance[4], baf=instance[5])
         batch_acc.append(float(doc1_emit_>doc2_emit_))
-        epoch_acc_acc.append(float(doc1_emit_>doc2_emit_))
+        epoch_acc.append(float(doc1_emit_>doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         if(len(batch_costs)==b_size):
             batch_counter += 1
-            batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
-            print(batch_counter, batch_aver_cost, epoch_aver_cost)
+            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+            print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
             batch_costs, batch_acc = [], []
     if (len(batch_costs)>0):
         batch_counter += 1
-        batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
-        print(batch_counter, batch_aver_cost, epoch_aver_cost)
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+        print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
         batch_costs, batch_acc = [], []
 
 
