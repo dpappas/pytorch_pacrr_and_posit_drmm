@@ -426,6 +426,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.LeakyReLU()
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=False)
+        #
+        # MultiMarginLoss
+        # MarginRankingLoss
+        # my hinge loss
+        # MultiLabelMarginLoss
+        #
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
