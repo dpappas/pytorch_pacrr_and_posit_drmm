@@ -498,6 +498,8 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
     idf_pickle_path = idf_pickle_path
 )
 
+b_size      = 32
+batch_costs = []
 for epoch in range(10):
     train_instances = train_data_step1()
     random.shuffle(train_instances)
@@ -507,8 +509,13 @@ for epoch in range(10):
             doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2],
             q_idfs=instance[3], gaf=instance[4], baf=instance[5]
         )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost)
+        batch_costs.append(cost_)
+        if(len(batch_costs)==b_size):
+            batch_cost  = sum(batch_costs) / float(len(batch_costs))
+            batch_cost.backward()
+            optimizer.step()
+            batch_costs = []
+            the_cost = batch_cost.cpu().item()
+            print(the_cost)
+
 
