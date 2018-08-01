@@ -503,12 +503,8 @@ for epoch in range(10):
     for instance in train_data_step2(train_instances):
         optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds     = instance[0],
-            doc2_embeds     = instance[1],
-            question_embeds = instance[2],
-            q_idfs          = instance[3],
-            gaf             = instance[4],
-            baf             = instance[5]
+            doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2],
+            q_idfs=instance[3], gaf=instance[4], baf=instance[5]
         )
         cost_.backward()
         optimizer.step()
