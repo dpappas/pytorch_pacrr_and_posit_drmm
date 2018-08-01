@@ -320,6 +320,28 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv
 
+def train_data_yielder():
+    for dato in tqdm(train_data['queries']):
+        quest       = dato['query_text']
+        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        #
+        quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
+        q_idfs      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float64')
+        #
+        if(len(bad_pmids)>0):
+            for gid in good_pmids:
+                bid                         = random.choice(bad_pmids)
+                good_text                   = train_docs[gid]['title'] + ' <title> ' + train_docs[gid]['abstractText']
+                good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
+                bad_text                    = train_docs[bid]['title'] + ' <title> ' + train_docs[bid]['abstractText']
+                bad_tokens, bad_embeds      = get_embeds(tokenize(bad_text), wv)
+                good_escores                = GetScores(quest, good_text, bm25s[gid])
+                bad_escores                 = GetScores(quest, bad_text,  bm25s[bid])
+                yield(good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -434,25 +456,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # loss1                           = self.my_hinge_loss(good_out, bad_out)
         return loss1, good_out, bad_out
 
-def data_yielder(bm25_scores, all_abs, t2i, how_many_loops):
-    for quer in bm25_scores[u'queries']:
-        quest       = quer['query_text']
-        bm25s       = {t['doc_id']:t['norm_bm25_score'] for t in quer[u'retrieved_documents']}
-        ret_pmids   = [t[u'doc_id'] for t in quer[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in quer[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in quer[u'relevant_documents']]
-        if(len(bad_pmids)>0):
-            for gid in good_pmids:
-                for i in range(how_many_loops):
-                    bid                                                                         = random.choice(bad_pmids)
-                    good_sents_inds, good_quest_inds, good_all_sims, additional_features_good   = get_item_inds(all_abs[gid], quest, t2i)
-                    additional_features_good.append(bm25s[gid])
-                    bad_sents_inds, bad_quest_inds, bad_all_sims, additional_features_bad       = get_item_inds(all_abs[bid], quest, t2i)
-                    additional_features_bad.append(bm25s[bid])
-                    yield [ good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, bad_quest_inds,
-                        np.array(additional_features_good, 'float'), np.array(additional_features_bad, 'float')
-                    ]
-
 print('Compiling model...')
 logger.info('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
@@ -466,27 +469,28 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
     dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path
 )
 
-for dato in train_data['queries']:
-    quest       = dato['query_text']
-    bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-    ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-    good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-    bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-    if(len(bad_pmids)>0):
-        for gid in good_pmids:
-            bid         = random.choice(bad_pmids)
-            good_text   = train_docs[gid]['title'] + ' <title> ' + train_docs[gid]['abstractText']
-            good_tokens = tokenize(good_text)
-            good_tokens_2, good_embeds  = get_embeds(good_tokens, wv)
-            bad_text    = train_docs[bid]['title'] + ' <title> ' + train_docs[bid]['abstractText']
-            bad_tokens  = tokenize(bad_text)
-            bad_tokens_2, bad_embeds    = get_embeds(bad_tokens, wv)
-            print(bid, good_tokens_2, bad_tokens_2)
+for epoch in range(10):
+    train_instances = list(train_data_yielder())
+    random.shuffle(train_instances)
+    for instance in train_instances:
+        optimizer.zero_grad()
+        cost_, doc1_emit_, doc2_emit_ = model(
+            doc1_embeds     = instance[0],
+            doc2_embeds     = instance[1],
+            question_embeds = instance[2],
+            q_idfs          = instance[3],
+            gaf             = instance[4],
+            baf             = instance[5]
+        )
+        cost_.backward()
+        optimizer.step()
+        the_cost = cost_.cpu().item()
+        print(the_cost)
 
-pprint(train_data['queries'][0])
-pprint(train_docs['17350655'])
-print(len(idf))
-print(len(wv))
+# pprint(train_data['queries'][0])
+# pprint(train_docs['17350655'])
+# print(len(idf))
+# print(len(wv))
 
 exit()
 
