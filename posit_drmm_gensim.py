@@ -354,10 +354,11 @@ def train_data_step1():
             for gid in good_pmids:
                 bid = random.choice(bad_pmids)
                 ret.append((quest, gid, bid, bm25s[gid], bm25s[bid]))
+    print('')
     return ret
 
 def train_data_step2(train_instances):
-    for quest, gid, bid, bm25s_gid, bm25s_bid in tqdm(train_instances):
+    for quest, gid, bid, bm25s_gid, bm25s_bid in train_instances:
         quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
         q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         good_text                               = train_docs[gid]['title'] + ' <title> ' + train_docs[gid]['abstractText']
