@@ -516,17 +516,18 @@ for epoch in range(10):
         optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_ = model(doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2], q_idfs=instance[3], gaf=instance[4], baf=instance[5])
         batch_acc.append(float(doc1_emit_>doc2_emit_))
+        epoch_acc_acc.append(float(doc1_emit_>doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         if(len(batch_costs)==b_size):
             batch_counter += 1
             batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
             print(batch_counter, batch_aver_cost, epoch_aver_cost)
-            batch_costs = []
+            batch_costs, batch_acc = [], []
     if (len(batch_costs)>0):
         batch_counter += 1
         batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
         print(batch_counter, batch_aver_cost, epoch_aver_cost)
-        batch_costs = []
+        batch_costs, batch_acc = [], []
 
 
