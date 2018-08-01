@@ -567,11 +567,9 @@ test_map        = None
 for epoch in range(10):
     train_one(epoch + 1)
     epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
-    print('epoch:{} epoch_dev_map:{}'.format(epoch + 1, epoch_dev_map))
-    logger.info('epoch:{} epoch_dev_map:{}'.format(epoch + 1, epoch_dev_map))
     if(best_dev_map is None or epoch_dev_map>=best_dev_map):
         best_dev_map    = epoch_dev_map
         test_map        = get_one_map('test', test_data, test_docs)
         save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    print('epoch:{} best_dev_map:{} test_map:{}'.format(epoch + 1, best_dev_map, test_map))
-    logger.info('epoch:{} best_dev_map:{} test_map:{}'.format(epoch + 1, best_dev_map, test_map))
+    print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+    logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
