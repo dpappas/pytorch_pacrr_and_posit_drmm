@@ -130,19 +130,6 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     }
     torch.save(state, filename)
 
-def dev_one(dev_instances):
-    optimizer.zero_grad()
-    instance_metr, average_total_loss, average_task_loss, average_reg_loss = 0.0, 0.0, 0.0, 0.0
-    for good_sents_inds, good_all_sims, bad_sents_inds, bad_all_sims, quest_inds, gaf, baf in dev_instances:
-        instance_cost, doc1_emit, doc2_emit, loss1, loss2 = model(good_sents_inds, bad_sents_inds, quest_inds, good_all_sims, bad_all_sims, gaf, baf)
-        average_total_loss  += instance_cost.cpu().item()
-        average_task_loss   += loss1.cpu().item()
-        average_reg_loss    += loss2.cpu().item()
-        instance_metr       += 1
-    print('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-    logger.info('dev epoch:{}, batch:{}, average_total_loss:{}, average_task_loss:{}, average_reg_loss:{}'.format(epoch, instance_metr, average_total_loss/(1.*instance_metr), average_task_loss/(1.*instance_metr), average_reg_loss/(1.*instance_metr)))
-    return average_task_loss / instance_metr
-
 def get_map_res(fgold, femit):
     trec_eval_res   = subprocess.Popen(['python', '/home/DATA/Biomedical/document_ranking/eval/run_eval.py', fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err)      = trec_eval_res.communicate()
@@ -285,6 +272,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs = pickle.load(f)
     print('loading words')
+    #
     words           = {}
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
@@ -356,6 +344,7 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def train_one(epoch):
+    model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter                   = 0
     train_instances                 = train_data_step1()
@@ -378,6 +367,66 @@ def train_one(epoch):
         batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
         print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+
+def get_one_map(prefix, data, docs):
+    ret_data                = {}
+    ret_data['questions']   = []
+    for dato in tqdm(data['queries']):
+        quest                       = dato['query_text']
+        quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
+        q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+        emitions                    = {'body': dato['query_text'], 'id': dato['query_id'], 'documents': []}
+        bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        doc_res                     = {}
+        for retr in dato['retrieved_documents']:
+            the_text                = docs[retr['doc_id']]['title'] + ' <title> ' + docs[retr['doc_id']]['abstractText']
+            the_tokens, the_embeds  = get_embeds(tokenize(the_text), wv)
+            the_escores             = GetScores(quest, the_text, bm25s[retr['doc_id']])
+            doc_emit_               = model.emit_one(doc1_embeds=the_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, gaf=the_escores)
+            emition                 = doc_emit_.cpu().item()
+            doc_res[retr['doc_id']] = float(emition)
+        emitions['documents']       = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+        ret_data['questions'].append(emitions)
+        exit()
+    #
+    #
+    #     #
+    #     doc_res = {}
+    #     for retr in quer['retrieved_documents']:
+    #         doc_id      = retr['doc_id']
+    #         passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
+    #         #
+    #         quest       = dato['query_text']
+    #         bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+    #         ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+    #         good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+    #         bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+    #         ######################
+    #         sents_inds  = text2indices(passage, t2i, 'd')
+    #         quest_inds  = text2indices(quer['query_text'], t2i, 'q')
+    #         #
+    #         gaf         = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
+    #         gaf.append(bm25s[doc_id])
+    #         #
+    #         doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims, gaf=gaf)
+    #         #
+    #         doc_res[doc_id] = float(doc1_emit_)
+    #     doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    #     doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+    #     doc_res = doc_res[:100]
+    #     # filler  = sorted([-i - 1 for i in range(100 - len(doc_res))])
+    #     # doc_res = doc_res+filler
+    #     dato['documents'] = doc_res
+    #     data['questions'].append(dato)
+    # if(prefix=='dev'):
+    #     with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
+    #         f.write(json.dumps(data, indent=4, sort_keys=True))
+    #     res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json', odir+'elk_relevant_abs_posit_drmm_lists_dev.json')
+    # else:
+    #     with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
+    #         f.write(json.dumps(data, indent=4, sort_keys=True))
+    #     res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json', odir+'elk_relevant_abs_posit_drmm_lists_test.json')
+    # return res_map
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
@@ -450,7 +499,28 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
     def emit_one(self, doc1_embeds, question_embeds, q_idfs, gaf):
         doc1_embeds, question_embeds, q_idfs, gaf = self.fix_input_one(doc1_embeds, question_embeds, q_idfs, gaf)
-        pass
+        sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
+        sim_oh_d1                       = (sim_insensitive_d1 > (1-(1e-3))).float()
+        # 3gram convolution on the embedding matrix
+        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+        d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
+        # cosine similairy on the contextual embeddings
+        sim_sensitive_d1_trigram        = self.my_cosine_sim(q_conv_res_trigram, d1_conv_trigram).squeeze(0)
+        # pooling 3 * 2 fetures from the similarity matrices for the good doc
+        sim_insensitive_pooled_d1       = self.pooling_method(sim_insensitive_d1)
+        sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
+        sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
+        # create the weights for weighted average
+        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights                       = F.softmax(q_weights, dim=-1)
+        # concatenate and pass through mlps
+        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
+        # concatenate the mlps' output to the additional features
+        good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
+        # apply output layer
+        good_out                        = self.out_layer(good_add_feats)
+        return good_out
     def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
         doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf = self.fix_input_two(
             doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
@@ -510,6 +580,7 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 
 b_size          = 32
 for epoch in range(10):
-    train_one(epoch+1)
+    get_one_map('dev', dev_data, dev_docs)
+    # train_one(epoch+1)
     exit()
 
