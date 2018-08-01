@@ -385,48 +385,19 @@ def get_one_map(prefix, data, docs):
             doc_emit_               = model.emit_one(doc1_embeds=the_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, gaf=the_escores)
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
-        emitions['documents']       = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+        doc_res                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+        doc_res                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+        emitions['documents']   = doc_res[:100]
         ret_data['questions'].append(emitions)
-        exit()
-    #
-    #
-    #     #
-    #     doc_res = {}
-    #     for retr in quer['retrieved_documents']:
-    #         doc_id      = retr['doc_id']
-    #         passage     = all_abs[doc_id]['title'] + ' ' + all_abs[doc_id]['abstractText']
-    #         #
-    #         quest       = dato['query_text']
-    #         bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-    #         ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-    #         good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-    #         bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-    #         ######################
-    #         sents_inds  = text2indices(passage, t2i, 'd')
-    #         quest_inds  = text2indices(quer['query_text'], t2i, 'q')
-    #         #
-    #         gaf         = get_overlap_features_mode_1(bioclean(quer['query_text']), bioclean(passage))
-    #         gaf.append(bm25s[doc_id])
-    #         #
-    #         doc1_emit_  = model.emit_one(doc1=sents_inds, question=quest_inds, doc1_sim=all_sims, gaf=gaf)
-    #         #
-    #         doc_res[doc_id] = float(doc1_emit_)
-    #     doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-    #     doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-    #     doc_res = doc_res[:100]
-    #     # filler  = sorted([-i - 1 for i in range(100 - len(doc_res))])
-    #     # doc_res = doc_res+filler
-    #     dato['documents'] = doc_res
-    #     data['questions'].append(dato)
-    # if(prefix=='dev'):
-    #     with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
-    #         f.write(json.dumps(data, indent=4, sort_keys=True))
-    #     res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.dev.json', odir+'elk_relevant_abs_posit_drmm_lists_dev.json')
-    # else:
-    #     with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
-    #         f.write(json.dumps(data, indent=4, sort_keys=True))
-    #     res_map = get_map_res('/home/DATA/Biomedical/document_ranking/bioasq_data/bioasq.test.json', odir+'elk_relevant_abs_posit_drmm_lists_test.json')
-    # return res_map
+    if (prefix == 'dev'):
+        with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
+            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
+        res_map = get_map_res(dataloc+'bioasq.dev.json', odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
+    else:
+        with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
+            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
+        res_map = get_map_res(dataloc+'bioasq.test.json', odir + 'elk_relevant_abs_posit_drmm_lists_test.json')
+    return res_map
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
