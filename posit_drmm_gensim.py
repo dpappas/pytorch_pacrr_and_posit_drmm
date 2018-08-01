@@ -555,11 +555,7 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 
 # dummy_test()
 
-test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(
-    dataloc         = dataloc,
-    w2v_bin_path    = w2v_bin_path,
-    idf_pickle_path = idf_pickle_path
-)
+test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 b_size          = 32
 best_dev_map    = None
