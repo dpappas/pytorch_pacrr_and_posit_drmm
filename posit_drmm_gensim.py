@@ -163,6 +163,7 @@ def get_embeds(tokens, wv):
 
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
+    logger.info('Loading IDF tables')
     # with open(dataloc + 'idf.pkl', 'rb') as f:
     with open(idf_path, 'rb') as f:
         idf = pickle.load(f)
@@ -175,7 +176,8 @@ def load_idfs(idf_path, words):
         if idf[w] > max_idf:
             max_idf = idf[w]
     idf = None
-    print('Loaded idf tables with max idf %f' % max_idf)
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    logger.info('Loaded idf tables with max idf {}'.format(max_idf))
     return ret, max_idf
 
 def uwords(words):
@@ -260,6 +262,7 @@ def GetWords(data, doc_text, words):
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
+    logger.info('loading pickle data')
     with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
         test_data = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
@@ -273,14 +276,17 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs = pickle.load(f)
     print('loading words')
+    logger.info('loading words')
     #
     words           = {}
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
     print('loading idfs')
+    logger.info('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
+    logger.info('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv
@@ -320,6 +326,7 @@ def train_data_step1():
                 bid = random.choice(bad_pmids)
                 ret.append((quest, gid, bid, bm25s[gid], bm25s[bid]))
     print('')
+    logger.info('')
     return ret
 
 def train_data_step2(train_instances):
@@ -362,12 +369,15 @@ def train_one(epoch):
             batch_counter += 1
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
             print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
+            logger.info(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
             batch_costs, batch_acc = [], []
     if (len(batch_costs)>0):
         batch_counter += 1
         batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
         print(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
+        logger.info(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc)
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
 def get_one_map(prefix, data, docs):
     model.eval()
@@ -557,8 +567,11 @@ test_map        = None
 for epoch in range(10):
     train_one(epoch + 1)
     epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
+    print('epoch:{} epoch_dev_map:{}'.format(epoch + 1, epoch_dev_map))
+    logger.info('epoch:{} epoch_dev_map:{}'.format(epoch + 1, epoch_dev_map))
     if(best_dev_map is None or epoch_dev_map>=best_dev_map):
         best_dev_map    = epoch_dev_map
         test_map        = get_one_map('test', test_data, test_docs)
         save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
     print('epoch:{} best_dev_map:{} test_map:{}'.format(epoch + 1, best_dev_map, test_map))
+    logger.info('epoch:{} best_dev_map:{} test_map:{}'.format(epoch + 1, best_dev_map, test_map))
