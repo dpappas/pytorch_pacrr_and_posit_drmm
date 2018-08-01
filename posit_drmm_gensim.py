@@ -344,7 +344,7 @@ def train_data_yielder():
 
 def train_data_step1():
     ret = []
-    for dato in tqdm(train_data['queries']):
+    for dato in train_data['queries']:
         quest       = dato['query_text']
         bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
@@ -355,6 +355,18 @@ def train_data_step1():
                 bid                         = random.choice(bad_pmids)
                 ret.append((quest, gid, bid, bm25s[gid], bm25s[bid]))
     return ret
+
+def train_data_step2(train_instances):
+    for quest, gid, bid, bm25s_gid, bm25s_bid in tqdm(train_instances):
+        quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
+        q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+        good_text                               = train_docs[gid]['title'] + ' <title> ' + train_docs[gid]['abstractText']
+        good_tokens, good_embeds                = get_embeds(tokenize(good_text), wv)
+        bad_text                                = train_docs[bid]['title'] + ' <title> ' + train_docs[bid]['abstractText']
+        bad_tokens, bad_embeds                  = get_embeds(tokenize(bad_text), wv)
+        good_escores                            = GetScores(quest, good_text, bm25s_gid)
+        bad_escores                             = GetScores(quest, bad_text, bm25s_bid)
+        yield (good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
@@ -487,8 +499,9 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 
 for epoch in range(10):
     train_instances = train_data_step1()
-    pprint(train_instances[0])
-    # random.shuffle(train_instances)
+    random.shuffle(train_instances)
+    for item in train_data_step2(train_instances):
+
     # for instance in train_instances:
     #     optimizer.zero_grad()
     #     cost_, doc1_emit_, doc2_emit_ = model(
