@@ -33,7 +33,7 @@ torch.manual_seed(my_seed)
 w2v_bin_path    = '/home/dpappas/for_ryan/biomedical-vectors-200.bin'
 idf_pickle_path = '/home/dpappas/for_ryan/IDF_python_v2.pkl'
 dataloc         = '/home/dpappas/for_ryan/'
-eval_path       = '/home/dpappas/for_ryan/run_eval.py'
+eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
 odir            = '/home/dpappas/posit_drmm_gensim/'
 if not os.path.exists(odir):
@@ -552,7 +552,8 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 
 b_size          = 32
 for epoch in range(10):
-    get_one_map('dev', dev_data, dev_docs)
+    epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
+    print(epoch_dev_map)
     # train_one(epoch+1)
     exit()
 
