@@ -551,9 +551,13 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 )
 
 b_size          = 32
+best_dev_map    = None
 for epoch in range(10):
+    train_one(epoch + 1)
     epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
-    print(epoch_dev_map)
-    # train_one(epoch+1)
-    exit()
+    if(best_dev_map is None or epoch_dev_map>=best_dev_map):
+        best_dev_map = epoch_dev_map
+        print('epoch:{} best_dev_map:{}'.format(epoch + 1, best_dev_map))
+        test_map = get_one_map('test', test_data, test_docs)
+        print('epoch:{} test_map:{}'.format(epoch + 1, test_map))
 
