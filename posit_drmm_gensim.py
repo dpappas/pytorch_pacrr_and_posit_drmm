@@ -369,6 +369,14 @@ def train_data_step2(train_instances):
         bad_escores                             = GetScores(quest, bad_text, bm25s_bid)
         yield (good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
 
+def back_prop(batch_costs, epoch_costs):
+    batch_cost = sum(batch_costs) / float(len(batch_costs))
+    batch_cost.backward()
+    optimizer.step()
+    batch_aver_cost = batch_cost.cpu().item()
+    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
+    return batch_aver_cost, epoch_aver_cost
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -510,12 +518,8 @@ for epoch in range(10):
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         if(len(batch_costs)==b_size):
-            batch_cost  = sum(batch_costs) / float(len(batch_costs))
-            batch_cost.backward()
-            optimizer.step()
+            print(back_prop(batch_costs, epoch_costs))
             batch_costs = []
-            batch_aver_cost = batch_cost.cpu().item()
-            epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-            print(batch_aver_cost, epoch_aver_cost )
+
 
 
