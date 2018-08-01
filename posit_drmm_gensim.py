@@ -556,8 +556,7 @@ for epoch in range(10):
     train_one(epoch + 1)
     epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
     if(best_dev_map is None or epoch_dev_map>=best_dev_map):
-        best_dev_map = epoch_dev_map
-        print('epoch:{} best_dev_map:{}'.format(epoch + 1, best_dev_map))
-        test_map = get_one_map('test', test_data, test_docs)
-        print('epoch:{} test_map:{}'.format(epoch + 1, test_map))
+        best_dev_map    = epoch_dev_map
+        test_map        = get_one_map('test', test_data, test_docs)
+        print('epoch:{} best_dev_map:{} test_map:{}'.format(epoch + 1, best_dev_map, test_map))
 
