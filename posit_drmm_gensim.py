@@ -37,7 +37,8 @@ idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc         = '/home/dpappas/for_ryan/'
 eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
-odir            = '/home/dpappas/posit_drmm_gensim_marginloss_30_0p01/'
+# odir            = '/home/dpappas/posit_drmm_gensim_marginloss_30_0p01/'
+odir            = '/home/dpappas/posit_drmm_gensim_hingeloss_30_0p01/'
 # odir            = '/home/dpappas/posit_drmm_gensim_hingeloss_0p01/'
 if not os.path.exists(odir):
     os.makedirs(odir)
@@ -55,6 +56,48 @@ formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
+
+def RemoveTrainLargeYears(data, doc_text):
+  for i in range(len(data['queries'])):
+    hyear = 1900
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
+        doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+        year = doc_text[doc_id]['publicationDate'].split('-')[0]
+        if year[:1] == '1' or year[:1] == '2':
+          if int(year) > hyear:
+            hyear = int(year)
+    j = 0
+    while True:
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year = doc_text[doc_id]['publicationDate'].split('-')[0]
+      if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
+
+def RemoveBadYears(data, doc_text, train):
+  for i in range(len(data['queries'])):
+    j = 0
+    while True:
+      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
+      ##########################
+      # Skip 2017/2018 docs always. Skip 2016 docs for training.
+      # Need to change for final model - 2017 should be a train year only.
+      # Use only for testing.
+      if year == '2017' or year == '2018' or (train and year == '2016'):
+      #if year == '2018' or (train and year == '2017'):
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      ##########################
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
 
 def print_params(model):
     '''
@@ -279,6 +322,12 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs = pickle.load(f)
     print('loading words')
+    #
+    train_data  = RemoveBadYears(train_data, train_docs, True)
+    train_data  = RemoveTrainLargeYears(train_data, train_docs)
+    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
+    test_data   = RemoveBadYears(test_data, test_docs, False)
+    #
     logger.info('loading words')
     #
     words           = {}
@@ -421,19 +470,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         self.embedding_dim                          = embedding_dim
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        nn.init.xavier_uniform_(self.trigram_conv.weight)
         self.trigram_conv_activation                = torch.nn.LeakyReLU()
         #
         self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=False)
         self.linear_per_q1                          = nn.Linear(6, 8, bias=False)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=False)
-        nn.init.xavier_uniform_(self.q_weights_mlp.weight)
-        nn.init.xavier_uniform_(self.linear_per_q1.weight)
-        nn.init.xavier_uniform_(self.linear_per_q2.weight)
         self.my_relu1                               = torch.nn.LeakyReLU()
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=False)
-        nn.init.xavier_uniform_(self.out_layer.weight)
         #
         # MultiMarginLoss
         # MarginRankingLoss
@@ -554,8 +598,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out                        = self.out_layer(good_add_feats)
         bad_out                         = self.out_layer(bad_add_feats)
         # compute the loss
-        loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
-        # loss1                           = self.my_hinge_loss(good_out, bad_out)
+        # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
+        loss1                           = self.my_hinge_loss(good_out, bad_out)
         return loss1, good_out, bad_out
 
 print('Compiling model...')
@@ -572,7 +616,7 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 b_size          = 32
 best_dev_map    = None
 test_map        = None
-for epoch in range(10):
+for epoch in range(20):
     train_one(epoch + 1)
     epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
     if(best_dev_map is None or epoch_dev_map>=best_dev_map):
