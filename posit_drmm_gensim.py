@@ -586,7 +586,6 @@ k_for_maxpool   = 5
 embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
-test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 for run in  range(5):
     odir            = '/home/dpappas/posit_drmm_gensim_hingeloss_30_0p01_run{}/'.format(run)
@@ -601,6 +600,10 @@ for run in  range(5):
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO)
+    #
+    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc,
+                                                                                                       w2v_bin_path=w2v_bin_path,
+                                                                                                       idf_pickle_path=idf_pickle_path)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
