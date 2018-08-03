@@ -477,11 +477,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q2                          = nn.Linear(8, 1, bias=False)
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=False)
-        nn.init.xavier_uniform(self.trigram_conv.weight)
-        nn.init.xavier_uniform(self.q_weights_mlp.weight)
-        nn.init.xavier_uniform(self.linear_per_q1.weight)
-        nn.init.xavier_uniform(self.linear_per_q2.weight)
-        nn.init.xavier_uniform(self.out_layer.weight)
+        nn.init.xavier_uniform_(self.trigram_conv.weight)
+        nn.init.xavier_uniform_(self.q_weights_mlp.weight)
+        nn.init.xavier_uniform_(self.linear_per_q1.weight)
+        nn.init.xavier_uniform_(self.linear_per_q2.weight)
+        nn.init.xavier_uniform_(self.out_layer.weight)
         #
         # MultiMarginLoss
         # MarginRankingLoss
