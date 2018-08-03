@@ -613,7 +613,7 @@ for run in  range(5):
     #
     best_dev_map    = None
     test_map        = None
-    for epoch in range(20):
+    for epoch in range(15):
         train_one(epoch + 1)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
