@@ -588,6 +588,11 @@ lr              = 0.01
 b_size          = 32
 
 for run in  range(5):
+    #
+    my_seed = random.randint(1,2000000)
+    random.seed(my_seed)
+    torch.manual_seed(my_seed)
+    #
     odir            = '/home/dpappas/posit_drmm_gensim_hingeloss_30_0p01_run{}/'.format(run)
     if not os.path.exists(odir):
         os.makedirs(odir)
