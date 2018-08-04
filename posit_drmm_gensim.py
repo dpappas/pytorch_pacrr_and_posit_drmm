@@ -587,6 +587,7 @@ embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
 
+hdlr = None
 for run in  range(5):
     #
     my_seed = random.randint(1,2000000)
@@ -600,6 +601,8 @@ for run in  range(5):
     #
     import logging
     logger      = logging.getLogger(od)
+    if(hdlr is not None):
+        logger.removeHandler(hdlr)
     hdlr        = logging.FileHandler(odir+'model.log')
     formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     hdlr.setFormatter(formatter)
