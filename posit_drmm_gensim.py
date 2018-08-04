@@ -572,8 +572,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out                        = self.out_layer(good_add_feats)
         bad_out                         = self.out_layer(bad_add_feats)
         # compute the loss
-        # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
-        loss1                           = self.my_hinge_loss(good_out, bad_out)
+        loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
+        # loss1                           = self.my_hinge_loss(good_out, bad_out)
         return loss1, good_out, bad_out
 
 # w2v_bin_path    = '/home/dpappas/for_ryan/biomedical-vectors-200.bin'
@@ -595,7 +595,8 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/posit_drmm_gensim_hingeloss_30_0p01_run{}/'.format(run)
+    # odir            = '/home/dpappas/posit_drmm_gensim_hingeloss_30_0p01_run{}/'.format(run)
+    odir            = '/home/dpappas/posit_drmm_gensim_rankingloss_30_0p01_run{}/'.format(run)
     if not os.path.exists(odir):
         os.makedirs(odir)
     od              = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
