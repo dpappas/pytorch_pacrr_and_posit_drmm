@@ -13,6 +13,7 @@ import os
 import re
 import json
 import random
+import logging
 import subprocess
 import numpy as np
 import torch
@@ -599,7 +600,6 @@ for run in range(5):
         os.makedirs(odir)
     od              = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
     #
-    import logging
     logger      = logging.getLogger(od)
     if(hdlr is not None):
         logger.removeHandler(hdlr)
