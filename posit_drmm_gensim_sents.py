@@ -616,7 +616,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # apply output layer
         good_out                        = self.out_layer(good_add_feats)
         return good_out
-    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
+    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
         doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf = self.fix_input_two(doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf)
         # cosine similarity on pretrained word embeddings
         sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
@@ -671,10 +671,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         d1_sents_conv_trigram   = [self.apply_convolution(sent_embeds, self.trigram_conv, self.trigram_conv_activation) for sent_embeds in doc1_sents_embeds]
         d2_sents_conv_trigram   = [self.apply_convolution(sent_embeds, self.trigram_conv, self.trigram_conv_activation) for sent_embeds in doc2_sents_embeds]
         #
-        sim_insensitive_d1  = [self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0) for sent_embeds in doc1_sents_embeds]
-        sim_insensitive_d2  = [self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0) ]
-        sim_oh_d1           = [(sent_sims > (1-(1e-3))).float() for sent_sims in sim_insensitive_d1]
-        sim_oh_d2           = [(sent_sims > (1-(1e-3))).float() for sent_sims in sim_insensitive_d2]
+        sent_sim_insensitive_d1         = [self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0) for sent_embeds in doc1_sents_embeds]
+        sent_sim_insensitive_d2         = [self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0) ]
+        sent_sim_oh_d1                  = [(sent_sims > (1-(1e-3))).float() for sent_sims in sent_sim_insensitive_d1]
+        sent_sim_oh_d2                  = [(sent_sims > (1-(1e-3))).float() for sent_sims in sent_sim_insensitive_d2]
+        sent_sim_sensitive_d1_trigram   = [self.my_cosine_sim(q_conv_res_trigram, sent_conv_trigram).squeeze(0) for sent_conv_trigram in d1_sents_conv_trigram]
+        sent_sim_sensitive_d2_trigram   = [self.my_cosine_sim(q_conv_res_trigram, sent_conv_trigram).squeeze(0) for sent_conv_trigram in d2_sents_conv_trigram]
         #
 
 
