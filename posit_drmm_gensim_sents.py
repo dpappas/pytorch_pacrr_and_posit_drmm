@@ -696,7 +696,14 @@ for instance in train_data_step2(train_instances):
             )
         )
         # logger.info(
-        #     '{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+        #     '{} {} {} {} {}'.format(
+        #         batch_counter,
+        #         batch_aver_cost,
+        #         epoch_aver_cost,
+        #         batch_aver_acc,
+        #         epoch_aver_acc
+        #     )
+        # )
         batch_costs, batch_acc = [], []
 
 
