@@ -668,7 +668,17 @@ def train_one(epoch):
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
-for epoch in range(15):
-    train_one(epoch)
+
+best_dev_map    = None
+test_map        = None
+for epoch in range(20):
+    train_one(epoch + 1)
+    epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
+    if(best_dev_map is None or epoch_dev_map>=best_dev_map):
+        best_dev_map    = epoch_dev_map
+        test_map        = get_one_map('test', test_data, test_docs)
+        save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
+    print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+    logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
 
