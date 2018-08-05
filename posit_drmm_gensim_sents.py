@@ -616,68 +616,34 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # apply output layer
         good_out                        = self.out_layer(good_add_feats)
         return good_out
-    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
-        doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf = self.fix_input_two(doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf)
-        # cosine similarity on pretrained word embeddings
-        sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        sim_insensitive_d2              = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
-        sim_oh_d1                       = (sim_insensitive_d1 > (1-(1e-3))).float()
-        sim_oh_d2                       = (sim_insensitive_d2 > (1-(1e-3))).float()
-        # 3gram convolution on the embedding matrix
-        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
-        d2_conv_trigram                 = self.apply_convolution(doc2_embeds,     self.trigram_conv, self.trigram_conv_activation)
-        # cosine similairy on the contextual embeddings
-        sim_sensitive_d1_trigram        = self.my_cosine_sim(q_conv_res_trigram, d1_conv_trigram).squeeze(0)
-        sim_sensitive_d2_trigram        = self.my_cosine_sim(q_conv_res_trigram, d2_conv_trigram).squeeze(0)
-        # pooling 3 * 2 fetures from the similarity matrices for the good doc
-        sim_insensitive_pooled_d1       = self.pooling_method(sim_insensitive_d1)
-        sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
-        sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
-        # pooling 3 * 2 fetures from the similarity matrices for the bad doc
-        sim_insensitive_pooled_d2       = self.pooling_method(sim_insensitive_d2)
-        sim_sensitive_pooled_d2_trigram = self.pooling_method(sim_sensitive_d2_trigram)
-        sim_oh_pooled_d2                = self.pooling_method(sim_oh_d2)
-        # create the weights for weighted average
-        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
-        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights                       = F.softmax(q_weights, dim=-1)
-        # concatenate and pass through mlps
-        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
-        doc2_emit                       = self.get_output([sim_oh_pooled_d2, sim_insensitive_pooled_d2, sim_sensitive_pooled_d2_trigram], q_weights)
-        # concatenate the mlps' output to the additional features
-        good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
-        bad_add_feats                   = torch.cat([baf, doc2_emit.unsqueeze(-1)])
-        # apply output layer
-        good_out                        = self.out_layer(good_add_feats)
-        bad_out                         = self.out_layer(bad_add_feats)
-        # compute the loss
-        loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
-        # loss1                           = self.my_hinge_loss(good_out, bad_out)
-        return loss1, good_out, bad_out
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
-        doc1_sents_embeds   = [autograd.Variable(torch.FloatTensor(s),requires_grad=False) for s in doc1_sents_embeds]
-        doc2_sents_embeds   = [autograd.Variable(torch.FloatTensor(s),requires_grad=False) for s in doc2_sents_embeds]
-        sents_baf           = [autograd.Variable(torch.FloatTensor(t),requires_grad=False) for t in sents_baf]
-        sents_gaf           = [autograd.Variable(torch.FloatTensor(t),requires_grad=False) for t in sents_gaf]
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
-        #
         q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        d1_sents_conv_trigram   = [self.apply_convolution(sent_embeds, self.trigram_conv, self.trigram_conv_activation) for sent_embeds in doc1_sents_embeds]
-        d2_sents_conv_trigram   = [self.apply_convolution(sent_embeds, self.trigram_conv, self.trigram_conv_activation) for sent_embeds in doc2_sents_embeds]
-        #
-        sent_sim_insensitive_d1         = [self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0) for sent_embeds in doc1_sents_embeds]
-        sent_sim_insensitive_d2         = [self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0) ]
-        sent_sim_oh_d1                  = [(sent_sims > (1-(1e-3))).float() for sent_sims in sent_sim_insensitive_d1]
-        sent_sim_oh_d2                  = [(sent_sims > (1-(1e-3))).float() for sent_sims in sent_sim_insensitive_d2]
-        sent_sim_sensitive_d1_trigram   = [self.my_cosine_sim(q_conv_res_trigram, sent_conv_trigram).squeeze(0) for sent_conv_trigram in d1_sents_conv_trigram]
-        sent_sim_sensitive_d2_trigram   = [self.my_cosine_sim(q_conv_res_trigram, sent_conv_trigram).squeeze(0) for sent_conv_trigram in d2_sents_conv_trigram]
-        #
+        for i in range(len(doc1_sents_embeds)):
+            sent_embeds = doc1_sents_embeds[i]
+            gaf         = sents_gaf[i]
+            conv_res    = self.apply_convolution(
+                sent_embeds,
+                self.trigram_conv,
+                self.trigram_conv_activation
+            )
+            #
+            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
+            sim_oh              = (sim_insens > (1 - (1e-3))).float()
+            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+            #
+            insensitive_pooled  = self.pooling_method(sim_insens)
+            sensitive_pooled    = self.pooling_method(sim_sens)
+            oh_pooled           = self.pooling_method(sim_oh)
+            #
+            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+            print(sent_emit)
+
 
 
 run         = 0
@@ -726,16 +692,15 @@ train_instances = train_data_step1()
 epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
 for instance in train_data_step2(train_instances):
-    pass
-    # optimizer.zero_grad()
-    # cost_, doc1_emit_, doc2_emit_ = model(
-    #     doc1_embeds     =instance[0],
-    #     doc2_embeds     =instance[1],
-    #     question_embeds =instance[2],
-    #     q_idfs          =instance[3],
-    #     gaf             =instance[4],
-    #     baf             =instance[5]
-    # )
+    optimizer.zero_grad()
+    cost_, doc1_emit_, doc2_emit_ = model(
+        doc1_sents_embeds   = instance[0],
+        doc2_sents_embeds   = instance[1],
+        question_embeds     = instance[2],
+        q_idfs              = instance[3],
+        sents_gaf           = instance[4],
+        sents_baf           = instance[5]
+    )
     # batch_acc.append(float(doc1_emit_ > doc2_emit_))
     # epoch_acc.append(float(doc1_emit_ > doc2_emit_))
     # epoch_costs.append(cost_.cpu().item())
