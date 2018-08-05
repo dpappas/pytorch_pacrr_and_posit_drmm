@@ -655,6 +655,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
         # loss1                           = self.my_hinge_loss(good_out, bad_out)
         return loss1, good_out, bad_out
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, gaf_sents, baf_sents):
+        doc1_sents_embeds   = autograd.Variable(torch.FloatTensor(doc1_sents_embeds),     requires_grad=False)
+        doc2_sents_embeds   = autograd.Variable(torch.FloatTensor(doc2_sents_embeds),     requires_grad=False)
+        # question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
+        # gaf             = autograd.Variable(torch.FloatTensor(gaf),             requires_grad=False)
+        # baf             = autograd.Variable(torch.FloatTensor(baf),             requires_grad=False)
+        # q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs),          requires_grad=False)
 
 run         = 0
 
