@@ -527,6 +527,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q2                          = nn.Linear(8, 1, bias=False)
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=False)
+        self.final_layer                            = nn.Linear(5, 1, bias=False)
         # nn.init.xavier_uniform_(self.trigram_conv.weight)
         # nn.init.xavier_uniform_(self.q_weights_mlp.weight)
         # nn.init.xavier_uniform_(self.linear_per_q1.weight)
@@ -578,60 +579,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
-    def fix_input_one(self, doc1_embeds, question_embeds, q_idfs, gaf):
-        doc1_embeds     = autograd.Variable(torch.FloatTensor(doc1_embeds),     requires_grad=False)
-        question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
-        gaf             = autograd.Variable(torch.FloatTensor(gaf),             requires_grad=False)
-        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs),          requires_grad=False)
-        return doc1_embeds, question_embeds, q_idfs, gaf
-    def fix_input_two(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf):
-        doc1_embeds     = autograd.Variable(torch.FloatTensor(doc1_embeds),     requires_grad=False)
-        doc2_embeds     = autograd.Variable(torch.FloatTensor(doc2_embeds),     requires_grad=False)
-        question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
-        gaf             = autograd.Variable(torch.FloatTensor(gaf),             requires_grad=False)
-        baf             = autograd.Variable(torch.FloatTensor(baf),             requires_grad=False)
-        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs),          requires_grad=False)
-        return doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf
-    def emit_one(self, doc1_embeds, question_embeds, q_idfs, gaf):
-        doc1_embeds, question_embeds, q_idfs, gaf = self.fix_input_one(doc1_embeds, question_embeds, q_idfs, gaf)
-        sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        sim_oh_d1                       = (sim_insensitive_d1 > (1-(1e-3))).float()
-        # 3gram convolution on the embedding matrix
-        q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
-        # cosine similairy on the contextual embeddings
-        sim_sensitive_d1_trigram        = self.my_cosine_sim(q_conv_res_trigram, d1_conv_trigram).squeeze(0)
-        # pooling 3 * 2 fetures from the similarity matrices for the good doc
-        sim_insensitive_pooled_d1       = self.pooling_method(sim_insensitive_d1)
-        sim_sensitive_pooled_d1_trigram = self.pooling_method(sim_sensitive_d1_trigram)
-        sim_oh_pooled_d1                = self.pooling_method(sim_oh_d1)
-        # create the weights for weighted average
-        q_weights                       = torch.cat([q_conv_res_trigram, q_idfs], -1)
-        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights                       = F.softmax(q_weights, dim=-1)
-        # concatenate and pass through mlps
-        doc1_emit                       = self.get_output([sim_oh_pooled_d1, sim_insensitive_pooled_d1, sim_sensitive_pooled_d1_trigram], q_weights)
-        # concatenate the mlps' output to the additional features
-        good_add_feats                  = torch.cat([gaf, doc1_emit.unsqueeze(-1)])
-        # apply output layer
-        good_out                        = self.out_layer(good_add_feats)
-        return good_out
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
-        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
-        q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
-        q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
-        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights           = F.softmax(q_weights, dim=-1)
-        #
-        for i in range(len(doc1_sents_embeds)):
-            sent_embeds = doc1_sents_embeds[i]
-            gaf         = sents_gaf[i]
-            conv_res    = self.apply_convolution(
-                sent_embeds,
-                self.trigram_conv,
-                self.trigram_conv_activation
-            )
+    def do_for_one_doc(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
+        res = []
+        for i in range(len(doc_sents_embeds)):
+            sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
+            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
+            conv_res            = self.apply_convolution(sent_embeds, self.trigram_conv, self.trigram_conv_activation)
             #
             sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
             sim_oh              = (sim_insens > (1 - (1e-3))).float()
@@ -642,9 +595,29 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             oh_pooled           = self.pooling_method(sim_oh)
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            print(sent_emit)
-
-
+            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            sent_out            = self.out_layer(sent_add_feats)
+            res.append(sent_out)
+        res = torch.stack(res)
+        res = torch.sort(res,0)[0]
+        res = res[-self.k:]
+        return res
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
+        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
+        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
+        q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+        q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights           = F.softmax(q_weights, dim=-1)
+        #
+        good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
+        bad_out             = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
+        #
+        final_good_output   = self.final_layer(good_out)
+        final_bad_output    = self.final_layer(bad_out)
+        #
+        loss1               = self.margin_loss(final_good_output, final_bad_output, torch.ones(1))
+        return loss1, final_good_output, final_bad_output
 
 run         = 0
 
@@ -701,18 +674,30 @@ for instance in train_data_step2(train_instances):
         sents_gaf           = instance[4],
         sents_baf           = instance[5]
     )
-    # batch_acc.append(float(doc1_emit_ > doc2_emit_))
-    # epoch_acc.append(float(doc1_emit_ > doc2_emit_))
-    # epoch_costs.append(cost_.cpu().item())
-    # batch_costs.append(cost_)
-    # if (len(batch_costs) == b_size):
-    #     batch_counter += 1
-    #     batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs,
-    #                                                                                  batch_acc, epoch_acc)
-    #     print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-    #     logger.info(
-    #         '{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-    #     batch_costs, batch_acc = [], []
+    batch_acc.append(float(doc1_emit_ > doc2_emit_))
+    epoch_acc.append(float(doc1_emit_ > doc2_emit_))
+    epoch_costs.append(cost_.cpu().item())
+    batch_costs.append(cost_)
+    if (len(batch_costs) == b_size):
+        batch_counter += 1
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
+            batch_costs,
+            epoch_costs,
+            batch_acc,
+            epoch_acc
+        )
+        print(
+            '{} {} {} {} {}'.format(
+                batch_counter,
+                batch_aver_cost,
+                epoch_aver_cost,
+                batch_aver_acc,
+                epoch_aver_acc
+            )
+        )
+        # logger.info(
+        #     '{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+        batch_costs, batch_acc = [], []
 
 
 
