@@ -475,7 +475,12 @@ def get_one_map(prefix, data, docs):
                 if (len(good_embeds) > 0):
                     good_sents_embeds.append(good_embeds)
                     good_sents_escores.append(good_escores)
-            doc_emit_               = model.emit_one(doc1_embeds=the_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, gaf=the_escores)
+            doc_emit_               = model.emit_one(
+                doc1_sents_embeds   = good_sents_embeds,
+                question_embeds     = quest_embeds,
+                q_idfs              = q_idfs,
+                sents_gaf           = good_sents_escores
+            )
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
         doc_res                     = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
@@ -583,6 +588,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         if(res.size()[0] < self.k):
             res         = torch.cat([res, torch.zeros(self.k - res.size()[0])], -1)
         return res
+    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
+        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
+        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
+        q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+        q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights           = F.softmax(q_weights, dim=-1)
+        good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
+        final_good_output   = self.final_layer(good_out)
+        return final_good_output
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
@@ -678,12 +693,12 @@ best_dev_map    = None
 test_map        = None
 for epoch in range(20):
     train_one(epoch + 1)
-    # epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
-    # if(best_dev_map is None or epoch_dev_map>=best_dev_map):
-    #     best_dev_map    = epoch_dev_map
-    #     test_map        = get_one_map('test', test_data, test_docs)
-    #     save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    # print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
-    # logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+    epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
+    if(best_dev_map is None or epoch_dev_map>=best_dev_map):
+        best_dev_map    = epoch_dev_map
+        test_map        = get_one_map('test', test_data, test_docs)
+        save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
+    print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+    logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
 
