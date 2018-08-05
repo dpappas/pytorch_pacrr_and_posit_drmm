@@ -431,16 +431,18 @@ def train_data_step2(train_instances):
         for good_text in good_sents:
             good_tokens, good_embeds            = get_embeds(tokenize(good_text), wv)
             good_escores                        = GetScores(quest, good_text, bm25s_gid)
-            good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores)
+            if(len(good_embeds)>0):
+                good_sents_embeds.append(good_embeds)
+                good_sents_escores.append(good_escores)
         #
         bad_sents                               = get_sents(train_docs[bid]['title']) + get_sents(train_docs[bid]['abstractText'])
         bad_sents_embeds, bad_sents_escores     = [], []
         for bad_text in bad_sents:
             bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
             bad_escores                         = GetScores(quest, bad_text, bm25s_bid)
-            bad_sents_embeds.append(bad_embeds)
-            bad_sents_escores.append(bad_escores)
+            if(len(bad_embeds)>0):
+                bad_sents_embeds.append(bad_embeds)
+                bad_sents_escores.append(bad_escores)
         yield (good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores)
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
