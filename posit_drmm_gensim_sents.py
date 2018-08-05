@@ -2,6 +2,8 @@
 # import sys
 # print(sys.version)
 import platform
+import pprint
+
 python_version = platform.python_version().strip()
 print(python_version)
 if(python_version.startswith('3')):
@@ -423,13 +425,23 @@ def train_data_step2(train_instances):
     for quest, gid, bid, bm25s_gid, bm25s_bid in train_instances:
         quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
         q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-        good_text                               = train_docs[gid]['title'] + ' <title> ' + train_docs[gid]['abstractText']
-        good_tokens, good_embeds                = get_embeds(tokenize(good_text), wv)
-        bad_text                                = train_docs[bid]['title'] + ' <title> ' + train_docs[bid]['abstractText']
-        bad_tokens, bad_embeds                  = get_embeds(tokenize(bad_text), wv)
-        good_escores                            = GetScores(quest, good_text, bm25s_gid)
-        bad_escores                             = GetScores(quest, bad_text, bm25s_bid)
-        yield (good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
+        #
+        good_sents                              = get_sents(train_docs[gid]['title']) + get_sents(train_docs[gid]['abstractText'])
+        good_sents_embeds, good_sents_escores   = [], []
+        for good_text in good_sents:
+            good_tokens, good_embeds            = get_embeds(tokenize(good_text), wv)
+            good_escores                        = GetScores(quest, good_text, bm25s_gid)
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores)
+        #
+        bad_sents                               = get_sents(train_docs[bid]['title']) + get_sents(train_docs[bid]['abstractText'])
+        bad_sents_embeds, bad_sents_escores     = [], []
+        for bad_text in bad_sents:
+            bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
+            bad_escores                         = GetScores(quest, bad_text, bm25s_bid)
+            bad_sents_embeds.append(bad_embeds)
+            bad_sents_escores.append(bad_escores)
+        yield (good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores)
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -690,27 +702,28 @@ train_instances = train_data_step1()
 epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
 for instance in train_data_step2(train_instances):
-    optimizer.zero_grad()
-    cost_, doc1_emit_, doc2_emit_ = model(
-        doc1_embeds     =instance[0],
-        doc2_embeds     =instance[1],
-        question_embeds =instance[2],
-        q_idfs          =instance[3],
-        gaf             =instance[4],
-        baf             =instance[5]
-    )
-    batch_acc.append(float(doc1_emit_ > doc2_emit_))
-    epoch_acc.append(float(doc1_emit_ > doc2_emit_))
-    epoch_costs.append(cost_.cpu().item())
-    batch_costs.append(cost_)
-    if (len(batch_costs) == b_size):
-        batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs,
-                                                                                     batch_acc, epoch_acc)
-        print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-        logger.info(
-            '{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-        batch_costs, batch_acc = [], []
+    pass
+    # optimizer.zero_grad()
+    # cost_, doc1_emit_, doc2_emit_ = model(
+    #     doc1_embeds     =instance[0],
+    #     doc2_embeds     =instance[1],
+    #     question_embeds =instance[2],
+    #     q_idfs          =instance[3],
+    #     gaf             =instance[4],
+    #     baf             =instance[5]
+    # )
+    # batch_acc.append(float(doc1_emit_ > doc2_emit_))
+    # epoch_acc.append(float(doc1_emit_ > doc2_emit_))
+    # epoch_costs.append(cost_.cpu().item())
+    # batch_costs.append(cost_)
+    # if (len(batch_costs) == b_size):
+    #     batch_counter += 1
+    #     batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs,
+    #                                                                                  batch_acc, epoch_acc)
+    #     print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+    #     logger.info(
+    #         '{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+    #     batch_costs, batch_acc = [], []
 
 
 
