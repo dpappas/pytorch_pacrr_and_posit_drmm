@@ -601,9 +601,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res     = torch.stack(res)
         res     = torch.sort(res,0)[0]
         res     = res[-self.k:].squeeze(-1)
-        temp    = res.size().item()
-        if(temp < self.k):
-            res         = torch.cat([res, torch.zeros(self.k - temp)], -1)
+        if(res.size()[0] < self.k):
+            res         = torch.cat([res, torch.zeros(self.k - res.size()[0])], -1)
         return res
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
