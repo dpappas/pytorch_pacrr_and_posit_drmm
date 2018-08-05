@@ -455,34 +455,6 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
-def train_one(epoch):
-    model.train()
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    batch_counter                   = 0
-    train_instances                 = train_data_step1()
-    epoch_aver_cost, epoch_aver_acc = 0., 0.
-    random.shuffle(train_instances)
-    for instance in train_data_step2(train_instances):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2], q_idfs=instance[3], gaf=instance[4], baf=instance[5])
-        batch_acc.append(float(doc1_emit_>doc2_emit_))
-        epoch_acc.append(float(doc1_emit_>doc2_emit_))
-        epoch_costs.append(cost_.cpu().item())
-        batch_costs.append(cost_)
-        if(len(batch_costs)==b_size):
-            batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-            print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-            logger.info('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-            batch_costs, batch_acc = [], []
-    if (len(batch_costs)>0):
-        batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-        print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-        logger.info('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-    print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-
 def get_one_map(prefix, data, docs):
     model.eval()
     ret_data                = {}
@@ -661,54 +633,42 @@ print_params(model)
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #
 
-
-model.train()
-batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-batch_counter = 0
-train_instances = train_data_step1()
-epoch_aver_cost, epoch_aver_acc = 0., 0.
-random.shuffle(train_instances)
-for instance in train_data_step2(train_instances):
-    optimizer.zero_grad()
-    cost_, doc1_emit_, doc2_emit_ = model(
-        doc1_sents_embeds   = instance[0],
-        doc2_sents_embeds   = instance[1],
-        question_embeds     = instance[2],
-        q_idfs              = instance[3],
-        sents_gaf           = instance[4],
-        sents_baf           = instance[5]
-    )
-    batch_acc.append(float(doc1_emit_ > doc2_emit_))
-    epoch_acc.append(float(doc1_emit_ > doc2_emit_))
-    epoch_costs.append(cost_.cpu().item())
-    batch_costs.append(cost_)
-    if (len(batch_costs) == b_size):
+def train_one(epoch):
+    model.train()
+    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
+    batch_counter = 0
+    train_instances = train_data_step1()
+    epoch_aver_cost, epoch_aver_acc = 0., 0.
+    random.shuffle(train_instances)
+    for instance in train_data_step2(train_instances):
+        optimizer.zero_grad()
+        cost_, doc1_emit_, doc2_emit_ = model(
+            doc1_sents_embeds   = instance[0],
+            doc2_sents_embeds   = instance[1],
+            question_embeds     = instance[2],
+            q_idfs              = instance[3],
+            sents_gaf           = instance[4],
+            sents_baf           = instance[5]
+        )
+        batch_acc.append(float(doc1_emit_ > doc2_emit_))
+        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
+        epoch_costs.append(cost_.cpu().item())
+        batch_costs.append(cost_)
+        if (len(batch_costs) == b_size):
+            batch_counter += 1
+            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+            print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+            logger.info('{} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+            batch_costs, batch_acc = [], []
+    if (len(batch_costs) > 0):
         batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
-            batch_costs,
-            epoch_costs,
-            batch_acc,
-            epoch_acc
-        )
-        print(
-            '{} {} {} {} {}'.format(
-                batch_counter,
-                batch_aver_cost,
-                epoch_aver_cost,
-                batch_aver_acc,
-                epoch_aver_acc
-            )
-        )
-        # logger.info(
-        #     '{} {} {} {} {}'.format(
-        #         batch_counter,
-        #         batch_aver_cost,
-        #         epoch_aver_cost,
-        #         batch_aver_acc,
-        #         epoch_aver_acc
-        #     )
-        # )
-        batch_costs, batch_acc = [], []
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+        print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+        logger.info('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+    print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
+for epoch in range(15):
+    train_one(epoch)
 
 
