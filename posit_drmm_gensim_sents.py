@@ -467,15 +467,20 @@ def get_one_map(prefix, data, docs):
         bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         doc_res                     = {}
         for retr in dato['retrieved_documents']:
-            the_text                = docs[retr['doc_id']]['title'] + ' <title> ' + docs[retr['doc_id']]['abstractText']
-            the_tokens, the_embeds  = get_embeds(tokenize(the_text), wv)
-            the_escores             = GetScores(quest, the_text, bm25s[retr['doc_id']])
+            good_sents = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
+            good_sents_embeds, good_sents_escores = [], []
+            for good_text in good_sents:
+                good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
+                good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])
+                if (len(good_embeds) > 0):
+                    good_sents_embeds.append(good_embeds)
+                    good_sents_escores.append(good_escores)
             doc_emit_               = model.emit_one(doc1_embeds=the_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, gaf=the_escores)
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
-        doc_res                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-        doc_res                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-        emitions['documents']   = doc_res[:100]
+        doc_res                     = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+        doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+        emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
