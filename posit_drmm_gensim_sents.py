@@ -583,10 +583,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res     = torch.stack(res)
-        res     = torch.sort(res,0)[0]
-        res     = res[-self.k:].squeeze(-1)
-        if(res.size()[0] < self.k):
-            res         = torch.cat([res, torch.zeros(self.k - res.size()[0])], -1)
+        res     = torch.sum(res) / float(res.size()[0])
+        # res     = torch.sort(res,0)[0]
+        # res     = res[-self.k:].squeeze(-1)
+        # if(res.size()[0] < self.k):
+        #     res         = torch.cat([res, torch.zeros(self.k - res.size()[0])], -1)
         return res
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
@@ -609,8 +610,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         bad_out             = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
-        final_good_output   = self.final_layer(good_out)
-        final_bad_output    = self.final_layer(bad_out)
+        # final_good_output   = self.final_layer(good_out)
+        # final_bad_output    = self.final_layer(bad_out)
         #
         loss1               = self.margin_loss(final_good_output, final_bad_output, torch.ones(1))
         return loss1, final_good_output, final_bad_output
