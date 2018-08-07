@@ -512,28 +512,32 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=True)
         self.final_layer                            = nn.Linear(5, 1, bias=True)
-        # nn.init.xavier_uniform_(self.trigram_conv.weight)
-        # nn.init.xavier_uniform_(self.q_weights_mlp.weight)
-        # nn.init.xavier_uniform_(self.linear_per_q1.weight)
-        # nn.init.xavier_uniform_(self.linear_per_q2.weight)
-        # nn.init.xavier_uniform_(self.out_layer.weight)
-        self.trigram_conv.weight.data.fill_(0.1)
-        self.q_weights_mlp.weight.data.fill_(0.1)
-        self.linear_per_q1.weight.data.fill_(0.1)
-        self.linear_per_q2.weight.data.fill_(0.1)
-        self.out_layer.weight.data.fill_(0.1)
-        self.trigram_conv.bias.data.fill_(0.1)
-        self.q_weights_mlp.bias.data.fill_(0.1)
-        self.linear_per_q1.bias.data.fill_(0.1)
-        self.linear_per_q2.bias.data.fill_(0.1)
-        self.out_layer.weight.data.fill_(0.1)
-        self.final_layer.weight.data.fill_(0.1)
         #
+        self.init_xavier()
+        self.init_using_value(0.1)
         # MultiMarginLoss
         # MarginRankingLoss
         # my hinge loss
         # MultiLabelMarginLoss
         #
+    def init_xavier(self):
+        nn.init.xavier_uniform_(self.trigram_conv.weight)
+        nn.init.xavier_uniform_(self.q_weights_mlp.weight)
+        nn.init.xavier_uniform_(self.linear_per_q1.weight)
+        nn.init.xavier_uniform_(self.linear_per_q2.weight)
+        nn.init.xavier_uniform_(self.out_layer.weight)
+    def init_using_value(self, value):
+        self.trigram_conv.weight.data.fill_(value)
+        self.q_weights_mlp.weight.data.fill_(value)
+        self.linear_per_q1.weight.data.fill_(value)
+        self.linear_per_q2.weight.data.fill_(value)
+        self.out_layer.weight.data.fill_(value)
+        self.trigram_conv.bias.data.fill_(value)
+        self.q_weights_mlp.bias.data.fill_(value)
+        self.linear_per_q1.bias.data.fill_(value)
+        self.linear_per_q2.bias.data.fill_(value)
+        self.out_layer.weight.data.fill_(value)
+        self.final_layer.weight.data.fill_(value)
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
