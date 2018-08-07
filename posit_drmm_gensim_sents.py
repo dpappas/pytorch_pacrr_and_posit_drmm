@@ -514,7 +514,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.final_layer                            = nn.Linear(5, 1, bias=True)
         #
         # self.init_xavier()
-        self.init_using_value(0.1)
+        # self.init_using_value(0.1)
         # MultiMarginLoss
         # MarginRankingLoss
         # my hinge loss
