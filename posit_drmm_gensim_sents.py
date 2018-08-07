@@ -659,7 +659,7 @@ eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
 k_for_maxpool   = 5
 embedding_dim   = 30 #200
-lr              = 0.1
+lr              = 0.01
 b_size          = 32
 
 test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(
