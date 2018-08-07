@@ -583,7 +583,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res     = torch.stack(res)
-        res     = torch.sum(res) / float(res.size()[0])
+        # max
+        # res     = torch.max(res)
+        # average
+        # res     = torch.sum(res) / float(res.size()[0])
+        # k max
         # res     = torch.sort(res,0)[0]
         # res     = res[-self.k:].squeeze(-1)
         # if(res.size()[0] < self.k):
@@ -597,7 +601,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
-        final_good_output   = self.final_layer(good_out)
+        # final_good_output   = self.final_layer(good_out)
+        final_good_output   = good_out.unsqueeze(0)
         return final_good_output
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
@@ -610,8 +615,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         bad_out             = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
-        # final_good_output   = self.final_layer(good_out)
-        # final_bad_output    = self.final_layer(bad_out)
+        final_good_output   = self.final_layer(good_out)
+        final_bad_output    = self.final_layer(bad_out)
+        # final_good_output   = good_out.unsqueeze(0)
+        # final_bad_output    = bad_out.unsqueeze(0)
         #
         loss1               = self.margin_loss(final_good_output, final_bad_output, torch.ones(1))
         return loss1, final_good_output, final_bad_output
@@ -637,7 +644,7 @@ eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
 k_for_maxpool   = 5
 embedding_dim   = 30 #200
-lr              = 0.01
+lr              = 0.001
 b_size          = 32
 
 test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(
