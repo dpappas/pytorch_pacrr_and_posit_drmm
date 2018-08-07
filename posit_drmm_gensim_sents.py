@@ -505,18 +505,29 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.embedding_dim                          = embedding_dim
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation                = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=False)
-        self.linear_per_q1                          = nn.Linear(6, 8, bias=False)
+        self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=True)
+        self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.my_relu1                               = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.linear_per_q2                          = nn.Linear(8, 1, bias=False)
+        self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-        self.out_layer                              = nn.Linear(5, 1, bias=False)
-        self.final_layer                            = nn.Linear(5, 1, bias=False)
+        self.out_layer                              = nn.Linear(5, 1, bias=True)
+        self.final_layer                            = nn.Linear(5, 1, bias=True)
         # nn.init.xavier_uniform_(self.trigram_conv.weight)
         # nn.init.xavier_uniform_(self.q_weights_mlp.weight)
         # nn.init.xavier_uniform_(self.linear_per_q1.weight)
         # nn.init.xavier_uniform_(self.linear_per_q2.weight)
         # nn.init.xavier_uniform_(self.out_layer.weight)
+        self.trigram_conv.weight.data.fill_(0.1)
+        self.q_weights_mlp.weight.data.fill_(0.1)
+        self.linear_per_q1.weight.data.fill_(0.1)
+        self.linear_per_q2.weight.data.fill_(0.1)
+        self.out_layer.weight.data.fill_(0.1)
+        self.trigram_conv.bias.data.fill_(0.1)
+        self.q_weights_mlp.bias.data.fill_(0.1)
+        self.linear_per_q1.bias.data.fill_(0.1)
+        self.linear_per_q2.bias.data.fill_(0.1)
+        self.out_layer.weight.data.fill_(0.1)
+        self.final_layer.weight.data.fill_(0.1)
         #
         # MultiMarginLoss
         # MarginRankingLoss
@@ -588,10 +599,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # average
         # res     = torch.sum(res) / float(res.size()[0])
         # k max
-        # res     = torch.sort(res,0)[0]
-        # res     = res[-self.k:].squeeze(-1)
-        # if(res.size()[0] < self.k):
-        #     res         = torch.cat([res, torch.zeros(self.k - res.size()[0])], -1)
+        res     = torch.sort(res,0)[0]
+        res     = res[-self.k:].squeeze(-1)
+        if(res.size()[0] < self.k):
+            res         = torch.cat([res, torch.zeros(self.k - res.size()[0])], -1)
         return res
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
@@ -601,8 +612,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
-        # final_good_output   = self.final_layer(good_out)
-        final_good_output   = good_out.unsqueeze(0)
+        final_good_output   = self.final_layer(good_out)
+        # final_good_output   = good_out.unsqueeze(0)
         return final_good_output
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
@@ -644,7 +655,7 @@ eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
 k_for_maxpool   = 5
 embedding_dim   = 30 #200
-lr              = 0.001
+lr              = 0.1
 b_size          = 32
 
 test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(
