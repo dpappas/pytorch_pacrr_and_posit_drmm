@@ -548,7 +548,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=True)
-        self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
+        # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
+        self.final_layer                            = nn.Linear(2, 1, bias=True)
         #
         # self.init_xavier()
         # self.init_using_value(0.1)
@@ -557,11 +558,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # my hinge loss
         # MultiLabelMarginLoss
         #
-    def min_max_norm(self, x):
-        minn        = torch.min(x)
-        maxx        = torch.max(x)
-        minmaxnorm  = (x-minn) / (maxx - minn)
-        return minmaxnorm
     def init_xavier(self):
         nn.init.xavier_uniform_(self.trigram_conv.weight)
         nn.init.xavier_uniform_(self.q_weights_mlp.weight)
@@ -580,6 +576,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q2.bias.data.fill_(value)
         self.out_layer.weight.data.fill_(value)
         self.final_layer.weight.data.fill_(value)
+    def min_max_norm(self, x):
+        minn        = torch.min(x)
+        maxx        = torch.max(x)
+        minmaxnorm  = (x-minn) / (maxx - minn)
+        return minmaxnorm
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
@@ -640,16 +641,31 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
-        # res = self.min_max_norm(res)
-        # max
-        # res     = torch.max(res)
-        # average
-        # res     = torch.sum(res) / float(res.size()[0])
-        # k max
+        res = self.get_max_and_average_of_k_max(res, 5)
+        print res
+        exit()
+        return res
+    def get_max_and_average_of_k_max(self, res, k):
+        sorted_res              = torch.sort(res)[0]
+        k_max_pooled            = sorted_res[-k:]
+        average_k_max_pooled    = k_max_pooled.sum()/float(k)
+        the_maximum             = k_max_pooled[-1]
+        the_concatenation       = torch.cat([the_maximum, average_k_max_pooled])
+        return the_concatenation
+    def get_max(self, res):
+        return torch.max(res)
+    def get_kmax(self, res):
         res     = torch.sort(res,0)[0]
         res     = res[-self.k2:].squeeze(-1)
         if(res.size()[0] < self.k2):
             res         = torch.cat([res, torch.zeros(self.k2 - res.size()[0])], -1)
+        return res
+    def get_average(self, res):
+        res = torch.sum(res) / float(res.size()[0])
+        return res
+    def get_maxmin_max(self, res):
+        res = self.min_max_norm(res)
+        res = torch.max(res)
         return res
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
