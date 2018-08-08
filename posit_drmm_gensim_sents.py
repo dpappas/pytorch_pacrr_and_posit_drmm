@@ -497,10 +497,46 @@ def get_one_map(prefix, data, docs):
         res_map = get_map_res(dataloc+'bioasq.test.json', odir + 'elk_relevant_abs_posit_drmm_lists_test.json')
     return res_map
 
+def train_one(epoch):
+    model.train()
+    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
+    batch_counter = 0
+    train_instances = train_data_step1()
+    epoch_aver_cost, epoch_aver_acc = 0., 0.
+    random.shuffle(train_instances)
+    for instance in train_data_step2(train_instances):
+        optimizer.zero_grad()
+        cost_, doc1_emit_, doc2_emit_ = model(
+            doc1_sents_embeds   = instance[0],
+            doc2_sents_embeds   = instance[1],
+            question_embeds     = instance[2],
+            q_idfs              = instance[3],
+            sents_gaf           = instance[4],
+            sents_baf           = instance[5]
+        )
+        batch_acc.append(float(doc1_emit_ > doc2_emit_))
+        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
+        epoch_costs.append(cost_.cpu().item())
+        batch_costs.append(cost_)
+        if (len(batch_costs) == b_size):
+            batch_counter += 1
+            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+            print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+            logger.info('{} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+            batch_costs, batch_acc = [], []
+    if (len(batch_costs) > 0):
+        batch_counter += 1
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+        print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+        logger.info('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+    print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim, k_for_maxpool):
+    def __init__(self, embedding_dim, k_for_maxpool, k_sent_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool         # k is for the average k pooling
+        self.k2                                     = k_sent_maxpool        # k is for the average k pooling
         #
         self.embedding_dim                          = embedding_dim
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
@@ -511,7 +547,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(5, 1, bias=True)
-        self.final_layer                            = nn.Linear(5, 1, bias=True)
+        self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
         #
         # self.init_xavier()
         # self.init_using_value(0.1)
@@ -520,6 +556,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # my hinge loss
         # MultiLabelMarginLoss
         #
+    def min_max_norm(self, x):
+        minn        = torch.min(x)
+        maxx        = torch.max(x)
+        minmaxnorm  = (x-minn) / (maxx - minn)
+        return minmaxnorm
     def init_xavier(self):
         nn.init.xavier_uniform_(self.trigram_conv.weight)
         nn.init.xavier_uniform_(self.q_weights_mlp.weight)
@@ -597,16 +638,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
-        res     = torch.stack(res)
+        res = torch.stack(res)
+        # res = self.min_max_norm(res)
         # max
         # res     = torch.max(res)
         # average
         # res     = torch.sum(res) / float(res.size()[0])
         # k max
         res     = torch.sort(res,0)[0]
-        res     = res[-self.k:].squeeze(-1)
-        if(res.size()[0] < self.k):
-            res         = torch.cat([res, torch.zeros(self.k - res.size()[0])], -1)
+        res     = res[-self.k2:].squeeze(-1)
+        if(res.size()[0] < self.k2):
+            res         = torch.cat([res, torch.zeros(self.k2 - res.size()[0])], -1)
         return res
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
@@ -658,6 +700,7 @@ dataloc         = '/home/dpappas/for_ryan/'
 eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
 k_for_maxpool   = 5
+k_sent_maxpool  = 2
 embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
@@ -670,46 +713,11 @@ test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, 
 #
 print('Compiling model...')
 logger.info('Compiling model...')
-model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
+model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
 params      = model.parameters()
 print_params(model)
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #
-
-def train_one(epoch):
-    model.train()
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    batch_counter = 0
-    train_instances = train_data_step1()
-    epoch_aver_cost, epoch_aver_acc = 0., 0.
-    random.shuffle(train_instances)
-    for instance in train_data_step2(train_instances):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_sents_embeds   = instance[0],
-            doc2_sents_embeds   = instance[1],
-            question_embeds     = instance[2],
-            q_idfs              = instance[3],
-            sents_gaf           = instance[4],
-            sents_baf           = instance[5]
-        )
-        batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_costs.append(cost_.cpu().item())
-        batch_costs.append(cost_)
-        if (len(batch_costs) == b_size):
-            batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-            print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-            logger.info('{} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-            batch_costs, batch_acc = [], []
-    if (len(batch_costs) > 0):
-        batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-        print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-        logger.info('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-    print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
 
 best_dev_map    = None
