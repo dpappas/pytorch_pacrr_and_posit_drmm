@@ -449,6 +449,7 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
     batch_cost.backward()
     optimizer.step()
+    optimizer.zero_grad()
     batch_aver_cost = batch_cost.cpu().item()
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
     batch_aver_acc  = sum(batch_acc) / float(len(batch_acc))
@@ -506,7 +507,6 @@ def train_one(epoch):
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
-        optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_ = model(
             doc1_sents_embeds   = instance[0],
             doc2_sents_embeds   = instance[1],
@@ -642,15 +642,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_out)
         res = torch.stack(res)
         res = self.get_max_and_average_of_k_max(res, 5)
-        print res
-        exit()
+        # print res
+        # print res.size()
+        # exit()
         return res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
         k_max_pooled            = sorted_res[-k:]
         average_k_max_pooled    = k_max_pooled.sum()/float(k)
         the_maximum             = k_max_pooled[-1]
-        the_concatenation       = torch.cat([the_maximum, average_k_max_pooled])
+        # print(the_maximum)
+        # print(the_maximum.size())
+        # print(average_k_max_pooled)
+        # print(average_k_max_pooled.size())
+        the_concatenation       = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
         return the_concatenation
     def get_max(self, res):
         return torch.max(res)
