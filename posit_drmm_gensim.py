@@ -108,7 +108,6 @@ def dummy_test():
     gaf                 = np.random.rand(4)
     baf                 = np.random.rand(4)
     for epoch in range(200):
-        optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_ = model(
             doc1_embeds     = doc1_embeds,
             doc2_embeds     = doc2_embeds,
@@ -119,6 +118,7 @@ def dummy_test():
         )
         cost_.backward()
         optimizer.step()
+        optimizer.zero_grad()
         the_cost = cost_.cpu().item()
         print(the_cost, float(doc1_emit_), float(doc2_emit_))
     print(20 * '-')
@@ -367,6 +367,7 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
     batch_cost.backward()
     optimizer.step()
+    optimizer.zero_grad()
     batch_aver_cost = batch_cost.cpu().item()
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
     batch_aver_acc  = sum(batch_acc) / float(len(batch_acc))
@@ -381,7 +382,6 @@ def train_one(epoch):
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
-        optimizer.zero_grad()
         cost_, doc1_emit_, doc2_emit_ = model(doc1_embeds=instance[0], doc2_embeds=instance[1], question_embeds=instance[2], q_idfs=instance[3], gaf=instance[4], baf=instance[5])
         batch_acc.append(float(doc1_emit_>doc2_emit_))
         epoch_acc.append(float(doc1_emit_>doc2_emit_))
