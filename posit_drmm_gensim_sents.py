@@ -502,6 +502,7 @@ def train_one(epoch):
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter = 0
     train_instances = train_data_step1()
+    # train_instances = train_instances[:len(train_instances)/2]
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
