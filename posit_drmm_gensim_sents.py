@@ -641,7 +641,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
-        res = self.get_max_and_average_of_k_max(res, 5)
+        # res = self.get_max_and_average_of_k_max(res, 5)
+        res = self.get_max(res)
         # print res
         # print res.size()
         # exit()
@@ -699,7 +700,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # final_good_output   = good_out.unsqueeze(0)
         # final_bad_output    = bad_out.unsqueeze(0)
         #
-        loss1               = self.margin_loss(final_good_output, final_bad_output, torch.ones(1))
+        # loss1               = self.margin_loss(final_good_output, final_bad_output, torch.ones(1))
+        loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output
 
 run         = 0
@@ -723,7 +725,11 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_run{}/'.format(run)
+    odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_max_run{}/'.format(run)
+    # odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_average_run{}/'.format(run)
+    # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
+    # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
+    #
     if not os.path.exists(odir):
         os.makedirs(odir)
     od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
