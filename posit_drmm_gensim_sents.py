@@ -704,18 +704,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 run         = 0
 
-odir        = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_run{}/'.format(run)
-if not os.path.exists(odir):
-    os.makedirs(odir)
-
-od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
-logger      = logging.getLogger(od)
-hdlr        = logging.FileHandler(odir+'model.log')
-formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-hdlr.setFormatter(formatter)
-logger.addHandler(hdlr)
-logger.setLevel(logging.INFO)
-
 w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc         = '/home/dpappas/for_ryan/'
@@ -727,31 +715,53 @@ embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
 
-test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(
-    dataloc         = dataloc,
-    w2v_bin_path    = w2v_bin_path,
-    idf_pickle_path = idf_pickle_path
-)
 #
-print('Compiling model...')
-logger.info('Compiling model...')
-model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
-params      = model.parameters()
-print_params(model)
-optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-#
-
-
-best_dev_map    = None
-test_map        = None
-for epoch in range(20):
-    train_one(epoch + 1)
-    epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
-    if(best_dev_map is None or epoch_dev_map>=best_dev_map):
-        best_dev_map    = epoch_dev_map
-        test_map        = get_one_map('test', test_data, test_docs)
-        save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
-    logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+hdlr = None
+for run in range(5):
+    #
+    my_seed = random.randint(1,2000000)
+    random.seed(my_seed)
+    torch.manual_seed(my_seed)
+    #
+    odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_run{}/'.format(run)
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
+    logger      = logging.getLogger(od)
+    if(hdlr is not None):
+        logger.removeHandler(hdlr)
+    hdlr        = logging.FileHandler(odir+'model.log')
+    formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+    #
+    print('random seed: {}'.format(my_seed))
+    logger.info('random seed: {}'.format(my_seed))
+    #
+    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(
+        dataloc         = dataloc,
+        w2v_bin_path    = w2v_bin_path,
+        idf_pickle_path = idf_pickle_path
+    )
+    #
+    print('Compiling model...')
+    logger.info('Compiling model...')
+    model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
+    params      = model.parameters()
+    print_params(model)
+    optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    #
+    best_dev_map    = None
+    test_map        = None
+    for epoch in range(20):
+        train_one(epoch + 1)
+        epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
+        if(best_dev_map is None or epoch_dev_map>=best_dev_map):
+            best_dev_map    = epoch_dev_map
+            test_map        = get_one_map('test', test_data, test_docs)
+            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
+        print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
 
