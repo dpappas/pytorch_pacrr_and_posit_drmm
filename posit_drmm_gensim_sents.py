@@ -641,8 +641,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
-        # res = self.get_max_and_average_of_k_max(res, 5)
-        res = self.get_max(res).unsqueeze(0)
+        res = self.get_max_and_average_of_k_max(res, 5)
+        # res = self.get_max(res).unsqueeze(0)
+        # res = self.get_average(res).unsqueeze(0)
         # print res
         # print res.size()
         # exit()
@@ -681,8 +682,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
-        # final_good_output   = self.final_layer(good_out)
-        final_good_output   = good_out
+        final_good_output   = self.final_layer(good_out)
+        # final_good_output   = good_out
         return final_good_output
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
@@ -695,10 +696,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         bad_out             = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
-        # final_good_output   = self.final_layer(good_out)
-        # final_bad_output    = self.final_layer(bad_out)
-        final_good_output   = good_out
-        final_bad_output    = bad_out
+        final_good_output   = self.final_layer(good_out)
+        final_bad_output    = self.final_layer(bad_out)
+        # final_good_output   = good_out
+        # final_bad_output    = bad_out
         #
         # loss1               = self.margin_loss(final_good_output, final_bad_output, torch.ones(1))
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
@@ -730,8 +731,8 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_max_run{}/'.format(run)
-    # odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_average_run{}/'.format(run)
+    # odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_max_run{}/'.format(run)
+    odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_average_run{}/'.format(run)
     # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
     # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
     #
