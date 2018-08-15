@@ -475,6 +475,10 @@ def get_one_map(prefix, data, docs):
         bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         doc_res                     = {}
         for retr in dato['retrieved_documents']:
+            #
+            good_doc_text = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
+            good_doc_af = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
+            #
             good_sents = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
             good_sents_embeds, good_sents_escores = [], []
             for good_text in good_sents:
@@ -487,7 +491,8 @@ def get_one_map(prefix, data, docs):
                 doc1_sents_embeds   = good_sents_embeds,
                 question_embeds     = quest_embeds,
                 q_idfs              = q_idfs,
-                sents_gaf           = good_sents_escores
+                sents_gaf           = good_sents_escores,
+                doc_gaf             = good_doc_af
             )
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
