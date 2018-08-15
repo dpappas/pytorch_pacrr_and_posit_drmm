@@ -520,7 +520,9 @@ def train_one(epoch):
             question_embeds     = instance[2],
             q_idfs              = instance[3],
             sents_gaf           = instance[4],
-            sents_baf           = instance[5]
+            sents_baf           = instance[5],
+            doc_gaf             = instance[6],
+            doc_baf             = instance[7]
         )
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -554,9 +556,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-        self.out_layer                              = nn.Linear(5, 1, bias=True)
+        self.out_layer                              = nn.Linear(4, 1, bias=True)
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
-        self.final_layer                            = nn.Linear(2, 1, bias=True)
+        self.final_layer                            = nn.Linear(5, 1, bias=True)
         #
         # self.init_xavier()
         # self.init_using_value(0.1)
@@ -681,7 +683,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = self.min_max_norm(res)
         res = torch.max(res)
         return res
-    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
+    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
@@ -692,7 +694,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_layer(good_out)
         # final_good_output   = good_out
         return final_good_output
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf):
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
