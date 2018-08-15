@@ -430,7 +430,7 @@ def train_data_step2(train_instances):
         good_sents_embeds, good_sents_escores   = [], []
         for good_text in good_sents:
             good_tokens, good_embeds            = get_embeds(tokenize(good_text), wv)
-            good_escores                        = GetScores(quest, good_text, bm25s_gid)
+            good_escores                        = GetScores(quest, good_text, bm25s_gid)[:-1]
             if(len(good_embeds)>0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
@@ -439,7 +439,7 @@ def train_data_step2(train_instances):
         bad_sents_embeds, bad_sents_escores     = [], []
         for bad_text in bad_sents:
             bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
-            bad_escores                         = GetScores(quest, bad_text, bm25s_bid)
+            bad_escores                         = GetScores(quest, bad_text, bm25s_bid)[:-1]
             if(len(bad_embeds)>0):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
