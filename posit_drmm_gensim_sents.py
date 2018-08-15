@@ -650,8 +650,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
-        res = self.get_max_and_average_of_k_max(res, 5)
-        # res = self.get_max(res).unsqueeze(0)
+        # res = self.get_max_and_average_of_k_max(res, 5)
+        res = self.get_max(res).unsqueeze(0)
         # res = self.get_average(res).unsqueeze(0)
         # print res
         # print res.size()
@@ -691,7 +691,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
-        final_good_output   = self.final_layer(good_out)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        final_good_output   = self.final_layer(good_out_pp)
         # final_good_output   = good_out
         return final_good_output
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
@@ -705,8 +706,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         bad_out             = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
-        final_good_output   = self.final_layer(good_out)
-        final_bad_output    = self.final_layer(bad_out)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        bad_out_pp          = torch.cat([bad_out,  doc_baf], -1)
+        #
+        final_good_output   = self.final_layer(good_out_pp)
+        final_bad_output    = self.final_layer(bad_out_pp)
         # final_good_output   = good_out
         # final_bad_output    = bad_out
         #
@@ -716,15 +720,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 run         = 0
 
-# w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc         = '/home/dpappas/for_ryan/'
-# eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
+w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc         = '/home/dpappas/for_ryan/'
+eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
-w2v_bin_path    = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
-dataloc         = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-eval_path       = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# w2v_bin_path    = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc         = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path       = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
@@ -742,7 +746,12 @@ for run in range(5):
     #
     # odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_max_run{}/'.format(run)
     # odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_average_run{}/'.format(run)
-    odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
+    # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
+    # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
+    #
+    odir = '/home/dpappas/proper_pdrmm_gensim_sent_hinge_30_0p01_max_run{}/'.format(run)
+    # odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_average_run{}/'.format(run)
+    # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
     # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
     #
     if not os.path.exists(odir):
