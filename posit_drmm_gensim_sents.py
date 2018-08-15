@@ -447,7 +447,10 @@ def train_data_step2(train_instances):
             if(len(bad_embeds)>0):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
-        yield (good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores)
+        yield (
+            good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs,
+            good_sents_escores, bad_sents_escores, good_doc_af, bad_doc_af
+        )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
