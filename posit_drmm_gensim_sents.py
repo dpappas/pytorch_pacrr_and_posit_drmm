@@ -483,7 +483,7 @@ def get_one_map(prefix, data, docs):
             good_sents_embeds, good_sents_escores = [], []
             for good_text in good_sents:
                 good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
-                good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])
+                good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])[:-1]
                 if (len(good_embeds) > 0):
                     good_sents_embeds.append(good_embeds)
                     good_sents_escores.append(good_escores)
