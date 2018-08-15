@@ -698,6 +698,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
+        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
+        doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
         q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
