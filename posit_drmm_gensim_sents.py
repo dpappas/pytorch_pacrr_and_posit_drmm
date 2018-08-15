@@ -426,6 +426,8 @@ def train_data_step2(train_instances):
         quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
         q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         #
+        good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
+        good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
         good_sents                              = get_sents(train_docs[gid]['title']) + get_sents(train_docs[gid]['abstractText'])
         good_sents_embeds, good_sents_escores   = [], []
         for good_text in good_sents:
@@ -435,6 +437,8 @@ def train_data_step2(train_instances):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
         #
+        bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
+        bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
         bad_sents                               = get_sents(train_docs[bid]['title']) + get_sents(train_docs[bid]['abstractText'])
         bad_sents_embeds, bad_sents_escores     = [], []
         for bad_text in bad_sents:
