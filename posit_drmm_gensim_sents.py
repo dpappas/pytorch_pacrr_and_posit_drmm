@@ -563,7 +563,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(4, 1, bias=True)
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
-        self.final_layer                            = nn.Linear(5, 1, bias=True)
+        self.final_layer                            = nn.Linear(6, 1, bias=True)
         #
         # self.init_xavier()
         # self.init_using_value(0.1)
@@ -655,8 +655,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
-        # res = self.get_max_and_average_of_k_max(res, 5)
-        res = self.get_max(res).unsqueeze(0)
+        res = self.get_max_and_average_of_k_max(res, 5)
+        # res = self.get_max(res).unsqueeze(0)
         # res = self.get_average(res).unsqueeze(0)
         # print res
         # print res.size()
@@ -755,9 +755,9 @@ for run in range(5):
     # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
     # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
     #
-    odir = '/home/dpappas/proper_pdrmm_gensim_sent_hinge_30_0p01_max_run{}/'.format(run)
+    # odir = '/home/dpappas/proper_pdrmm_gensim_sent_hinge_30_0p01_max_run{}/'.format(run)
     # odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_average_run{}/'.format(run)
-    # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
+    odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
     # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
     #
     if not os.path.exists(odir):
