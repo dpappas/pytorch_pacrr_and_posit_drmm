@@ -477,11 +477,12 @@ def train_data_step2(train_instances):
             if(len(bad_embeds)>0):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
-        yield (
-            good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs,
-            good_sents_escores, bad_sents_escores, good_doc_af, bad_doc_af,
-            good_sent_tags, bad_sent_tags
-        )
+        if(sum(good_sent_tags)>0):
+            yield (
+                good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs,
+                good_sents_escores, bad_sents_escores, good_doc_af, bad_doc_af,
+                good_sent_tags, bad_sent_tags
+            )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -541,6 +542,10 @@ def get_one_map(prefix, data, docs):
         res_map = get_map_res(dataloc+'bioasq.test.json', odir + 'elk_relevant_abs_posit_drmm_lists_test.json')
     return res_map
 
+def get_snippets_loss(wright, wrong):
+    losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
+    return sum(losses) / float(len(losses))
+
 def train_one(epoch):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
@@ -561,12 +566,11 @@ def train_one(epoch):
             doc_baf             = instance[7]
         )
         good_sent_tags, bad_sent_tags = instance[8], instance[9]
-        wright  = [gs_emits_[i] for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 1)]
-        wrong   = [gs_emits_[i] for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 0)]
-        wrong   += [t for t in bs_emits_]
-        print(wright)
-        print(wrong)
-        exit()
+        wright      = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 1)])
+        wrong       = [gs_emits_[i] for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 0)]
+        wrong       = torch.cat(wrong+[bs_emits_.squeeze(-1)])
+        snip_loss   = get_snippets_loss(wright, wrong)
+        print snip_loss
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
