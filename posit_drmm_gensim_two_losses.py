@@ -723,8 +723,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
-        ret = self.get_max_and_average_of_k_max(res, 5)
-        # res = self.get_max(res).unsqueeze(0)
+        # ret = self.get_max_and_average_of_k_max(res, 5)
+        res = self.get_max(res).unsqueeze(0)
         # res = self.get_average(res).unsqueeze(0)
         # print res
         # print res.size()
