@@ -797,7 +797,6 @@ idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc         = '/home/dpappas/for_ryan/'
 eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
-
 # w2v_bin_path    = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
 # idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
 # dataloc         = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
