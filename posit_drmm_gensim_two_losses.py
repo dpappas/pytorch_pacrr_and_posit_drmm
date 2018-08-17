@@ -789,8 +789,7 @@ for run in range(5):
     print_params(model)
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
-    best_dev_map    = None
-    test_map        = None
+    best_dev_map, test_map = None, None
     for epoch in range(20):
         train_one(epoch + 1)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
