@@ -428,16 +428,18 @@ def train_data_step1():
     logger.info('')
     return ret
 
-def get_sent_tags(good_sents, good_snips):
-    print('\n'.join(good_sents))
-    print(20 * '-')
-    print('\n'.join(good_snips))
-    for sent in good_sents:
-        print(
-            (sent in good_snips)
-        )
-    exit()
+def get_snips(quest_id, gid):
+    good_snips = []
+    for sn in bioasq6_data[quest_id]['snippets']:
+        if (sn['document'].endswith(gid)):
+            good_snips.extend(get_sents(sn['text']))
+    return good_snips
 
+def get_sent_tags(good_sents, good_snips):
+    sent_tags = []
+    for sent in good_sents:
+        sent_tags.append(int((sent in good_snips) or any([s in sent for s in good_snips])))
+    return sent_tags
 
 def train_data_step2(train_instances):
     for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
@@ -451,13 +453,8 @@ def train_data_step2(train_instances):
         #
         good_sents                              = good_sents_title + good_sents_abs
         #
-        good_snips                              = []
-        for sn in bioasq6_data[quest_id]['snippets']:
-            if (sn['document'].endswith(gid)):
-                good_snips.extend(get_sents(sn['text']))
-        #
-        get_sent_tags(good_sents, good_snips)
-        exit()
+        good_snips                              = get_snips(quest_id, gid)
+        good_sent_tags                          = get_sent_tags(good_sents, good_snips)
         #
         good_sents_embeds, good_sents_escores   = [], []
         for good_text in good_sents:
@@ -470,6 +467,9 @@ def train_data_step2(train_instances):
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
         bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
         bad_sents                               = get_sents(train_docs[bid]['title']) + get_sents(train_docs[bid]['abstractText'])
+        #
+        bad_sent_tags                           = len(bad_sents) * [0]
+        #
         bad_sents_embeds, bad_sents_escores     = [], []
         for bad_text in bad_sents:
             bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
@@ -479,7 +479,8 @@ def train_data_step2(train_instances):
                 bad_sents_escores.append(bad_escores)
         yield (
             good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs,
-            good_sents_escores, bad_sents_escores, good_doc_af, bad_doc_af
+            good_sents_escores, bad_sents_escores, good_doc_af, bad_doc_af,
+            good_sent_tags, bad_sent_tags
         )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
@@ -709,13 +710,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
-        res = self.get_max_and_average_of_k_max(res, 5)
+        ret = self.get_max_and_average_of_k_max(res, 5)
         # res = self.get_max(res).unsqueeze(0)
         # res = self.get_average(res).unsqueeze(0)
         # print res
         # print res.size()
         # exit()
-        return res
+        return ret, res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
         k_max_pooled            = sorted_res[-k:]
@@ -750,11 +751,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
+        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         final_good_output   = self.final_layer(good_out_pp)
         # final_good_output   = good_out
-        return final_good_output
+        return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
@@ -765,8 +766,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out            = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
-        bad_out             = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
+        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
+        bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp          = torch.cat([bad_out,  doc_baf], -1)
@@ -778,7 +779,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         # loss1               = self.margin_loss(final_good_output, final_bad_output, torch.ones(1))
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output
+        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
