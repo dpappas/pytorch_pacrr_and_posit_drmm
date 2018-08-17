@@ -411,9 +411,11 @@ def train_data_yielder():
                 yield(good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
 
 def train_data_step1():
+    # bioasq6_data
     ret = []
     for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
+        quest_id    = dato['query_id']
         bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
@@ -421,7 +423,7 @@ def train_data_step1():
         if(len(bad_pmids)>0):
             for gid in good_pmids:
                 bid = random.choice(bad_pmids)
-                ret.append((quest, gid, bid, bm25s[gid], bm25s[bid]))
+                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
     print('')
     logger.info('')
     return ret
@@ -786,6 +788,8 @@ for run in range(5):
     logger.info('random seed: {}'.format(my_seed))
     #
     test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+    # pprint(bioasq6_data.items()[0])
+    # exit()
     #
     print('Compiling model...')
     logger.info('Compiling model...')
