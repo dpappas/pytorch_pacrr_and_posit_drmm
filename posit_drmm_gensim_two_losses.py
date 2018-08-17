@@ -566,8 +566,6 @@ def train_one(epoch):
         wrong   += [t for t in bs_emits_]
         print(wright)
         print(wrong)
-        print(bs_emits_)
-        print(bad_sent_tags)
         exit()
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
