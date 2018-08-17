@@ -430,9 +430,10 @@ def train_data_step1():
 
 def get_snips(quest_id, gid):
     good_snips = []
-    for sn in bioasq6_data[quest_id]['snippets']:
-        if (sn['document'].endswith(gid)):
-            good_snips.extend(get_sents(sn['text']))
+    if('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            if (sn['document'].endswith(gid)):
+                good_snips.extend(get_sents(sn['text']))
     return good_snips
 
 def get_sent_tags(good_sents, good_snips):
