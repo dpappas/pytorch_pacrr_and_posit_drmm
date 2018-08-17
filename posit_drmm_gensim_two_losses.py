@@ -633,7 +633,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(4, 1, bias=True)
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
-        self.final_layer                            = nn.Linear(5, 1, bias=True)
+        self.final_layer                            = nn.Linear(6, 1, bias=True)
         #
         # self.init_xavier()
         # self.init_using_value(0.1)
@@ -725,8 +725,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
-        # ret = self.get_max_and_average_of_k_max(res, 5)
-        ret = self.get_max(res).unsqueeze(0)
+        ret = self.get_max_and_average_of_k_max(res, 5)
+        # ret = self.get_max(res).unsqueeze(0)
         # ret = self.get_average(res).unsqueeze(0)
         # print ret
         # print ret.size()
@@ -796,15 +796,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc         = '/home/dpappas/for_ryan/'
-eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
+# w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc         = '/home/dpappas/for_ryan/'
+# eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
-# w2v_bin_path    = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-# idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
-# dataloc         = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-# eval_path       = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+w2v_bin_path    = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
+dataloc         = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+eval_path       = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
@@ -820,7 +820,8 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/pdrmm_gensim_2L_30_0p01_max_run{}/'.format(run)
+    # odir            = '/home/dpappas/pdrmm_gensim_2L_30_0p01_max_run{}/'.format(run)
+    odir            = '/home/dpappas/pdrmm_gensim_2L_30_0p01_MaxAndAverKMax_run{}/'.format(run)
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
