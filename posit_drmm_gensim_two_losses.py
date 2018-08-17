@@ -428,12 +428,14 @@ def train_data_step1():
     logger.info('')
     return ret
 
-def get_sent_tags(title_sents, abs_sents, good_snips):
-    ttags, atags = len(title_sents)*[0], len(abs_sents)*[0]
-    for gs in good_snips:
-        pprint(gs)
-    for s in title_sents+abs_sents:
-        print(len(s))
+def get_sent_tags(good_sents, good_snips):
+    print('\n'.join(good_sents))
+    print(20 * '-')
+    print('\n'.join(good_snips))
+    for sent in good_sents:
+        print(
+            (sent in good_snips)
+        )
     exit()
 
 
@@ -447,11 +449,16 @@ def train_data_step2(train_instances):
         good_sents_title                        = get_sents(train_docs[gid]['title'])
         good_sents_abs                          = get_sents(train_docs[gid]['abstractText'])
         #
-        good_snips = [sn for sn in bioasq6_data[quest_id]['snippets'] if(sn['document'].endswith(gid))]
-        get_sent_tags(good_sents_title, good_sents_abs, good_snips)
+        good_sents                              = good_sents_title + good_sents_abs
+        #
+        good_snips                              = []
+        for sn in bioasq6_data[quest_id]['snippets']:
+            if (sn['document'].endswith(gid)):
+                good_snips.extend(get_sents(sn['text']))
+        #
+        get_sent_tags(good_sents, good_snips)
         exit()
         #
-        good_sents                              = good_sents_title + good_sents_abs
         good_sents_embeds, good_sents_escores   = [], []
         for good_text in good_sents:
             good_tokens, good_embeds            = get_embeds(tokenize(good_text), wv)
