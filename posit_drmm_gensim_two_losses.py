@@ -552,11 +552,25 @@ def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
 def get_sim_info(sent, snippets):
-    sent = bioclean(sent)
-    similarities = [similar(sent, s) for s in snippets]
-    max_sim = max(similarities)
-    index_of_max = similarities.index(max_sim)
+    sent            = bioclean(sent)
+    similarities    = [similar(sent, s) for s in snippets]
+    max_sim         = max(similarities)
+    index_of_max    = similarities.index(max_sim)
     return max_sim, index_of_max, snippets[index_of_max]
+
+def init_the_logger(hdlr):
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
+    logger      = logging.getLogger(od)
+    if(hdlr is not None):
+        logger.removeHandler(hdlr)
+    hdlr        = logging.FileHandler(odir+'model.log')
+    formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+    return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool, k_sent_maxpool):
@@ -761,19 +775,9 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = '/home/dpappas/pdrmm_gensim_2L_30_0p01_max_run{}/'.format(run)
+    odir            = '/home/dpappas/pdrmm_gensim_2L_30_0p01_max_run{}/'.format(run)
     #
-    if not os.path.exists(odir):
-        os.makedirs(odir)
-    od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
-    logger      = logging.getLogger(od)
-    if(hdlr is not None):
-        logger.removeHandler(hdlr)
-    hdlr        = logging.FileHandler(odir+'model.log')
-    formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    hdlr.setFormatter(formatter)
-    logger.addHandler(hdlr)
-    logger.setLevel(logging.INFO)
+    logger, hdlr    = init_the_logger(hdlr)
     #
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
