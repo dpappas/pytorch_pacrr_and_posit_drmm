@@ -27,6 +27,7 @@ import torch.autograd as autograd
 from tqdm import tqdm
 from gensim.models.keyedvectors import KeyedVectors
 from nltk.tokenize import sent_tokenize
+from difflib import SequenceMatcher
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -546,6 +547,16 @@ def train_one(epoch):
         logger.info('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
+
+def get_sim_info(sent, snippets):
+    sent = bioclean(sent)
+    similarities = [similar(sent, s) for s in snippets]
+    max_sim = max(similarities)
+    index_of_max = similarities.index(max_sim)
+    return max_sim, index_of_max, snippets[index_of_max]
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool, k_sent_maxpool):
