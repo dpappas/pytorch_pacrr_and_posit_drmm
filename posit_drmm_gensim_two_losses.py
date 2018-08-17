@@ -565,12 +565,14 @@ def train_one(epoch):
             doc_gaf             = instance[6],
             doc_baf             = instance[7]
         )
+        #
         good_sent_tags, bad_sent_tags = instance[8], instance[9]
         wright      = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 1)])
         wrong       = [gs_emits_[i] for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 0)]
         wrong       = torch.cat(wrong+[bs_emits_.squeeze(-1)])
         snip_loss   = get_snippets_loss(wright, wrong)
-        print snip_loss
+        cost_       += snip_loss
+        #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
