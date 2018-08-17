@@ -432,6 +432,8 @@ def get_sent_tags(title_sents, abs_sents, good_snips):
     ttags, atags = len(title_sents)*[0], len(abs_sents)*[0]
     for gs in good_snips:
         pprint(gs)
+    for s in title_sents+abs_sents:
+        print(len(s))
     exit()
 
 
