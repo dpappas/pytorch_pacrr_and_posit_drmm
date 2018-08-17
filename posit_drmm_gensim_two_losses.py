@@ -435,7 +435,9 @@ def train_data_step2(train_instances):
         #
         good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
         good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
-        good_sents                              = get_sents(train_docs[gid]['title']) + get_sents(train_docs[gid]['abstractText'])
+        good_sents_title                        = get_sents(train_docs[gid]['title'])
+        good_sents_abs                          = get_sents(train_docs[gid]['abstractText'])
+        good_sents                              = good_sents_title + good_sents_abs
         good_sents_embeds, good_sents_escores   = [], []
         for good_text in good_sents:
             good_tokens, good_embeds            = get_embeds(tokenize(good_text), wv)
