@@ -350,7 +350,7 @@ def GetWords(data, doc_text, words):
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
     #
-    with open('/home/dpappas/bioasq_ir_data/BioASQ-trainingDataset6b.json', 'r') as f:
+    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
         bioasq6_data = json.load(f)
         bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
     # logger.info('loading pickle data')
