@@ -349,6 +349,10 @@ def GetWords(data, doc_text, words):
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
+    #
+    with open('/home/dpappas/bioasq_ir_data/BioASQ-trainingDataset6b.json', 'r') as f:
+        bioasq6_data = json.load(f)
+        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
     # logger.info('loading pickle data')
     with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
         test_data = pickle.load(f)
@@ -382,7 +386,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     logger.info('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 def train_data_yielder():
     for dato in tqdm(train_data['queries']):
@@ -756,6 +760,7 @@ idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc         = '/home/dpappas/for_ryan/'
 eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
+
 # w2v_bin_path    = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
 # idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
 # dataloc         = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
@@ -780,7 +785,7 @@ for run in range(5):
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
     #
-    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
