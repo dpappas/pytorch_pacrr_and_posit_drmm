@@ -550,7 +550,7 @@ def train_one(epoch):
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
-        cost_, doc1_emit_, doc2_emit_ = model(
+        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = instance[0],
             doc2_sents_embeds   = instance[1],
             question_embeds     = instance[2],
@@ -560,6 +560,15 @@ def train_one(epoch):
             doc_gaf             = instance[6],
             doc_baf             = instance[7]
         )
+        good_sent_tags, bad_sent_tags = instance[8], instance[9]
+        wright  = [gs_emits_[i] for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 1)]
+        wrong   = [gs_emits_[i] for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 0)]
+        wrong   += [t for t in bs_emits_]
+        print(wright)
+        print(wrong)
+        print(bs_emits_)
+        print(bad_sent_tags)
+        exit()
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
