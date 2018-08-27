@@ -603,7 +603,6 @@ for run in range(5):
     torch.manual_seed(my_seed)
     #
     odir            = '/home/dpappas/posit_drmm_gensim_hingeloss_30_0p01_run{}/'.format(run)
-    # odir            = '/home/dpappas/posit_drmm_gensim_rankingloss_30_0p01_run{}/'.format(run)
     if not os.path.exists(odir):
         os.makedirs(odir)
     od              = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
