@@ -543,7 +543,7 @@ print_params(model)
 model.eval()
 
 
-for dato in tqdm(test_data['queries']):
+for dato in test_data['queries']:
     quest                       = dato['query_text']
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
     q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
