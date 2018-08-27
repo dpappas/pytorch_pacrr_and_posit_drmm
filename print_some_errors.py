@@ -590,7 +590,7 @@ for dato in test_data['queries']:
         emit_inds = []
         temp = sorted(sent_emits, reverse=True)
         for se in sent_emits:
-            emit_inds.append(temp.index(se))
+            emit_inds.append(temp.index(se)+1)
         #
         if(retr['is_relevant']):
             if(worst_pos is None or emition < worst_pos[0]):
