@@ -1,3 +1,6 @@
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 import cPickle as pickle
 import os
@@ -8,7 +11,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.autograd as autograd
-from tqdm import tqdm
 from gensim.models.keyedvectors import KeyedVectors
 from nltk.tokenize import sent_tokenize
 from pprint import pprint
@@ -563,13 +565,7 @@ for dato in test_data['queries']:
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-        doc_emit_, gs_emits_ = model.emit_one(
-            doc1_sents_embeds   = good_sents_embeds,
-            question_embeds     = quest_embeds,
-            q_idfs              = q_idfs,
-            sents_gaf           = good_sents_escores,
-            doc_gaf             = good_doc_af
-        )
+        doc_emit_, gs_emits_ = model.emit_one(doc1_sents_embeds=good_sents_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, sents_gaf=good_sents_escores, doc_gaf=good_doc_af)
         emition                 = doc_emit_.cpu().item()
         sent_emits              = gs_emits_.squeeze(-1).cpu().tolist()
         if(retr['is_relevant']):
