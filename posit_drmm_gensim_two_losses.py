@@ -455,6 +455,7 @@ def train_data_step2(train_instances):
         good_sents                              = good_sents_title + good_sents_abs
         #
         good_snips                              = get_snips(quest_id, gid)
+        good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
         # good_sent_tags                          = get_sent_tags(good_sents, good_snips)
         #
         good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
@@ -464,7 +465,8 @@ def train_data_step2(train_instances):
             if(len(good_embeds)>0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-                good_sent_tags.append(int((good_text in good_snips) or any([s in good_text for s in good_snips])))
+                tt = ' '.join(bioclean(good_text))
+                good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
         #
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
         bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
