@@ -495,13 +495,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
-        ret = self.get_max_and_average_of_k_max(res, 5)
-        # res = self.get_kmax(res)
-        # res = self.get_max(res).unsqueeze(0)
-        # res = self.get_average(res).unsqueeze(0)
-        # print res
-        # print res.size()
-        # exit()
+        ret = self.get_max(res).unsqueeze(0)
         return ret, res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
@@ -540,7 +534,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         final_good_output   = self.final_layer(good_out_pp)
-        # final_good_output   = good_out
         return final_good_output, gs_emits
 
 w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
@@ -590,9 +583,8 @@ for dato in tqdm(test_data['queries']):
             doc_gaf             = good_doc_af
         )
         emition                 = doc_emit_.cpu().item()
-
-
-test_map        = get_one_map('test', test_data, test_docs)
+        print(emition)
+        print(gs_emits_.cpu().data())
 
 
 
