@@ -2,6 +2,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
+import json
 import cPickle as pickle
 import os
 import re
@@ -374,6 +375,14 @@ def load_model_from_checkpoint(resume_from):
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
+def get_snips(quest_id, gid):
+    good_snips = []
+    if('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            if (sn['document'].endswith(gid)):
+                good_snips.extend(get_sents(sn['text']))
+    return good_snips
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool, k_sent_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -544,8 +553,12 @@ load_model_from_checkpoint(resume_from)
 print_params(model)
 model.eval()
 
+with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
+    bioasq6_data = json.load(f)
+    bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
 
 for dato in test_data['queries']:
+    quest_id                    = dato['query_id']
     quest                       = dato['query_text']
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
     q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
@@ -559,13 +572,18 @@ for dato in test_data['queries']:
         good_sents      = get_sents(test_docs[retr['doc_id']]['title']) + get_sents(test_docs[retr['doc_id']]['abstractText'])
         good_sents_embeds, good_sents_escores = [], []
         #
-        ssss            = []
+        good_snips      = get_snips(quest_id, retr['doc_id'])
+        ssss, good_sent_tags = [], []
         for good_text in good_sents:
             good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
             good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])[:-1]
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
+
+                good_sent_tags.append(int((good_text in good_snips) or any([s in good_text for s in good_snips])))
+
+
                 ssss.append(good_text)
         doc_emit_, gs_emits_ = model.emit_one(doc1_sents_embeds=good_sents_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, sents_gaf=good_sents_escores, doc_gaf=good_doc_af)
         emition                 = doc_emit_.cpu().item()
@@ -591,6 +609,6 @@ for dato in test_data['queries']:
 
 
 
-
+# good_sent_tags.append(int((good_text in good_snips) or any([s in good_text for s in good_snips])))
 
 
