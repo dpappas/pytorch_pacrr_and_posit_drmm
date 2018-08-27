@@ -570,7 +570,7 @@ for dato in tqdm(test_data['queries']):
         )
         emition                 = doc_emit_.cpu().item()
         print(emition, retr['is_relevant'])
-        print(list(gs_emits_.cpu().data))
+        print(gs_emits_.cpu().tolist())
     print(40 * '#')
 
 
