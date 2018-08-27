@@ -621,8 +621,16 @@ for dato in test_data['queries']:
             print('{:.4f}\t{}\t{}\t{}'.format(best_neg[3][i], best_neg[6][i], best_neg[4][i], best_neg[2][i]))
         print(40 * '#')
 
-# what is wrong with this question ?
+# what is wrong with these questions ? :
 # which is the major rna editing enzyme in drosophila melanogaster
+# which protein is the main marker of cajal bodies
+# what condition is usually represented by the acronym sudep
+# does yersinia pestis causes a respiratory infection
+# what is dravet syndrome
+# please list the 3 findings in hellp syndrome
+
+
+
 
 # good_sent_tags.append(int((good_text in good_snips) or any([s in good_text for s in good_snips])))
 
