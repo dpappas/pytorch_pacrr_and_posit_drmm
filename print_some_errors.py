@@ -559,21 +559,23 @@ for dato in test_data['queries']:
         good_sents      = get_sents(test_docs[retr['doc_id']]['title']) + get_sents(test_docs[retr['doc_id']]['abstractText'])
         good_sents_embeds, good_sents_escores = [], []
         #
+        ssss            = []
         for good_text in good_sents:
             good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
             good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])[:-1]
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
+                ssss.append(good_text)
         doc_emit_, gs_emits_ = model.emit_one(doc1_sents_embeds=good_sents_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, sents_gaf=good_sents_escores, doc_gaf=good_doc_af)
         emition                 = doc_emit_.cpu().item()
         sent_emits              = gs_emits_.squeeze(-1).cpu().tolist()
         if(retr['is_relevant']):
             if(worst_pos is None or emition < worst_pos[0]):
-                worst_pos = [emition, quest, good_sents, sent_emits]
+                worst_pos = [emition, quest, ssss, sent_emits]
         else:
             if (best_neg is None or emition > best_neg[0]):
-                best_neg = [emition, quest, good_sents, sent_emits]
+                best_neg = [emition, quest, ssss, sent_emits]
     #
     print worst_pos[0]
     print worst_pos[1]
