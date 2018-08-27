@@ -577,16 +577,17 @@ for dato in test_data['queries']:
             if (best_neg is None or emition > best_neg[0]):
                 best_neg = [emition, quest, ssss, sent_emits]
     #
-    print worst_pos[0]
-    print worst_pos[1]
-    for i in range(len(worst_pos[2])):
-        print('{}\t{}'.format(worst_pos[3][i], worst_pos[2][i]))
-    print(40 * '-')
-    print best_neg[0]
-    print best_neg[1]
-    for i in range(len(best_neg[2])):
-        print('{}\t{}'.format(best_neg[3][i], best_neg[2][i]))
-    print(40 * '#')
+    if(worst_pos is not None and best_neg is not None) and (worst_pos[0] < best_neg[0]):
+        print worst_pos[0]
+        print worst_pos[1]
+        for i in range(len(worst_pos[2])):
+            print('{}\t{}'.format(worst_pos[3][i], worst_pos[2][i]))
+        print(40 * '-')
+        print best_neg[0]
+        print best_neg[1]
+        for i in range(len(best_neg[2])):
+            print('{}\t{}'.format(best_neg[3][i], best_neg[2][i]))
+        print(40 * '#')
 
 
 
