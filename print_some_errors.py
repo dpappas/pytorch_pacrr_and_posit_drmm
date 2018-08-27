@@ -586,7 +586,7 @@ for dato in test_data['queries']:
         doc_emit_, gs_emits_ = model.emit_one(doc1_sents_embeds=good_sents_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, sents_gaf=good_sents_escores, doc_gaf=good_doc_af)
         emition                 = doc_emit_.cpu().item()
         sent_emits              = gs_emits_.squeeze(-1).cpu().tolist()
-        emit_inds               = np.argsort(sent_emits).tolist()
+        emit_inds               = (np.argsort(sent_emits)+1).tolist()
         if(retr['is_relevant']):
             if(worst_pos is None or emition < worst_pos[0]):
                 worst_pos = [emition, quest, ssss, sent_emits, good_sent_tags, good_snips, emit_inds]
