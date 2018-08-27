@@ -544,7 +544,10 @@ embedding_dim   = 30
 lr              = 0.01
 b_size          = 32
 
-#
+with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
+    bioasq6_data = json.load(f)
+    bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
+
 test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 model           = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
 params          = model.parameters()
@@ -552,10 +555,6 @@ resume_from     = '/home/dpappas/proper_pdrmm_gensim_sent_hinge_30_0p01_max_run0
 load_model_from_checkpoint(resume_from)
 print_params(model)
 model.eval()
-
-with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
-    bioasq6_data = json.load(f)
-    bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
 
 for dato in test_data['queries']:
     quest_id                    = dato['query_id']
