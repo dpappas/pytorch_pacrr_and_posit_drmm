@@ -756,9 +756,9 @@ for run in range(5):
     # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
     #
     # odir = '/home/dpappas/proper_pdrmm_gensim_sent_hinge_30_0p01_max_run{}/'.format(run)
-    # odir = '/home/dpappas/pdrmm_gensim_sent_hinge_30_0p01_average_run{}/'.format(run)
-    odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
-    # odir = '/home/dpappas/posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
+    # odir = '/home/dpappas/proper_pdrmm_gensim_sent_hinge_30_0p01_average_run{}/'.format(run)
+    odir = '/home/dpappas/proper_posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
+    # odir = '/home/dpappas/proper_posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
     #
     if not os.path.exists(odir):
         os.makedirs(odir)
@@ -795,5 +795,9 @@ for run in range(5):
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+
+
+
+
 
 
