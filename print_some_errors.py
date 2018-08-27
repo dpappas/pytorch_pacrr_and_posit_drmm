@@ -607,13 +607,15 @@ for dato in test_data['queries']:
         print ' '.join(bioclean(worst_pos[1]))
         pprint(worst_pos[5])
         for i in range(len(worst_pos[2])):
-            print('{:.4f}\t{}\t{}\t{}'.format(worst_pos[3][i], worst_pos[6][i], worst_pos[4][i], worst_pos[2][i]))
+            souma = sum([int( tok in worst_pos[2][i].split()) for tok in bioclean(worst_pos[1]) ])
+            print('{:.4f}\t{}\t{}\t{}\t{}'.format(worst_pos[3][i], worst_pos[6][i], worst_pos[4][i], souma, worst_pos[2][i]))
         print(40 * '-')
         print best_neg[0], best_neg[7], quest_id
         print ' '.join(bioclean(best_neg[1]))
         pprint(best_neg[5])
         for i in range(len(best_neg[2])):
-            print('{:.4f}\t{}\t{}\t{}'.format(best_neg[3][i], best_neg[6][i], best_neg[4][i], best_neg[2][i]))
+            souma = sum([int( tok in best_neg[2][i].split()) for tok in bioclean(best_neg[1]) ])
+            print('{:.4f}\t{}\t{}\t{}\t{}'.format(best_neg[3][i], best_neg[6][i], best_neg[4][i], souma, best_neg[2][i]))
         print(40 * '#')
 
 
