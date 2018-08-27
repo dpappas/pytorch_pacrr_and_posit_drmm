@@ -586,27 +586,38 @@ for dato in test_data['queries']:
         doc_emit_, gs_emits_ = model.emit_one(doc1_sents_embeds=good_sents_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, sents_gaf=good_sents_escores, doc_gaf=good_doc_af)
         emition                 = doc_emit_.cpu().item()
         sent_emits              = gs_emits_.squeeze(-1).cpu().tolist()
+        emit_inds               = np.argsort(sent_emits).tolist()
         if(retr['is_relevant']):
             if(worst_pos is None or emition < worst_pos[0]):
-                worst_pos = [emition, quest, ssss, sent_emits, good_sent_tags, good_snips]
+                worst_pos = [emition, quest, ssss, sent_emits, good_sent_tags, good_snips, emit_inds]
         else:
             if (best_neg is None or emition > best_neg[0]):
-                best_neg = [emition, quest, ssss, sent_emits, good_sent_tags, good_snips]
+                best_neg = [emition, quest, ssss, sent_emits, good_sent_tags, good_snips, emit_inds]
     #
     if(worst_pos is not None and best_neg is not None) and (worst_pos[0] < best_neg[0]):
         print worst_pos[0]
         # print worst_pos[1]
         print ' '.join(bioclean(worst_pos[1]))
-        pprint(worst_pos[-1])
+        pprint(worst_pos[5])
         for i in range(len(worst_pos[2])):
-            print('{:.4f}\t{}\t{}'.format(worst_pos[3][i], worst_pos[4][i], worst_pos[2][i]))
+            print('{:.4f}\t{}\t{}\t{}'.format(
+                worst_pos[3][i],
+                worst_pos[6][i],
+                worst_pos[4][i],
+                worst_pos[2][i])
+            )
         print(40 * '-')
         print best_neg[0]
         # print best_neg[1]
         print ' '.join(bioclean(best_neg[1]))
-        pprint(best_neg[-1])
+        pprint(best_neg[5])
         for i in range(len(best_neg[2])):
-            print('{:.4f}\t{}\t{}'.format(best_neg[3][i], best_neg[4][i], best_neg[2][i]))
+            print('{:.4f}\t{}\t{}\t{}'.format(
+                best_neg[3][i],
+                best_neg[6][i],
+                best_neg[4][i],
+                best_neg[2][i])
+            )
         print(40 * '#')
 
 
