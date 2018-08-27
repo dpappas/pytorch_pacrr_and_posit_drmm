@@ -569,10 +569,11 @@ for dato in test_data['queries']:
     #
     best_neg, worst_pos         = None, None
     for retr in dato['retrieved_documents']:
-        good_doc_text   = test_docs[retr['doc_id']]['title'] + test_docs[retr['doc_id']]['abstractText']
-        good_doc_af     = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
-        good_sents      = get_sents(test_docs[retr['doc_id']]['title']) + get_sents(test_docs[retr['doc_id']]['abstractText'])
-        good_sents_embeds, good_sents_escores = [], []
+        good_doc_text           = test_docs[retr['doc_id']]['title'] + test_docs[retr['doc_id']]['abstractText']
+        good_doc_af             = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
+        good_sents              = get_sents(test_docs[retr['doc_id']]['title']) + get_sents(test_docs[retr['doc_id']]['abstractText'])
+        good_sents_embeds       = []
+        good_sents_escores      = []
         #
         good_snips              = get_snips(quest_id, retr['doc_id'])
         good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
