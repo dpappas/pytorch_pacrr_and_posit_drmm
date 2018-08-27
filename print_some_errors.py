@@ -573,6 +573,7 @@ for dato in test_data['queries']:
         good_sents_embeds, good_sents_escores = [], []
         #
         good_snips              = get_snips(quest_id, retr['doc_id'])
+        good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
         ssss, good_sent_tags    = [], []
         for good_text in good_sents:
             good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
@@ -580,7 +581,15 @@ for dato in test_data['queries']:
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-                good_sent_tags.append(int((good_text in good_snips) or any([s in good_text for s in good_snips])))
+                #
+                good_sent_tags.append(
+                    int(
+                        (' '.join(bioclean(good_text)) in good_snips)
+                        or
+                        any([s in ' '.join(bioclean(good_text)) for s in good_snips])
+                    )
+                )
+                #
                 ssss.append(' '.join(good_tokens))
         doc_emit_, gs_emits_ = model.emit_one(doc1_sents_embeds=good_sents_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, sents_gaf=good_sents_escores, doc_gaf=good_doc_af)
         emition                 = doc_emit_.cpu().item()
