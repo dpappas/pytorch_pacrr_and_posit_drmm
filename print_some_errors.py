@@ -1,32 +1,17 @@
 
-# import sys
-# print(sys.version)
-import platform
-import pprint
-
-python_version = platform.python_version().strip()
-print(python_version)
-if(python_version.startswith('3')):
-    import pickle
-else:
-    import cPickle as pickle
-
+import cPickle as pickle
 import os
 import re
-import json
-import random
-import logging
 import subprocess
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
-from pprint import pprint
 import torch.autograd as autograd
 from tqdm import tqdm
 from gensim.models.keyedvectors import KeyedVectors
 from nltk.tokenize import sent_tokenize
+from pprint import pprint
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
