@@ -569,7 +569,7 @@ for dato in tqdm(test_data['queries']):
             doc_gaf             = good_doc_af
         )
         emition                 = doc_emit_.cpu().item()
-        print(emition)
+        print(emition, retr['is_relevant'])
         print(gs_emits_.cpu().data)
 
 
