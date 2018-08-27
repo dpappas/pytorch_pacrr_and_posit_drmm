@@ -585,7 +585,7 @@ for dato in test_data['queries']:
                 good_sents_escores.append(good_escores)
                 good_sent_tags.append(int((' '.join(bioclean(good_text)) in good_snips) or any([s in ' '.join(bioclean(good_text)) for s in good_snips])))
                 ssss.append(' '.join(good_tokens))
-        doc_emit_, gs_emits_ = model.emit_one(doc1_sents_embeds=good_sents_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, sents_gaf=good_sents_escores, doc_gaf=good_doc_af)
+        doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds=good_sents_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, sents_gaf=good_sents_escores, doc_gaf=good_doc_af)
         emition                 = doc_emit_.cpu().item()
         sent_emits              = gs_emits_.squeeze(-1).cpu().tolist()
         #
