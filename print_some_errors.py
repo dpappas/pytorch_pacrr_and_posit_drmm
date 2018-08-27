@@ -368,17 +368,13 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     dev_data    = RemoveBadYears(dev_data, dev_docs, False)
     test_data   = RemoveBadYears(test_data, test_docs, False)
     #
-    logger.info('loading words')
-    #
     words           = {}
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
     print('loading idfs')
-    logger.info('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
-    logger.info('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv
