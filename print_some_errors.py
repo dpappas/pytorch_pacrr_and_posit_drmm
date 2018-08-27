@@ -580,31 +580,28 @@ for dato in test_data['queries']:
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-
                 good_sent_tags.append(int((good_text in good_snips) or any([s in good_text for s in good_snips])))
-
-
                 ssss.append(good_text)
         doc_emit_, gs_emits_ = model.emit_one(doc1_sents_embeds=good_sents_embeds, question_embeds=quest_embeds, q_idfs=q_idfs, sents_gaf=good_sents_escores, doc_gaf=good_doc_af)
         emition                 = doc_emit_.cpu().item()
         sent_emits              = gs_emits_.squeeze(-1).cpu().tolist()
         if(retr['is_relevant']):
             if(worst_pos is None or emition < worst_pos[0]):
-                worst_pos = [emition, quest, ssss, sent_emits]
+                worst_pos = [emition, quest, ssss, sent_emits, good_sent_tags]
         else:
             if (best_neg is None or emition > best_neg[0]):
-                best_neg = [emition, quest, ssss, sent_emits]
+                best_neg = [emition, quest, ssss, sent_emits, good_sent_tags]
     #
     if(worst_pos is not None and best_neg is not None) and (worst_pos[0] < best_neg[0]):
         print worst_pos[0]
         print worst_pos[1]
         for i in range(len(worst_pos[2])):
-            print('{}\t{}'.format(worst_pos[3][i], worst_pos[2][i]))
+            print('{}\t{}\t{}'.format(worst_pos[3][i], worst_pos[4][i], worst_pos[2][i]))
         print(40 * '-')
         print best_neg[0]
         print best_neg[1]
         for i in range(len(best_neg[2])):
-            print('{}\t{}'.format(best_neg[3][i], best_neg[2][i]))
+            print('{}\t{}'.format(best_neg[3][i], best_neg[4][i], best_neg[2][i]))
         print(40 * '#')
 
 
