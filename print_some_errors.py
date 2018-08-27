@@ -603,13 +603,13 @@ for dato in test_data['queries']:
                 best_neg = [ emition, quest, ssss, sent_emits, good_sent_tags, good_snips, emit_inds, bm25s[retr['doc_id']]]
     #
     if(worst_pos is not None and best_neg is not None) and (worst_pos[0] < best_neg[0]):
-        print worst_pos[0], worst_pos[7]
+        print worst_pos[0], worst_pos[7], quest_id
         print ' '.join(bioclean(worst_pos[1]))
         pprint(worst_pos[5])
         for i in range(len(worst_pos[2])):
             print('{:.4f}\t{}\t{}\t{}'.format(worst_pos[3][i], worst_pos[6][i], worst_pos[4][i], worst_pos[2][i]))
         print(40 * '-')
-        print best_neg[0], best_neg[7]
+        print best_neg[0], best_neg[7], quest_id
         print ' '.join(bioclean(best_neg[1]))
         pprint(best_neg[5])
         for i in range(len(best_neg[2])):
