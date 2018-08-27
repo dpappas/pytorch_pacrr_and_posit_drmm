@@ -596,7 +596,7 @@ b_size          = 32
 hdlr = None
 for run in range(5):
     #
-    my_seed = random.randint(1,2000000)
+    my_seed = random.randint(1, 2000000)
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
