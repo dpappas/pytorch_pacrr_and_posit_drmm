@@ -456,7 +456,6 @@ def train_data_step2(train_instances):
         #
         good_snips                              = get_snips(quest_id, gid)
         good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
-        # good_sent_tags                          = get_sent_tags(good_sents, good_snips)
         #
         good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
         for good_text in good_sents:
