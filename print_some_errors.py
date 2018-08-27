@@ -572,8 +572,8 @@ for dato in test_data['queries']:
         good_sents      = get_sents(test_docs[retr['doc_id']]['title']) + get_sents(test_docs[retr['doc_id']]['abstractText'])
         good_sents_embeds, good_sents_escores = [], []
         #
-        good_snips      = get_snips(quest_id, retr['doc_id'])
-        ssss, good_sent_tags = [], []
+        good_snips              = get_snips(quest_id, retr['doc_id'])
+        ssss, good_sent_tags    = [], []
         for good_text in good_sents:
             good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
             good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])[:-1]
@@ -601,7 +601,7 @@ for dato in test_data['queries']:
         print best_neg[0]
         print best_neg[1]
         for i in range(len(best_neg[2])):
-            print('{}\t{}'.format(best_neg[3][i], best_neg[4][i], best_neg[2][i]))
+            print('{}\t{}\t{}'.format(best_neg[3][i], best_neg[4][i], best_neg[2][i]))
         print(40 * '#')
 
 
