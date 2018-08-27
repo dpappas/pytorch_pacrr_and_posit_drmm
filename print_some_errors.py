@@ -550,7 +550,7 @@ for dato in test_data['queries']:
     emitions                    = {'body': dato['query_text'], 'id': dato['query_id'], 'documents': []}
     bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
     #
-    best_neg, worst_pos         = [], []
+    best_neg, worst_pos         = None, None
     for retr in dato['retrieved_documents']:
         good_doc_text   = test_docs[retr['doc_id']]['title'] + test_docs[retr['doc_id']]['abstractText']
         good_doc_af     = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
@@ -573,10 +573,10 @@ for dato in test_data['queries']:
         emition                 = doc_emit_.cpu().item()
         sent_emits              = gs_emits_.squeeze(-1).cpu().tolist()
         if(retr['is_relevant']):
-            if(emition < worst_pos[0]):
+            if(worst_pos is None or emition < worst_pos[0]):
                 worst_pos = [emition, quest, good_sents, sent_emits]
         else:
-            if(emition > best_neg[0]):
+            if (best_neg is None or emition > best_neg[0]):
                 best_neg = [emition, quest, good_sents, sent_emits]
     #
     print worst_pos[0]
