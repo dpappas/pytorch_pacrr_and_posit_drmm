@@ -519,11 +519,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_oh_d2       = autograd.Variable(torch.FloatTensor(sim_oh_d2),       requires_grad=False)
         return doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf, sim_oh_d1, sim_oh_d2
     def emit_one(self, doc1_embeds, question_embeds, q_idfs, gaf, sim_oh_d1):
-        doc1_embeds, question_embeds, q_idfs, gaf, sim_oh_d1 = self.fix_input_one(
-            doc1_embeds, question_embeds, q_idfs, gaf, sim_oh_d1
-        )
+        doc1_embeds, question_embeds, q_idfs, gaf, sim_oh_d1 = self.fix_input_one(doc1_embeds, question_embeds, q_idfs, gaf, sim_oh_d1)
         sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
-        # sim_oh_d1                       = (sim_insensitive_d1 > (1-(1e-3))).float()
         # 3gram convolution on the embedding matrix
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
@@ -545,14 +542,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out                        = self.out_layer(good_add_feats)
         return good_out
     def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf, sim_oh_d1, sim_oh_d2):
-        doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf, sim_oh_d1, sim_oh_d2 = self.fix_input_two(
-            doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf, sim_oh_d1, sim_oh_d2
-        )
+        doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf, sim_oh_d1, sim_oh_d2 = self.fix_input_two(doc1_embeds, doc2_embeds, question_embeds, q_idfs, gaf, baf, sim_oh_d1, sim_oh_d2)
         # cosine similarity on pretrained word embeddings
         sim_insensitive_d1              = self.my_cosine_sim(question_embeds, doc1_embeds).squeeze(0)
         sim_insensitive_d2              = self.my_cosine_sim(question_embeds, doc2_embeds).squeeze(0)
-        # sim_oh_d1                       = (sim_insensitive_d1 > (1-(1e-3))).float()
-        # sim_oh_d2                       = (sim_insensitive_d2 > (1-(1e-3))).float()
         # 3gram convolution on the embedding matrix
         q_conv_res_trigram              = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         d1_conv_trigram                 = self.apply_convolution(doc1_embeds,     self.trigram_conv, self.trigram_conv_activation)
@@ -582,7 +575,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out                        = self.out_layer(good_add_feats)
         bad_out                         = self.out_layer(bad_add_feats)
         # compute the loss
-        # loss1                           = self.margin_loss(good_out, bad_out, torch.ones(1))
         loss1                           = self.my_hinge_loss(good_out, bad_out)
         return loss1, good_out, bad_out
 
