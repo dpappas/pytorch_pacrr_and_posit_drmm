@@ -381,7 +381,7 @@ def get_snips(quest_id, gid):
         for sn in bioasq6_data[quest_id]['snippets']:
             if (sn['document'].endswith(gid)):
                 good_snips.extend(get_sents(sn['text']))
-    return good_snips
+    return list(set(good_snips))
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool, k_sent_maxpool):
