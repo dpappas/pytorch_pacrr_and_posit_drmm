@@ -596,10 +596,28 @@ for dato in test_data['queries']:
         #
         if(retr['is_relevant']):
             if(worst_pos is None or emition < worst_pos[0]):
-                worst_pos = [emition, quest, ssss, sent_emits, good_sent_tags, good_snips, emit_inds, bm25s[retr['doc_id']]]
+                worst_pos = [
+                    emition,
+                    quest,
+                    ssss,
+                    sent_emits,
+                    good_sent_tags,
+                    good_snips,
+                    emit_inds,
+                    bm25s[retr['doc_id']]
+                ]
         else:
             if (best_neg is None or emition > best_neg[0]):
-                best_neg = [emition, quest, ssss, sent_emits, good_sent_tags, good_snips, emit_inds, bm25s[retr['doc_id']]]
+                best_neg = [
+                    emition,
+                    quest,
+                    ssss,
+                    sent_emits,
+                    good_sent_tags,
+                    good_snips,
+                    emit_inds,
+                    bm25s[retr['doc_id']]
+                ]
     #
     if(worst_pos is not None and best_neg is not None) and (worst_pos[0] < best_neg[0]):
         print worst_pos[0], worst_pos[7]
