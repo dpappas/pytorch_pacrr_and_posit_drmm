@@ -621,7 +621,7 @@ for dato in test_data['queries']:
             print('{:.4f}\t{}\t{}\t{}'.format(best_neg[3][i], best_neg[6][i], best_neg[4][i], best_neg[2][i]))
         print(40 * '#')
 
-# what is wrong with this quest ?
+# what is wrong with this question ?
 # which is the major rna editing enzyme in drosophila melanogaster
 
 # good_sent_tags.append(int((good_text in good_snips) or any([s in good_text for s in good_snips])))
