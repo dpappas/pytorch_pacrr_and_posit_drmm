@@ -556,6 +556,8 @@ load_model_from_checkpoint(resume_from)
 print_params(model)
 model.eval()
 
+print model.final_layer.weight.data.tolist()
+
 for dato in test_data['queries']:
     quest_id                    = dato['query_id']
     quest                       = dato['query_text']
