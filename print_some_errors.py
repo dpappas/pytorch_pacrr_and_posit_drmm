@@ -403,7 +403,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(4, 1, bias=True)
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
-        self.final_layer                            = nn.Linear(6, 1, bias=True)
+        # self.final_layer                            = nn.Linear(6, 1, bias=True)
+        self.final_layer                            = nn.Linear(5, 1, bias=True)
         #
         # self.init_xavier()
         # self.init_using_value(0.1)
