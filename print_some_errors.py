@@ -563,6 +563,7 @@ for dato in test_data['queries']:
     q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     emitions                    = {'body': dato['query_text'], 'id': dato['query_id'], 'documents': []}
     bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+    # the_snippets                = [get_sents(sn['text']) for sn in bioasq6_data[quest_id]['snippets']]
     #
     best_neg, worst_pos         = None, None
     for retr in dato['retrieved_documents']:
@@ -586,19 +587,21 @@ for dato in test_data['queries']:
         sent_emits              = gs_emits_.squeeze(-1).cpu().tolist()
         if(retr['is_relevant']):
             if(worst_pos is None or emition < worst_pos[0]):
-                worst_pos = [emition, quest, ssss, sent_emits, good_sent_tags]
+                worst_pos = [emition, quest, ssss, sent_emits, good_sent_tags, good_snips]
         else:
             if (best_neg is None or emition > best_neg[0]):
-                best_neg = [emition, quest, ssss, sent_emits, good_sent_tags]
+                best_neg = [emition, quest, ssss, sent_emits, good_sent_tags, good_snips]
     #
     if(worst_pos is not None and best_neg is not None) and (worst_pos[0] < best_neg[0]):
         print worst_pos[0]
         print worst_pos[1]
+        pprint(worst_pos[-1])
         for i in range(len(worst_pos[2])):
             print('{:.4f}\t{}\t{}'.format(worst_pos[3][i], worst_pos[4][i], worst_pos[2][i]))
         print(40 * '-')
         print best_neg[0]
         print best_neg[1]
+        pprint(best_neg[-1])
         for i in range(len(best_neg[2])):
             print('{:.4f}\t{}\t{}'.format(best_neg[3][i], best_neg[4][i], best_neg[2][i]))
         print(40 * '#')
