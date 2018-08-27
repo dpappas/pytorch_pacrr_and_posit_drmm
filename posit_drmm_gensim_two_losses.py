@@ -821,7 +821,8 @@ for run in range(5):
     torch.manual_seed(my_seed)
     #
     # odir            = '/home/dpappas/pdrmm_gensim_2L_30_0p01_max_run{}/'.format(run)
-    odir            = '/home/dpappas/pdrmm_gensim_2L_30_0p01_MaxAndAverKMax_run{}/'.format(run)
+    odir            = '/home/dpappas/pdrmm_gensim_2L_30_0p01_average_run{}/'.format(run)
+    # odir            = '/home/dpappas/pdrmm_gensim_2L_30_0p01_MaxAndAverKMax_run{}/'.format(run)
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
