@@ -656,6 +656,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_out)
         res = torch.stack(res)
         res = self.get_max_and_average_of_k_max(res, 5)
+        # res = self.get_kmax(res)
         # res = self.get_max(res).unsqueeze(0)
         # res = self.get_average(res).unsqueeze(0)
         # print res
@@ -757,8 +758,8 @@ for run in range(5):
     #
     # odir = '/home/dpappas/proper_pdrmm_gensim_sent_hinge_30_0p01_max_run{}/'.format(run)
     # odir = '/home/dpappas/proper_pdrmm_gensim_sent_hinge_30_0p01_average_run{}/'.format(run)
-    odir = '/home/dpappas/proper_posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
-    # odir = '/home/dpappas/proper_posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
+    # odir = '/home/dpappas/proper_posit_drmm_gensim_sents_hingeloss_30_0p01_MaxAndAverKMax_run{}/'.format(run)
+    odir = '/home/dpappas/proper_posit_drmm_gensim_sents_hingeloss_30_0p01_kmaxmlp_run{}/'.format(run)
     #
     if not os.path.exists(odir):
         os.makedirs(odir)
