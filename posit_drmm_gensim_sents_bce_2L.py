@@ -556,8 +556,12 @@ def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
     return sum(losses) / float(len(losses))
 
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
-    sn_d1_l         = F.binary_cross_entropy(gs_emits_, torch.FloatTensor(good_sent_tags), size_average=False, reduce=True)
-    sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_)      , size_average=False, reduce=True)
+    bs_emits_       = bs_emits_.unsqueeze(0)
+    gs_emits_       = gs_emits_.unsqueeze(0)
+    good_sent_tags  = torch.FloatTensor(good_sent_tags).unsqueeze(0)
+    #
+    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags.unsqueeze(0), size_average=False, reduce=True)
+    sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
 
 def train_one(epoch):
