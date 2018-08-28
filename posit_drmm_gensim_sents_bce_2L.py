@@ -818,6 +818,7 @@ k_sent_maxpool  = 2
 embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
+max_epoch       = 15
 
 hdlr = None
 for run in range(5):
@@ -842,7 +843,7 @@ for run in range(5):
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
-    for epoch in range(20):
+    for epoch in range(max_epoch):
         train_one(epoch + 1)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
