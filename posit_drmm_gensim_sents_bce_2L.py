@@ -548,9 +548,19 @@ def get_one_map(prefix, data, docs):
         res_map = get_map_res(dataloc+'bioasq.test.json', odir + 'elk_relevant_abs_posit_drmm_lists_test.json')
     return res_map
 
-def get_snippets_loss(wright, wrong):
+def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
+    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
+    wrong = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
+    wrong = torch.cat(wrong + [bs_emits_.squeeze(-1)])
     losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
     return sum(losses) / float(len(losses))
+
+# def get_snippets_loss(wright, wrong):
+#     l1      = model.bce_loss(input, target)
+#     l1      = model.bce_loss(input, target)
+#
+#     losses  = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
+#     return sum(losses) / float(len(losses))
 
 def train_one(epoch):
     model.train()
@@ -573,10 +583,7 @@ def train_one(epoch):
         )
         #
         good_sent_tags, bad_sent_tags = instance[8], instance[9]
-        wright      = torch.cat([gs_emits_[i]   for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 1)])
-        wrong       = [gs_emits_[i]             for i in range(len(good_sent_tags)) if(good_sent_tags[i] == 0)]
-        wrong       = torch.cat(wrong+[bs_emits_.squeeze(-1)])
-        snip_loss   = get_snippets_loss(wright, wrong)
+        snip_loss   = get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_)
         cost_       += snip_loss
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -645,6 +652,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # MarginRankingLoss
         # my hinge loss
         # MultiLabelMarginLoss
+        self.bce_loss                               = nn.BCELoss()
         #
     def init_xavier(self):
         nn.init.xavier_uniform_(self.trigram_conv.weight)
