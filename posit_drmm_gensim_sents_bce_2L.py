@@ -550,17 +550,15 @@ def get_one_map(prefix, data, docs):
 
 def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
     wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
-    wrong = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
-    wrong = torch.cat(wrong + [bs_emits_.squeeze(-1)])
+    wrong  = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
+    wrong  = torch.cat(wrong + [bs_emits_.squeeze(-1)])
     losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
     return sum(losses) / float(len(losses))
 
-# def get_snippets_loss(wright, wrong):
-#     l1      = model.bce_loss(input, target)
-#     l1      = model.bce_loss(input, target)
-#
-#     losses  = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
-#     return sum(losses) / float(len(losses))
+def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
+    sn_d1_l         = F.binary_cross_entropy(gs_emits_, torch.FloatTensor(good_sent_tags), size_average=False, reduce=True)
+    sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_)      , size_average=False, reduce=True)
+    return sn_d1_l, sn_d2_l
 
 def train_one(epoch):
     model.train()
@@ -583,8 +581,9 @@ def train_one(epoch):
         )
         #
         good_sent_tags, bad_sent_tags = instance[8], instance[9]
-        snip_loss   = get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_)
-        cost_       += snip_loss
+        sn_d1_l, sn_d2_l    =   get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+        snip_loss           =   sn_d1_l + sn_d2_l
+        cost_               +=  snip_loss
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -652,7 +651,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # MarginRankingLoss
         # my hinge loss
         # MultiLabelMarginLoss
-        self.bce_loss                               = nn.BCELoss()
         #
     def init_xavier(self):
         nn.init.xavier_uniform_(self.trigram_conv.weight)
@@ -803,6 +801,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # loss1               = self.margin_loss(final_good_output, final_bad_output, torch.ones(1))
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+
+
 
 # w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 # idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
