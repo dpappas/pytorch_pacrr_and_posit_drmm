@@ -581,9 +581,10 @@ def train_one(epoch):
         )
         #
         good_sent_tags, bad_sent_tags = instance[8], instance[9]
-        sn_d1_l, sn_d2_l    =   get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-        snip_loss           =   sn_d1_l + sn_d2_l
-        cost_               +=  snip_loss
+        sn_d1_l, sn_d2_l    = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+        snip_loss           = sn_d1_l + sn_d2_l
+        l                   = 0.5
+        cost_               = ((1 - l) * snip_loss) + (l * cost_)
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
