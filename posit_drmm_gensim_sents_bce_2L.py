@@ -803,17 +803,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
+w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc         = '/home/dpappas/for_ryan/'
+eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
-
-# w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc         = '/home/dpappas/for_ryan/'
-# eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
-
-w2v_bin_path    = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
-dataloc         = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-eval_path       = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# w2v_bin_path    = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc         = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path       = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
@@ -821,7 +819,6 @@ embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
 
-#
 hdlr = None
 for run in range(5):
     #
@@ -829,7 +826,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/pdrmm_gensim_2L_30_0p01_max_run{}/'.format(run)
+    odir            = '/home/dpappas/pdrmm_gensim_2L_bce_30_0p01_max_run{}/'.format(run)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
