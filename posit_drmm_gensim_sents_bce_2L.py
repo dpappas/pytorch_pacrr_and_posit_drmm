@@ -857,4 +857,12 @@ for run in range(5):
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
+'''
+Precision
+Recall
+F1
+MAP
+GMAP
+MRR
+'''
 
