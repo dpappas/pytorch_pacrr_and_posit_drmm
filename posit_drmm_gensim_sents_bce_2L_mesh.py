@@ -450,6 +450,8 @@ def train_data_step2(train_instances):
         quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
         q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         #
+        good_mesh                               = [bioclean(t.split(':',1)[1].strip()) for t in train_docs[gid]['meshHeadingsList']]
+        good_mesh                               = ['mgmx'] + sorted(good_mesh)
         good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
         good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
         good_sents_title                        = get_sents(train_docs[gid]['title'])
@@ -470,7 +472,8 @@ def train_data_step2(train_instances):
                 tt = ' '.join(bioclean(good_text))
                 good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
         #
-        bad_mesh                                = ' # '.join([bioclean(t.split(':',1)[1].strip()) for t in train_docs[bid]['meshHeadingsList']])
+        bad_mesh                                = [bioclean(t.split(':',1)[1].strip()) for t in train_docs[bid]['meshHeadingsList']]
+        bad_mesh                                = ['mgmx'] + sorted(bad_mesh)
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
         bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
         bad_sents                               = get_sents(train_docs[bid]['title']) + get_sents(train_docs[bid]['abstractText'])
