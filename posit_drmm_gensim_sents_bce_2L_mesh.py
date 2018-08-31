@@ -874,7 +874,7 @@ MRR
 criterio 1. pubmed.
             Posostwsh me ola papers kai ektos pubmed. 
             Statistika kai deigmata.
-            
+
 criterio 2. etairia pou suniparxei sto core set.
 criterio 3. list with tokens
 
