@@ -581,7 +581,6 @@ def train_one(epoch):
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
-        good_mesh_embeds, bad_mesh_embeds   = instance[10], instance[11]
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = instance[0],
             doc2_sents_embeds   = instance[1],
@@ -590,7 +589,9 @@ def train_one(epoch):
             sents_gaf           = instance[4],
             sents_baf           = instance[5],
             doc_gaf             = instance[6],
-            doc_baf             = instance[7]
+            doc_baf             = instance[7],
+            good_mesh_embeds    = instance[10],
+            bad_mesh_embeds     = instance[11]
         )
         #
         good_sent_tags, bad_sent_tags       = instance[8], instance[9]
