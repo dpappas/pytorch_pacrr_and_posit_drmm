@@ -581,6 +581,7 @@ def train_one(epoch):
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
     for instance in train_data_step2(train_instances):
+        good_mesh_embeds, bad_mesh_embeds   = instance[10], instance[11]
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = instance[0],
             doc2_sents_embeds   = instance[1],
@@ -592,11 +593,11 @@ def train_one(epoch):
             doc_baf             = instance[7]
         )
         #
-        good_sent_tags, bad_sent_tags = instance[8], instance[9]
-        sn_d1_l, sn_d2_l    = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-        snip_loss           = sn_d1_l + sn_d2_l
-        l                   = 0.5
-        cost_               = ((1 - l) * snip_loss) + (l * cost_)
+        good_sent_tags, bad_sent_tags       = instance[8], instance[9]
+        sn_d1_l, sn_d2_l                    = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+        snip_loss                           = sn_d1_l + sn_d2_l
+        l                                   = 0.5
+        cost_                               = ((1 - l) * snip_loss) + (l * cost_)
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
