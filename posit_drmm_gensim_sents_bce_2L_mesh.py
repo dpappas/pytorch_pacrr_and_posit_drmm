@@ -490,10 +490,12 @@ def train_data_step2(train_instances):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
         if(sum(good_sent_tags)>0):
+            bad_mesh_embeds     = get_embeds(bad_mesh.split(), wv)
+            good_mesh_embeds    = get_embeds(good_mesh.split(), wv)
             yield (
                 good_sents_embeds,  bad_sents_embeds,   quest_embeds,   q_idfs,
                 good_sents_escores, bad_sents_escores,  good_doc_af,    bad_doc_af,
-                good_sent_tags,     bad_sent_tags
+                good_sent_tags,     bad_sent_tags, good_mesh_embeds, bad_mesh_embeds
             )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
