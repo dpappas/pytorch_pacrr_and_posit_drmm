@@ -870,3 +870,12 @@ GMAP
 MRR
 '''
 
+'''
+criterio 1. pubmed.
+criterio 2. etairia pou suniparxei sto core set.
+criterio 3. list with tokens
+
+'''
+
+
+
