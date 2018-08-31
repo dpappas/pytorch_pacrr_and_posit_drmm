@@ -38,6 +38,9 @@ for item in bioasq6_data.values():
 #
 
 
+# from gensim.models.keyedvectors import KeyedVectors
+# w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 # min_tok, min_count = None, None
 # for word in wv.vocab.items():
 #     if(word[1].count < 3):
