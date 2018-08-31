@@ -9,7 +9,7 @@ dataloc = '/home/dpappas/for_ryan/'
 print('loading pickle data')
 with open(dataloc +'BioASQ-trainingDataset6b.json', 'r') as f:
     bioasq6_data = json.load(f)
-    bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
+    bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
 
 pprint(bioasq6_data['58b548d722d3005309000005'])
 
@@ -38,7 +38,19 @@ for item in bioasq6_data.values():
 #
 
 
-
+# min_tok, min_count = None, None
+# for word in wv.vocab.items():
+#     if(word[1].count < 3):
+#         print word[0], word[1].count
+#     if(min_tok is None):
+#         min_tok     =  word[0]
+#         min_count   =  word[1].count
+#     else:
+#         if(min_count) >= word[1].count:
+#             min_tok     =  word[0]
+#             min_count   =  word[1].count
+#
+# print(min_tok, min_count)
 
 
 
