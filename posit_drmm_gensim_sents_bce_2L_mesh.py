@@ -807,17 +807,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         print(mesh_embeds.shape)
         mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
         output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
-        print(output.size())
-        return output
+        return output[-1,0]
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_mesh_embeds, bad_mesh_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
-        #
-        good_mesh_out       = self.apply_mesh_gru(good_mesh_embeds)
-        bad_mesh_out        = self.apply_mesh_gru(bad_mesh_embeds)
-        exit()
         #
         q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
@@ -826,6 +821,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
+        #
+        good_mesh_out       = self.apply_mesh_gru(good_mesh_embeds)
+        bad_mesh_out        = self.apply_mesh_gru(bad_mesh_embeds)
+        print(good_mesh_out.size())
+        print(doc_gaf.size())
+        print(bad_mesh_out.size())
+        print(doc_baf.size())
         #
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp          = torch.cat([bad_out,  doc_baf], -1)
