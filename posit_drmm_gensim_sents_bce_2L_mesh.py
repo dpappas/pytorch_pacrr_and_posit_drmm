@@ -804,7 +804,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # final_good_output   = good_out
         return final_good_output, gs_emits
     def apply_mesh_gru(self, mesh_embeds):
-        print(mesh_embeds.shape)
+        # print(mesh_embeds.shape)
         mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
         output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         return output[-1,0,:]
@@ -823,14 +823,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
         good_mesh_out       = self.apply_mesh_gru(good_mesh_embeds)
-        print(good_mesh_out.size())
-        print(doc_gaf.size())
         bad_mesh_out        = self.apply_mesh_gru(bad_mesh_embeds)
-        print(bad_mesh_out.size())
-        print(doc_baf.size())
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp          = torch.cat([bad_out,  doc_baf], -1)
+        good_out_pp         = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
+        bad_out_pp          = torch.cat([bad_out,  doc_baf, bad_mesh_out],  -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
