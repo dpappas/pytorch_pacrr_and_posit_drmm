@@ -479,9 +479,7 @@ def train_data_step2(train_instances):
                 tt = ' '.join(bioclean(good_text))
                 good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
         #
-        bad_mesh                                = [bioclean(t.split(':',1)[1].strip()) for t in train_docs[bid]['meshHeadingsList']]
-        bad_mesh                                = ['mgmx'] + sorted(bad_mesh)
-        bad_mesh                                = ' # '.join(bad_mesh).split()
+        bad_mesh                                = get_the_mesh(train_docs[bid])
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
         bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
         bad_sents                               = get_sents(train_docs[bid]['title']) + get_sents(train_docs[bid]['abstractText'])
