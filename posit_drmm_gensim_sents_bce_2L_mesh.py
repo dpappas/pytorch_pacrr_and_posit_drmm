@@ -498,9 +498,9 @@ def train_data_step2(train_instances):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
         if(sum(good_sent_tags)>0):
-            bmt, bad_mesh_embeds      = get_embeds(bad_mesh, wv)
+            bmt, bad_mesh_embeds    = get_embeds(bad_mesh, wv)
             print(bmt)
-            gmt, good_mesh_embeds     = get_embeds(good_mesh, wv)
+            gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
             print(gmt)
             print(20 * '-')
             yield (
