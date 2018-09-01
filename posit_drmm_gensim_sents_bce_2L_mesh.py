@@ -660,6 +660,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
         self.final_layer                            = nn.Linear(5, 1, bias=True)
         #
+        self.mesh_gru                               = nn.GRU(self.embedding_dim, 10)
         # self.init_xavier()
         # self.init_using_value(0.1)
         # MultiMarginLoss
@@ -792,9 +793,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_layer(good_out_pp)
         # final_good_output   = good_out
         return final_good_output, gs_emits
+    def apply_mesh_gru(self, mesh_embeds):
+        mesh_embeds = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
+
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_mesh_embeds, bad_mesh_embeds):
-        good_mesh_embeds    = autograd.Variable(torch.FloatTensor(good_mesh_embeds),    requires_grad=False)
-        bad_mesh_embeds     = autograd.Variable(torch.FloatTensor(bad_mesh_embeds),     requires_grad=False)
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
