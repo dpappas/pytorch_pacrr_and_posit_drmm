@@ -453,7 +453,6 @@ def get_the_mesh(the_doc):
         good_mesh.append(t)
     good_mesh = sorted(good_mesh)
     good_mesh = ['mgmx'] + good_mesh
-    pprint(good_mesh)
     good_mesh = ' # '.join(good_mesh)
     good_mesh = good_mesh.split()
     return good_mesh
@@ -499,8 +498,8 @@ def train_data_step2(train_instances):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
         if(sum(good_sent_tags)>0):
-            bad_mesh_embeds     = get_embeds(bad_mesh.split(), wv)
-            good_mesh_embeds    = get_embeds(good_mesh.split(), wv)
+            _, bad_mesh_embeds      = get_embeds(bad_mesh, wv)
+            _, good_mesh_embeds     = get_embeds(good_mesh, wv)
             yield (
                 good_sents_embeds,  bad_sents_embeds,   quest_embeds,   q_idfs,
                 good_sents_escores, bad_sents_escores,  good_doc_af,    bad_doc_af,
@@ -805,6 +804,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # final_good_output   = good_out
         return final_good_output, gs_emits
     def apply_mesh_gru(self, mesh_embeds):
+        print(mesh_embeds.shape())
         mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
         output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         print(output.size())
