@@ -534,10 +534,10 @@ def get_one_map(prefix, data, docs):
         doc_res                     = {}
         for retr in dato['retrieved_documents']:
             #
-            good_doc_text = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
-            good_doc_af = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
+            good_doc_text   = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
+            good_doc_af     = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
             #
-            good_sents = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
+            good_sents      = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
             good_sents_embeds, good_sents_escores = [], []
             for good_text in good_sents:
                 good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
@@ -545,12 +545,17 @@ def get_one_map(prefix, data, docs):
                 if (len(good_embeds) > 0):
                     good_sents_embeds.append(good_embeds)
                     good_sents_escores.append(good_escores)
+            #
+            good_mesh               = get_the_mesh(docs[retr['doc_id']])
+            gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
+            #
             doc_emit_, _            = model.emit_one(
                 doc1_sents_embeds   = good_sents_embeds,
                 question_embeds     = quest_embeds,
                 q_idfs              = q_idfs,
                 sents_gaf           = good_sents_escores,
-                doc_gaf             = good_doc_af
+                doc_gaf             = good_doc_af,
+                good_mesh_embeds    = good_mesh_embeds
             )
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
