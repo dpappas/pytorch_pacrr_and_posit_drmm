@@ -814,9 +814,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         good_mesh_out       = self.apply_mesh_gru(good_mesh_embeds)
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        good_out_pp         = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
         final_good_output   = self.final_layer(good_out_pp)
-        # final_good_output   = good_out
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_mesh_embeds, bad_mesh_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
