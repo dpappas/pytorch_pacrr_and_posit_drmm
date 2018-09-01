@@ -498,8 +498,11 @@ def train_data_step2(train_instances):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
         if(sum(good_sent_tags)>0):
-            _, bad_mesh_embeds      = get_embeds(bad_mesh, wv)
-            _, good_mesh_embeds     = get_embeds(good_mesh, wv)
+            bmt, bad_mesh_embeds      = get_embeds(bad_mesh, wv)
+            print(bmt)
+            gmt, good_mesh_embeds     = get_embeds(good_mesh, wv)
+            print(gmt)
+            print(20 * '-')
             yield (
                 good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
                 good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
@@ -830,10 +833,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
-        # final_good_output   = good_out
-        # final_bad_output    = bad_out
         #
-        # loss1               = self.margin_loss(final_good_output, final_bad_output, torch.ones(1))
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
