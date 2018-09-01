@@ -344,8 +344,10 @@ def GetWords(data, doc_text, words):
       words[w] = 1
     for j in range(len(data['queries'][i]['retrieved_documents'])):
       doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      dtext = (doc_text[doc_id]['title'] + ' <title> ' +
-               doc_text[doc_id]['abstractText'])
+      dtext = (
+              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
+              ' '.join(get_the_mesh(doc_text[doc_id]))
+      )
       dwds = tokenize(dtext)
       for w in dwds:
         words[w] = 1
@@ -382,6 +384,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
+    # mgmx
     print('loading idfs')
     logger.info('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
