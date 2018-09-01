@@ -823,9 +823,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
         good_mesh_out       = self.apply_mesh_gru(good_mesh_embeds)
-        bad_mesh_out        = self.apply_mesh_gru(bad_mesh_embeds)
         print(good_mesh_out.size())
         print(doc_gaf.size())
+        bad_mesh_out        = self.apply_mesh_gru(bad_mesh_embeds)
         print(bad_mesh_out.size())
         print(doc_baf.size())
         #
