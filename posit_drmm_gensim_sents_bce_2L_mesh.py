@@ -445,14 +445,20 @@ def get_sent_tags(good_sents, good_snips):
         sent_tags.append(int((sent in good_snips) or any([s in sent for s in good_snips])))
     return sent_tags
 
+def get_the_mesh(the_doc):
+    good_mesh = [bioclean(t.split(':', 1)[1].strip()) for t in the_doc['meshHeadingsList']]
+    good_mesh = sorted(good_mesh)
+    good_mesh = ['mgmx'] + good_mesh
+    good_mesh = ' # '.join(good_mesh)
+    good_mesh = good_mesh.split()
+    return good_mesh
+
 def train_data_step2(train_instances):
     for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
         quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
         q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         #
-        good_mesh                               = [bioclean(t.split(':',1)[1].strip()) for t in train_docs[gid]['meshHeadingsList']]
-        good_mesh                               = ['mgmx'] + sorted(good_mesh)
-        good_mesh                               = ' # '.join(good_mesh).split()
+        good_mesh                               = get_the_mesh(train_docs[gid])
         good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
         good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
         good_sents_title                        = get_sents(train_docs[gid]['title'])
@@ -660,6 +666,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
         self.final_layer                            = nn.Linear(5, 1, bias=True)
         #
+        # num_layers * num_directions, batch, hidden_size
+        self.mesh_h0                                = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru                               = nn.GRU(self.embedding_dim, 10)
         # self.init_xavier()
         # self.init_using_value(0.1)
@@ -794,13 +802,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # final_good_output   = good_out
         return final_good_output, gs_emits
     def apply_mesh_gru(self, mesh_embeds):
-        mesh_embeds = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-
+        mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
+        output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
+        print(output.size())
+        return output
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_mesh_embeds, bad_mesh_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
+        #
+        good_mesh_out       = self.apply_mesh_gru(good_mesh_embeds)
+        bad_mesh_out        = self.apply_mesh_gru(bad_mesh_embeds)
+        exit()
         #
         q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
