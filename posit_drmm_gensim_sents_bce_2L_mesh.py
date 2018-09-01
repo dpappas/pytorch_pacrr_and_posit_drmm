@@ -450,6 +450,7 @@ def get_the_mesh(the_doc):
     for t in the_doc['meshHeadingsList']:
         t = t.split(':', 1)
         t = t[1].strip()
+        t = t.lower()
         good_mesh.append(t)
     good_mesh = sorted(good_mesh)
     good_mesh = ['mgmx'] + good_mesh
@@ -498,13 +499,8 @@ def train_data_step2(train_instances):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
         if(sum(good_sent_tags)>0):
-            print(bad_mesh)
             bmt, bad_mesh_embeds    = get_embeds(bad_mesh, wv)
-            print(bmt)
-            print(good_mesh)
             gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-            print(gmt)
-            print(20 * '-')
             yield (
                 good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
                 good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
