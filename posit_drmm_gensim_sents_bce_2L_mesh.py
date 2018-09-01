@@ -804,7 +804,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # final_good_output   = good_out
         return final_good_output, gs_emits
     def apply_mesh_gru(self, mesh_embeds):
-        print(mesh_embeds.shape())
+        print(mesh_embeds.shape)
         mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
         output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         print(output.size())
