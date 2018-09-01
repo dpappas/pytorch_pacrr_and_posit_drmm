@@ -807,7 +807,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         print(mesh_embeds.shape)
         mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
         output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
-        return output[-1,0]
+        return output[-1,0,:]
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_mesh_embeds, bad_mesh_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
