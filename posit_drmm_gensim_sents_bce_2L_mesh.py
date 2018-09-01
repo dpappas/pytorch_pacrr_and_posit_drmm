@@ -501,9 +501,9 @@ def train_data_step2(train_instances):
             _, bad_mesh_embeds      = get_embeds(bad_mesh, wv)
             _, good_mesh_embeds     = get_embeds(good_mesh, wv)
             yield (
-                good_sents_embeds,  bad_sents_embeds,   quest_embeds,   q_idfs,
-                good_sents_escores, bad_sents_escores,  good_doc_af,    bad_doc_af,
-                good_sent_tags,     bad_sent_tags, good_mesh_embeds, bad_mesh_embeds
+                good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
+                good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
+                good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds
             )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
