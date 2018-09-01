@@ -446,9 +446,14 @@ def get_sent_tags(good_sents, good_snips):
     return sent_tags
 
 def get_the_mesh(the_doc):
-    good_mesh = [bioclean(t.split(':', 1)[1].strip()) for t in the_doc['meshHeadingsList']]
+    good_mesh = []
+    for t in the_doc['meshHeadingsList']:
+        t = t.split(':', 1)
+        t = t[1].strip()
+        good_mesh.append(t)
     good_mesh = sorted(good_mesh)
     good_mesh = ['mgmx'] + good_mesh
+    pprint(good_mesh)
     good_mesh = ' # '.join(good_mesh)
     good_mesh = good_mesh.split()
     return good_mesh
