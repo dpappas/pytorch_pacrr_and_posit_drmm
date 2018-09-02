@@ -665,6 +665,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.k                                      = k_for_maxpool         # k is for the average k pooling
         self.k2                                     = k_sent_maxpool        # k is for the average k pooling
         #
+        # positions : first, second, third, other, last
+        # self.positional_embeddings                  = nn.Embedding(5, 6)
+        self.positional_weights                     = nn.Parameter(torch.Tensor(5, 6))
         self.embedding_dim                          = embedding_dim
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation                = torch.nn.LeakyReLU(negative_slope=0.1)
@@ -766,6 +769,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             oh_pooled           = self.pooling_method(sim_oh)
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+            position_embed      = self.positional_embeddings()
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
