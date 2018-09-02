@@ -769,7 +769,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             oh_pooled           = self.pooling_method(sim_oh)
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            if(i<4)
+            if(i<4):
                 position_embed  = self.positional_weights[i,:]
             elif(i == len(doc_sents_embeds)-1):
                 position_embed  = self.positional_weights[-1,:]
