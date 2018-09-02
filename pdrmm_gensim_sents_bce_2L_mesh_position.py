@@ -676,7 +676,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-        self.out_layer                              = nn.Linear(4, 1, bias=True)
+        self.out_layer                              = nn.Linear(4+6, 1, bias=True)
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
         self.final_layer                            = nn.Linear(5 + 10, 1, bias=True)
         #
