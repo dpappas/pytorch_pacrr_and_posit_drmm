@@ -769,8 +769,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             oh_pooled           = self.pooling_method(sim_oh)
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            position_embed      = self.positional_embeddings()
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            if(i<4)
+                position_embed  = self.positional_weights[i,:]
+            elif(i == len(doc_sents_embeds)-1):
+                position_embed  = self.positional_weights[-1,:]
+            else:
+                position_embed  = self.positional_weights[-2,:]
+            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1), position_embed])
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
