@@ -930,12 +930,13 @@ java -Xmx10G -cp $CLASSPATH:./flat/BioASQEvaluation/dist/BioASQEvaluation.jar ev
 
 
 
-java -Xmx10G -cp            \
-/home/dpappas/for_ryan/bioasq_eval/Evaluation-Measures-master/flat/BioASQEvaluation/dist/BioASQEvaluation.jar \
-evaluation.EvaluatorTask1b  \
--phaseB -e 5                \
+java -Xmx10G -cp \
+/home/dpappas/for_ryan/bioasq_eval_new/Evaluation-Measures-master/flat/BioASQEvaluation/dist/BioASQEvaluation.jar \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1 \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/drmm-experimental_submit.json
+
 
 '''
 
