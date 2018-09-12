@@ -476,5 +476,5 @@ train_instances = train_data_step1()
 epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
 for instance in train_data_step2(train_instances):
-
+    pass
 
