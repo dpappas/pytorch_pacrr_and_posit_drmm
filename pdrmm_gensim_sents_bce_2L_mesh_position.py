@@ -931,11 +931,19 @@ java -Xmx10G -cp $CLASSPATH:./flat/BioASQEvaluation/dist/BioASQEvaluation.jar ev
 
 
 java -Xmx10G -cp \
-/home/dpappas/for_ryan/bioasq_eval_new/Evaluation-Measures-master/flat/BioASQEvaluation/dist/BioASQEvaluation.jar \
+/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar \
 evaluation.EvaluatorTask1b \
 -phaseA -e 5  \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1 \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/drmm-experimental_submit.json
+
+add eval of snippets
+treat mesh terms as sentences with pdrmm
+stats on positions of relevant snippets
+add an rrn but keep pooling as well
+add document score as weel (original output of pdrmm)
+dump positional embeds for now
+do everything with and without loss 2
 
 
 '''
