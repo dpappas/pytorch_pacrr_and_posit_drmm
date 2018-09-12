@@ -18,17 +18,9 @@ import os
 import re
 import json
 import random
-import logging
-import subprocess
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
 from pprint import pprint
-import torch.autograd as autograd
 from tqdm import tqdm
-from gensim.models.keyedvectors import KeyedVectors
 from nltk.tokenize import sent_tokenize
 from difflib import SequenceMatcher
 
@@ -419,8 +411,7 @@ epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
 
 res = {}
-train_Data = list(train_data_step2(train_instances))
-for (good_sents_embeds,  good_sents_escores, good_sent_tags, good_mesh_embeds) in tqdm(train_data):
+for (good_sents_embeds,  good_sents_escores, good_sent_tags, good_mesh_embeds) in tqdm(list(train_data_step2(train_instances))):
     for i in range(len(good_sent_tags)):
         if(good_sent_tags[i] == 1):
             try:
