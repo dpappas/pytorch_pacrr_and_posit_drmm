@@ -424,12 +424,11 @@ pprint(res)
 
 res = {}
 for good_sent_tags in tqdm(td):
-    for i in range(len(good_sent_tags)):
-        if(good_sent_tags[i] == 1):
-            try:
-                res[i] += 1
-            except:
-                res[i] = 1
+    key = len(good_sent_tags)
+    try:
+        res[key] += np.array(good_sent_tags)
+    except:
+        res[key] = np.array(good_sent_tags)
 
 pprint(res)
 
