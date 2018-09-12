@@ -403,12 +403,9 @@ def get_the_mesh(the_doc):
 
 def train_data_step2(train_instances):
     for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
-        quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
-        q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         #
         good_mesh                               = get_the_mesh(train_docs[gid])
         good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
-        good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
         good_sents_title                        = get_sents(train_docs[gid]['title'])
         good_sents_abs                          = get_sents(train_docs[gid]['abstractText'])
         #
@@ -427,27 +424,11 @@ def train_data_step2(train_instances):
                 tt = ' '.join(bioclean(good_text))
                 good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
         #
-        bad_mesh                                = get_the_mesh(train_docs[bid])
-        bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
-        bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
-        bad_sents                               = get_sents(train_docs[bid]['title']) + get_sents(train_docs[bid]['abstractText'])
-        #
-        bad_sent_tags                           = len(bad_sents) * [0]
-        #
-        bad_sents_embeds, bad_sents_escores     = [], []
-        for bad_text in bad_sents:
-            bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
-            bad_escores                         = GetScores(quest, bad_text, bm25s_bid)[:-1]
-            if(len(bad_embeds)>0):
-                bad_sents_embeds.append(bad_embeds)
-                bad_sents_escores.append(bad_escores)
         if(sum(good_sent_tags)>0):
-            bmt, bad_mesh_embeds    = get_embeds(bad_mesh, wv)
             gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
             yield (
-                good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
-                good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
-                good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds
+                good_sents_embeds,  good_sents_escores,
+                good_sent_tags,     good_mesh_embeds
             )
 
 def similar(a, b):
@@ -475,6 +456,15 @@ train_instances = train_data_step1()
 # train_instances = train_instances[:len(train_instances)/2]
 epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
-for instance in train_data_step2(train_instances):
-    pass
+
+res = {}
+for (good_sents_embeds,  good_sents_escores, good_sent_tags, good_mesh_embeds) in train_data_step2(train_instances):
+    for i in range(len(good_sent_tags)):
+        if(good_sent_tags[i] == 1):
+            try:
+                res[i] += 1
+            except:
+                res[i] = 1
+
+pprint(res)
 
