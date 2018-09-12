@@ -937,12 +937,12 @@ evaluation.EvaluatorTask1b \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1 \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/drmm-experimental_submit.json
 
-add eval of snippets
-treat mesh terms as sentences with pdrmm
 stats on positions of relevant snippets
+add eval of snippets
+add document score as well (original output of pdrmm)
+treat mesh terms as sentences with pdrmm
 add an rrn but keep pooling as well
-add document score as weel (original output of pdrmm)
-dump positional embeds for now
+# dump positional embeds for now
 do everything with and without loss 2
 
 
