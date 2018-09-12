@@ -410,8 +410,20 @@ train_instances = train_data_step1()
 epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
 
+td  = list(train_data_step2(train_instances))
 res = {}
-for good_sent_tags in tqdm(list(train_data_step2(train_instances))):
+for good_sent_tags in tqdm(td):
+    for i in range(len(good_sent_tags)):
+        if(good_sent_tags[i] == 1):
+            try:
+                res[i] += 1
+            except:
+                res[i] = 1
+
+pprint(res)
+
+res = {}
+for good_sent_tags in tqdm(td):
     for i in range(len(good_sent_tags)):
         if(good_sent_tags[i] == 1):
             try:
