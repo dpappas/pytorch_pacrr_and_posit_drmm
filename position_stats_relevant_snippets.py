@@ -297,7 +297,7 @@ def GetWords(data, doc_text, words):
       for w in dwds:
         words[w] = 1
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+def load_all_data(dataloc):
     print('loading pickle data')
     #
     with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
@@ -330,32 +330,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     # mgmx
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
-    print('loading w2v')
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
-
-def train_data_yielder():
-    for dato in tqdm(train_data['queries']):
-        quest       = dato['query_text']
-        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-        #
-        quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
-        q_idfs      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float64')
-        #
-        if(len(bad_pmids)>0):
-            for gid in good_pmids:
-                bid                         = random.choice(bad_pmids)
-                good_text                   = train_docs[gid]['title'] + ' <title> ' + train_docs[gid]['abstractText']
-                good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
-                bad_text                    = train_docs[bid]['title'] + ' <title> ' + train_docs[bid]['abstractText']
-                bad_tokens, bad_embeds      = get_embeds(tokenize(bad_text), wv)
-                good_escores                = GetScores(quest, good_text, bm25s[gid])
-                bad_escores                 = GetScores(quest, bad_text,  bm25s[bid])
-                yield(good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 def train_data_step1():
     # bioasq6_data
@@ -436,11 +411,7 @@ idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc         = '/home/dpappas/for_ryan/'
 eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
-test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data = load_all_data(
-    dataloc         = dataloc,
-    w2v_bin_path    = w2v_bin_path,
-    idf_pickle_path = idf_pickle_path
-)
+test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data = load_all_data(dataloc)
 
 train_instances = train_data_step1()
 # train_instances = train_instances[:len(train_instances)/2]
