@@ -458,7 +458,8 @@ epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
 
 res = {}
-for (good_sents_embeds,  good_sents_escores, good_sent_tags, good_mesh_embeds) in train_data_step2(train_instances):
+train_Data = list(train_data_step2(train_instances))
+for (good_sents_embeds,  good_sents_escores, good_sent_tags, good_mesh_embeds) in tqdm(train_data):
     for i in range(len(good_sent_tags)):
         if(good_sent_tags[i] == 1):
             try:
