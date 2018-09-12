@@ -386,7 +386,7 @@ def train_data_step2(train_instances):
             good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
         #
         if(sum(good_sent_tags)>0):
-            yield (good_sent_tags)
+            yield good_sent_tags
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
@@ -411,7 +411,7 @@ epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
 
 res = {}
-for (good_sents_embeds,  good_sents_escores, good_sent_tags, good_mesh_embeds) in tqdm(list(train_data_step2(train_instances))):
+for good_sent_tags in tqdm(list(train_data_step2(train_instances))):
     for i in range(len(good_sent_tags)):
         if(good_sent_tags[i] == 1):
             try:
