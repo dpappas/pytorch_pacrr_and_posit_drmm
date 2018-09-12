@@ -432,6 +432,6 @@ for good_sent_tags in tqdm(td):
 
 # pprint(res)
 for k in sorted(res.keys()):
-    print(str(k)+' '+ ' '.join(res[k].tolist()))
+    print(str(k)+ ' '+ ' '.join([str(t) for t in res[k].tolist()]))
 
 
