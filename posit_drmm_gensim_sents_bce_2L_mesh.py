@@ -927,7 +927,7 @@ evaluation.EvaluatorTask1b \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1 \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/drmm-experimental_submit.json
 
-stats on positions of relevant snippets
+# stats on positions of relevant snippets
 add eval of snippets
 add document score as well (original output of pdrmm)
 treat mesh terms as sentences with pdrmm
