@@ -430,5 +430,8 @@ for good_sent_tags in tqdm(td):
     except:
         res[key] = np.array(good_sent_tags)
 
-pprint(res)
+# pprint(res)
+for k in sorted(res.keys()):
+    print k, res[k].to_list()
+
 
