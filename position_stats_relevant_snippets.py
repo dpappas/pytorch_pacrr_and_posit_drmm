@@ -405,7 +405,6 @@ def train_data_step2(train_instances):
     for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
         #
         good_mesh                               = get_the_mesh(train_docs[gid])
-        good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
         good_sents_title                        = get_sents(train_docs[gid]['title'])
         good_sents_abs                          = get_sents(train_docs[gid]['abstractText'])
         #
@@ -416,20 +415,11 @@ def train_data_step2(train_instances):
         #
         good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
         for good_text in good_sents:
-            good_tokens, good_embeds            = get_embeds(tokenize(good_text), wv)
-            good_escores                        = GetScores(quest, good_text, bm25s_gid)[:-1]
-            if(len(good_embeds)>0):
-                good_sents_embeds.append(good_embeds)
-                good_sents_escores.append(good_escores)
-                tt = ' '.join(bioclean(good_text))
-                good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
+            tt = ' '.join(bioclean(good_text))
+            good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
         #
         if(sum(good_sent_tags)>0):
-            gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-            yield (
-                good_sents_embeds,  good_sents_escores,
-                good_sent_tags,     good_mesh_embeds
-            )
+            yield (good_sent_tags)
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
