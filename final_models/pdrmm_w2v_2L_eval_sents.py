@@ -614,6 +614,7 @@ def train_one(epoch):
     # train_instances = train_instances[:len(train_instances)/2]
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
+    # for instance in train_data_step2(train_instances[:100*32]):
     for instance in train_data_step2(train_instances):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = instance[0],
