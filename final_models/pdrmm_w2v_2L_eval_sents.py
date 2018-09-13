@@ -561,18 +561,19 @@ def get_one_map(prefix, data, docs):
                 good_mesh_embeds    = good_mesh_embeds
             )
             emitss = gs_emits_[:, 0].tolist()
-            print(emitss)
-            print(did_i_pad)
             indices = [
                 item[0] + sum(did_i_pad[:item[0]])
                 for item in
                 zip(range(len(emitss)), emitss)
                 if(item[1] == max(emitss))
             ]
-            print indices
-            if(sum(did_i_pad)>0):
-                exit()
-            print 20 * '-'
+            if(sum(did_i_pad) > 0):
+                print(emitss)
+                print(did_i_pad)
+                print indices
+                for ind in indices:
+                    print(good_sents[ind])
+                print 20 * '-'
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
         doc_res                     = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
@@ -904,7 +905,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch + 1)
+        train_one(epoch + 1)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
