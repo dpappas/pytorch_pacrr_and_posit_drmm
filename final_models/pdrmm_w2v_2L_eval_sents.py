@@ -547,8 +547,6 @@ def get_one_map(prefix, data, docs):
                     good_sents_embeds.append(good_embeds)
                     good_sents_escores.append(good_escores)
                     held_out_sents.append(good_text)
-                else:
-                    held_out_sents.append(good_text)
             good_mesh               = get_the_mesh(docs[retr['doc_id']])
             gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
             #
@@ -561,10 +559,10 @@ def get_one_map(prefix, data, docs):
                 good_mesh_embeds    = good_mesh_embeds
             )
             emitss  = gs_emits_[:, 0].tolist()
-            indices = [ item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == max(emitss))]
+            indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == max(emitss))]
             print(quest)
             for ind in indices:
-                print(held_out_sents[ind])
+                print(str(emitss[ind]) + '\t' + held_out_sents[ind])
             print(20 * '-')
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
