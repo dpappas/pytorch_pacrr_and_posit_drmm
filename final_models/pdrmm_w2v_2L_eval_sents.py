@@ -539,13 +539,18 @@ def get_one_map(prefix, data, docs):
             #
             good_sents      = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
             good_sents_embeds, good_sents_escores = [], []
+            did_i_pad       = []
+            v               = 0
             for good_text in good_sents:
                 good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
                 good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])[:-1]
                 if (len(good_embeds) > 0):
                     good_sents_embeds.append(good_embeds)
                     good_sents_escores.append(good_escores)
-            #
+                    did_i_pad.append(v)
+                else:
+                    v += 1
+                    did_i_pad.append(v)
             good_mesh               = get_the_mesh(docs[retr['doc_id']])
             gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
             #
@@ -559,9 +564,9 @@ def get_one_map(prefix, data, docs):
             )
             emitss = gs_emits_[:, 0].tolist()
             print(emitss)
+            print(did_i_pad)
             indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == max(emitss))]
-            # print(gs_emits_[0].tolist())
-            # print(len(good_sents))
+            print indices
             print 20 * '-'
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
