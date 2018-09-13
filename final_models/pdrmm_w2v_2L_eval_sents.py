@@ -559,10 +559,12 @@ def get_one_map(prefix, data, docs):
                 good_mesh_embeds    = good_mesh_embeds
             )
             emitss  = gs_emits_[:, 0].tolist()
-            indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == max(emitss))]
-            print(quest)
-            for ind in indices:
-                print(str(emitss[ind]) + '\t' + held_out_sents[ind])
+            mmax    = max(emitss)
+            indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
+            if(mmax>.3):
+                print(quest)
+                for ind in indices:
+                    print(str(emitss[ind]) + '\t' + held_out_sents[ind])
             print(20 * '-')
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
