@@ -927,6 +927,10 @@ evaluation.EvaluatorTask1b \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1 \
 /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/drmm-experimental_submit.json
 
+'''
+
+'''
+
 # stats on positions of relevant snippets
 add eval of snippets
 add document score as well (original output of pdrmm)
@@ -935,9 +939,6 @@ add an rrn but keep pooling as well
 # dump positional embeds for now
 do everything with and without loss 2
 
-
 '''
-
-
 
 
