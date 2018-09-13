@@ -539,16 +539,16 @@ def get_one_map(prefix, data, docs):
             #
             good_sents      = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
             good_sents_embeds, good_sents_escores = [], []
-            did_i_pad       = []
+            held_out_sents  = []
             for good_text in good_sents:
                 good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
                 good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])[:-1]
                 if (len(good_embeds) > 0):
                     good_sents_embeds.append(good_embeds)
                     good_sents_escores.append(good_escores)
-                    did_i_pad.append(0)
+                    held_out_sents.append(good_text)
                 else:
-                    did_i_pad.append(1)
+                    held_out_sents.append(good_text)
             good_mesh               = get_the_mesh(docs[retr['doc_id']])
             gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
             #
@@ -560,20 +560,12 @@ def get_one_map(prefix, data, docs):
                 doc_gaf             = good_doc_af,
                 good_mesh_embeds    = good_mesh_embeds
             )
-            emitss = gs_emits_[:, 0].tolist()
-            indices = [
-                item[0] + sum(did_i_pad[:item[0]])
-                for item in
-                zip(range(len(emitss)), emitss)
-                if(item[1] == max(emitss))
-            ]
-            if(sum(did_i_pad) > 0):
-                print(emitss)
-                print(did_i_pad)
-                print indices
-                for ind in indices:
-                    print(good_sents[ind])
-                print 20 * '-'
+            emitss  = gs_emits_[:, 0].tolist()
+            indices = [ item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == max(emitss))]
+            print(quest)
+            for ind in indices:
+                print(held_out_sents[ind])
+            print(20 * '-')
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
         doc_res                     = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
