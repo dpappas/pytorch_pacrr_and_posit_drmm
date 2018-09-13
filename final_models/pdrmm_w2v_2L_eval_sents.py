@@ -549,7 +549,7 @@ def get_one_map(prefix, data, docs):
             good_mesh               = get_the_mesh(docs[retr['doc_id']])
             gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
             #
-            doc_emit_, _            = model.emit_one(
+            doc_emit_, gs_emits_            = model.emit_one(
                 doc1_sents_embeds   = good_sents_embeds,
                 question_embeds     = quest_embeds,
                 q_idfs              = q_idfs,
@@ -557,6 +557,9 @@ def get_one_map(prefix, data, docs):
                 doc_gaf             = good_doc_af,
                 good_mesh_embeds    = good_mesh_embeds
             )
+            print(gs_emits_)
+            print(len(good_sents))
+            print 20 * '-'
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
         doc_res                     = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
@@ -888,7 +891,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
+        # train_one(epoch + 1)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
