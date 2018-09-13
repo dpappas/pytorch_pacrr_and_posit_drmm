@@ -570,6 +570,8 @@ def get_one_map(prefix, data, docs):
                 if(item[1] == max(emitss))
             ]
             print indices
+            if(sum(did_i_pad)>0):
+                exit()
             print 20 * '-'
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
