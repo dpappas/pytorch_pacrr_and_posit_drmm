@@ -238,11 +238,13 @@ def get_bioasq_res(data_gold, data_emitted):
     '''
     jar_path = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
     fgold    = './gold_bioasq.json'
+    fgold    = os.path.abspath(fgold)
     with open(fgold, 'w') as f:
         f.write(json.dumps(data_gold, indent=4, sort_keys=True))
         f.close()
     #
     femit    = './emit_bioasq.json'
+    femit    = os.path.abspath(femit)
     with open(femit, 'w') as f:
         f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
         f.close()
@@ -618,7 +620,7 @@ def get_one_map(prefix, data, docs):
         ########
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
-
+        get_bioasq_res(all_bioasq_gold_data, all_bioasq_subm_data)
         # NOW HERE WE CALL THE BIOASQ EVALUATION
         ########
     if (prefix == 'dev'):
