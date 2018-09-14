@@ -229,6 +229,36 @@ def get_map_res(fgold, femit):
     map_res         = float(map_res[-1])
     return map_res
 
+def get_bioasq_res(data_gold, data_emitted):
+    '''
+    java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
+    evaluation.EvaluatorTask1b -phaseA -e 5
+    /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1
+    ./drmm-experimental_submit.json
+    '''
+    jar_path = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+    fgold    = './gold_bioasq.json'
+    with open(fgold, 'w') as f:
+        f.write(json.dumps(data_gold, indent=4, sort_keys=True))
+        f.close()
+    #
+    femit    = './emit_bioasq.json'
+    with open(femit, 'w') as f:
+        f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
+        f.close()
+    #
+    bioasq_eval_res = subprocess.Popen(
+        [
+            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
+            '-phaseA', '-e', '5', fgold, femit
+        ],
+        stdout=subprocess.PIPE, shell=False
+    )
+    (out, err)  = bioasq_eval_res.communicate()
+    lines       = out.decode("utf-8").split('\n')
+    pprint(lines)
+    exit()
+
 def tokenize(x):
   return bioclean(x)
 
@@ -588,6 +618,7 @@ def get_one_map(prefix, data, docs):
         ########
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
+
         # NOW HERE WE CALL THE BIOASQ EVALUATION
         ########
     if (prefix == 'dev'):
