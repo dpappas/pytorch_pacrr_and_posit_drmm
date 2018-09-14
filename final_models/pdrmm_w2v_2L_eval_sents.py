@@ -532,6 +532,13 @@ def get_one_map(prefix, data, docs):
         emitions                    = {'body': dato['query_text'], 'id': dato['query_id'], 'documents': []}
         bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         doc_res                     = {}
+        bioasq_subm_dato            = {
+            'body'      : dato['query_text'],
+            'documents' : [],
+            'id'        : dato['query_id'],
+            'snippets'  : []
+        }
+        extracted_snippets = []
         for retr in dato['retrieved_documents']:
             #
             good_doc_text   = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
@@ -561,11 +568,13 @@ def get_one_map(prefix, data, docs):
             emitss  = gs_emits_[:, 0].tolist()
             mmax    = max(emitss)
             indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
-            if(mmax>.5):
-                print(quest)
-                for ind in indices:
-                    print(str(emitss[ind]) + '\t' + held_out_sents[ind])
-                print(20 * '-')
+            for ind in indices:
+                extracted_snippets.append((emitss[ind], retr['doc_id'], held_out_sents[ind]))
+            # if(mmax>.5):
+            #     print(quest)
+            #     for ind in indices:
+            #         print(str(emitss[ind]) + '\t' + held_out_sents[ind])
+            #     print(20 * '-')
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
         doc_res                     = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
