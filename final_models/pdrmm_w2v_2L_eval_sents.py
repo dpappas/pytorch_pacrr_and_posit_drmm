@@ -569,14 +569,16 @@ def get_one_map(prefix, data, docs):
             mmax    = max(emitss)
             indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
             for ind in indices:
-                extracted_snippets.append((emitss[ind], retr['doc_id'], held_out_sents[ind]))
-            # if(mmax>.5):
-            #     print(quest)
-            #     for ind in indices:
-            #         print(str(emitss[ind]) + '\t' + held_out_sents[ind])
-            #     print(20 * '-')
+                extracted_snippets.append(
+                    (
+                        emitss[ind],
+                        "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+                        held_out_sents[ind]
+                    )
+                )
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
+        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[0], reverse=True)[:10]
         doc_res                     = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
