@@ -523,7 +523,8 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
 
 def get_one_map(prefix, data, docs):
     model.eval()
-    all_bioasq_subm_dato = {'questions':[]}
+    all_bioasq_subm_data = {'questions':[]}
+    all_bioasq_gold_data = {'questions':[]}
     ret_data                = {}
     ret_data['questions']   = []
     for dato in tqdm(data['queries']):
@@ -584,9 +585,11 @@ def get_one_map(prefix, data, docs):
             'id'        : dato['query_id'],
             'snippets'  : [{"document" : sn[-2], "text" : sn[-1]} for sn in extracted_snippets]
         }
-        all_bioasq_subm_dato['questions'].append(bioasq_subm_dato)
-        # pprint(bioasq_subm_dato)
-        # exit()
+        ########
+        all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
+        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
+        # NOW HERE WE CALL THE BIOASQ EVALUATION
+        ########
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
