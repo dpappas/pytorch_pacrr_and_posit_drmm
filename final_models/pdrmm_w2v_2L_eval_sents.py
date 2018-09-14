@@ -561,7 +561,7 @@ def get_one_map(prefix, data, docs):
             emitss  = gs_emits_[:, 0].tolist()
             mmax    = max(emitss)
             indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
-            if(mmax>.3):
+            if(mmax>.5):
                 print(quest)
                 for ind in indices:
                     print(str(emitss[ind]) + '\t' + held_out_sents[ind])
@@ -606,7 +606,7 @@ def train_one(epoch):
     # train_instances = train_instances[:len(train_instances)/2]
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
-    # for instance in train_data_step2(train_instances[:90*32]):
+    # for instance in train_data_step2(train_instances[:90*50]):
     for instance in train_data_step2(train_instances):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = instance[0],
