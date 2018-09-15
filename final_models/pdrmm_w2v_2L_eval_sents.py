@@ -266,8 +266,7 @@ def get_bioasq_res(data_gold, data_emitted):
             ret['MAP'] = float(line.split()[-1])
         elif('F1 snippets:' in line):
             ret['F1'] = float(line.split()[-1])
-    pprint(ret)
-    exit()
+    return ret
 
 def tokenize(x):
   return bioclean(x)
@@ -626,9 +625,10 @@ def get_one_map(prefix, data, docs):
         ########
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
-        get_bioasq_res(all_bioasq_gold_data, all_bioasq_subm_data)
         # NOW HERE WE CALL THE BIOASQ EVALUATION
         ########
+    bioasq_snip_res = get_bioasq_res(all_bioasq_gold_data, all_bioasq_subm_data)
+    pprint(bioasq_snip_res)
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
