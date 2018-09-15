@@ -561,7 +561,7 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
-def get_one_map(prefix, data, docs):
+def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
     all_bioasq_gold_data = {'questions':[]}
@@ -649,10 +649,53 @@ def get_one_map(prefix, data, docs):
             del(gold_dato['ideal_answer'])
         #
         all_bioasq_gold_data['questions'].append(gold_dato)
-        # NOW HERE WE CALL THE BIOASQ EVALUATION
-        ########
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
     pprint(bioasq_snip_res)
+
+
+def get_one_map(prefix, data, docs):
+    model.eval()
+    ret_data                = {}
+    ret_data['questions']   = []
+    for dato in tqdm(data['queries']):
+        quest                       = dato['query_text']
+        quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
+        q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+        emitions                    = {'body': dato['query_text'], 'id': dato['query_id'], 'documents': []}
+        bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        doc_res                     = {}
+        for retr in dato['retrieved_documents']:
+            #
+            good_doc_text   = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
+            good_doc_af     = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
+            #
+            good_sents      = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
+            good_sents_embeds, good_sents_escores = [], []
+            held_out_sents  = []
+            for good_text in good_sents:
+                good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
+                good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])[:-1]
+                if (len(good_embeds) > 0):
+                    good_sents_embeds.append(good_embeds)
+                    good_sents_escores.append(good_escores)
+                    held_out_sents.append(good_text)
+            good_mesh               = get_the_mesh(docs[retr['doc_id']])
+            gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
+            #
+            doc_emit_, gs_emits_    = model.emit_one(
+                doc1_sents_embeds   = good_sents_embeds,
+                question_embeds     = quest_embeds,
+                q_idfs              = q_idfs,
+                sents_gaf           = good_sents_escores,
+                doc_gaf             = good_doc_af,
+                good_mesh_embeds    = good_mesh_embeds
+            )
+            emition                 = doc_emit_.cpu().item()
+            doc_res[retr['doc_id']] = float(emition)
+        doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
+        doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+        emitions['documents']       = doc_res[:100]
+        ret_data['questions'].append(emitions)
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
