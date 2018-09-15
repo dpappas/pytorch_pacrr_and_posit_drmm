@@ -237,6 +237,7 @@ def get_bioasq_res(data_gold, data_emitted):
     ./drmm-experimental_submit.json
     '''
     jar_path = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+    #
     fgold    = './gold_bioasq.json'
     fgold    = os.path.abspath(fgold)
     with open(fgold, 'w') as f:
@@ -624,7 +625,12 @@ def get_one_map(prefix, data, docs):
         }
         ########
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
-        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
+        gold_dato   = bioasq6_data[dato['query_id']]
+        if('exact_answer' in gold_dato):
+            del(gold_dato['exact_answer'])
+        if('ideal_answer' in gold_dato):
+            del(gold_dato['ideal_answer'])
+        all_bioasq_gold_data['questions'].append(gold_dato)
         # NOW HERE WE CALL THE BIOASQ EVALUATION
         ########
     bioasq_snip_res = get_bioasq_res(all_bioasq_gold_data, all_bioasq_subm_data)
