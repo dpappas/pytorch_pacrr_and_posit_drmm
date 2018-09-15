@@ -561,16 +561,17 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
-def handle_good(docs, retr, quest, bm25s):
-    good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
-    good_doc_af         = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
+def handle_good(docs, retr, quest):
+    # good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
+    good_doc_text       = bioasq6_data[retr['doc_id']]['title'] + bioasq6_data[retr['doc_id']]['abstractText']
+    good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
     good_sents          = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
     good_sents_embeds   = []
     good_sents_escores  = []
     held_out_sents      = []
     for good_text in good_sents:
         good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
-        good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])[:-1]
+        good_escores = GetScores(quest, good_text, retr['norm_bm25_score'])[:-1]
         if (len(good_embeds) > 0):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
@@ -593,6 +594,7 @@ def eval_bioasq_snippets(prefix, data, docs):
         extracted_snippets          = []
         # for retr in dato['retrieved_documents']:
         for retr in pseudo_retrieved:
+            # pprint(retr)
             good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = handle_good(docs, retr, quest, bm25s)
             #
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
@@ -1013,8 +1015,8 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
-        epoch_dev_map   = get_one_map('dev', dev_data, dev_docs)
+        # train_one(epoch + 1)
+        # epoch_dev_map   = get_one_map('dev', dev_data, dev_docs)
         bioasq_snip_res = eval_bioasq_snippets('dev', dev_data, dev_docs)
         pprint(bioasq_snip_res)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
