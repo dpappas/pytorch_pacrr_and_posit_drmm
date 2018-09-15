@@ -618,7 +618,7 @@ def get_one_map(prefix, data, docs):
             #
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
-        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[0], reverse=True)[:10]
+        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[0], reverse=True)
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
@@ -631,11 +631,13 @@ def get_one_map(prefix, data, docs):
         }
         ########
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
+        #
         gold_dato   = bioasq6_data[dato['query_id']]
         if('exact_answer' in gold_dato):
             del(gold_dato['exact_answer'])
         if('ideal_answer' in gold_dato):
             del(gold_dato['ideal_answer'])
+        #
         all_bioasq_gold_data['questions'].append(gold_dato)
         # NOW HERE WE CALL THE BIOASQ EVALUATION
         ########
