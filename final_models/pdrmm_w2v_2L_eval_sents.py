@@ -595,7 +595,9 @@ def eval_bioasq_snippets(prefix, data, docs):
         doc_res                     = {}
         extracted_snippets = []
         for retr in dato['retrieved_documents']:
-            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = handle_good(docs, retr, quest, bm25s)
+            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = handle_good(
+                docs, retr, quest, bm25s
+            )
             #
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss  = gs_emits_[:, 0].tolist()
