@@ -229,7 +229,7 @@ def get_map_res(fgold, femit):
     map_res         = float(map_res[-1])
     return map_res
 
-def get_bioasq_res(data_gold, data_emitted):
+def get_bioasq_res(prefix, data_gold, data_emitted):
     '''
     java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
     evaluation.EvaluatorTask1b -phaseA -e 5
@@ -238,13 +238,13 @@ def get_bioasq_res(data_gold, data_emitted):
     '''
     jar_path = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
     #
-    fgold    = './gold_bioasq.json'
+    fgold    = './{}_gold_bioasq.json'.format(prefix)
     fgold    = os.path.abspath(fgold)
     with open(fgold, 'w') as f:
         f.write(json.dumps(data_gold, indent=4, sort_keys=True))
         f.close()
     #
-    femit    = './emit_bioasq.json'
+    femit    = './{}_emit_bioasq.json'.format(prefix)
     femit    = os.path.abspath(femit)
     with open(femit, 'w') as f:
         f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
@@ -650,7 +650,7 @@ def get_one_map(prefix, data, docs):
         all_bioasq_gold_data['questions'].append(gold_dato)
         # NOW HERE WE CALL THE BIOASQ EVALUATION
         ########
-    bioasq_snip_res = get_bioasq_res(all_bioasq_gold_data, all_bioasq_subm_data)
+    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
     pprint(bioasq_snip_res)
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
