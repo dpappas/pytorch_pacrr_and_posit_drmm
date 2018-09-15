@@ -579,7 +579,6 @@ def handle_good(docs, retr, quest, bm25s):
     gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
     return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
 
-
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
@@ -593,8 +592,21 @@ def eval_bioasq_snippets(prefix, data, docs):
         emitions                    = {'body': dato['query_text'], 'id': dato['query_id'], 'documents': []}
         bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         doc_res                     = {}
-        extracted_snippets = []
+        pseudo_retrieved            = [
+            {
+                u'bm25_score':      7.76,
+                u'doc_id':          item['document'].split('/')[-1].strip(),
+                u'is_relevant':     True,
+                u'norm_bm25_score': 3.85,
+                u'rank': 1
+            }
+            for item in bioasq6_data[dato['query_id']]['snippets']
+        ]
+        extracted_snippets          = []
         for retr in dato['retrieved_documents']:
+            pprint(retr)
+            pprint(bioasq6_data[dato['query_id']])
+            exit()
             good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = handle_good(
                 docs, retr, quest, bm25s
             )
@@ -1019,8 +1031,9 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
+        # train_one(epoch + 1)
+        # epoch_dev_map   = get_one_map('dev', dev_data, dev_docs)
+        bioasq_snip_res = eval_bioasq_snippets('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
             test_map        = get_one_map('test', test_data, test_docs)
