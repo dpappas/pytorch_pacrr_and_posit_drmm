@@ -583,33 +583,17 @@ def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
     all_bioasq_gold_data = {'questions':[]}
-    ret_data                = {}
-    ret_data['questions']   = []
     for dato in tqdm(data['queries']):
         quest                       = dato['query_text']
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-        emitions                    = {'body': dato['query_text'], 'id': dato['query_id'], 'documents': []}
         bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         doc_res                     = {}
-        pseudo_retrieved            = [
-            {
-                u'bm25_score':      7.76,
-                u'doc_id':          item['document'].split('/')[-1].strip(),
-                u'is_relevant':     True,
-                u'norm_bm25_score': 3.85,
-                u'rank': 1
-            }
-            for item in bioasq6_data[dato['query_id']]['snippets']
-        ]
+        pseudo_retrieved            = [{'bm25_score':7.76, 'doc_id':item['document'].split('/')[-1].strip(), 'is_relevant':True, 'norm_bm25_score':3.85} for item in bioasq6_data[dato['query_id']]['snippets']]
         extracted_snippets          = []
-        for retr in dato['retrieved_documents']:
-            pprint(retr)
-            pprint(bioasq6_data[dato['query_id']])
-            exit()
-            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = handle_good(
-                docs, retr, quest, bm25s
-            )
+        # for retr in dato['retrieved_documents']:
+        for retr in pseudo_retrieved:
+            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = handle_good(docs, retr, quest, bm25s)
             #
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss  = gs_emits_[:, 0].tolist()
@@ -632,14 +616,12 @@ def eval_bioasq_snippets(prefix, data, docs):
         extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[0], reverse=True)
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-        emitions['documents']       = doc_res[:100]
-        ret_data['questions'].append(emitions)
         snipis = []
         for sn in extracted_snippets:
             if(sn in doc_res[:10]):
                 snipis.append(
                     {
-                        # 'score'     : sn[0],
+                        'score'     : sn[0],
                         "document"  : sn[1],
                         "text"      : sn[2]
                     }
@@ -660,7 +642,7 @@ def eval_bioasq_snippets(prefix, data, docs):
         #
         all_bioasq_gold_data['questions'].append(gold_dato)
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
-    pprint(bioasq_snip_res)
+    return bioasq_snip_res
 
 def get_one_map(prefix, data, docs):
     model.eval()
@@ -1031,9 +1013,10 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch + 1)
-        # epoch_dev_map   = get_one_map('dev', dev_data, dev_docs)
+        train_one(epoch + 1)
+        epoch_dev_map   = get_one_map('dev', dev_data, dev_docs)
         bioasq_snip_res = eval_bioasq_snippets('dev', dev_data, dev_docs)
+        pprint(bioasq_snip_res)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
             test_map        = get_one_map('test', test_data, test_docs)
