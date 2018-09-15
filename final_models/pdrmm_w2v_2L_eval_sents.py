@@ -576,13 +576,12 @@ def eval_bioasq_snippets(prefix, data, docs):
         doc_res                     = {}
         extracted_snippets = []
         for retr in dato['retrieved_documents']:
-            #
-            good_doc_text   = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
-            good_doc_af     = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
-            #
-            good_sents      = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
-            good_sents_embeds, good_sents_escores = [], []
-            held_out_sents  = []
+            good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
+            good_doc_af         = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
+            good_sents          = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
+            good_sents_embeds   = []
+            good_sents_escores  = []
+            held_out_sents      = []
             for good_text in good_sents:
                 good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
                 good_escores = GetScores(quest, good_text, bm25s[retr['doc_id']])[:-1]
@@ -593,14 +592,7 @@ def eval_bioasq_snippets(prefix, data, docs):
             good_mesh               = get_the_mesh(docs[retr['doc_id']])
             gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
             #
-            doc_emit_, gs_emits_    = model.emit_one(
-                doc1_sents_embeds   = good_sents_embeds,
-                question_embeds     = quest_embeds,
-                q_idfs              = q_idfs,
-                sents_gaf           = good_sents_escores,
-                doc_gaf             = good_doc_af,
-                good_mesh_embeds    = good_mesh_embeds
-            )
+            doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss  = gs_emits_[:, 0].tolist()
             #
             indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] >= .6)]
@@ -639,7 +631,6 @@ def eval_bioasq_snippets(prefix, data, docs):
             'id'        : dato['query_id'],
             'snippets'  : snipis
         }
-        ########
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
         #
         gold_dato   = bioasq6_data[dato['query_id']]
@@ -651,7 +642,6 @@ def eval_bioasq_snippets(prefix, data, docs):
         all_bioasq_gold_data['questions'].append(gold_dato)
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
     pprint(bioasq_snip_res)
-
 
 def get_one_map(prefix, data, docs):
     model.eval()
