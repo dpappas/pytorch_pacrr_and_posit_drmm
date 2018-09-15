@@ -260,10 +260,10 @@ def get_bioasq_res(data_gold, data_emitted):
     lines       = out.decode("utf-8").split('\n')
     ret = {}
     for line in lines:
-        if('MAP snippets:' in line):
-            ret['MAP'] = float(line.split()[-1])
-        elif('GMAP snippets:' in line):
+        if('GMAP snippets:' in line):
             ret['GMAP'] = float(line.split()[-1])
+        elif('MAP snippets:' in line):
+            ret['MAP'] = float(line.split()[-1])
         elif('F1 snippets:' in line):
             ret['F1'] = float(line.split()[-1])
     pprint(ret)
@@ -608,13 +608,7 @@ def get_one_map(prefix, data, docs):
                 mmax    = max(emitss)
                 indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
             for ind in indices:
-                extracted_snippets.append(
-                    (
-                        emitss[ind],
-                        "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-                        held_out_sents[ind]
-                    )
-                )
+                extracted_snippets.append((emitss[ind], "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']), held_out_sents[ind]))
             #
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
