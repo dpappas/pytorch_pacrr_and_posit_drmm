@@ -258,10 +258,15 @@ def get_bioasq_res(data_gold, data_emitted):
     )
     (out, err)  = bioasq_eval_res.communicate()
     lines       = out.decode("utf-8").split('\n')
-    pprint(lines)
-    'MAP snippets:'
-    'GMAP snippets:'
-    'F1 snippets:'
+    ret = {}
+    for line in lines:
+        if('MAP snippets:' in line):
+            ret['MAP'] = float(line.split()[-1])
+        elif('GMAP snippets:' in line):
+            ret['GMAP'] = float(line.split()[-1])
+        elif('F1 snippets:' in line):
+            ret['F1'] = float(line.split()[-1])
+    pprint(ret)
     exit()
 
 def tokenize(x):
