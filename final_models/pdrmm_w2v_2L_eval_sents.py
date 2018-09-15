@@ -623,11 +623,20 @@ def get_one_map(prefix, data, docs):
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
+        snipis = []
+        for sn in extracted_snippets:
+            snipis.append(
+                {
+                    'score'     : sn[0],
+                    "document"  : sn[1],
+                    "text"      : sn[2]
+                }
+            )
         bioasq_subm_dato            = {
             'body'      : dato['query_text'],
             'documents' : doc_res[:10],
             'id'        : dato['query_id'],
-            'snippets'  : [{"document" : sn[-2], "text" : sn[-1]} for sn in extracted_snippets]
+            'snippets'  : snipis
         }
         ########
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
