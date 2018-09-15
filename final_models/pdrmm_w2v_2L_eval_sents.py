@@ -603,10 +603,10 @@ def get_one_map(prefix, data, docs):
             )
             emitss  = gs_emits_[:, 0].tolist()
             #
-            indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] >= .5)]
-            if(len(indices)==0):
-                mmax    = max(emitss)
-                indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
+            indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] >= .6)]
+            # if(len(indices)==0):
+            #     mmax    = max(emitss)
+            #     indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
             for ind in indices:
                 extracted_snippets.append(
                     (
