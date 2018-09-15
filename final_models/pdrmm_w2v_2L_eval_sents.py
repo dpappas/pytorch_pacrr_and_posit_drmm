@@ -1024,14 +1024,16 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch + 1)
-        # epoch_dev_map   = get_one_map('dev', dev_data, dev_docs)
-        bioasq_snip_res = eval_bioasq_snippets('dev', dev_data, dev_docs)
-        pprint(bioasq_snip_res)
+        train_one(epoch + 1)
+        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
+        dev_bioasq_snip_res = eval_bioasq_snippets('dev', dev_data, dev_docs)
+        pprint(dev_bioasq_snip_res)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
             test_map        = get_one_map('test', test_data, test_docs)
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
+        test_bioasq_snip_res = eval_bioasq_snippets('test', test_data, test_docs)
+        pprint(test_bioasq_snip_res)
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
