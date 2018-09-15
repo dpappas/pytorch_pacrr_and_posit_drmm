@@ -625,13 +625,14 @@ def get_one_map(prefix, data, docs):
         ret_data['questions'].append(emitions)
         snipis = []
         for sn in extracted_snippets:
-            snipis.append(
-                {
-                    'score'     : sn[0],
-                    "document"  : sn[1],
-                    "text"      : sn[2]
-                }
-            )
+            if(sn in doc_res[:10]):
+                snipis.append(
+                    {
+                        # 'score'     : sn[0],
+                        "document"  : sn[1],
+                        "text"      : sn[2]
+                    }
+                )
         bioasq_subm_dato            = {
             'body'      : dato['query_text'],
             'documents' : doc_res[:10],
