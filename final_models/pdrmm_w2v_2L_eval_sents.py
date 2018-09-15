@@ -998,8 +998,10 @@ evaluation.EvaluatorTask1b \
 
 '''
 
+java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar evaluation.EvaluatorTask1b -phaseA -e 5 ./gold_bioasq.json emit_bioasq.json 
+
 # stats on positions of relevant snippets
-add eval of snippets
+# add eval of snippets
 add document score as well (original output of pdrmm)
 treat mesh terms as sentences with pdrmm
 add an rrn but keep pooling as well
