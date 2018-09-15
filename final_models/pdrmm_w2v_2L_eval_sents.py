@@ -259,6 +259,9 @@ def get_bioasq_res(data_gold, data_emitted):
     (out, err)  = bioasq_eval_res.communicate()
     lines       = out.decode("utf-8").split('\n')
     pprint(lines)
+    'MAP snippets:'
+    'GMAP snippets:'
+    'F1 snippets:'
     exit()
 
 def tokenize(x):
@@ -594,8 +597,11 @@ def get_one_map(prefix, data, docs):
                 good_mesh_embeds    = good_mesh_embeds
             )
             emitss  = gs_emits_[:, 0].tolist()
+            #
             mmax    = max(emitss)
-            indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
+            indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] >= .5)]
+            if(len(indices)==0):
+                indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
             for ind in indices:
                 extracted_snippets.append(
                     (
@@ -604,6 +610,7 @@ def get_one_map(prefix, data, docs):
                         held_out_sents[ind]
                     )
                 )
+            #
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
         extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[0], reverse=True)[:10]
