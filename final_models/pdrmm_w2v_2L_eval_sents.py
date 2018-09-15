@@ -588,7 +588,7 @@ def eval_bioasq_snippets(prefix, data, docs):
         quest                       = dato['query_text']
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-        bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        # bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         doc_res                     = {}
         pseudo_retrieved            = [
             {
