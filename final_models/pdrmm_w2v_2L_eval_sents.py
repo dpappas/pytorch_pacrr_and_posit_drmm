@@ -562,8 +562,7 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def handle_good(docs, retr, quest):
-    # good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
-    good_doc_text       = bioasq6_data[retr['doc_id']]['title'] + bioasq6_data[retr['doc_id']]['abstractText']
+    good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
     good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
     good_sents          = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
     good_sents_embeds   = []
@@ -588,7 +587,6 @@ def eval_bioasq_snippets(prefix, data, docs):
         quest                       = dato['query_text']
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-        # bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         doc_res                     = {}
         pseudo_retrieved            = [
             {
@@ -598,7 +596,6 @@ def eval_bioasq_snippets(prefix, data, docs):
                 'norm_bm25_score'   : 3.85
             }
             for item in bioasq6_data[dato['query_id']]['snippets']
-            if(item['document'].split('/')[-1].strip() in bioasq6_data)
         ]
         extracted_snippets          = []
         # for retr in dato['retrieved_documents']:
@@ -609,6 +606,16 @@ def eval_bioasq_snippets(prefix, data, docs):
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss  = gs_emits_[:, 0].tolist()
             #
+            print dato['query_text']
+            for i in range(len(emitss)):
+                if(emitss[i]>.3):
+                    print(
+                        '{}\t{}\t{}'.format(
+                            emitss[i],
+                            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+                            held_out_sents[i]
+                        )
+                    )
             indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] >= .6)]
             # if(len(indices)==0):
             #     mmax    = max(emitss)
@@ -1024,8 +1031,8 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
+        # train_one(epoch + 1)
+        # epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         dev_bioasq_snip_res = eval_bioasq_snippets('dev', dev_data, dev_docs)
         pprint(dev_bioasq_snip_res)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
