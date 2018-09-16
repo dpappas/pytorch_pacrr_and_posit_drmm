@@ -562,11 +562,11 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def handle_good(docs, retr, quest):
-    json_dato           = json.load(open('./downloaded/{}.json'.format(retr['doc_id'])))
+    json_dato           = json.load(open('/home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/downloaded/{}.json'.format(retr['doc_id'])))
     good_doc_text       = json_dato['ArticleTitle'] + ' ' + json_dato['AbstractText']
     # good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
     good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
-    good_sents          = get_sents(docs[retr['doc_id']]['title']) + get_sents(docs[retr['doc_id']]['abstractText'])
+    good_sents          = get_sents(json_dato['ArticleTitle']) + get_sents(json_dato['AbstractText'])
     good_sents_embeds   = []
     good_sents_escores  = []
     held_out_sents      = []
