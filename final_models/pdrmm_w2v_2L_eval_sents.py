@@ -572,24 +572,28 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
 
 def handle_good(docs, retr, quest):
     print(retr['doc_id'])
-    json_dato           = json.load(open('/home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/downloaded/{}.json'.format(retr['doc_id'])))
-    good_doc_text       = json_dato['ArticleTitle'] + ' ' + json_dato['AbstractText']
-    # good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
-    good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
-    good_sents          = get_sents(json_dato['ArticleTitle']) + get_sents(json_dato['AbstractText'])
-    good_sents_embeds   = []
-    good_sents_escores  = []
-    held_out_sents      = []
-    for good_text in good_sents:
-        good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
-        good_escores = GetScores(quest, good_text, retr['norm_bm25_score'])[:-1]
-        if (len(good_embeds) > 0):
-            good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores)
-            held_out_sents.append(good_text)
-    # good_mesh               = get_the_mesh(docs[retr['doc_id']])
-    good_mesh               = get_the_mesh(json_dato)
-    gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
+    fpath = '/home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/downloaded/{}.json'.format(retr['doc_id'])
+    if(os.path.exists(fpath)):
+        json_dato           = json.load(open(fpath))
+        good_doc_text       = json_dato['ArticleTitle'] + ' ' + json_dato['AbstractText']
+        # good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
+        good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
+        good_sents          = get_sents(json_dato['ArticleTitle']) + get_sents(json_dato['AbstractText'])
+        good_sents_embeds   = []
+        good_sents_escores  = []
+        held_out_sents      = []
+        for good_text in good_sents:
+            good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
+            good_escores = GetScores(quest, good_text, retr['norm_bm25_score'])[:-1]
+            if (len(good_embeds) > 0):
+                good_sents_embeds.append(good_embeds)
+                good_sents_escores.append(good_escores)
+                held_out_sents.append(good_text)
+        # good_mesh               = get_the_mesh(docs[retr['doc_id']])
+        good_mesh               = get_the_mesh(json_dato)
+        gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
+    else:
+        good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = 5 * [None]
     return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
 
 def eval_bioasq_snippets(prefix, data, docs):
