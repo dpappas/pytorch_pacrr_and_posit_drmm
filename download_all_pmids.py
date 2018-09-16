@@ -421,11 +421,12 @@ if(not os.path.exists(odir)):
     os.makedirs(odir)
 
 for pmid in tqdm(all_ids):
-    dato = do_for_one_pmid(pmid)
-    # pprint(dato)
-    with open(os.path.join(odir,'{}.json'.format(dato['pmid'])), 'w') as f:
-        f.write(json.dumps(dato, indent=4, sort_keys=True))
-        f.close()
+    opath   = os.path.join(odir,'{}.json'.format(dato['pmid']))
+    if(not os.path.exists(opath)):
+        dato    = do_for_one_pmid(pmid)
+        with open(opath, 'w') as f:
+            f.write(json.dumps(dato, indent=4, sort_keys=True))
+            f.close()
 
 
 
