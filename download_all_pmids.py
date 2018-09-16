@@ -201,7 +201,7 @@ def get_GrantList(dato, Article):
             dato['Grants'].append(
                 {
                     'GrantID': get_children_with_tag(Grant, 'GrantID')[0].text.strip() if (len(get_children_with_tag(Grant, 'GrantID')) > 0) else '',
-                    'Agency':  get_children_with_tag(Grant, 'Agency')[0].text.strip(),
+                    'Agency':  get_children_with_tag(Grant, 'Agency')[0].text.strip()  if (len(get_children_with_tag(Grant, 'Agency')) > 0) else '',
                     'Country': get_children_with_tag(Grant, 'Country')[0].text.strip() if (len(get_children_with_tag(Grant, 'Country')) > 0) else '',
                 }
             )
