@@ -573,8 +573,9 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
 def handle_good(docs, retr, quest):
     print(retr['doc_id'])
     fpath = '/home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/downloaded/{}.json'.format(retr['doc_id'])
-    if(os.path.exists(fpath)):
-        json_dato           = json.load(open(fpath))
+    json_dato           = json.load(open(fpath))
+    # if(os.path.exists(fpath)):
+    if(len(json_dato)>0):
         good_doc_text       = json_dato['ArticleTitle'] + ' ' + json_dato['AbstractText']
         # good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
         good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
