@@ -19,6 +19,16 @@ def load_all_data(dataloc):
     #
     return test_data, dev_data, train_data, bioasq6_data
 
+def get_all_ids_from_data(test_data, dev_data, train_data, bioasq6_data):
+    all_ids = []
+    for quer in train_data['queries']+dev_data['queries']+test_data['queries']:
+        all_ids.extend([rd['doc_id'] for rd in quer['retrieved_documents']])
+    for val in bioasq6_data.values():
+        all_ids.extend([d.split('/')[-1] for d in val['documents']])
+        if('snippets' in val):
+            all_ids.extend([sn['document'].split('/')[-1] for sn in val['snippets']])
+    all_ids = list(set(all_ids))
+    return all_ids
 
 w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
@@ -26,17 +36,5 @@ dataloc         = '/home/dpappas/for_ryan/'
 
 (test_data, dev_data, train_data, bioasq6_data) = load_all_data(dataloc=dataloc)
 
-# pprint(bioasq6_data.items()[0])
-
-all_ids = []
-for quer in train_data['queries']+dev_data['queries']+test_data['queries']:
-    all_ids.extend([rd['doc_id'] for rd in quer['retrieved_documents']])
-
-for val in bioasq6_data.values():
-    all_ids.extend([d.split('/')[-1] for d in val['documents']])
-    if('snippets' in val):
-        all_ids.extend([sn['document'].split('/')[-1] for sn in val['snippets']])
-
-all_ids = list(set(all_ids))
-print(len(all_ids))
+all_ids = get_all_ids_from_data(test_data, dev_data, train_data, bioasq6_data)
 
