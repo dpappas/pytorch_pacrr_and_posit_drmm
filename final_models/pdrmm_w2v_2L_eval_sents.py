@@ -497,9 +497,9 @@ def get_the_mesh(the_doc):
             t = t.lower()
             good_mesh.append(t)
     elif('MeshHeadings' in the_doc):
-        for t in the_doc['MeshHeadings']:
-            t = t['text'].strip().lower()
-            good_mesh.append(t)
+        for mesh_head_set in the_doc['MeshHeadings']:
+            for item in mesh_head_set:
+                good_mesh.append(item['text'].strip().lower())
     if('Chemicals' in the_doc):
         for t in the_doc['Chemicals']:
             t = t['NameOfSubstance'].strip().lower()
