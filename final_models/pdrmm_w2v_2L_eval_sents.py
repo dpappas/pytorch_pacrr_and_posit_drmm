@@ -490,11 +490,16 @@ def get_sent_tags(good_sents, good_snips):
 
 def get_the_mesh(the_doc):
     good_mesh = []
-    for t in the_doc['meshHeadingsList']:
-        t = t.split(':', 1)
-        t = t[1].strip()
-        t = t.lower()
-        good_mesh.append(t)
+    if('meshHeadingsList' in the_doc):
+        for t in the_doc['meshHeadingsList']:
+            t = t.split(':', 1)
+            t = t[1].strip()
+            t = t.lower()
+            good_mesh.append(t)
+    elif('MeshHeadings' in the_doc):
+        for t in the_doc['MeshHeadings']:
+            t = t['text'].strip().lower()
+            good_mesh.append(t)
     good_mesh = sorted(good_mesh)
     good_mesh = ['mgmx'] + good_mesh
     good_mesh = ' # '.join(good_mesh)
