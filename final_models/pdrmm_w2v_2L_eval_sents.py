@@ -1058,8 +1058,8 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch + 1)
-        # epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
+        train_one(epoch + 1)
+        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         dev_bioasq_snip_res = eval_bioasq_snippets('dev', dev_data, dev_docs)
         pprint(dev_bioasq_snip_res)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
