@@ -576,6 +576,8 @@ def handle_good(docs, retr, quest):
     json_dato           = json.load(open(fpath))
     # if(os.path.exists(fpath)):
     if(len(json_dato)>0):
+        if('AbstractText' not in json_dato and 'ArticleTitle' not in json_dato):
+            return None
         good_doc_text       = json_dato['ArticleTitle'] + ' ' + json_dato['AbstractText']
         # good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
         good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
