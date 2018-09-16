@@ -13,6 +13,7 @@ import mechanize
 import cookielib
 from bs4 import BeautifulSoup
 import cPickle as pickle
+from tqdm import tqdm
 from nltk.tokenize import sent_tokenize, word_tokenize
 import urllib2  # the lib that handles the url stuff
 import json
@@ -415,6 +416,16 @@ dataloc         = '/home/dpappas/for_ryan/'
 
 all_ids = get_all_ids_from_data(test_data, dev_data, train_data, bioasq6_data)
 
-for pmid in all_ids:
+odir = './downloaded/'
+if(not os.path.exists(odir)):
+    os.makedirs(odir)
+
+for pmid in tqdm(all_ids):
+    dato = do_for_one_pmid(pmid)
+    # pprint(dato)
+    with open(os.path.join(odir,'{}.json'.format(dato['pmid'])), 'w') as f:
+        f.write(json.dumps(dato, indent=4, sort_keys=True))
+        f.close()
+
 
 
