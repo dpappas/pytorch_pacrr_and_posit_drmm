@@ -420,8 +420,9 @@ odir = './downloaded/'
 if(not os.path.exists(odir)):
     os.makedirs(odir)
 
+random.shuffle(all_ids)
 for pmid in tqdm(all_ids):
-    opath   = os.path.join(odir,'{}.json'.format(dato['pmid']))
+    opath   = os.path.join(odir,'{}.json'.format(pmid))
     if(not os.path.exists(opath)):
         dato    = do_for_one_pmid(pmid)
         with open(opath, 'w') as f:
