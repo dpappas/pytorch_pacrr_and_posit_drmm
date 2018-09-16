@@ -500,6 +500,10 @@ def get_the_mesh(the_doc):
         for t in the_doc['MeshHeadings']:
             t = t['text'].strip().lower()
             good_mesh.append(t)
+    if('Chemicals' in the_doc):
+        for t in the_doc['Chemicals']:
+            t = t['NameOfSubstance'].strip().lower()
+            good_mesh.append(t)
     good_mesh = sorted(good_mesh)
     good_mesh = ['mgmx'] + good_mesh
     good_mesh = ' # '.join(good_mesh)
