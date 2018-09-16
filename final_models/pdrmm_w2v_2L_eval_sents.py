@@ -601,21 +601,23 @@ def eval_bioasq_snippets(prefix, data, docs):
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         doc_res                     = {}
+        some_ids                    = [
+            item['document'].split('/')[-1].strip()
+            for item in bioasq6_data[dato['query_id']]['snippets']
+        ]
         pseudo_retrieved            = [
             {
                 'bm25_score'        : 7.76,
-                'doc_id'            : item['document'].split('/')[-1].strip(),
+                'doc_id'            : id,
                 'is_relevant'       : True,
                 'norm_bm25_score'   : 3.85
             }
-            for item in bioasq6_data[dato['query_id']]['snippets']
+            for id in set(some_ids)
         ]
         extracted_snippets          = []
         # for retr in dato['retrieved_documents']:
         for retr in pseudo_retrieved:
-            # pprint(retr)
             good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = handle_good(docs, retr, quest)
-            #
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss  = gs_emits_[:, 0].tolist()
             #
