@@ -592,9 +592,9 @@ def handle_good(docs, retr, quest):
         # good_mesh               = get_the_mesh(docs[retr['doc_id']])
         good_mesh               = get_the_mesh(json_dato)
         gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
+        return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
     else:
-        good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = 5 * [None]
-    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
+        return None
 
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
@@ -621,7 +621,10 @@ def eval_bioasq_snippets(prefix, data, docs):
         extracted_snippets          = []
         # for retr in dato['retrieved_documents']:
         for retr in pseudo_retrieved:
-            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = handle_good(docs, retr, quest)
+            good_res = handle_good(docs, retr, quest)
+            if(good_res is None):
+                continue
+            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = good_res
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss  = gs_emits_[:, 0].tolist()
             #
