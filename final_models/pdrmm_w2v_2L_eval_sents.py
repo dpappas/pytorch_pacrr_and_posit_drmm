@@ -663,6 +663,12 @@ def eval_bioasq_snippets(prefix, data, docs):
             for ind in indices:
                 extracted_snippets.append(
                     (
+                        any(
+                            [
+                                (held_out_sents[i] in gold_snip) or (gold_snip in held_out_sents[i])
+                                for gold_snip in gold_snips
+                            ]
+                        ),
                         emitss[ind],
                         "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
                         held_out_sents[ind]
