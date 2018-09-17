@@ -711,8 +711,8 @@ def prepare_gold_dato(gold_dato):
         fpath                   = '/home/dpappas/for_ryan/downloaded/{}.json'.format(did)
         dato                    = json.load(open(fpath))
         snip[u'text']           = fix_text_for_matching(snip[u'text'])
-        dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
-        dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
+        # dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
+        # dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
         for snip_sent in get_sents(snip[u'text']):
             tt = {
                 "beginSection"  : snip["beginSection"],
