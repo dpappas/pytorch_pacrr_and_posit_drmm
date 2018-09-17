@@ -689,11 +689,10 @@ def eval_bioasq_snippets(prefix, data, docs):
         for sn in extracted_snippets:
             snipis.append(
                 {
-
                     "beginSection"          : sn[3][0],
                     "endSection"            : sn[3][0],
-                    "offsetInBeginSection"  : '',
-                    "offsetInEndSection"    : '',
+                    "offsetInBeginSection"  : json_dato['ArticleTitle'].index(sn[3][1]) if(sn[3][0] == 'title') else json_dato['AbstractText'].index(sn[3][1]),
+                    "offsetInEndSection"    : json_dato['ArticleTitle'].index(sn[3][1])+len(sn[3][1]) if(sn[3][0] == 'title') else json_dato['AbstractText'].index(sn[3][1])+len(sn[3][1]),
                     "text"                  : sn[3][1],
                     "document"              : sn[2]
                 }
