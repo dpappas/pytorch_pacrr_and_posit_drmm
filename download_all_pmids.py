@@ -424,7 +424,7 @@ dataloc         = '/home/dpappas/for_ryan/'
 
 all_ids = get_all_ids_from_data(test_data, dev_data, train_data, bioasq6_data)
 
-odir = './downloaded/'
+odir = '/home/dpappas/for_ryan/downloaded/'
 if(not os.path.exists(odir)):
     os.makedirs(odir)
 
