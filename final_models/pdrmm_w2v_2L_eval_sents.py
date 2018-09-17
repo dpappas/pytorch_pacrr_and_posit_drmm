@@ -616,10 +616,6 @@ def handle_good(retr, quest):
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-                print(good_text)
-                print(20*'-')
-                print(json_dato['AbstractText'])
-                print(20*'-')
                 held_out_sents.append(
                     (
                         'abstract',
@@ -709,6 +705,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace(' &gt; ',       '>')
     the_text = the_text.replace('Alzheimer\'s', 'Alzheimers')
     the_text = the_text.strip()
+    the_text = the_text.replace('Background Niraparib is an oral poly', 'Niraparib is an oral poly')
     return the_text
 
 def prepare_gold_dato(gold_dato):
