@@ -380,13 +380,13 @@ def train_data_step2(train_instances):
         good_snips                              = get_snips(quest_id, gid)
         good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
         #
-        good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
+        good_sents_embeds, good_sents_escores, good_sent_tags, good_sent_len = [], [], [], []
         for good_text in good_sents:
             tt = ' '.join(bioclean(good_text))
             good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
         #
         if(sum(good_sent_tags)>0):
-            yield good_sent_tags
+            yield good_sent_tags, good_sent_len
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
@@ -410,9 +410,10 @@ train_instances = train_data_step1()
 epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
 
-td  = list(train_data_step2(train_instances))
-res = {}
-for good_sent_tags in tqdm(td):
+td      = list(train_data_step2(train_instances))
+res     = {}
+res2    = {}
+for good_sent_tags, good_sent_len in tqdm(td):
     for i in range(len(good_sent_tags)):
         if(good_sent_tags[i] == 1):
             try:

@@ -682,6 +682,7 @@ def eval_bioasq_snippets(prefix, data, docs):
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
         extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[0], reverse=True)
+        pprint(extracted_snippets)
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         snipis = []
