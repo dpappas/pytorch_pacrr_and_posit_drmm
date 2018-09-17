@@ -736,6 +736,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('.).',          '. ).')
     the_text = the_text.replace('Alzheimer\'s', 'Alzheimers')
     the_text = the_text.replace('Parkinson\'s', 'Parkinsons')
+    the_text = the_text.replace('t(9; 19) (q13; p13) and t(3;5) (?; ?)', 't(9; 19) (q13; p13) and t(3;5) (? ; ?)')
     the_text = the_text.replace('(the wearing off" phenomenon)', '(the \'wearing off" phenomenon)')
     the_text = re.sub('\s+', ' ', the_text)
     the_text = the_text.strip()
