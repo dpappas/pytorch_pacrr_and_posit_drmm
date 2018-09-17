@@ -740,6 +740,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('.).',          '. ).')
     the_text = the_text.replace('Alzheimer\'s', 'Alzheimers')
     the_text = the_text.replace('Parkinson\'s', 'Parkinsons')
+    the_text = the_text.replace('Hodgkin\'s',   'Hodgkins')
     the_text = the_text.replace('(?; ?)', '(? ; ?)')
     the_text = the_text.replace('(? ; ?)', '(? ; ? )')
     the_text = the_text.replace('(the wearing off" phenomenon)', '(the \'wearing off" phenomenon)')
