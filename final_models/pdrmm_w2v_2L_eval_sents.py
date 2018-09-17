@@ -688,9 +688,9 @@ def eval_bioasq_snippets(prefix, data, docs):
         for sn in extracted_snippets:
             snipis.append(
                 {
-                    'score'     : sn[0],
-                    "document"  : sn[1],
-                    "text"      : sn[2]
+                    # 'score'     : sn[1],
+                    "document"  : sn[2],
+                    "text"      : sn[3]
                 }
             )
         bioasq_subm_dato            = {
