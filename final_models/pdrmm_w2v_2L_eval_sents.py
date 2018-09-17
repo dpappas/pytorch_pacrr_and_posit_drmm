@@ -686,13 +686,13 @@ def prep_bioasq_subm_dato(extracted_snippets, dato, doc_res):
     return bioasq_subm_dato
 
 def fix_text_for_matching(the_text):
-    the_text = the_text.replace('á',            'α')
-    the_text = the_text.replace('&quot;',       '"')
     the_text = the_text.replace('BACKGROUND:',  ' ')
     the_text = the_text.replace('METHODS:',     ' ')
     the_text = the_text.replace('OBJECTIVE:',   ' ')
     the_text = the_text.replace('RESULTS:',     ' ')
     the_text = the_text.replace('CONCLUSIONS:', ' ')
+    the_text = the_text.replace('á',            'α')
+    the_text = the_text.replace('&quot;',       '"')
     the_text = the_text.strip()
     return the_text
 
@@ -720,6 +720,8 @@ def prepare_gold_dato(gold_dato):
                 "document"      : snip["document"]
             }
             if(snip["beginSection"] == 'title'):
+                print(snip[u'text'])
+                print(20*'-')
                 print(snip_sent)
                 print(20*'-')
                 print(dato['ArticleTitle'])
