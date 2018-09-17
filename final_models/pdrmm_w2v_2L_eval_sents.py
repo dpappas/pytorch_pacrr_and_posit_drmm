@@ -660,7 +660,6 @@ def eval_bioasq_snippets(prefix, data, docs):
         #
         pseudo_retrieved            = get_pseudo_retrieved(dato)
         extracted_snippets          = []
-        # for retr in dato['retrieved_documents']:
         for retr in pseudo_retrieved:
             good_res = handle_good(docs, retr, quest)
             if(good_res is None):
