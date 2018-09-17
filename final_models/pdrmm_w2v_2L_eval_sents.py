@@ -582,7 +582,6 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def handle_good(retr, quest):
-    print(retr['doc_id'])
     fpath                       = '/home/dpappas/for_ryan/downloaded/{}.json'.format(retr['doc_id'])
     json_dato                   = json.load(open(fpath))
     if(len(json_dato)>0):
@@ -617,18 +616,21 @@ def handle_good(retr, quest):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
                 good_text = fix_text_for_matching(good_text)
-                print(good_text)
-                print(20*'-')
-                print(json_dato['AbstractText'])
-                print(20*'=')
-                held_out_sents.append(
-                    (
-                        'abstract',
-                        good_text,
-                        json_dato['AbstractText'].index(good_text),
-                        json_dato['AbstractText'].index(good_text)+len(good_text)
+                try:
+                    held_out_sents.append(
+                        (
+                            'abstract',
+                            good_text,
+                            json_dato['AbstractText'].index(good_text),
+                            json_dato['AbstractText'].index(good_text)+len(good_text)
+                        )
                     )
-                )
+                except:
+                    print(retr['doc_id'])
+                    print(good_text)
+                    print(20 * '-')
+                    print(json_dato['AbstractText'])
+                    print(20 * '=')
         good_mesh               = get_the_mesh(json_dato)
         gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
         return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
@@ -780,29 +782,33 @@ def prepare_gold_dato(gold_dato):
                 "document"      : snip["document"]
             }
             if(snip["beginSection"] == 'title'):
-                print(snip["document"])
-                print(20*'-')
-                print(snip[u'text'])
-                print(20*'-')
-                print(snip_sent)
-                print(20*'-')
-                print(dato['ArticleTitle'])
-                print(20*'=')
-                tt['offsetInBeginSection']  = dato['ArticleTitle'].index(snip_sent)
-                tt['offsetInEndSection']    = dato['ArticleTitle'].index(snip_sent)+len(snip_sent)
-                ret['snippets'].append(tt)
+                try:
+                    tt['offsetInBeginSection']  = dato['ArticleTitle'].index(snip_sent)
+                    tt['offsetInEndSection']    = dato['ArticleTitle'].index(snip_sent)+len(snip_sent)
+                    ret['snippets'].append(tt)
+                except:
+                    print(snip["document"])
+                    print(20 * '-')
+                    print(snip[u'text'])
+                    print(20 * '-')
+                    print(snip_sent)
+                    print(20 * '-')
+                    print(dato['ArticleTitle'])
+                    print(20 * '=')
             else:
-                print(snip[u'text'])
-                print(20*'-')
-                print(snip["document"])
-                print(20*'-')
-                print(snip_sent)
-                print(20*'-')
-                print(dato['AbstractText'])
-                print(20*'=')
-                tt['offsetInBeginSection']  = dato['AbstractText'].index(snip_sent)
-                tt['offsetInEndSection']    = dato['AbstractText'].index(snip_sent)+len(snip_sent)
-                ret['snippets'].append(tt)
+                try:
+                    tt['offsetInBeginSection']  = dato['AbstractText'].index(snip_sent)
+                    tt['offsetInEndSection']    = dato['AbstractText'].index(snip_sent)+len(snip_sent)
+                    ret['snippets'].append(tt)
+                except:
+                    print(snip[u'text'])
+                    print(20 * '-')
+                    print(snip["document"])
+                    print(20 * '-')
+                    print(snip_sent)
+                    print(20 * '-')
+                    print(dato['AbstractText'])
+                    print(20 * '=')
     return ret
 
 def eval_bioasq_snippets(prefix, data, docs):
