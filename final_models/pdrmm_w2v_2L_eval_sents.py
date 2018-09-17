@@ -753,6 +753,8 @@ def prepare_gold_dato(gold_dato):
         dato                    = json.load(open(fpath))
         if(len(dato)==0):
             return None
+        if('ArticleTitle' not in dato and 'AbstractText' not in dato):
+            return None
         snip[u'text']           = fix_text_for_matching(snip[u'text'])
         dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
         dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
