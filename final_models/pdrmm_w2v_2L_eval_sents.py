@@ -641,7 +641,6 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
@@ -672,14 +671,13 @@ def eval_bioasq_snippets(prefix, data, docs):
                 if(item[1] >= .6 or item[1] == mmax)
             ]
             for ind in indices:
-                extracted_snippets.append(
-                    (
+                to_append = (
                         snip_is_relevant(held_out_sents[ind], gold_snips),
                         emitss[ind],
                         "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
                         held_out_sents[ind]
                     )
-                )
+                extracted_snippets.append(to_append)
             #
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
