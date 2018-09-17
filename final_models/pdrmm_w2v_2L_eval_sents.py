@@ -697,14 +697,16 @@ def prepare_gold_dato(gold_dato):
             tt = {
                 "beginSection"          : snip["beginSection"],
                 "endSection"            : snip["beginSection"],
-                "offsetInBeginSection"  : sn[3][2],
-                "offsetInEndSection"    : sn[3][3],
                 "text"                  : snip_sent,
                 "document"              : snip["document"]
             }
             if(snip["beginSection"] == 'title'):
+                tt['offsetInBeginSection']  = dato['ArticleTitle'].index(snip_sent)
+                tt['offsetInEndSection']    = dato['ArticleTitle'].index(snip_sent)+len(snip_sent)
                 ret['snippets'].append(tt)
             else:
+                tt['offsetInBeginSection']  = dato['AbstractText'].index(snip_sent)
+                tt['offsetInEndSection']    = dato['AbstractText'].index(snip_sent)+len(snip_sent)
                 ret['snippets'].append(tt)
     return ret
 
@@ -754,12 +756,6 @@ def eval_bioasq_snippets(prefix, data, docs):
         #
         gold_dato   = bioasq6_data[dato['query_id']]
         gold_dato   = prepare_gold_dato(gold_dato)
-        exit()
-        if('exact_answer' in gold_dato):
-            del(gold_dato['exact_answer'])
-        if('ideal_answer' in gold_dato):
-            del(gold_dato['ideal_answer'])
-        #
         all_bioasq_gold_data['questions'].append(gold_dato)
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
     return bioasq_snip_res
