@@ -716,7 +716,7 @@ def prepare_gold_dato(gold_dato):
                 print(snip_sent)
                 print(20*'-')
                 print(dato['AbstractText'])
-                print(20*'-')
+                print(20*'=')
                 tt['offsetInBeginSection']  = dato['AbstractText'].index(snip_sent)
                 tt['offsetInEndSection']    = dato['AbstractText'].index(snip_sent)+len(snip_sent)
                 ret['snippets'].append(tt)
