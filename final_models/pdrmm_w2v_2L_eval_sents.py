@@ -681,14 +681,6 @@ def prep_bioasq_subm_dato(extracted_snippets, dato, doc_res):
     return bioasq_subm_dato
 
 def prepare_gold_dato(gold_dato):
-    # {
-    #     "beginSection": sn[3][0],
-    #     "endSection": sn[3][0],
-    #     "offsetInBeginSection": sn[3][2],
-    #     "offsetInEndSection": sn[3][3],
-    #     "text": sn[3][1],
-    #     "document": sn[2]
-    # }
     ret = {
         'body'      : gold_dato['body'],
         'documents' : gold_dato["documents"],
@@ -697,32 +689,24 @@ def prepare_gold_dato(gold_dato):
         'snippets'  : []
 
     }
-    ret = {}
-    if('exact_answer' in gold_dato):
-        del(gold_dato['exact_answer'])
-    if('ideal_answer' in gold_dato):
-        del(gold_dato['ideal_answer'])
     for snip in gold_dato['snippets']:
         did     = snip['document'].split('/')[-1]
         fpath   = '/home/dpappas/for_ryan/downloaded/{}.json'.format(did)
         dato    = json.load(open(fpath))
         for snip_sent in get_sents(snip[u'text']):
+            tt = {
+                "beginSection"          : snip["beginSection"],
+                "endSection"            : snip["beginSection"],
+                "offsetInBeginSection"  : sn[3][2],
+                "offsetInEndSection"    : sn[3][3],
+                "text"                  : snip_sent,
+                "document"              : snip["document"]
+            }
             if(snip["beginSection"] == 'title'):
-
+                ret['snippets'].append(tt)
             else:
-
-
-            # "beginSection": "title",
-            # "document": "http://www.ncbi.nlm.nih.gov/pubmed/26899868",
-            # "endSection": "title",
-            # "offsetInBeginSection": 0,
-            # "offsetInEndSection": 116,
-            # "text": ''
-            if():
-
-            else:
-
-    return gold_dato
+                ret['snippets'].append(tt)
+    return ret
 
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
