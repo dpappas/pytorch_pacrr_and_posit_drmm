@@ -642,7 +642,13 @@ def eval_bioasq_snippets(prefix, data, docs):
             for i in range(len(emitss)):
                 # if(emitss[i]>.3):
                 print(
-                    '{}\t{}\t{}'.format(
+                    '{}\t{}\t{}\t{}'.format(
+                        any(
+                            [
+                                (held_out_sents[i] in gold_snip) or (gold_snip in held_out_sents[i])
+                                for gold_snip in gold_snips
+                            ]
+                        ),
                         emitss[i],
                         "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
                         held_out_sents[i]
