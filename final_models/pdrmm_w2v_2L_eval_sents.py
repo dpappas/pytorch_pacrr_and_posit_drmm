@@ -703,6 +703,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('&amp;',        '&')
     the_text = the_text.replace(' &lt; ',       '<')
     the_text = the_text.replace(' &gt; ',       '>')
+    the_text = the_text.replace(' >> ',         '>')
     the_text = the_text.replace('Alzheimer\'s', 'Alzheimers')
     the_text = the_text.strip()
     the_text = the_text.replace('Background Niraparib is an oral poly', 'Niraparib is an oral poly')
