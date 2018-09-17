@@ -680,6 +680,50 @@ def prep_bioasq_subm_dato(extracted_snippets, dato, doc_res):
     }
     return bioasq_subm_dato
 
+def prepare_gold_dato(gold_dato):
+    # {
+    #     "beginSection": sn[3][0],
+    #     "endSection": sn[3][0],
+    #     "offsetInBeginSection": sn[3][2],
+    #     "offsetInEndSection": sn[3][3],
+    #     "text": sn[3][1],
+    #     "document": sn[2]
+    # }
+    ret = {
+        'body'      : gold_dato['body'],
+        'documents' : gold_dato["documents"],
+        'id'        : gold_dato["id"],
+        'type'      : gold_dato["type"],
+        'snippets'  : []
+
+    }
+    ret = {}
+    if('exact_answer' in gold_dato):
+        del(gold_dato['exact_answer'])
+    if('ideal_answer' in gold_dato):
+        del(gold_dato['ideal_answer'])
+    for snip in gold_dato['snippets']:
+        did     = snip['document'].split('/')[-1]
+        fpath   = '/home/dpappas/for_ryan/downloaded/{}.json'.format(did)
+        dato    = json.load(open(fpath))
+        for snip_sent in get_sents(snip[u'text']):
+            if(snip["beginSection"] == 'title'):
+
+            else:
+
+
+            # "beginSection": "title",
+            # "document": "http://www.ncbi.nlm.nih.gov/pubmed/26899868",
+            # "endSection": "title",
+            # "offsetInBeginSection": 0,
+            # "offsetInEndSection": 116,
+            # "text": ''
+            if():
+
+            else:
+
+    return gold_dato
+
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
@@ -725,6 +769,8 @@ def eval_bioasq_snippets(prefix, data, docs):
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
         #
         gold_dato   = bioasq6_data[dato['query_id']]
+        gold_dato   = prepare_gold_dato(gold_dato)
+        exit()
         if('exact_answer' in gold_dato):
             del(gold_dato['exact_answer'])
         if('ideal_answer' in gold_dato):
@@ -1105,8 +1151,8 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
+        # train_one(epoch + 1)
+        # epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         dev_bioasq_snip_res = eval_bioasq_snippets('dev', dev_data, dev_docs)
         pprint(dev_bioasq_snip_res)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
