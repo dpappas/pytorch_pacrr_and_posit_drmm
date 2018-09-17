@@ -692,6 +692,7 @@ def prep_bioasq_subm_dato(extracted_snippets, dato, doc_res):
     return bioasq_subm_dato
 
 def fix_text_for_matching(the_text):
+    the_text = the_text.replace('or intramuscular interferon beta-1a (30 ìg) once a week.', 'or intramuscular interferon beta-1a (30 μg) once a week.')
     the_text = the_text.replace('BACKGROUND & AIMS:',   '\n')
     the_text = the_text.replace('RECENT FINDINGS:',     '\n')
     the_text = the_text.replace('BACKGROUND:',  '\n')
@@ -716,7 +717,6 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('.).',          '. ).')
     the_text = the_text.replace('Alzheimer\'s', 'Alzheimers')
     the_text = the_text.strip()
-    the_text = the_text.replace('or intramuscular interferon beta-1a (30 ìg) once a week.', 'or intramuscular interferon beta-1a (30 μg) once a week.')
     return the_text
 
 def prepare_gold_dato(gold_dato):
