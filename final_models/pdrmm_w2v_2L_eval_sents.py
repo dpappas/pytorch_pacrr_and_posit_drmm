@@ -608,10 +608,7 @@ def eval_bioasq_snippets(prefix, data, docs):
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         doc_res                     = {}
-        some_ids                    = [
-            item['document'].split('/')[-1].strip()
-            for item in bioasq6_data[dato['query_id']]['snippets']
-        ]
+        some_ids                    = [item['document'].split('/')[-1].strip() for item in bioasq6_data[dato['query_id']]['snippets']]
         pseudo_retrieved            = [
             {
                 'bm25_score'        : 7.76,
@@ -633,14 +630,14 @@ def eval_bioasq_snippets(prefix, data, docs):
             #
             print dato['query_text']
             for i in range(len(emitss)):
-                if(emitss[i]>.3):
-                    print(
-                        '{}\t{}\t{}'.format(
-                            emitss[i],
-                            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-                            held_out_sents[i]
-                        )
+                # if(emitss[i]>.3):
+                print(
+                    '{}\t{}\t{}'.format(
+                        emitss[i],
+                        "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+                        held_out_sents[i]
                     )
+                )
             indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] >= .6)]
             # if(len(indices)==0):
             #     mmax    = max(emitss)
