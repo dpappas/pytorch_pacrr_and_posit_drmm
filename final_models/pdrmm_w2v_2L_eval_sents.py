@@ -481,6 +481,13 @@ def get_snips(quest_id, gid):
                 good_snips.extend(get_sents(sn['text']))
     return good_snips
 
+def get_gold_snips(quest_id):
+    gold_snips                  = []
+    if ('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            gold_snips.extend(get_sents(sn['text']))
+    return gold_snips
+
 def get_sent_tags(good_sents, good_snips):
     sent_tags = []
     for sent in good_sents:
@@ -616,11 +623,7 @@ def eval_bioasq_snippets(prefix, data, docs):
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         doc_res                     = {}
         #
-        quest_id                    = dato['query_id']
-        gold_snips                  = []
-        if ('snippets' in bioasq6_data[quest_id]):
-            for sn in bioasq6_data[quest_id]['snippets']:
-                gold_snips.extend(get_sents(sn['text']))
+        gold_snips                  = get_gold_snips(dato['query_id'])
         #
         some_ids                    = [
             item['document'].split('/')[-1].strip()
