@@ -693,6 +693,7 @@ def prep_bioasq_subm_dato(extracted_snippets, dato, doc_res):
 
 def fix_text_for_matching(the_text):
     the_text = the_text.replace('BACKGROUND & AIMS:',   '\n')
+    the_text = the_text.replace('RECENT FINDINGS:',     '\n')
     the_text = the_text.replace('BACKGROUND:',  '\n')
     the_text = the_text.replace('METHODS:',     '\n')
     the_text = the_text.replace('OBJECTIVE:',   '\n')
