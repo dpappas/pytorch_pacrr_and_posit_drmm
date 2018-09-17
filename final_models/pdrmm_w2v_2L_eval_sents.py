@@ -759,7 +759,9 @@ def prepare_gold_dato(gold_dato):
         if('ArticleTitle' not in dato and 'AbstractText' not in dato):
             return None
         snip[u'text']           = fix_text_for_matching(snip[u'text'])
+        dato['ArticleTitle']    = '\n'.join(get_sents(dato['ArticleTitle']))
         dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
+        dato['AbstractText']    = '\n'.join(get_sents(dato['AbstractText']))
         dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
         for snip_sent in get_sents(snip[u'text']):
             tt = {
