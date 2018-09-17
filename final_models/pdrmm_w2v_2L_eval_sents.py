@@ -685,6 +685,9 @@ def prep_bioasq_subm_dato(extracted_snippets, dato, doc_res):
     }
     return bioasq_subm_dato
 
+def fix_text_for_matching(the_text):
+    return the_text.replace('á','α').replace('&quot;','"').replace('BACKGROUND:','')
+
 def prepare_gold_dato(gold_dato):
     ret = {
         'body'      : gold_dato['body'],
@@ -705,9 +708,9 @@ def prepare_gold_dato(gold_dato):
                 "text"                  : snip_sent,
                 "document"              : snip["document"]
             }
-            snip_sent               = snip_sent.replace('á','α').replace('&quot;','"')
-            dato['ArticleTitle']    = dato['ArticleTitle'].replace('á','α').replace('&quot;','"')
-            dato['AbstractText']    = dato['AbstractText'].replace('á','α').replace('&quot;','"')
+            snip_sent               = fix_text_for_matching(snip_sent)
+            dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
+            dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
             if(snip["beginSection"] == 'title'):
                 print(snip_sent)
                 print(20*'-')
