@@ -638,10 +638,13 @@ def eval_bioasq_snippets(prefix, data, docs):
                         held_out_sents[i]
                     )
                 )
-            indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] >= .6)]
-            # if(len(indices)==0):
-            #     mmax    = max(emitss)
-            #     indices = [item[0] for item in zip(range(len(emitss)), emitss) if(item[1] == mmax)]
+
+            mmax    = max(emitss)
+            indices = [
+                item[0]
+                for item in zip(range(len(emitss)), emitss)
+                if(item[1] >= .6 or item[1] == mmax)
+            ]
             for ind in indices:
                 extracted_snippets.append(
                     (
