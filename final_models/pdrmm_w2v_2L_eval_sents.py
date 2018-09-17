@@ -608,7 +608,17 @@ def eval_bioasq_snippets(prefix, data, docs):
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         doc_res                     = {}
-        some_ids                    = [item['document'].split('/')[-1].strip() for item in bioasq6_data[dato['query_id']]['snippets']]
+        #
+        quest_id                    = dato['query_id']
+        gold_snips                  = []
+        if ('snippets' in bioasq6_data[quest_id]):
+            for sn in bioasq6_data[quest_id]['snippets']:
+                gold_snips.extend(get_sents(sn['text']))
+        #
+        some_ids                    = [
+            item['document'].split('/')[-1].strip()
+            for item in bioasq6_data[dato['query_id']]['snippets']
+        ]
         pseudo_retrieved            = [
             {
                 'bm25_score'        : 7.76,
@@ -1057,8 +1067,8 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
+        # train_one(epoch + 1)
+        # epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         dev_bioasq_snip_res = eval_bioasq_snippets('dev', dev_data, dev_docs)
         pprint(dev_bioasq_snip_res)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
