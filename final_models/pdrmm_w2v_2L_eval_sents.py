@@ -686,7 +686,7 @@ def prep_bioasq_subm_dato(extracted_snippets, dato, doc_res):
     return bioasq_subm_dato
 
 def fix_text_for_matching(the_text):
-    return the_text.replace('á','α').replace('&quot;','"').replace('BACKGROUND:','')
+    return the_text.replace('á','α').replace('&quot;','"').replace('BACKGROUND:','').strip()
 
 def prepare_gold_dato(gold_dato):
     ret = {
