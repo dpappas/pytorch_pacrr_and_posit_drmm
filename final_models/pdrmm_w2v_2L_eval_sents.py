@@ -659,6 +659,27 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
+def prep_bioasq_subm_dato(extracted_snippets, dato, doc_res):
+    snipis = []
+    for sn in extracted_snippets:
+        snipis.append(
+            {
+                "beginSection"          : sn[3][0],
+                "endSection"            : sn[3][0],
+                "offsetInBeginSection"  : sn[3][2],
+                "offsetInEndSection"    : sn[3][3],
+                "text"                  : sn[3][1],
+                "document"              : sn[2]
+            }
+        )
+    bioasq_subm_dato            = {
+        'body'      : dato['query_text'],
+        'documents' : doc_res,
+        'id'        : dato['query_id'],
+        'snippets'  : snipis
+    }
+    return bioasq_subm_dato
+
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
@@ -700,24 +721,7 @@ def eval_bioasq_snippets(prefix, data, docs):
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         #
-        snipis                      = []
-        for sn in extracted_snippets:
-            snipis.append(
-                {
-                    "beginSection"          : sn[3][0],
-                    "endSection"            : sn[3][0],
-                    "offsetInBeginSection"  : sn[3][2],
-                    "offsetInEndSection"    : sn[3][3],
-                    "text"                  : sn[3][1],
-                    "document"              : sn[2]
-                }
-            )
-        bioasq_subm_dato            = {
-            'body'      : dato['query_text'],
-            'documents' : doc_res,
-            'id'        : dato['query_id'],
-            'snippets'  : snipis
-        }
+        bioasq_subm_dato            = prep_bioasq_subm_dato(extracted_snippets, dato, doc_res)
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
         #
         gold_dato   = bioasq6_data[dato['query_id']]
