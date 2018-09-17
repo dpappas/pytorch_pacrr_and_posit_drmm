@@ -707,7 +707,7 @@ def eval_bioasq_snippets(prefix, data, docs):
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         #
-        bioasq_subm_dato = prepare_bioasq_subm_dato(extracted_snippets, json_dato, dato, doc_res)
+        bioasq_subm_dato            = prepare_bioasq_subm_dato(extracted_snippets, json_dato, dato, doc_res)
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
         #
         gold_dato   = bioasq6_data[dato['query_id']]
