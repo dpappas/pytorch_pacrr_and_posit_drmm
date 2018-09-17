@@ -697,6 +697,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('AVAILABILITY AND IMPLEMENTATION:', '\n')
     the_text = the_text.replace('BACKGROUND AND OBJECTIVES:',       '\n')
     the_text = the_text.replace('DESIGN AND METHODS:',              '\n')
+    the_text = the_text.replace('METHODS AND ANALYSIS:',            '\n')
     the_text = the_text.replace('BACKGROUND & AIMS:',               '\n')
     the_text = the_text.replace('STUDY OBJECTIVES:',                '\n')
     the_text = the_text.replace('RECENT FINDINGS:',                 '\n')
