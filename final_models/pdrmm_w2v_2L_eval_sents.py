@@ -693,6 +693,7 @@ def prep_bioasq_subm_dato(extracted_snippets, dato, doc_res):
 
 def fix_text_for_matching(the_text):
     the_text = the_text.replace('or intramuscular interferon beta-1a (30 ìg) once a week.', 'or intramuscular interferon beta-1a (30 μg) once a week.')
+    the_text = the_text.replace('(bromocriptine, lisuride, pergolide etc. ),', '(bromocriptine, lisuride, pergolide etc.),')
     the_text = the_text.replace('AVAILABILITY AND IMPLEMENTATION:', '\n')
     the_text = the_text.replace('BACKGROUND AND OBJECTIVES:',       '\n')
     the_text = the_text.replace('DESIGN AND METHODS:',              '\n')
@@ -707,6 +708,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('OBJECTIVE:',   '\n')
     the_text = the_text.replace('OBJECTIVES:',  '\n')
     the_text = the_text.replace('RESULTS:',     '\n')
+    the_text = the_text.replace('SUMMARY:',     '\n')
     the_text = the_text.replace('CONCLUSION:',  '\n')
     the_text = the_text.replace('CONCLUSIONS:', '\n')
     the_text = the_text.replace('UNLABELLED:',  '\n')
