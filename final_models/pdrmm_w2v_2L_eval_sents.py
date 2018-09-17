@@ -702,6 +702,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('CONCLUSIONS:', '\n')
     the_text = the_text.replace('UNLABELLED:',  '\n')
     the_text = the_text.replace('PATIENTS:',    '\n')
+    the_text = the_text.replace('DISCUSSION:',  '\n')
     the_text = the_text.replace('SETTING:',     '\n')
     the_text = the_text.replace('á',            'α')
     the_text = the_text.replace('&quot;',       '"')
