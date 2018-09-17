@@ -457,7 +457,6 @@ def train_data_yielder():
                 yield(good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
 
 def train_data_step1():
-    # bioasq6_data
     ret = []
     for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
