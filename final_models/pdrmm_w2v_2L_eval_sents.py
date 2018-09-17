@@ -583,10 +583,10 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
 
 def handle_good(retr, quest):
     print(retr['doc_id'])
-    fpath       = '/home/dpappas/for_ryan/downloaded/{}.json'.format(retr['doc_id'])
-    json_dato   = json.load(open(fpath))
-    json_dato['ArticleTitle'] = fix_text_for_matching(json_dato['ArticleTitle'])
-    json_dato['AbstractText'] = fix_text_for_matching(json_dato['AbstractText'])
+    fpath                       = '/home/dpappas/for_ryan/downloaded/{}.json'.format(retr['doc_id'])
+    json_dato                   = json.load(open(fpath))
+    json_dato['ArticleTitle']   = fix_text_for_matching(json_dato['ArticleTitle'])
+    json_dato['AbstractText']   = fix_text_for_matching(json_dato['AbstractText'])
     if(len(json_dato)>0):
         if('AbstractText' not in json_dato and 'ArticleTitle' not in json_dato):
             return None
@@ -616,6 +616,10 @@ def handle_good(retr, quest):
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
+                print(good_text)
+                print(20*'-')
+                print(json_dato['AbstractText'])
+                print(20*'-')
                 held_out_sents.append(
                     (
                         'abstract',
