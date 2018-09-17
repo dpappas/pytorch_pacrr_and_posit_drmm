@@ -813,7 +813,7 @@ def eval_bioasq_snippets(prefix, data, docs):
         #
         gold_dato   = bioasq6_data[dato['query_id']]
         gold_dato   = prepare_gold_dato(gold_dato)
-        if(gold_dato is not None)
+        if(gold_dato is not None):
             all_bioasq_gold_data['questions'].append(gold_dato)
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
     return bioasq_snip_res
