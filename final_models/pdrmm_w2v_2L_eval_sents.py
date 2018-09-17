@@ -626,7 +626,7 @@ def eval_bioasq_snippets(prefix, data, docs):
                 continue
             good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = good_res
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
-            emitss  = gs_emits_[:, 0].tolist()
+            emitss                  = gs_emits_[:, 0].tolist()
             #
             print dato['query_text']
             for i in range(len(emitss)):
@@ -658,7 +658,7 @@ def eval_bioasq_snippets(prefix, data, docs):
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         snipis = []
         for sn in extracted_snippets:
-            if(sn in doc_res[:10]):
+            if(sn in doc_res):
                 snipis.append(
                     {
                         'score'     : sn[0],
@@ -668,7 +668,7 @@ def eval_bioasq_snippets(prefix, data, docs):
                 )
         bioasq_subm_dato            = {
             'body'      : dato['query_text'],
-            'documents' : doc_res[:10],
+            'documents' : doc_res,
             'id'        : dato['query_id'],
             'snippets'  : snipis
         }
