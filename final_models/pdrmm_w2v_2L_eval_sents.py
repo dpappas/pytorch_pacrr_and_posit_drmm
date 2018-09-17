@@ -572,8 +572,8 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
 
 def handle_good(docs, retr, quest):
     print(retr['doc_id'])
-    fpath = '/home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/downloaded/{}.json'.format(retr['doc_id'])
-    json_dato           = json.load(open(fpath))
+    fpath       = '/home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/downloaded/{}.json'.format(retr['doc_id'])
+    json_dato   = json.load(open(fpath))
     # if(os.path.exists(fpath)):
     if(len(json_dato)>0):
         if('AbstractText' not in json_dato and 'ArticleTitle' not in json_dato):
