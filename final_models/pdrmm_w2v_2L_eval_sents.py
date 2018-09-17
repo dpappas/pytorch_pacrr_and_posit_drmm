@@ -675,7 +675,7 @@ def eval_bioasq_snippets(prefix, data, docs):
             ]
             for ind in indices:
                 to_append = (
-                        snip_is_relevant(held_out_sents[ind], gold_snips),
+                        snip_is_relevant(held_out_sents[ind][1], gold_snips),
                         emitss[ind],
                         "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
                         held_out_sents[ind]
@@ -692,12 +692,12 @@ def eval_bioasq_snippets(prefix, data, docs):
             snipis.append(
                 {
 
-                    "beginSection": "title",
-                    "endSection": "title",
-                    "offsetInBeginSection": 0,
-                    "offsetInEndSection": 116,
-                    "text"      : sn[3],
-                    "document"  : sn[2]
+                    "beginSection"          : sn[3][0],
+                    "endSection"            : sn[3][0],
+                    "offsetInBeginSection"  : ,
+                    "offsetInEndSection"    : ,
+                    "text"                  : sn[3][1],
+                    "document"              : sn[2]
                 }
             )
         bioasq_subm_dato            = {
