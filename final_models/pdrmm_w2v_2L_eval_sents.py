@@ -613,6 +613,18 @@ def snip_is_relevant(one_sent, gold_snips):
         ]
     )
 
+def print_snip_res(dato, emitss, held_out_sents, gold_snips, retr):
+        print dato['query_text']
+        for i in range(len(emitss)):
+            print(
+                '{}\t{}\t{}\t{}'.format(
+                    snip_is_relevant(held_out_sents[i], gold_snips),
+                    emitss[i],
+                    "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+                    held_out_sents[i]
+                )
+            )
+
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
@@ -648,17 +660,7 @@ def eval_bioasq_snippets(prefix, data, docs):
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss                  = gs_emits_[:, 0].tolist()
             #
-            print dato['query_text']
-            for i in range(len(emitss)):
-                # if(emitss[i]>.3):
-                print(
-                    '{}\t{}\t{}\t{}'.format(
-                        snip_is_relevant(held_out_sents[i], gold_snips),
-                        emitss[i],
-                        "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-                        held_out_sents[i]
-                    )
-                )
+            print_snip_res(dato, emitss, held_out_sents, gold_snips, retr)
             mmax    = max(emitss)
             indices = [
                 item[0]
