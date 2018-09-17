@@ -705,9 +705,9 @@ def prepare_gold_dato(gold_dato):
                 "text"                  : snip_sent,
                 "document"              : snip["document"]
             }
-            snip_sent               = snip_sent.replace('á','α')
-            dato['ArticleTitle']    = dato['ArticleTitle'].replace('á','α')
-            dato['AbstractText']    = dato['AbstractText'].replace('á','α')
+            snip_sent               = snip_sent.replace('á','α').replace('&quot;','"')
+            dato['ArticleTitle']    = dato['ArticleTitle'].replace('á','α').replace('&quot;','"')
+            dato['AbstractText']    = dato['AbstractText'].replace('á','α').replace('&quot;','"')
             if(snip["beginSection"] == 'title'):
                 print(snip_sent)
                 print(20*'-')
