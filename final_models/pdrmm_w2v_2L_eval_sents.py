@@ -699,7 +699,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('&quot;',       '"')
     the_text = the_text.replace('&amp;',        '&')
     the_text = the_text.replace(' &lt; ',       '<')
-    the_text = the_text.replace(' &gt; ',       '<')
+    the_text = the_text.replace(' &gt; ',       '>')
     the_text = the_text.replace('Alzheimer\'s', 'Alzheimers')
     the_text = the_text.strip()
     return the_text
