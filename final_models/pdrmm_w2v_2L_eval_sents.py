@@ -585,16 +585,16 @@ def handle_good(retr, quest):
     print(retr['doc_id'])
     fpath                       = '/home/dpappas/for_ryan/downloaded/{}.json'.format(retr['doc_id'])
     json_dato                   = json.load(open(fpath))
-    json_dato['ArticleTitle']   = fix_text_for_matching(json_dato['ArticleTitle'])
-    json_dato['AbstractText']   = fix_text_for_matching(json_dato['AbstractText'])
     if(len(json_dato)>0):
         if('AbstractText' not in json_dato and 'ArticleTitle' not in json_dato):
             return None
-        good_doc_text       = json_dato['ArticleTitle'] + ' ' + json_dato['AbstractText']
-        good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
-        good_sents_embeds   = []
-        good_sents_escores  = []
-        held_out_sents      = []
+        json_dato['ArticleTitle']   = fix_text_for_matching(json_dato['ArticleTitle'])
+        json_dato['AbstractText']   = fix_text_for_matching(json_dato['AbstractText'])
+        good_doc_text               = json_dato['ArticleTitle'] + ' ' + json_dato['AbstractText']
+        good_doc_af                 = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
+        good_sents_embeds           = []
+        good_sents_escores          = []
+        held_out_sents              = []
         for good_text in get_sents(json_dato['ArticleTitle']):
             good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
             good_escores                = GetScores(quest, good_text, retr['norm_bm25_score'])[:-1]
