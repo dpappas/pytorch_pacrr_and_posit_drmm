@@ -729,11 +729,11 @@ def prepare_gold_dato(gold_dato):
         did                     = snip['document'].split('/')[-1]
         fpath                   = '/home/dpappas/for_ryan/downloaded/{}.json'.format(did)
         dato                    = json.load(open(fpath))
+        if(len(dato)==0):
+            return None
         snip[u'text']           = fix_text_for_matching(snip[u'text'])
-        if('ArticleTitle' in dato):
-            dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
-        if('AbstractText' in dato):
-            dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
+        dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
+        dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
         for snip_sent in get_sents(snip[u'text']):
             tt = {
                 "beginSection"  : snip["beginSection"],
@@ -742,6 +742,8 @@ def prepare_gold_dato(gold_dato):
                 "document"      : snip["document"]
             }
             if(snip["beginSection"] == 'title'):
+                print(snip["document"])
+                print(20*'-')
                 print(snip[u'text'])
                 print(20*'-')
                 print(snip_sent)
@@ -753,6 +755,8 @@ def prepare_gold_dato(gold_dato):
                 ret['snippets'].append(tt)
             else:
                 print(snip[u'text'])
+                print(20*'-')
+                print(snip["document"])
                 print(20*'-')
                 print(snip_sent)
                 print(20*'-')
@@ -809,7 +813,8 @@ def eval_bioasq_snippets(prefix, data, docs):
         #
         gold_dato   = bioasq6_data[dato['query_id']]
         gold_dato   = prepare_gold_dato(gold_dato)
-        all_bioasq_gold_data['questions'].append(gold_dato)
+        if(gold_dato is not None)
+            all_bioasq_gold_data['questions'].append(gold_dato)
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
     return bioasq_snip_res
 
