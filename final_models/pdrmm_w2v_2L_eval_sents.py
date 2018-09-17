@@ -689,7 +689,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('BACKGROUND:',  '\n')
     the_text = the_text.replace('METHODS:',     '\n')
     the_text = the_text.replace('OBJECTIVE:',   '\n')
-    the_text = the_text.replace('OBJECTIVES:',   '\n')
+    the_text = the_text.replace('OBJECTIVES:',  '\n')
     the_text = the_text.replace('RESULTS:',     '\n')
     the_text = the_text.replace('CONCLUSIONS:', '\n')
     the_text = the_text.replace('á',            'α')
