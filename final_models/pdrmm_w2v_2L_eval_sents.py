@@ -714,10 +714,10 @@ def prepare_gold_dato(gold_dato):
         dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
         for snip_sent in get_sents(snip[u'text']):
             tt = {
-                "beginSection"          : snip["beginSection"],
-                "endSection"            : snip["beginSection"],
-                "text"                  : snip_sent,
-                "document"              : snip["document"]
+                "beginSection"  : snip["beginSection"],
+                "endSection"    : snip["beginSection"],
+                "text"          : snip_sent,
+                "document"      : snip["document"]
             }
             if(snip["beginSection"] == 'title'):
                 print(snip_sent)
