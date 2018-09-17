@@ -638,7 +638,6 @@ def eval_bioasq_snippets(prefix, data, docs):
                         held_out_sents[i]
                     )
                 )
-
             mmax    = max(emitss)
             indices = [
                 item[0]
