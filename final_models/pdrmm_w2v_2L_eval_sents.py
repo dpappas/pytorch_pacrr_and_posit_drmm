@@ -597,7 +597,9 @@ def handle_good(retr, quest):
                 held_out_sents.append(
                     (
                         'title',
-                        good_text
+                        good_text,
+                        json_dato['ArticleTitle'].index(good_text),
+                        json_dato['ArticleTitle'].index(good_text)+len(good_text)
                     )
                 )
         #
@@ -610,7 +612,9 @@ def handle_good(retr, quest):
                 held_out_sents.append(
                     (
                         'abstract',
-                        good_text
+                        good_text,
+                        json_dato['AbstractText'].index(good_text),
+                        json_dato['AbstractText'].index(good_text)+len(good_text)
                     )
                 )
         good_mesh               = get_the_mesh(json_dato)
@@ -702,8 +706,8 @@ def eval_bioasq_snippets(prefix, data, docs):
                 {
                     "beginSection"          : sn[3][0],
                     "endSection"            : sn[3][0],
-                    "offsetInBeginSection"  : json_dato['ArticleTitle'].index(sn[3][1]) if(sn[3][0] == 'title') else json_dato['AbstractText'].index(sn[3][1]),
-                    "offsetInEndSection"    : json_dato['ArticleTitle'].index(sn[3][1])+len(sn[3][1]) if(sn[3][0] == 'title') else json_dato['AbstractText'].index(sn[3][1])+len(sn[3][1]),
+                    "offsetInBeginSection"  : sn[3][2],
+                    "offsetInEndSection"    : sn[3][3],
                     "text"                  : sn[3][1],
                     "document"              : sn[2]
                 }
