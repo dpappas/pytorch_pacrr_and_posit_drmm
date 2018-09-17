@@ -706,9 +706,12 @@ def prepare_gold_dato(gold_dato):
 
     }
     for snip in gold_dato['snippets']:
-        did     = snip['document'].split('/')[-1]
-        fpath   = '/home/dpappas/for_ryan/downloaded/{}.json'.format(did)
-        dato    = json.load(open(fpath))
+        did                     = snip['document'].split('/')[-1]
+        fpath                   = '/home/dpappas/for_ryan/downloaded/{}.json'.format(did)
+        dato                    = json.load(open(fpath))
+        snip[u'text']           = fix_text_for_matching(snip[u'text'])
+        dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
+        dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
         for snip_sent in get_sents(snip[u'text']):
             tt = {
                 "beginSection"          : snip["beginSection"],
@@ -716,9 +719,6 @@ def prepare_gold_dato(gold_dato):
                 "text"                  : snip_sent,
                 "document"              : snip["document"]
             }
-            snip_sent               = fix_text_for_matching(snip_sent)
-            dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
-            dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
             if(snip["beginSection"] == 'title'):
                 print(snip_sent)
                 print(20*'-')
