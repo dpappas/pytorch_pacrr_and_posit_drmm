@@ -706,11 +706,17 @@ def prepare_gold_dato(gold_dato):
                 "document"              : snip["document"]
             }
             snip_sent               = snip_sent.replace('á','α')
+            dato['ArticleTitle']    = dato['ArticleTitle'].replace('á','α')
+            dato['AbstractText']    = dato['AbstractText'].replace('á','α')
             if(snip["beginSection"] == 'title'):
                 tt['offsetInBeginSection']  = dato['ArticleTitle'].index(snip_sent)
                 tt['offsetInEndSection']    = dato['ArticleTitle'].index(snip_sent)+len(snip_sent)
                 ret['snippets'].append(tt)
             else:
+                print(snip_sent)
+                print(20*'-')
+                print(dato['AbstractText'])
+                print(20*'-')
                 tt['offsetInBeginSection']  = dato['AbstractText'].index(snip_sent)
                 tt['offsetInEndSection']    = dato['AbstractText'].index(snip_sent)+len(snip_sent)
                 ret['snippets'].append(tt)
