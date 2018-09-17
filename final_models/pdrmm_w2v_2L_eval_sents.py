@@ -585,6 +585,8 @@ def handle_good(retr, quest):
     print(retr['doc_id'])
     fpath       = '/home/dpappas/for_ryan/downloaded/{}.json'.format(retr['doc_id'])
     json_dato   = json.load(open(fpath))
+    json_dato['ArticleTitle'] = fix_text_for_matching(json_dato['ArticleTitle'])
+    json_dato['AbstractText'] = fix_text_for_matching(json_dato['AbstractText'])
     if(len(json_dato)>0):
         if('AbstractText' not in json_dato and 'ArticleTitle' not in json_dato):
             return None
@@ -692,8 +694,10 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('OBJECTIVES:',  '\n')
     the_text = the_text.replace('RESULTS:',     '\n')
     the_text = the_text.replace('CONCLUSIONS:', '\n')
+    the_text = the_text.replace('BACKGROUND & AIMS:', '\n')
     the_text = the_text.replace('á',            'α')
     the_text = the_text.replace('&quot;',       '"')
+    the_text = the_text.replace('&amp;',        '&')
     the_text = the_text.strip()
     return the_text
 
@@ -711,8 +715,8 @@ def prepare_gold_dato(gold_dato):
         fpath                   = '/home/dpappas/for_ryan/downloaded/{}.json'.format(did)
         dato                    = json.load(open(fpath))
         snip[u'text']           = fix_text_for_matching(snip[u'text'])
-        # dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
-        # dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
+        dato['ArticleTitle']    = fix_text_for_matching(dato['ArticleTitle'])
+        dato['AbstractText']    = fix_text_for_matching(dato['AbstractText'])
         for snip_sent in get_sents(snip[u'text']):
             tt = {
                 "beginSection"  : snip["beginSection"],
