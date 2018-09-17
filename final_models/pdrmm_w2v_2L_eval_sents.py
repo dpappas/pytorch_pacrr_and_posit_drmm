@@ -705,6 +705,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('RECENT FINDINGS:',                 '\n')
     the_text = the_text.replace('AVAILABILITY:',                    '\n')
     the_text = the_text.replace('INTRODUCTION:',                    '\n')
+    the_text = the_text.replace('INTERPRETATION:',                  '\n')
     the_text = the_text.replace('PURPOSE:',     '\n')
     the_text = the_text.replace('BACKGROUND:',  '\n')
     the_text = the_text.replace('METHODS:',     '\n')
