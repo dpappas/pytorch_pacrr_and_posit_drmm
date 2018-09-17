@@ -587,18 +587,24 @@ def handle_good(docs, retr, quest):
         good_doc_text       = json_dato['ArticleTitle'] + ' ' + json_dato['AbstractText']
         # good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
         good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
-        good_sents          = get_sents(json_dato['ArticleTitle']) + get_sents(json_dato['AbstractText'])
         good_sents_embeds   = []
         good_sents_escores  = []
         held_out_sents      = []
-        for good_text in good_sents:
-            good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
-            good_escores = GetScores(quest, good_text, retr['norm_bm25_score'])[:-1]
+        for good_text in get_sents(json_dato['ArticleTitle']):
+            good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
+            good_escores                = GetScores(quest, good_text, retr['norm_bm25_score'])[:-1]
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-                held_out_sents.append(good_text)
-        # good_mesh               = get_the_mesh(docs[retr['doc_id']])
+                held_out_sents.append(('title', good_text))
+        #
+        for good_text in get_sents(json_dato['AbstractText']):
+            good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
+            good_escores                = GetScores(quest, good_text, retr['norm_bm25_score'])[:-1]
+            if (len(good_embeds) > 0):
+                good_sents_embeds.append(good_embeds)
+                good_sents_escores.append(good_escores)
+                held_out_sents.append(('abstract', good_text))
         good_mesh               = get_the_mesh(json_dato)
         gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
         return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
@@ -662,8 +668,6 @@ def eval_bioasq_snippets(prefix, data, docs):
             good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = good_res
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss                  = gs_emits_[:, 0].tolist()
-            #
-            print_snip_res(dato, emitss, held_out_sents, gold_snips, retr)
             mmax    = max(emitss)
             indices = [
                 item[0]
@@ -688,9 +692,13 @@ def eval_bioasq_snippets(prefix, data, docs):
         for sn in extracted_snippets:
             snipis.append(
                 {
-                    # 'score'     : sn[1],
-                    "document"  : sn[2],
-                    "text"      : sn[3]
+
+                    "beginSection": "title",
+                    "endSection": "title",
+                    "offsetInBeginSection": 0,
+                    "offsetInEndSection": 116,
+                    "text"      : sn[3],
+                    "document"  : sn[2]
                 }
             )
         bioasq_subm_dato            = {
