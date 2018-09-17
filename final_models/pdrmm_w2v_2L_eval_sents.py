@@ -695,6 +695,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('RESULTS:',             '\n')
     the_text = the_text.replace('CONCLUSIONS:',         '\n')
     the_text = the_text.replace('BACKGROUND & AIMS:',   '\n')
+    the_text = the_text.replace('UNLABELLED:',          '\n')
     the_text = the_text.replace('á',                    'α')
     the_text = the_text.replace('&quot;',               '"')
     the_text = the_text.replace('&amp;',                '&')
