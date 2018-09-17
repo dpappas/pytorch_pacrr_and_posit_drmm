@@ -625,6 +625,23 @@ def print_snip_res(dato, emitss, held_out_sents, gold_snips, retr):
                 )
             )
 
+def get_pseudo_retrieved(dato):
+    some_ids                    = [
+        item['document'].split('/')[-1].strip()
+        for item in bioasq6_data[dato['query_id']]['snippets']
+    ]
+    pseudo_retrieved            = [
+        {
+            'bm25_score'        : 7.76,
+            'doc_id'            : id,
+            'is_relevant'       : True,
+            'norm_bm25_score'   : 3.85
+        }
+        for id in set(some_ids)
+    ]
+    return pseudo_retrieved
+
+
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
@@ -634,22 +651,9 @@ def eval_bioasq_snippets(prefix, data, docs):
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         doc_res                     = {}
-        #
         gold_snips                  = get_gold_snips(dato['query_id'])
         #
-        some_ids                    = [
-            item['document'].split('/')[-1].strip()
-            for item in bioasq6_data[dato['query_id']]['snippets']
-        ]
-        pseudo_retrieved            = [
-            {
-                'bm25_score'        : 7.76,
-                'doc_id'            : id,
-                'is_relevant'       : True,
-                'norm_bm25_score'   : 3.85
-            }
-            for id in set(some_ids)
-        ]
+        pseudo_retrieved            = get_pseudo_retrieved(dato)
         extracted_snippets          = []
         # for retr in dato['retrieved_documents']:
         for retr in pseudo_retrieved:
