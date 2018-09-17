@@ -715,6 +715,7 @@ def fix_text_for_matching(the_text):
     the_text = the_text.replace('Alzheimer\'s', 'Alzheimers')
     the_text = the_text.strip()
     the_text = the_text.replace('Background Niraparib is an oral poly', 'Niraparib is an oral poly')
+    the_text = the_text.replace('or intramuscular interferon beta-1a (30 ìg) once a week.', 'or intramuscular interferon beta-1a (30 mg) once a week.')
     return the_text
 
 def prepare_gold_dato(gold_dato):
