@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 
 import sys
@@ -704,8 +705,7 @@ def prepare_gold_dato(gold_dato):
                 "text"                  : snip_sent,
                 "document"              : snip["document"]
             }
-            pprint(dato)
-            print(snip_sent)
+            snip_sent               = snip_sent.replace('á','α')
             if(snip["beginSection"] == 'title'):
                 tt['offsetInBeginSection']  = dato['ArticleTitle'].index(snip_sent)
                 tt['offsetInEndSection']    = dato['ArticleTitle'].index(snip_sent)+len(snip_sent)
