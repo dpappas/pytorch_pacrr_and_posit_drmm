@@ -576,16 +576,14 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
-def handle_good(docs, retr, quest):
+def handle_good(retr, quest):
     print(retr['doc_id'])
     fpath       = '/home/dpappas/for_ryan/downloaded/{}.json'.format(retr['doc_id'])
     json_dato   = json.load(open(fpath))
-    # if(os.path.exists(fpath)):
     if(len(json_dato)>0):
         if('AbstractText' not in json_dato and 'ArticleTitle' not in json_dato):
             return None
         good_doc_text       = json_dato['ArticleTitle'] + ' ' + json_dato['AbstractText']
-        # good_doc_text       = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
         good_doc_af         = GetScores(quest, good_doc_text, retr['norm_bm25_score'])
         good_sents_embeds   = []
         good_sents_escores  = []
@@ -607,7 +605,7 @@ def handle_good(docs, retr, quest):
                 held_out_sents.append(('abstract', good_text))
         good_mesh               = get_the_mesh(json_dato)
         gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-        return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
+        return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, json_dato
     else:
         return None
 
@@ -661,10 +659,10 @@ def eval_bioasq_snippets(prefix, data, docs):
         pseudo_retrieved            = get_pseudo_retrieved(dato)
         extracted_snippets          = []
         for retr in pseudo_retrieved:
-            good_res = handle_good(docs, retr, quest)
+            good_res = handle_good(retr, quest)
             if(good_res is None):
                 continue
-            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = good_res
+            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, json_dato = good_res
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss                  = gs_emits_[:, 0].tolist()
             mmax    = max(emitss)
@@ -684,7 +682,7 @@ def eval_bioasq_snippets(prefix, data, docs):
             #
             emition                 = doc_emit_.cpu().item()
             doc_res[retr['doc_id']] = float(emition)
-        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[0], reverse=True)
+        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         snipis                      = []
@@ -694,8 +692,8 @@ def eval_bioasq_snippets(prefix, data, docs):
 
                     "beginSection"          : sn[3][0],
                     "endSection"            : sn[3][0],
-                    "offsetInBeginSection"  : ,
-                    "offsetInEndSection"    : ,
+                    "offsetInBeginSection"  : '',
+                    "offsetInEndSection"    : '',
                     "text"                  : sn[3][1],
                     "document"              : sn[2]
                 }
