@@ -599,6 +599,14 @@ def handle_good(docs, retr, quest):
     else:
         return None
 
+def snip_is_relevant(one_sent, gold_snips):
+    return any(
+        [
+            (one_sent in gold_snip) or (gold_snip in one_sent)
+            for gold_snip in gold_snips
+        ]
+    )
+
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
@@ -643,12 +651,7 @@ def eval_bioasq_snippets(prefix, data, docs):
                 # if(emitss[i]>.3):
                 print(
                     '{}\t{}\t{}\t{}'.format(
-                        any(
-                            [
-                                (held_out_sents[i] in gold_snip) or (gold_snip in held_out_sents[i])
-                                for gold_snip in gold_snips
-                            ]
-                        ),
+                        snip_is_relevant(held_out_sents[i], gold_snips),
                         emitss[i],
                         "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
                         held_out_sents[i]
@@ -663,12 +666,7 @@ def eval_bioasq_snippets(prefix, data, docs):
             for ind in indices:
                 extracted_snippets.append(
                     (
-                        any(
-                            [
-                                (held_out_sents[i] in gold_snip) or (gold_snip in held_out_sents[i])
-                                for gold_snip in gold_snips
-                            ]
-                        ),
+                        snip_is_relevant(held_out_sents[i], gold_snips),
                         emitss[ind],
                         "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
                         held_out_sents[ind]
