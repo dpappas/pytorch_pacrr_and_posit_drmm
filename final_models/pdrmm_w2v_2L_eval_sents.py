@@ -594,7 +594,12 @@ def handle_good(retr, quest):
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-                held_out_sents.append(('title', good_text))
+                held_out_sents.append(
+                    (
+                        'title',
+                        good_text
+                    )
+                )
         #
         for good_text in get_sents(json_dato['AbstractText']):
             good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
@@ -602,10 +607,15 @@ def handle_good(retr, quest):
             if (len(good_embeds) > 0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-                held_out_sents.append(('abstract', good_text))
+                held_out_sents.append(
+                    (
+                        'abstract',
+                        good_text
+                    )
+                )
         good_mesh               = get_the_mesh(json_dato)
         gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-        return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, json_dato
+        return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
     else:
         return None
 
@@ -645,27 +655,6 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-def prepare_bioasq_subm_dato(extracted_snippets, json_dato, dato, doc_res):
-    snipis                      = []
-    for sn in extracted_snippets:
-        snipis.append(
-            {
-                "beginSection"          : sn[3][0],
-                "endSection"            : sn[3][0],
-                "offsetInBeginSection"  : json_dato['ArticleTitle'].index(sn[3][1]) if(sn[3][0] == 'title') else json_dato['AbstractText'].index(sn[3][1]),
-                "offsetInEndSection"    : json_dato['ArticleTitle'].index(sn[3][1])+len(sn[3][1]) if(sn[3][0] == 'title') else json_dato['AbstractText'].index(sn[3][1])+len(sn[3][1]),
-                "text"                  : sn[3][1],
-                "document"              : sn[2]
-            }
-        )
-    bioasq_subm_dato            = {
-        'body'      : dato['query_text'],
-        'documents' : doc_res,
-        'id'        : dato['query_id'],
-        'snippets'  : snipis
-    }
-    return bioasq_subm_dato
-
 def eval_bioasq_snippets(prefix, data, docs):
     model.eval()
     all_bioasq_subm_data = {'questions':[]}
@@ -683,7 +672,7 @@ def eval_bioasq_snippets(prefix, data, docs):
             good_res = handle_good(retr, quest)
             if(good_res is None):
                 continue
-            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, json_dato = good_res
+            good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents = good_res
             doc_emit_, gs_emits_    = model.emit_one(doc1_sents_embeds = good_sents_embeds, question_embeds = quest_embeds, q_idfs = q_idfs, sents_gaf = good_sents_escores, doc_gaf = good_doc_af, good_mesh_embeds = good_mesh_embeds)
             emitss                  = gs_emits_[:, 0].tolist()
             mmax    = max(emitss)
@@ -707,7 +696,24 @@ def eval_bioasq_snippets(prefix, data, docs):
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         #
-        bioasq_subm_dato            = prepare_bioasq_subm_dato(extracted_snippets, json_dato, dato, doc_res)
+        snipis                      = []
+        for sn in extracted_snippets:
+            snipis.append(
+                {
+                    "beginSection"          : sn[3][0],
+                    "endSection"            : sn[3][0],
+                    "offsetInBeginSection"  : json_dato['ArticleTitle'].index(sn[3][1]) if(sn[3][0] == 'title') else json_dato['AbstractText'].index(sn[3][1]),
+                    "offsetInEndSection"    : json_dato['ArticleTitle'].index(sn[3][1])+len(sn[3][1]) if(sn[3][0] == 'title') else json_dato['AbstractText'].index(sn[3][1])+len(sn[3][1]),
+                    "text"                  : sn[3][1],
+                    "document"              : sn[2]
+                }
+            )
+        bioasq_subm_dato            = {
+            'body'      : dato['query_text'],
+            'documents' : doc_res,
+            'id'        : dato['query_id'],
+            'snippets'  : snipis
+        }
         all_bioasq_subm_data['questions'].append(bioasq_subm_dato)
         #
         gold_dato   = bioasq6_data[dato['query_id']]
