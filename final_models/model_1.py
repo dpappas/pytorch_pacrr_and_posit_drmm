@@ -518,7 +518,7 @@ def get_gold_snips(quest_id):
     if ('snippets' in bioasq6_data[quest_id]):
         for sn in bioasq6_data[quest_id]['snippets']:
             gold_snips.extend(sent_tokenize(sn['text']))
-    return gold_snips
+    return list(set(gold_snips))
 
 def get_one_map(prefix, data, docs):
     model.eval()
@@ -564,7 +564,7 @@ def get_one_map(prefix, data, docs):
             ]
             for ind in indices:
                 to_append = (
-                        snip_is_relevant(held_out_sents[ind][1], gold_snips),
+                        snip_is_relevant(held_out_sents[ind], gold_snips),
                         emitss[ind],
                         "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
                         held_out_sents[ind]
@@ -573,11 +573,13 @@ def get_one_map(prefix, data, docs):
             #
             doc_res[retr['doc_id']] = float(emition)
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
+        pprint(extracted_snippets)
+        exit()
+        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
         #
-
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
