@@ -558,6 +558,40 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             ret['F1'] = float(line.split()[-1])
     return ret
 
+def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, extracted_snippets, gold_snips):
+    #
+    (
+        good_sents_embeds, good_sents_escores, good_doc_af,
+        good_mesh_embeds, held_out_sents
+    ) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
+    doc_emit_, gs_emits_    = model.emit_one(
+        doc1_sents_embeds   = good_sents_embeds,
+        question_embeds     = quest_embeds,
+        q_idfs              = q_idfs,
+        sents_gaf           = good_sents_escores,
+        doc_gaf             = good_doc_af,
+        good_mesh_embeds    = good_mesh_embeds
+    )
+    emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_[:, 0].tolist()
+    mmax                    = max(emitss)
+    indices                 = [
+        item[0] for item in zip(range(len(emitss)), emitss)
+        # if (item[1] >= .6 or item[1] == mmax)
+        if (item[1] == mmax)
+    ]
+    for ind in indices:
+        to_append = (
+                snip_is_relevant(held_out_sents[ind], gold_snips),
+                emitss[ind],
+                "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+                held_out_sents[ind]
+            )
+        extracted_snippets.append(to_append)
+    #
+    doc_res[retr['doc_id']] = float(emition)
+    return doc_res, extracted_snippets
+
 def get_one_map(prefix, data, docs):
     model.eval()
     ret_data                = {'questions': []}
@@ -590,38 +624,7 @@ def get_one_map(prefix, data, docs):
         gold_snips                  = get_gold_snips(dato['query_id'])
         doc_res, extracted_snippets = {}, []
         for retr in dato['retrieved_documents']:
-            #
-            (
-                good_sents_embeds, good_sents_escores, good_doc_af,
-                good_mesh_embeds, held_out_sents
-            ) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
-            doc_emit_, gs_emits_    = model.emit_one(
-                doc1_sents_embeds   = good_sents_embeds,
-                question_embeds     = quest_embeds,
-                q_idfs              = q_idfs,
-                sents_gaf           = good_sents_escores,
-                doc_gaf             = good_doc_af,
-                good_mesh_embeds    = good_mesh_embeds
-            )
-            emition                 = doc_emit_.cpu().item()
-            #
-            emitss                  = gs_emits_[:, 0].tolist()
-            mmax                    = max(emitss)
-            indices                 = [
-                item[0] for item in zip(range(len(emitss)), emitss)
-                # if (item[1] >= .6 or item[1] == mmax)
-                if (item[1] == mmax)
-            ]
-            for ind in indices:
-                to_append = (
-                        snip_is_relevant(held_out_sents[ind], gold_snips),
-                        emitss[ind],
-                        "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-                        held_out_sents[ind]
-                    )
-                extracted_snippets.append(to_append)
-            #
-            doc_res[retr['doc_id']] = float(emition)
+            doc_res, extracted_snippets = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, extracted_snippets, gold_snips)
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
@@ -630,11 +633,14 @@ def get_one_map(prefix, data, docs):
         if(dato['query_id'] not in data_for_revision):
             data_for_revision[dato['query_id']] = {
                 'query_text'    : dato['query_text'],
-                'snippets'      : sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+                'snippets'      : extracted_snippets
             }
+        else:
+            data_for_revision[dato['query_id']]['snippets'].extend(extracted_snippets)
         #
-        extracted_snippets          = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
-        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+        data_for_revision[dato['query_id']]['snippets'] = sorted(data_for_revision[dato['query_id']]['snippets'], key=lambda x: x[1], reverse=True)
+        extracted_snippets                              = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
+        extracted_snippets                              = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
         # pprint(extracted_snippets),
         snips_res                   = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
         all_bioasq_subm_data['questions'].append(snips_res)
