@@ -512,7 +512,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         ret['snippets'].append(esnip_res)
     return ret
 
-def get_bioasq_res(prefix, data_gold, data_emitted):
+def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
     java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
     evaluation.EvaluatorTask1b -phaseA -e 5
@@ -520,6 +520,12 @@ def get_bioasq_res(prefix, data_gold, data_emitted):
     ./drmm-experimental_submit.json
     '''
     jar_path = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+    #
+    fgold    = './{}_data_for_revision.json'.format(prefix)
+    fgold    = os.path.abspath(fgold)
+    with open(fgold, 'w') as f:
+        f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
+        f.close()
     #
     fgold    = './{}_gold_bioasq.json'.format(prefix)
     fgold    = os.path.abspath(fgold)
@@ -557,6 +563,7 @@ def get_one_map(prefix, data, docs):
     ret_data                = {'questions': []}
     all_bioasq_subm_data    = {"questions": []}
     all_bioasq_gold_data    = {'questions':[]}
+    data_for_revision       = {}
     for dato in tqdm(data['queries']):
         #
         tt = bioasq6_data[dato['query_id']]
@@ -620,17 +627,19 @@ def get_one_map(prefix, data, docs):
         emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
         #
+        if(dato['query_id'] not in data_for_revision):
+            data_for_revision[dato['query_id']] = {
+                'query_text'    : dato['query_text'],
+                'snippets'      : sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+            }
+        #
         extracted_snippets          = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
         extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
         # pprint(extracted_snippets),
-        snips_res                   = prep_extracted_snippets(
-            extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text']
-        )
-        with open('{}.txt'.format(dato['query_id']),'w') as f:
-            f.write('\n'.join('\t'.join([str(t) for t in sn]) for sn in extracted_snippets))
+        snips_res                   = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
         all_bioasq_subm_data['questions'].append(snips_res)
     #
-    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
+    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
     #
     if (prefix == 'dev'):
