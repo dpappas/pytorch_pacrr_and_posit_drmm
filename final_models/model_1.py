@@ -490,8 +490,10 @@ def prep_data(quest, the_doc, the_bm25):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
-    good_mesh               = get_the_mesh(the_doc)
-    gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
+    good_meshes         = get_the_mesh(the_doc)
+    good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
+    good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
+    # gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
     return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
 
 def get_gold_snips(quest_id):
@@ -589,7 +591,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
 def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
     (
         good_sents_embeds, good_sents_escores, good_doc_af,
-        good_mesh_embeds, held_out_sents
+        good_meshes_embeds, held_out_sents
     ) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
     doc_emit_, gs_emits_    = model.emit_one(
         doc1_sents_embeds   = good_sents_embeds,
@@ -597,7 +599,7 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
         q_idfs              = q_idfs,
         sents_gaf           = good_sents_escores,
         doc_gaf             = good_doc_af,
-        good_mesh_embeds    = good_mesh_embeds
+        good_meshes_embeds  = good_meshes_embeds
     )
     emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_[:, 0].tolist()
@@ -671,6 +673,9 @@ def get_one_map(prefix, data, docs):
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
+    logger.info('{} snippets F1: {}'.format(prefix, bioasq_snip_res['F1']))
+    logger.info('{} snippets GMAP: {}'.format(prefix, bioasq_snip_res['GMAP']))
+    logger.info('{} snippets MAP: {}'.format(prefix, bioasq_snip_res['MAP']))
     #
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
