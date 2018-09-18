@@ -520,7 +520,11 @@ def get_one_map(prefix, data, docs):
             good_doc_text   = docs[retr['doc_id']]['title'] + docs[retr['doc_id']]['abstractText']
             good_doc_af     = GetScores(quest, good_doc_text, bm25s[retr['doc_id']])
             #
-            good_sents      = sent_tokenize(docs[retr['doc_id']]['title']) + sent_tokenize(docs[retr['doc_id']]['abstractText'])
+            good_sents      = sent_tokenize(
+                docs[retr['doc_id']]['title'])
+                +
+                sent_tokenize(docs[retr['doc_id']]['abstractText']
+            )
             good_sents_embeds, good_sents_escores = [], []
             held_out_sents  = []
             for good_text in good_sents:
