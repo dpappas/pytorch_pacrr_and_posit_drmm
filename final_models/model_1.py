@@ -505,8 +505,15 @@ def get_one_map(prefix, data, docs):
         quest                       = dato['query_text']
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-        emitions                    = {'body': dato['query_text'], 'id': dato['query_id'], 'documents': []}
-        bm25s                       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        emitions                    = {
+            'body'      : dato['query_text'],
+            'id'        : dato['query_id'],
+            'documents' : []
+        }
+        bm25s                       = {
+            t['doc_id'] : t['norm_bm25_score']
+            for t in dato[u'retrieved_documents']
+        }
         doc_res                     = {}
         for retr in dato['retrieved_documents']:
             #
@@ -870,7 +877,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
+        # train_one(epoch + 1)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
