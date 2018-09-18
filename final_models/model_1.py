@@ -776,8 +776,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.final_layer                            = nn.Linear(5 + 10, 1, bias=True)
         #
         # num_layers * num_directions, batch, hidden_size
-        self.mesh_h0                                = autograd.Variable(torch.randn(1, 1, 10))
-        self.mesh_gru                               = nn.GRU(self.embedding_dim, 10)
+        self.mesh_h0_first                          = autograd.Variable(torch.randn(1, 1, 10))
+        self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10)
+        self.mesh_h0_second                         = autograd.Variable(torch.randn(1, 1, 10))
+        self.mesh_gru_second                        = nn.GRU(10, 10)
         # self.init_xavier()
         # self.init_using_value(0.1)
         # MultiMarginLoss
@@ -898,10 +900,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = torch.max(res)
         return res
     def apply_mesh_gru(self, mesh_embeds):
-        # print(mesh_embeds.shape)
         mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-        output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
+        output, hn      = self.mesh_gru_first(mesh_embeds.unsqueeze(1), self.mesh_h0_first)
         return output[-1,0,:]
+    def apply_stacked_mesh_gru(self, meshes_embeds):
+        meshes_embeds   = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
+        meshes_embeds   = torch.stack(meshes_embeds)
+        output, hn      = self.mesh_gru_second(meshes_embeds.unsqueeze(1), self.mesh_h0_second)
+        return output[-1, 0, :]
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_mesh_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
@@ -929,14 +935,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
-        good_meshes_out     = [self.apply_mesh_gru(good_mesh_embeds) for good_mesh_embeds in good_meshes_embeds]
-        bad_meshes_out      = [self.apply_mesh_gru(bad_mesh_embeds)  for bad_mesh_embeds  in bad_meshes_embeds]
-        print(torch.stack(good_meshes_out).size())
-        print(torch.stack(bad_meshes_out).size())
-        exit()
+        good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
+        bad_meshes_out      = self.apply_stacked_mesh_gru(bad_meshes_embeds)
         #
         good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-        bad_out_pp          = torch.cat([bad_out,  doc_baf, good_meshes_out],  -1)
+        bad_out_pp          = torch.cat([bad_out,  doc_baf, bad_meshes_out],  -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
