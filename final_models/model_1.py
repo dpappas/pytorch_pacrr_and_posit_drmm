@@ -551,11 +551,53 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         ret['snippets'].append(esnip_res)
     return ret
 
+def get_bioasq_res(prefix, data_gold, data_emitted):
+    '''
+    java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
+    evaluation.EvaluatorTask1b -phaseA -e 5
+    /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1
+    ./drmm-experimental_submit.json
+    '''
+    jar_path = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+    #
+    fgold    = './{}_gold_bioasq.json'.format(prefix)
+    fgold    = os.path.abspath(fgold)
+    with open(fgold, 'w') as f:
+        f.write(json.dumps(data_gold, indent=4, sort_keys=True))
+        f.close()
+    #
+    femit    = './{}_emit_bioasq.json'.format(prefix)
+    femit    = os.path.abspath(femit)
+    with open(femit, 'w') as f:
+        f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
+        f.close()
+    #
+    bioasq_eval_res = subprocess.Popen(
+        [
+            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
+            '-phaseA', '-e', '5', fgold, femit
+        ],
+        stdout=subprocess.PIPE, shell=False
+    )
+    (out, err)  = bioasq_eval_res.communicate()
+    lines       = out.decode("utf-8").split('\n')
+    ret = {}
+    for line in lines:
+        if('GMAP snippets:' in line):
+            ret['GMAP'] = float(line.split()[-1])
+        elif('MAP snippets:' in line):
+            ret['MAP'] = float(line.split()[-1])
+        elif('F1 snippets:' in line):
+            ret['F1'] = float(line.split()[-1])
+    return ret
+
 def get_one_map(prefix, data, docs):
     model.eval()
-    ret_data        = {'questions': []}
-    all_snips_res   = {"questions": []}
+    ret_data                = {'questions': []}
+    all_bioasq_subm_data    = {"questions": []}
+    all_bioasq_gold_data    = {'questions':[]}
     for dato in tqdm(data['queries']):
+        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         quest                       = dato['query_text']
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
@@ -614,7 +656,11 @@ def get_one_map(prefix, data, docs):
         snips_res                   = prep_extracted_snippets(
             extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text']
         )
-        all_snips_res['questions'].append(snips_res)
+        all_bioasq_subm_data['questions'].append(snips_res)
+    #
+    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
+    pprint(bioasq_snip_res)
+    exit()
     #
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
