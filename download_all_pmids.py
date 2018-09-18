@@ -428,6 +428,8 @@ odir = '/home/dpappas/for_ryan/downloaded/'
 if(not os.path.exists(odir)):
     os.makedirs(odir)
 
+all_ids = ['18457919']
+
 random.shuffle(all_ids)
 for pmid in tqdm(all_ids):
     opath   = os.path.join(odir,'{}.json'.format(pmid))
