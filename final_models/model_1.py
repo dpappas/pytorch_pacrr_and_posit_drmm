@@ -527,7 +527,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
         f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
         f.close()
     #
-    for tt in data_gold:
+    for tt in data_gold['questions']:
         if ('exact_answer' in tt):
             del (tt['exact_answer'])
         if ('ideal_answer' in tt):
@@ -582,22 +582,20 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
     emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_[:, 0].tolist()
     mmax                    = max(emitss)
-    indices                 = [
-        item[0] for item in zip(range(len(emitss)), emitss)
-        # if (item[1] >= .6 or item[1] == mmax)
-        if (item[1] == mmax)
-    ]
-    for ind in indices:
-        to_append = (
-                snip_is_relevant(held_out_sents[ind], gold_snips),
-                emitss[ind],
-                "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-                held_out_sents[ind]
-            )
-        extracted_from_one.append(to_append)
-    #
+    all_emits, extracted_from_one = [], []
+    for ind in range(len(emitss)):
+        t = (
+            snip_is_relevant(held_out_sents[ind], gold_snips),
+            emitss[ind],
+            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+            held_out_sents[ind]
+        )
+        all_emits.append(t)
+        if(emitss[ind] == mmax):
+            extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
-    return doc_res, extracted_from_one
+    all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
+    return doc_res, extracted_from_one, all_emits
 
 def get_one_map(prefix, data, docs):
     model.eval()
@@ -629,7 +627,7 @@ def get_one_map(prefix, data, docs):
                     'snippets': { retr['doc_id'] : extracted_from_one}
                 }
             else:
-                data_for_revision[dato['query_id']]['snippets']['doc_id'] = extracted_from_one
+                data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = extracted_from_one
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
