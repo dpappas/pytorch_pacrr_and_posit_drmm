@@ -441,8 +441,10 @@ def train_data_step2(train_instances):
         if(sum(good_sent_tags)>0):
             # bmt, bad_mesh_embeds    = get_embeds(bad_mesh, wv)
             # gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-            bad_mesh_embeds     = [get_embeds(bad_mesh, wv)[1] for bad_mesh in bad_meshes]
-            good_mesh_embeds    = [get_embeds(good_mesh, wv)[1] for good_mesh in good_meshes]
+            bad_mesh_embeds     = [get_embeds(bad_mesh, wv)     for bad_mesh            in bad_meshes ]
+            bad_mesh_embeds     = [bad_mesh[1] for bad_mesh     in  bad_mesh_embeds     if(len(bad_mesh[0])>0)]
+            good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
+            good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
             yield (
                 good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
                 good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
@@ -780,13 +782,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10)
         self.mesh_h0_second                         = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru_second                        = nn.GRU(10, 10)
-        # self.init_xavier()
-        # self.init_using_value(0.1)
-        # MultiMarginLoss
-        # MarginRankingLoss
-        # my hinge loss
-        # MultiLabelMarginLoss
-        #
     def init_xavier(self):
         nn.init.xavier_uniform_(self.trigram_conv.weight)
         nn.init.xavier_uniform_(self.q_weights_mlp.weight)
