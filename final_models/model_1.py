@@ -511,7 +511,7 @@ def prep_data(quest, the_doc, the_bm25):
             held_out_sents.append(good_text)
     good_mesh               = get_the_mesh(the_doc)
     gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds
+    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
 
 def get_one_map(prefix, data, docs):
     model.eval()
@@ -533,7 +533,10 @@ def get_one_map(prefix, data, docs):
         doc_res                     = {}
         for retr in dato['retrieved_documents']:
             #
-            (good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
+            (
+                good_sents_embeds, good_sents_escores, good_doc_af,
+                good_mesh_embeds, held_out_sents
+            ) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
             doc_emit_, gs_emits_    = model.emit_one(
                 doc1_sents_embeds   = good_sents_embeds,
                 question_embeds     = quest_embeds,
@@ -543,11 +546,30 @@ def get_one_map(prefix, data, docs):
                 good_mesh_embeds    = good_mesh_embeds
             )
             emition                 = doc_emit_.cpu().item()
+            #
+            emitss                  = gs_emits_[:, 0].tolist()
+            mmax                    = max(emitss)
+            indices                 = [
+                item[0]
+                for item in zip(range(len(emitss)), emitss)
+                if (item[1] >= .6 or item[1] == mmax)
+            ]
+            for ind in indices:
+                to_append = (
+                        snip_is_relevant(held_out_sents[ind][1], gold_snips),
+                        emitss[ind],
+                        "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+                        held_out_sents[ind]
+                    )
+                extracted_snippets.append(to_append)
+            #
             doc_res[retr['doc_id']] = float(emition)
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
+        #
+
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
