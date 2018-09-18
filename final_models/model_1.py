@@ -615,10 +615,7 @@ def get_one_map(prefix, data, docs):
             'id'        : dato['query_id'],
             'documents' : []
         }
-        bm25s                       = {
-            t['doc_id'] : t['norm_bm25_score']
-            for t in dato[u'retrieved_documents']
-        }
+        bm25s                       = { t['doc_id'] : t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         gold_snips                  = get_gold_snips(dato['query_id'])
         doc_res, extracted_snippets = {}, []
         for retr in dato['retrieved_documents']:
