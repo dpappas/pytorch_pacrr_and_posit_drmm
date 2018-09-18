@@ -715,13 +715,6 @@ def train_one(epoch):
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
-def get_sim_info(sent, snippets):
-    sent            = bioclean(sent)
-    similarities    = [similar(sent, s) for s in snippets]
-    max_sim         = max(similarities)
-    index_of_max    = similarities.index(max_sim)
-    return max_sim, index_of_max, snippets[index_of_max]
-
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
         os.makedirs(odir)
@@ -1016,4 +1009,20 @@ do everything with and without loss 2
 
 '''
 
+'''
+
+upstream_seq    = "\u00e1-Synuclein is the major protein component of Lewy bodies--the pathological hallmark of Parkinson's disease (PD) and Dementia with Lewy bodies (DLB). Its accumulation into intracellular aggregates is implicated in the process of Lewy body formation."
+downstream_seq  = "\u03b1-Synuclein is the major protein component of Lewy bodies--the pathological hallmark of Parkinson's disease (PD) and Dementia with Lewy bodies (DLB)."
+s               = SequenceMatcher(None, upstream_seq, downstream_seq)
+match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
+print(match)
+upstream_start  = match[0]
+upstream_end    = match[0]+match[2]
+seq             = upstream_seq[match[0]:(match[0]+match[2])]
+downstream_start = match[1]
+downstream_end  = match[1]+match[2]
+print("Upstream seq: %s\nstart-stop: %s-%s\n")      % (seq, upstream_start, upstream_end)
+print("Downstream seq: %s\nstart-stop: %s-%s\n")    % (seq, downstream_start, downstream_end)
+
+'''
 
