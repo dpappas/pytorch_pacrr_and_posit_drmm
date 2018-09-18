@@ -624,7 +624,7 @@ def get_one_map(prefix, data, docs):
         gold_snips                  = get_gold_snips(dato['query_id'])
         doc_res, extracted_snippets = {}, []
         for retr in dato['retrieved_documents']:
-            doc_res, extracted_from_one = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, extracted_snippets, gold_snips)
+            doc_res, extracted_from_one = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
             extracted_from_one          = sorted(extracted_from_one, key=lambda x: x[1], reverse=True)
             extracted_snippets.extend(extracted_from_one)
             #
