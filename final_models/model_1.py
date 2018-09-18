@@ -4,8 +4,6 @@
 
 import sys
 
-from networkx.algorithms.connectivity.tests.test_kcutsets import torrents_and_ferraro_graph
-
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
