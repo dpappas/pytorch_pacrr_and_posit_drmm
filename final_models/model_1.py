@@ -451,18 +451,28 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def snip_is_relevant(one_sent, gold_snips):
-    # return any(
-    #     [
-    #         (one_sent in gold_snip) or (gold_snip in one_sent)
-    #         for gold_snip in gold_snips
-    #     ]
-    # )
-    return max(
+    return any(
         [
-            similar(one_sent, gold_snip)
+            (
+                one_sent.encode('accii','ignore')
+                in
+                gold_snip.encode('accii','ignore')
+            )
+            or
+            (
+                gold_snip.encode('accii','ignore')
+                in
+                one_sent.encode('accii','ignore')
+            )
             for gold_snip in gold_snips
         ]
     )
+    # return max(
+    #     [
+    #         similar(one_sent, gold_snip)
+    #         for gold_snip in gold_snips
+    #     ]
+    # )
 
 def prep_data(quest, the_doc, the_bm25):
     good_doc_text   = the_doc['title'] + the_doc['abstractText']
