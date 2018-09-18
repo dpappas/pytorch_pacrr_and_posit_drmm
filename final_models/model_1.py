@@ -513,6 +513,13 @@ def prep_data(quest, the_doc, the_bm25):
     gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
     return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
 
+def get_gold_snips(quest_id):
+    gold_snips                  = []
+    if ('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            gold_snips.extend(sent_tokenize(sn['text']))
+    return gold_snips
+
 def get_one_map(prefix, data, docs):
     model.eval()
     ret_data                = {}
@@ -530,6 +537,7 @@ def get_one_map(prefix, data, docs):
             t['doc_id'] : t['norm_bm25_score']
             for t in dato[u'retrieved_documents']
         }
+        gold_snips                  = get_gold_snips(dato['query_id'])
         doc_res, extracted_snippets = {}, []
         for retr in dato['retrieved_documents']:
             #
