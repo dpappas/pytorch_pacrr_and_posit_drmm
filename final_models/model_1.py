@@ -155,46 +155,6 @@ def get_map_res(fgold, femit):
     map_res         = float(map_res[-1])
     return map_res
 
-def get_bioasq_res(prefix, data_gold, data_emitted):
-    '''
-    java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
-    evaluation.EvaluatorTask1b -phaseA -e 5
-    /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1
-    ./drmm-experimental_submit.json
-    '''
-    jar_path = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
-    #
-    fgold    = './{}_gold_bioasq.json'.format(prefix)
-    fgold    = os.path.abspath(fgold)
-    with open(fgold, 'w') as f:
-        f.write(json.dumps(data_gold, indent=4, sort_keys=True))
-        f.close()
-    #
-    femit    = './{}_emit_bioasq.json'.format(prefix)
-    femit    = os.path.abspath(femit)
-    with open(femit, 'w') as f:
-        f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
-        f.close()
-    #
-    bioasq_eval_res = subprocess.Popen(
-        [
-            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
-            '-phaseA', '-e', '5', fgold, femit
-        ],
-        stdout=subprocess.PIPE, shell=False
-    )
-    (out, err)  = bioasq_eval_res.communicate()
-    lines       = out.decode("utf-8").split('\n')
-    ret = {}
-    for line in lines:
-        if('GMAP snippets:' in line):
-            ret['GMAP'] = float(line.split()[-1])
-        elif('MAP snippets:' in line):
-            ret['MAP'] = float(line.split()[-1])
-        elif('F1 snippets:' in line):
-            ret['F1'] = float(line.split()[-1])
-    return ret
-
 def tokenize(x):
   return bioclean(x)
 
@@ -531,8 +491,9 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         pid         = esnip[2].split('/')[-1]
         the_text    = esnip[3]
         esnip_res = {
-            "document": "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
-            "text":     the_text
+            'score'     : esnip[1],
+            "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
+            "text"      : the_text
         }
         try:
             ind_from    = docs[pid]['title'].index(the_text)
@@ -605,6 +566,8 @@ def get_one_map(prefix, data, docs):
             del(tt['ideal_answer'])
         if('type' in tt):
             del(tt['type'])
+        for sn in tt['snippets']:
+            sn['score'] = 1.0
         all_bioasq_gold_data['questions'].append(tt)
         #
         quest                       = dato['query_text']
@@ -669,7 +632,6 @@ def get_one_map(prefix, data, docs):
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
     pprint(bioasq_snip_res)
-    exit()
     #
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
