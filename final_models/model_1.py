@@ -603,7 +603,7 @@ def get_one_map(prefix, data, docs):
     model.eval()
     ret_data                = {'questions': []}
     all_bioasq_subm_data    = {"questions": []}
-    all_bioasq_gold_data    = {'questions':[]}
+    all_bioasq_gold_data    = {'questions': []}
     data_for_revision       = {}
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
