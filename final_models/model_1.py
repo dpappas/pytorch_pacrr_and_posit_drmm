@@ -597,7 +597,16 @@ def get_one_map(prefix, data, docs):
     all_bioasq_subm_data    = {"questions": []}
     all_bioasq_gold_data    = {'questions':[]}
     for dato in tqdm(data['queries']):
-        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
+        #
+        tt = bioasq6_data[dato['query_id']]
+        if('exact_answer' in tt):
+            del(tt['exact_answer'])
+        if('ideal_answer' in tt):
+            del(tt['ideal_answer'])
+        if('type' in tt):
+            del(tt['type'])
+        all_bioasq_gold_data['questions'].append(tt)
+        #
         quest                       = dato['query_text']
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
@@ -973,15 +982,7 @@ for run in range(5):
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
     #
-    (
-        test_data, test_docs, dev_data, dev_docs,
-        train_data, train_docs, idf, max_idf, wv,
-        bioasq6_data
-    ) = load_all_data(
-        dataloc         = dataloc,
-        w2v_bin_path    = w2v_bin_path,
-        idf_pickle_path = idf_pickle_path
-    )
+    (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
@@ -992,7 +993,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch + 1)
+        train_one(epoch + 1)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
