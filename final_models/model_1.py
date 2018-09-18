@@ -641,8 +641,7 @@ def get_one_map(prefix, data, docs):
         data_for_revision[dato['query_id']]['snippets'] = sorted(data_for_revision[dato['query_id']]['snippets'], key=lambda x: x[1], reverse=True)
         extracted_snippets                              = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
         extracted_snippets                              = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-        # pprint(extracted_snippets),
-        snips_res                   = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+        snips_res                                       = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
         all_bioasq_subm_data['questions'].append(snips_res)
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
