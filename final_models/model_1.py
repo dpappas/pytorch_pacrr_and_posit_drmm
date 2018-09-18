@@ -455,15 +455,15 @@ def snip_is_relevant(one_sent, gold_snips):
     return any(
         [
             (
-                one_sent.encode('accii','ignore')
+                one_sent.encode('ascii','ignore')
                 in
-                gold_snip.encode('accii','ignore')
+                gold_snip.encode('ascii','ignore')
             )
             or
             (
-                gold_snip.encode('accii','ignore')
+                gold_snip.encode('ascii','ignore')
                 in
-                one_sent.encode('accii','ignore')
+                one_sent.encode('ascii','ignore')
             )
             for gold_snip in gold_snips
         ]
