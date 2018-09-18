@@ -421,7 +421,6 @@ def train_data_step2(train_instances):
         bad_sents                               = sent_tokenize(train_docs[bid]['title']) + sent_tokenize(train_docs[bid]['abstractText'])
         #
         bad_sent_tags                           = len(bad_sents) * [0]
-        #
         bad_sents_embeds, bad_sents_escores     = [], []
         for bad_text in bad_sents:
             bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
