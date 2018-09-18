@@ -625,20 +625,20 @@ def get_one_map(prefix, data, docs):
         doc_res, extracted_snippets = {}, []
         for retr in dato['retrieved_documents']:
             doc_res, extracted_snippets = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, extracted_snippets, gold_snips)
+            extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+            #
+            if (dato['query_id'] not in data_for_revision):
+                data_for_revision[dato['query_id']] = {
+                    'query_text': dato['query_text'],
+                    'snippets': { retr['doc_id'] : extracted_snippets}
+                }
+            else:
+                data_for_revision[dato['query_id']]['snippets']['doc_id'] = extracted_snippets
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
         #
-        if(dato['query_id'] not in data_for_revision):
-            data_for_revision[dato['query_id']] = {
-                'query_text'    : dato['query_text'],
-                'snippets'      : extracted_snippets
-            }
-        else:
-            data_for_revision[dato['query_id']]['snippets'].extend(extracted_snippets)
-        #
-        data_for_revision[dato['query_id']]['snippets'] = sorted(data_for_revision[dato['query_id']]['snippets'], key=lambda x: x[1], reverse=True)
         extracted_snippets                              = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
         extracted_snippets                              = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
         snips_res                                       = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
