@@ -491,7 +491,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         pid         = esnip[2].split('/')[-1]
         the_text    = esnip[3]
         esnip_res = {
-            'score'     : esnip[1],
+            # 'score'     : esnip[1],
             "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
             "text"      : the_text
         }
@@ -566,8 +566,6 @@ def get_one_map(prefix, data, docs):
             del(tt['ideal_answer'])
         if('type' in tt):
             del(tt['type'])
-        for sn in tt['snippets']:
-            sn['score'] = 1.0
         all_bioasq_gold_data['questions'].append(tt)
         #
         quest                       = dato['query_text']
@@ -628,6 +626,8 @@ def get_one_map(prefix, data, docs):
         snips_res                   = prep_extracted_snippets(
             extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text']
         )
+        with open('{}.txt'.format(dato['query_id']),'w') as f:
+            f.write('\n'.join('\t'.join([str(t) for t in sn]) for sn in extracted_snippets))
         all_bioasq_subm_data['questions'].append(snips_res)
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data)
