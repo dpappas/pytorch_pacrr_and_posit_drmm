@@ -413,7 +413,7 @@ def train_data_step2(train_instances):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
                 tt          = ' '.join(bioclean(good_text))
-                snip_is_relevant(tt, good_snips)
+                good_sent_tags.append(snip_is_relevant(tt, good_snips))
                 # sims        = [similar(gs, tt) for gs in good_snips]
                 # best_sim    = max(sims) if(len(sims)>0) else 0.
                 # good_sent_tags.append(int(best_sim>0.9))
@@ -454,17 +454,9 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
 def snip_is_relevant(one_sent, gold_snips):
     return any(
         [
-            (
-                one_sent.encode('ascii','ignore')
-                in
-                gold_snip.encode('ascii','ignore')
-            )
+            (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
             or
-            (
-                gold_snip.encode('ascii','ignore')
-                in
-                one_sent.encode('ascii','ignore')
-            )
+            (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
             for gold_snip in gold_snips
         ]
     )
