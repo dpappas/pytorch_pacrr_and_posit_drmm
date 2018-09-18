@@ -527,6 +527,13 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
         f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
         f.close()
     #
+    for tt in data_gold:
+        if ('exact_answer' in tt):
+            del (tt['exact_answer'])
+        if ('ideal_answer' in tt):
+            del (tt['ideal_answer'])
+        if ('type' in tt):
+            del (tt['type'])
     fgold    = './{}_gold_bioasq.json'.format(prefix)
     fgold    = os.path.abspath(fgold)
     with open(fgold, 'w') as f:
@@ -599,16 +606,7 @@ def get_one_map(prefix, data, docs):
     all_bioasq_gold_data    = {'questions':[]}
     data_for_revision       = {}
     for dato in tqdm(data['queries']):
-        #
-        tt = bioasq6_data[dato['query_id']]
-        if('exact_answer' in tt):
-            del(tt['exact_answer'])
-        if('ideal_answer' in tt):
-            del(tt['ideal_answer'])
-        if('type' in tt):
-            del(tt['type'])
-        all_bioasq_gold_data['questions'].append(tt)
-        #
+        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         quest                       = dato['query_text']
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
