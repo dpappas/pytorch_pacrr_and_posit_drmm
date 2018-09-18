@@ -403,7 +403,10 @@ def train_data_step2(train_instances):
         good_sents                              = good_sents_title + good_sents_abs
         #
         good_snips                              = get_snips(quest_id, gid)
-        good_snips                              = [' '.join(bioclean(sn)).encode('utf8') for sn in good_snips]
+        good_snips                              = [
+            ' '.join(bioclean(sn)).encode('ascii', 'ignore')
+            for sn in good_snips
+        ]
         #
         good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
         for good_text in good_sents:
@@ -412,7 +415,7 @@ def train_data_step2(train_instances):
             if(len(good_embeds)>0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-                tt = ' '.join(bioclean(good_text)).encode('utf8')
+                tt = ' '.join(bioclean(good_text)).encode('ascii', 'ignore')
                 good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
         #
         bad_mesh                                = get_the_mesh(train_docs[bid])
