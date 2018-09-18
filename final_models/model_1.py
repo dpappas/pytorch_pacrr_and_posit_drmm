@@ -500,7 +500,6 @@ def snip_is_relevant(one_sent, gold_snips):
 def prep_data(quest, the_doc, the_bm25):
     good_doc_text   = the_doc['title'] + the_doc['abstractText']
     good_doc_af     = GetScores(quest, good_doc_text, the_bm25)
-    #
     good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     good_sents_embeds, good_sents_escores, held_out_sents = [], [], []
     for good_text in good_sents:
@@ -513,7 +512,6 @@ def prep_data(quest, the_doc, the_bm25):
     good_mesh               = get_the_mesh(the_doc)
     gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
     return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds
-
 
 def get_one_map(prefix, data, docs):
     model.eval()
