@@ -1,10 +1,10 @@
 
 model_1:
-nltk sentence split
-cnn 3grams
-pdrmm on each sentence
-used entire document as sent as well
-use mesh hierarchical
+nltk sentence split                     done
+cnn 3grams                              done
+pdrmm on each sentence                  done
+used entire document as sent as well    pending
+use mesh hierarchical                   pending
 
 
 

@@ -3,6 +3,9 @@
 
 
 import sys
+
+from networkx.algorithms.connectivity.tests.test_kcutsets import torrents_and_ferraro_graph
+
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -368,25 +371,26 @@ def get_snips(quest_id, gid):
     return good_snips
 
 def get_the_mesh(the_doc):
-    good_mesh = []
+    good_meshes = []
     if('meshHeadingsList' in the_doc):
         for t in the_doc['meshHeadingsList']:
             t = t.split(':', 1)
             t = t[1].strip()
             t = t.lower()
-            good_mesh.append(t)
+            good_meshes.append(t)
     elif('MeshHeadings' in the_doc):
         for mesh_head_set in the_doc['MeshHeadings']:
             for item in mesh_head_set:
-                good_mesh.append(item['text'].strip().lower())
+                good_meshes.append(item['text'].strip().lower())
     if('Chemicals' in the_doc):
         for t in the_doc['Chemicals']:
             t = t['NameOfSubstance'].strip().lower()
-            good_mesh.append(t)
-    good_mesh = sorted(good_mesh)
+            good_meshes.append(t)
+    good_mesh = sorted(good_meshes)
     good_mesh = ['mgmx'] + good_mesh
-    good_mesh = ' # '.join(good_mesh)
-    good_mesh = good_mesh.split()
+    # good_mesh = ' # '.join(good_mesh)
+    # good_mesh = good_mesh.split()
+    good_mesh = [gm.split() for gm in good_mesh]
     return good_mesh
 
 def train_data_step2(train_instances):
@@ -394,7 +398,7 @@ def train_data_step2(train_instances):
         quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
         q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         #
-        good_mesh                               = get_the_mesh(train_docs[gid])
+        good_meshes                             = get_the_mesh(train_docs[gid])
         good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
         good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
         good_sents_title                        = sent_tokenize(train_docs[gid]['title'])
@@ -418,7 +422,7 @@ def train_data_step2(train_instances):
                 # best_sim    = max(sims) if(len(sims)>0) else 0.
                 # good_sent_tags.append(int(best_sim>0.9))
         #
-        bad_mesh                                = get_the_mesh(train_docs[bid])
+        bad_meshes                              = get_the_mesh(train_docs[bid])
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
         bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
         bad_sents                               = sent_tokenize(train_docs[bid]['title']) + sent_tokenize(train_docs[bid]['abstractText'])
@@ -432,8 +436,10 @@ def train_data_step2(train_instances):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
         if(sum(good_sent_tags)>0):
-            bmt, bad_mesh_embeds    = get_embeds(bad_mesh, wv)
-            gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
+            # bmt, bad_mesh_embeds    = get_embeds(bad_mesh, wv)
+            # gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
+            bad_mesh_embeds     = [get_embeds(bad_mesh, wv)[1] for bad_mesh in bad_meshes]
+            good_mesh_embeds    = [get_embeds(good_mesh, wv)[1] for good_mesh in good_meshes]
             yield (
                 good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
                 good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
@@ -706,8 +712,8 @@ def train_one(epoch):
             sents_baf           = instance[5],
             doc_gaf             = instance[6],
             doc_baf             = instance[7],
-            good_mesh_embeds    = instance[10],
-            bad_mesh_embeds     = instance[11]
+            good_meshes_embeds  = instance[10],
+            bad_meshes_embeds   = instance[11]
         )
         #
         good_sent_tags, bad_sent_tags       = instance[8], instance[9]
@@ -906,7 +912,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out_pp         = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
         final_good_output   = self.final_layer(good_out_pp)
         return final_good_output, gs_emits
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_mesh_embeds, bad_mesh_embeds):
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
@@ -920,11 +926,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
-        good_mesh_out       = self.apply_mesh_gru(good_mesh_embeds)
-        bad_mesh_out        = self.apply_mesh_gru(bad_mesh_embeds)
+        good_meshes_out     = [self.apply_mesh_gru(good_mesh_embeds) for good_mesh_embeds in good_meshes_embeds]
+        bad_meshes_out      = [self.apply_mesh_gru(bad_mesh_embeds)  for bad_mesh_embeds  in bad_meshes_embeds]
+        print(torch.stack(good_meshes_out).size())
+        print(torch.stack(bad_meshes_out).size())
+        exit()
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
-        bad_out_pp          = torch.cat([bad_out,  doc_baf, bad_mesh_out],  -1)
+        good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
+        bad_out_pp          = torch.cat([bad_out,  doc_baf, good_meshes_out],  -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
