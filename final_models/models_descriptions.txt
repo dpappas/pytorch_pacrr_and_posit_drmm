@@ -10,9 +10,10 @@ use mesh hierarchical
 
 model_2:
 nltk sentence split
+cnn 3grams
 pdrmm on each sentence
 used entire document as sent as well
-use mesh
-
+use mesh hierarchical
+rnn on outputs of sents
 
 
