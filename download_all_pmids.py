@@ -424,20 +424,28 @@ dataloc         = '/home/dpappas/for_ryan/'
 
 all_ids = get_all_ids_from_data(test_data, dev_data, train_data, bioasq6_data)
 
-odir = '/home/dpappas/for_ryan/downloaded/'
+odir = '/home/dpappas/for_ryan/downloaded_xmls/'
 if(not os.path.exists(odir)):
     os.makedirs(odir)
 
-# all_ids = ['18457919']
-
 random.shuffle(all_ids)
 for pmid in tqdm(all_ids):
-    opath   = os.path.join(odir, '{}.json'.format(pmid))
-    if(not os.path.exists(opath)):
-        dato    = do_for_one_pmid(pmid)
-        with open(opath, 'w') as f:
-            f.write(json.dumps(dato, indent=4, sort_keys=True))
-            f.close()
+    dato = {}
+    link = 'https://www.ncbi.nlm.nih.gov/pubmed/?term={}&report=xml&format=json'.format(pmid)
+    data = urllib2.urlopen(link).read()
+
+
+
+# all_ids = ['18457919']
+#
+# random.shuffle(all_ids)
+# for pmid in tqdm(all_ids):
+#     opath   = os.path.join(odir, '{}.json'.format(pmid))
+#     if(not os.path.exists(opath)):
+#         dato    = do_for_one_pmid(pmid)
+#         with open(opath, 'w') as f:
+#             f.write(json.dumps(dato, indent=4, sort_keys=True))
+#             f.close()
 
 
 
