@@ -403,10 +403,7 @@ def train_data_step2(train_instances):
         good_sents                              = good_sents_title + good_sents_abs
         #
         good_snips                              = get_snips(quest_id, gid)
-        good_snips                              = [
-            ' '.join(bioclean(sn)).encode('ascii', 'ignore')
-            for sn in good_snips
-        ]
+        good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
         #
         good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
         for good_text in good_sents:
@@ -415,8 +412,9 @@ def train_data_step2(train_instances):
             if(len(good_embeds)>0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-                tt = ' '.join(bioclean(good_text)).encode('ascii', 'ignore')
-                good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
+                tt          = ' '.join(bioclean(good_text))
+                best_sim    = max([similar(gs, tt) for gs in good_snips])
+                good_sent_tags.append(int(best_sim>0.9))
         #
         bad_mesh                                = get_the_mesh(train_docs[bid])
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
@@ -452,9 +450,15 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def snip_is_relevant(one_sent, gold_snips):
-    return any(
+    # return any(
+    #     [
+    #         (one_sent in gold_snip) or (gold_snip in one_sent)
+    #         for gold_snip in gold_snips
+    #     ]
+    # )
+    return max(
         [
-            (one_sent in gold_snip) or (gold_snip in one_sent)
+            similar(one_sent, gold_snip)
             for gold_snip in gold_snips
         ]
     )
@@ -599,11 +603,13 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
     return doc_res, extracted_from_one, all_emits
 
 def similar(upstream_seq, downstream_seq):
+    upstream_seq    = upstream_seq.encode('ascii','ignore')
+    downstream_seq  = downstream_seq.encode('ascii','ignore')
     s               = SequenceMatcher(None, upstream_seq, downstream_seq)
     match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
     upstream_start  = match[0]
     upstream_end    = match[0]+match[2]
-    longest_match   = upstream_seq[match[0]:(match[0]+match[2])]
+    longest_match   = upstream_seq[upstream_start:upstream_end]
     to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
     r1              = SequenceMatcher(None, to_match, longest_match).ratio()
     return r1
