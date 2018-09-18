@@ -428,7 +428,7 @@ odir = '/home/dpappas/for_ryan/downloaded/'
 if(not os.path.exists(odir)):
     os.makedirs(odir)
 
-all_ids = ['18457919']
+# all_ids = ['18457919']
 
 random.shuffle(all_ids)
 for pmid in tqdm(all_ids):
@@ -438,6 +438,7 @@ for pmid in tqdm(all_ids):
         with open(opath, 'w') as f:
             f.write(json.dumps(dato, indent=4, sort_keys=True))
             f.close()
+
 
 
 
