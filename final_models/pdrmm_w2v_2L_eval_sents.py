@@ -406,16 +406,16 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     # logger.info('loading pickle data')
     with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
         test_data = pickle.load(f)
-    # with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
-    #     test_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
+        test_docs = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
         dev_data = pickle.load(f)
-    # with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
-    #     dev_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+        dev_docs = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
         train_data = pickle.load(f)
-    # with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
-    #     train_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+        train_docs = pickle.load(f)
     print('loading words')
     #
     train_data  = RemoveBadYears(train_data, train_docs, True)
@@ -1219,9 +1219,11 @@ for run in range(5):
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
     #
-    (test_data, test_docs, dev_data, dev_docs,
-     train_data, train_docs, idf, max_idf, wv,
-     bioasq6_data) = load_all_data(
+    (
+        test_data, test_docs, dev_data, dev_docs,
+        train_data, train_docs, idf, max_idf, wv,
+        bioasq6_data
+    ) = load_all_data(
         dataloc         = dataloc,
         w2v_bin_path    = w2v_bin_path,
         idf_pickle_path = idf_pickle_path

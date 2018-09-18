@@ -1,0 +1,7 @@
+
+model_1
+pdrmm on each sentence
+used entire document as sent as well
+
+
+
