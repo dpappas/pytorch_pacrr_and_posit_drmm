@@ -407,19 +407,6 @@ def get_snips(quest_id, gid):
                 good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
 
-def get_gold_snips(quest_id):
-    gold_snips                  = []
-    if ('snippets' in bioasq6_data[quest_id]):
-        for sn in bioasq6_data[quest_id]['snippets']:
-            gold_snips.extend(sent_tokenize(sn['text']))
-    return gold_snips
-
-def get_sent_tags(good_sents, good_snips):
-    sent_tags = []
-    for sent in good_sents:
-        sent_tags.append(int((sent in good_snips) or any([s in sent for s in good_snips])))
-    return sent_tags
-
 def get_the_mesh(the_doc):
     good_mesh = []
     if('meshHeadingsList' in the_doc):
@@ -858,7 +845,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/pdrmm_w2v_2L_eval_sents_run{}/'.format(run)
+    odir            = '/home/dpappas/model_1_run{}/'.format(run)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
