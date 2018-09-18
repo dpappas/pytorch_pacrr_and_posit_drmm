@@ -520,6 +520,38 @@ def get_gold_snips(quest_id):
             gold_snips.extend(sent_tokenize(sn['text']))
     return list(set(gold_snips))
 
+def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
+    ret = {
+        'body'      : quest_body,
+        'documents' : top10docs,
+        'id'        : qid,
+        'snippets'  : [],
+    }
+    for esnip in extracted_snippets:
+        pid         = esnip[2].split('/')[-1]
+        the_text    = esnip[3]
+        esnip_res = {
+            "document": "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
+            "text":     the_text
+        }
+        try:
+            ind_from    = docs[pid]['title'].index(the_text)
+            ind_to      = ind_from + len(the_text)
+            esnip_res["beginSection"]           = "title"
+            esnip_res["endSection"]             = "title"
+            esnip_res["offsetInBeginSection"]   = ind_from
+            esnip_res["offsetInEndSection"]     = ind_to
+        except:
+            ind_from    = docs[pid]['abstractText'].index(the_text)
+            ind_to      = ind_from + len(the_text)
+            esnip_res["beginSection"]           = "abstract"
+            esnip_res["endSection"]             = "abstract"
+            esnip_res["offsetInBeginSection"]   = ind_from
+            esnip_res["offsetInEndSection"]     = ind_to
+        ret['snippets'].append(esnip_res)
+    return ret
+
+
 def get_one_map(prefix, data, docs):
     model.eval()
     ret_data                = {}
@@ -579,7 +611,8 @@ def get_one_map(prefix, data, docs):
         #
         extracted_snippets          = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
         extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-        pprint(extracted_snippets)
+        # pprint(extracted_snippets)
+        prep_extracted_snippets()
         exit()
         #
     if (prefix == 'dev'):
