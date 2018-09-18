@@ -273,7 +273,12 @@ def GetWords(data, doc_text, words):
       doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
       dtext = (
               doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
-              ' '.join(get_the_mesh(doc_text[doc_id]))
+              ' '.join(
+                  [
+                      ' '.join(mm) for mm in
+                      get_the_mesh(doc_text[doc_id])
+                  ]
+              )
       )
       dwds = tokenize(dtext)
       for w in dwds:
