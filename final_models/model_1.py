@@ -558,9 +558,9 @@ def get_one_map(prefix, data, docs):
             emitss                  = gs_emits_[:, 0].tolist()
             mmax                    = max(emitss)
             indices                 = [
-                item[0]
-                for item in zip(range(len(emitss)), emitss)
-                if (item[1] >= .6 or item[1] == mmax)
+                item[0] for item in zip(range(len(emitss)), emitss)
+                # if (item[1] >= .6 or item[1] == mmax)
+                if (item[1] == mmax)
             ]
             for ind in indices:
                 to_append = (
@@ -573,12 +573,14 @@ def get_one_map(prefix, data, docs):
             #
             doc_res[retr['doc_id']] = float(emition)
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
-        pprint(extracted_snippets)
-        exit()
-        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
+        #
+        extracted_snippets          = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
+        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+        pprint(extracted_snippets)
+        exit()
         #
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
