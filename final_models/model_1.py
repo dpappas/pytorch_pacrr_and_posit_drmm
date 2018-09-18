@@ -712,8 +712,15 @@ def train_one(epoch):
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
-def similar(a, b):
-    return SequenceMatcher(None, a, b).ratio()
+def similar(upstream_seq, downstream_seq):
+    s               = SequenceMatcher(None, upstream_seq, downstream_seq)
+    match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
+    upstream_start  = match[0]
+    upstream_end    = match[0]+match[2]
+    longest_match   = upstream_seq[match[0]:(match[0]+match[2])]
+    to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
+    r1              = SequenceMatcher(None, to_match, longest_match).ratio()
+    return r1
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
@@ -1009,17 +1016,4 @@ do everything with and without loss 2
 
 '''
 
-'''
-
-def similar(upstream_seq, downstream_seq):
-    s               = SequenceMatcher(None, upstream_seq, downstream_seq)
-    match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
-    upstream_start  = match[0]
-    upstream_end    = match[0]+match[2]
-    longest_match   = upstream_seq[match[0]:(match[0]+match[2])]
-    to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
-    r1              = SequenceMatcher(None, to_match, longest_match).ratio()
-    return r1
-
-'''
 
