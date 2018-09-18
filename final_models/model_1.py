@@ -903,7 +903,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         meshes_embeds   = torch.stack(meshes_embeds)
         output, hn      = self.mesh_gru_second(meshes_embeds.unsqueeze(1), self.mesh_h0_second)
         return output[-1, 0, :]
-    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_mesh_embeds):
+    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_meshes_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
@@ -912,8 +912,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
-        good_mesh_out       = self.apply_mesh_gru(good_mesh_embeds)
-        good_out_pp         = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
+        good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
+        good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
         final_good_output   = self.final_layer(good_out_pp)
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds):
