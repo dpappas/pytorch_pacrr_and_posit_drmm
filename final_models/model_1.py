@@ -403,7 +403,7 @@ def train_data_step2(train_instances):
         good_sents                              = good_sents_title + good_sents_abs
         #
         good_snips                              = get_snips(quest_id, gid)
-        good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
+        good_snips                              = [' '.join(bioclean(sn)).encode('utf8') for sn in good_snips]
         #
         good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
         for good_text in good_sents:
@@ -412,7 +412,7 @@ def train_data_step2(train_instances):
             if(len(good_embeds)>0):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
-                tt = ' '.join(bioclean(good_text))
+                tt = ' '.join(bioclean(good_text)).encode('utf8')
                 good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
         #
         bad_mesh                                = get_the_mesh(train_docs[bid])
@@ -596,6 +596,16 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
+def similar(upstream_seq, downstream_seq):
+    s               = SequenceMatcher(None, upstream_seq, downstream_seq)
+    match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
+    upstream_start  = match[0]
+    upstream_end    = match[0]+match[2]
+    longest_match   = upstream_seq[match[0]:(match[0]+match[2])]
+    to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
+    r1              = SequenceMatcher(None, to_match, longest_match).ratio()
+    return r1
+
 def get_one_map(prefix, data, docs):
     model.eval()
     ret_data                = {'questions': []}
@@ -711,16 +721,6 @@ def train_one(epoch):
         logger.info('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-
-def similar(upstream_seq, downstream_seq):
-    s               = SequenceMatcher(None, upstream_seq, downstream_seq)
-    match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
-    upstream_start  = match[0]
-    upstream_end    = match[0]+match[2]
-    longest_match   = upstream_seq[match[0]:(match[0]+match[2])]
-    to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
-    r1              = SequenceMatcher(None, to_match, longest_match).ratio()
-    return r1
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
