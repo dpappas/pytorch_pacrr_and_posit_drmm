@@ -551,11 +551,10 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         ret['snippets'].append(esnip_res)
     return ret
 
-
 def get_one_map(prefix, data, docs):
     model.eval()
-    ret_data                = {}
-    ret_data['questions']   = []
+    ret_data        = {'questions': []}
+    all_snips_res   = {"questions": []}
     for dato in tqdm(data['queries']):
         quest                       = dato['query_text']
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
@@ -611,10 +610,12 @@ def get_one_map(prefix, data, docs):
         #
         extracted_snippets          = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
         extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-        # pprint(extracted_snippets)
-        prep_extracted_snippets()
-        exit()
-        #
+        # pprint(extracted_snippets),
+        snips_res                   = prep_extracted_snippets(
+            extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text']
+        )
+        all_snips_res['questions'].append(snips_res)
+    #
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
