@@ -413,9 +413,10 @@ def train_data_step2(train_instances):
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores)
                 tt          = ' '.join(bioclean(good_text))
-                sims        = [similar(gs, tt) for gs in good_snips]
-                best_sim    = max(sims) if(len(sims)>0) else 0.
-                good_sent_tags.append(int(best_sim>0.9))
+                snip_is_relevant(tt, good_snips)
+                # sims        = [similar(gs, tt) for gs in good_snips]
+                # best_sim    = max(sims) if(len(sims)>0) else 0.
+                # good_sent_tags.append(int(best_sim>0.9))
         #
         bad_mesh                                = get_the_mesh(train_docs[bid])
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
