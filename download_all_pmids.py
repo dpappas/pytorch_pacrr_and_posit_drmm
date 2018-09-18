@@ -430,9 +430,13 @@ if(not os.path.exists(odir)):
 
 random.shuffle(all_ids)
 for pmid in tqdm(all_ids):
-    dato = {}
-    link = 'https://www.ncbi.nlm.nih.gov/pubmed/?term={}&report=xml&format=json'.format(pmid)
-    data = urllib2.urlopen(link).read()
+    opath   = os.path.join(odir, '{}.xml'.format(pmid))
+    if(not os.path.exists(opath)):
+        link = 'https://www.ncbi.nlm.nih.gov/pubmed/?term={}&report=xml&format=json'.format(pmid)
+        dato = urllib2.urlopen(link).read()
+        with open(opath, 'w') as f:
+            f.write(dato)
+            f.close()
 
 
 
