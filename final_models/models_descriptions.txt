@@ -1,7 +1,18 @@
 
-model_1
+model_1:
+nltk sentence split
+cnn 3grams
 pdrmm on each sentence
 used entire document as sent as well
+use mesh hierarchical
+
+
+
+model_2:
+nltk sentence split
+pdrmm on each sentence
+used entire document as sent as well
+use mesh
 
 
 
