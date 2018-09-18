@@ -1011,18 +1011,15 @@ do everything with and without loss 2
 
 '''
 
-upstream_seq    = "\u00e1-Synuclein is the major protein component of Lewy bodies--the pathological hallmark of Parkinson's disease (PD) and Dementia with Lewy bodies (DLB). Its accumulation into intracellular aggregates is implicated in the process of Lewy body formation."
-downstream_seq  = "\u03b1-Synuclein is the major protein component of Lewy bodies--the pathological hallmark of Parkinson's disease (PD) and Dementia with Lewy bodies (DLB)."
-s               = SequenceMatcher(None, upstream_seq, downstream_seq)
-match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
-print(match)
-upstream_start  = match[0]
-upstream_end    = match[0]+match[2]
-seq             = upstream_seq[match[0]:(match[0]+match[2])]
-downstream_start = match[1]
-downstream_end  = match[1]+match[2]
-print("Upstream seq: %s\nstart-stop: %s-%s\n")      % (seq, upstream_start, upstream_end)
-print("Downstream seq: %s\nstart-stop: %s-%s\n")    % (seq, downstream_start, downstream_end)
+def similar(upstream_seq, downstream_seq):
+    s               = SequenceMatcher(None, upstream_seq, downstream_seq)
+    match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
+    upstream_start  = match[0]
+    upstream_end    = match[0]+match[2]
+    longest_match   = upstream_seq[match[0]:(match[0]+match[2])]
+    to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
+    r1              = SequenceMatcher(None, to_match, longest_match).ratio()
+    return r1
 
 '''
 
