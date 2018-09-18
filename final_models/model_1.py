@@ -530,7 +530,7 @@ def get_one_map(prefix, data, docs):
             t['doc_id'] : t['norm_bm25_score']
             for t in dato[u'retrieved_documents']
         }
-        doc_res                     = {}
+        doc_res, extracted_snippets = {}, []
         for retr in dato['retrieved_documents']:
             #
             (
