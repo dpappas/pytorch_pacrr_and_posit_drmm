@@ -795,7 +795,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.final_layer                            = nn.Linear(5 + 10, 1, bias=True)
         #
         # num_layers * num_directions, batch, hidden_size
-        self.context_h0                             = autograd.Variable(torch.randn(2, 1, 10))
+        self.context_h0                             = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
         self.context_gru                            = nn.GRU(
             input_size      = self.embedding_dim,
             hidden_size     = self.embedding_dim,
@@ -834,17 +834,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
-    def apply_convolution(self, the_input, the_filters, activation):
-        conv_res        = the_filters(the_input.transpose(0,1).unsqueeze(0))
-        if(activation is not None):
-            conv_res    = activation(conv_res)
-        pad             = the_filters.padding[0]
-        ind_from        = int(np.floor(pad/2.0))
-        ind_to          = ind_from + the_input.size(0)
-        conv_res        = conv_res[:, :, ind_from:ind_to]
-        conv_res        = conv_res.transpose(1, 2)
-        conv_res        = conv_res + the_input
-        return conv_res.squeeze(0)
+    def apply_context_gru(self, the_input):
+        output, hn      = self.context_gru(the_input.unsqueeze(1), self.context_h0)
+        output          = self.context_gru_activation(output)
+        out_forward     = output[:, 0, :self.embedding_dim]
+        out_backward    = output[:, 0, self.embedding_dim:]
+        output          = out_forward + out_backward
+        res             = output + the_input
+        return res
     def my_cosine_sim(self, A, B):
         A           = A.unsqueeze(0)
         B           = B.unsqueeze(0)
@@ -875,7 +872,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            conv_res            = self.apply_convolution(sent_embeds, self.trigram_conv, self.trigram_conv_activation)
+            conv_res            = self.apply_context_gru(sent_embeds)
             #
             sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
             sim_oh              = (sim_insens > (1 - (1e-3))).float()
@@ -947,7 +944,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         #
-        q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+        q_conv_res_trigram  = self.apply_context_gru(question_embeds)
         q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
