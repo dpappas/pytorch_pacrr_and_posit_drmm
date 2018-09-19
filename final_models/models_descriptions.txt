@@ -1,10 +1,10 @@
 
 model_1:
 nltk sentence split                     done
-cnn 3grams                              done
+bigru on doc and quest LeakyReLU        done
 pdrmm on each sentence                  done
 used entire document as sent as well    pending
-use mesh hierarchical                   done
+use mesh hierarchical 2 grus sigmoid    done
 
 
 

@@ -785,8 +785,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.k2                                     = k_sent_maxpool        # k is for the average k pooling
         #
         self.embedding_dim                          = embedding_dim
-        self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation                = torch.nn.LeakyReLU(negative_slope=0.1)
         self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=True)
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.my_relu1                               = torch.nn.LeakyReLU(negative_slope=0.1)
@@ -796,6 +794,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
         self.final_layer                            = nn.Linear(5 + 10, 1, bias=True)
         #
+        # num_layers * num_directions, batch, hidden_size
+        self.context_h0                             = autograd.Variable(torch.randn(2, 1, 10))
+        self.context_gru                            = nn.GRU(
+            input_size      = self.embedding_dim,
+            hidden_size     = self.embedding_dim,
+            bidirectional   = True
+        )
+        self.context_gru_activation                 = torch.nn.LeakyReLU(negative_slope=0.1)
         # num_layers * num_directions, batch, hidden_size
         self.mesh_h0_first                          = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10)
