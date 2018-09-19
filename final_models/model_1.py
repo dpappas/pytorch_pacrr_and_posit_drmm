@@ -631,6 +631,19 @@ def similar(upstream_seq, downstream_seq):
     r1              = SequenceMatcher(None, to_match, longest_match).ratio()
     return r1
 
+def get_pseudo_retrieved(dato):
+    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq6_data[dato['query_id']]['snippets']]
+    pseudo_retrieved            = [
+        {
+            'bm25_score'        : 7.76,
+            'doc_id'            : id,
+            'is_relevant'       : True,
+            'norm_bm25_score'   : 3.85
+        }
+        for id in set(some_ids)
+    ]
+    return pseudo_retrieved
+
 def get_one_map(prefix, data, docs):
     model.eval()
     ret_data                = {'questions': []}
@@ -650,6 +663,7 @@ def get_one_map(prefix, data, docs):
         bm25s                       = { t['doc_id'] : t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         gold_snips                  = get_gold_snips(dato['query_id'])
         doc_res, extracted_snippets = {}, []
+        # for retr in get_pseudo_retrieved(dato):
         for retr in dato['retrieved_documents']:
             doc_res, extracted_from_one, all_emits  = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
             extracted_snippets.extend(extracted_from_one)
