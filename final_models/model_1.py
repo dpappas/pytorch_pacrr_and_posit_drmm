@@ -671,7 +671,7 @@ def get_one_map(prefix, data, docs):
             if (dato['query_id'] not in data_for_revision):
                 data_for_revision[dato['query_id']] = {
                     'query_text': dato['query_text'],
-                    'snippets': { retr['doc_id'] : all_emits}
+                    'snippets'  : {retr['doc_id']: all_emits}
                 }
             else:
                 data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
