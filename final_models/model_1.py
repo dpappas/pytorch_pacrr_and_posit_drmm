@@ -834,14 +834,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
-    def apply_context_gru(self, the_input):
-        output, hn      = self.context_gru(the_input.unsqueeze(1), self.context_h0)
+    def apply_context_gru(self, the_input, h0):
+        output, hn      = self.context_gru(the_input.unsqueeze(1), h0)
         output          = self.context_gru_activation(output)
         out_forward     = output[:, 0, :self.embedding_dim]
         out_backward    = output[:, 0, self.embedding_dim:]
         output          = out_forward + out_backward
         res             = output + the_input
-        return res
+        return res, hn
     def my_cosine_sim(self, A, B):
         A           = A.unsqueeze(0)
         B           = B.unsqueeze(0)
@@ -869,10 +869,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return sr
     def do_for_one_doc(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
+        hn  = self.context_h0
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            conv_res            = self.apply_context_gru(sent_embeds)
+            conv_res, hn        = self.apply_context_gru(sent_embeds, hn)
             #
             sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
             sim_oh              = (sim_insens > (1 - (1e-3))).float()
@@ -929,11 +930,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
-        q_conv_res_trigram  = self.apply_context_gru(question_embeds)
-        q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_gru_res, _        = self.apply_context_gru(question_embeds, self.context_h0)
+        q_weights           = torch.cat([q_gru_res, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
+        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
         good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
         good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
         final_good_output   = self.final_layer(good_out_pp)
@@ -944,13 +945,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         #
-        q_conv_res_trigram  = self.apply_context_gru(question_embeds)
-        q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
+        q_gru_res, _        = self.apply_context_gru(question_embeds, self.context_h0)
+        q_weights           = torch.cat([q_gru_res, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
-        bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
+        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
+        bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_gru_res, q_weights)
         #
         good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
         bad_meshes_out      = self.apply_stacked_mesh_gru(bad_meshes_embeds)
