@@ -10,6 +10,7 @@ sys.setdefaultencoding("utf-8")
 import  os
 import  re
 import  json
+import  time
 import  random
 import  logging
 import  subprocess
@@ -726,6 +727,7 @@ def train_one(epoch):
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
     # for instance in train_data_step2(train_instances[:90*50]):
+    start_time      = time.time()
     for instance in train_data_step2(train_instances):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = instance[0],
@@ -753,14 +755,18 @@ def train_one(epoch):
         if (len(batch_costs) == b_size):
             batch_counter += 1
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-            print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-            logger.info('{} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+            elapsed_time    = time.time() - start_time
+            start_time      = time.time()
+            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+            logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
         batch_counter += 1
         batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-        print('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
-        logger.info('{} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc))
+        elapsed_time = time.time() - start_time
+        start_time = time.time()
+        print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+        logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
