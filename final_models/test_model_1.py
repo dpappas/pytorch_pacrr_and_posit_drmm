@@ -765,14 +765,29 @@ lr              = 0.01
 b_size          = 32
 max_epoch       = 15
 
-odir            = '/home/dpappas/test_model_1/'
-resume_from     = '/home/dpappas/model_1_run0/best_checkpoint.pth.tar'
 
 docs            = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_docset_top100.test.pkl'
 retrieved       = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_top100.test.pkl'
 golden          = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_top100.test.golden.pkl'
 
 test_data, test_docs, idf, max_idf, wv = load_all_data(w2v_bin_path, idf_pickle_path)
+
+for quer in test_data[u'queries']:
+    qid     = quer['query_id']
+    qtext   = quer['query_text']
+    for retr_doc in quer['retrieved_documents']:
+        doc_id  = retr_doc['doc_id']
+        bm25    = retr_doc['norm_bm25_score']
+        print(test_docs[doc_id].keys())
+
+
+
+
+
+exit()
+
+odir            = '/home/dpappas/test_model_1/'
+resume_from     = '/home/dpappas/model_1_run0/best_checkpoint.pth.tar'
 
 model           = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
 params          = model.parameters()
