@@ -776,10 +776,12 @@ for quer in test_data[u'queries']:
     qid     = quer['query_id']
     qtext   = quer['query_text']
     for retr_doc in quer['retrieved_documents']:
-        doc_id  = retr_doc['doc_id']
-        bm25    = retr_doc['norm_bm25_score']
-        print(test_docs[doc_id].keys())
-
+        doc_id      = retr_doc['doc_id']
+        bm25        = retr_doc['norm_bm25_score']
+        the_doc     = test_docs[doc_id]
+        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+        dtext       = ['title'] + test_docs[doc_id]['abstractText']
+        good_doc_af = GetScores(qtext, dtext, bm25)
 
 
 
