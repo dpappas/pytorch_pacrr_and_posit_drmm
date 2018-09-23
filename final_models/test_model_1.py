@@ -288,12 +288,10 @@ def GetWords(data, doc_text, words):
 def load_all_data(w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
     #
-    with open(retrieved, 'rb') as f:
-        test_data = pickle.load(f)
-    with open(docs, 'rb') as f:
-        test_docs = pickle.load(f)
-    #
-    test_data = RemoveBadYears(test_data, test_docs, False)
+    # golden_data = pickle.load(open(golden,      'rb'))
+    test_data   = pickle.load(open(retrieved,   'rb'))
+    test_docs   = pickle.load(open(docs,        'rb'))
+    test_data   = RemoveBadYears(test_data, test_docs, False)
     #
     words = {}
     GetWords(test_data, test_docs, words)
@@ -768,7 +766,7 @@ b_size          = 32
 max_epoch       = 15
 
 odir            = '/home/dpappas/test_model_1/'
-resume_from     = '/home/dpappas/model_2_run0/best_checkpoint.pth.tar'
+resume_from     = '/home/dpappas/model_1_run0/best_checkpoint.pth.tar'
 
 docs            = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_docset_top100.test.pkl'
 retrieved       = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_top100.test.pkl'
@@ -780,6 +778,8 @@ model           = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_max
 params          = model.parameters()
 
 load_model_from_checkpoint(resume_from)
+
+
 
 epoch_dev_map   = get_one_map('test', test_data, test_docs)
 pprint(epoch_dev_map)
