@@ -772,6 +772,15 @@ golden          = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioas
 
 test_data, test_docs, idf, max_idf, wv = load_all_data(w2v_bin_path, idf_pickle_path)
 
+odir            = '/home/dpappas/test_model_1/'
+resume_from     = '/home/dpappas/model_1_run0/best_checkpoint.pth.tar'
+
+model           = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
+params          = model.parameters()
+
+load_model_from_checkpoint(resume_from)
+
+
 for quer in test_data[u'queries']:
     qid                         = quer['query_id']
     qtext                       = quer['query_text']
@@ -781,6 +790,7 @@ for quer in test_data[u'queries']:
         doc_id      = retr_doc['doc_id']
         bm25        = retr_doc['norm_bm25_score']
         the_doc     = test_docs[doc_id]
+        is_relevant = retr_doc['is_relevant']
         (
             good_sents_embeds, good_sents_escores, good_doc_af,
             good_meshes_embeds, held_out_sents
@@ -793,20 +803,21 @@ for quer in test_data[u'queries']:
             doc_gaf             = good_doc_af,
             good_meshes_embeds  = good_meshes_embeds
         )
-
-
-
-exit()
-
-odir            = '/home/dpappas/test_model_1/'
-resume_from     = '/home/dpappas/model_1_run0/best_checkpoint.pth.tar'
-
-model           = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
-params          = model.parameters()
-
-load_model_from_checkpoint(resume_from)
-
-
-
-epoch_dev_map   = get_one_map('test', test_data, test_docs)
-pprint(epoch_dev_map)
+        emition     = doc_emit_.cpu().item()
+        emitss      = gs_emits_.tolist()
+        mmax        = max(emitss)
+        print(emition, is_relevant)
+        print(emitss)
+        # all_emits, extracted_from_one = [], []
+        # for ind in range(len(emitss)):
+        #     t = (
+        #         snip_is_relevant(held_out_sents[ind], gold_snips),
+        #         emitss[ind],
+        #         "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+        #         held_out_sents[ind]
+        #     )
+        #     all_emits.append(t)
+        #     if (emitss[ind] == mmax):
+        #         extracted_from_one.append(t)
+        # doc_res[retr['doc_id']] = float(emition)
+        # all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
