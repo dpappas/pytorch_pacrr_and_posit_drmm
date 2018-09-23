@@ -1000,14 +1000,14 @@ w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
 dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
 eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-retrieval_jar_path  = '/home/DATA/Biomedical/bioasq6/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar '
+retrieval_jar_path  = '/home/DATA/Biomedical/bioasq6/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
 embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
-max_epoch       = 15
+max_epoch       = 10
 
 hdlr = None
 for run in range(5):
