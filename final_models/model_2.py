@@ -951,13 +951,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         #
-        q_gru_res, _        = self.apply_context_gru(question_embeds, self.context_h0)
-        q_weights           = torch.cat([q_gru_res, q_idfs], -1)
+        q_conv_res_trigram  = self.apply_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+        q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
-        bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_gru_res, q_weights)
+        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
+        bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
         good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
         bad_meshes_out      = self.apply_stacked_mesh_gru(bad_meshes_embeds)
