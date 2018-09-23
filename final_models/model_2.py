@@ -886,6 +886,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            print(sent_add_feats.size())
             sent_out            = self.out_layer(sent_add_feats)
             res.append(sent_out)
         res = torch.stack(res)
