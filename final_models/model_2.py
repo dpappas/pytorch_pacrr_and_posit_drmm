@@ -603,7 +603,7 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
         good_meshes_embeds  = good_meshes_embeds
     )
     emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_[:, 0].tolist()
+    emitss                  = gs_emits_.tolist()
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
