@@ -901,7 +901,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         print(res.size())
         res = self.out_layer(res)
         print(res.size())
-        res = torch.stack(res)
         res = F.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
         return ret, res
