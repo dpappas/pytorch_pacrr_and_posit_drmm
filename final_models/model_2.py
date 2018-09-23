@@ -843,6 +843,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output          = out_forward + out_backward
         res             = output + the_input
         return res, hn
+    def apply_convolution(self, the_input, the_filters, activation):
+        conv_res        = the_filters(the_input.transpose(0,1).unsqueeze(0))
+        if(activation is not None):
+            conv_res    = activation(conv_res)
+        pad             = the_filters.padding[0]
+        ind_from        = int(np.floor(pad/2.0))
+        ind_to          = ind_from + the_input.size(0)
+        conv_res        = conv_res[:, :, ind_from:ind_to]
+        conv_res        = conv_res.transpose(1, 2)
+        conv_res        = conv_res + the_input
+        return conv_res.squeeze(0)
     def my_cosine_sim(self, A, B):
         A           = A.unsqueeze(0)
         B           = B.unsqueeze(0)
