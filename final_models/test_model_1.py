@@ -798,4 +798,8 @@ params          = model.parameters()
 
 load_model_from_checkpoint(resume_from)
 
+docs        = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_docset_top100.test.pkl'
+retrieved   = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_top100.test.pkl'
+golden      = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_top100.test.golden.pkl'
+
 epoch_dev_map   = get_one_map('test', dev_data, dev_docs)
