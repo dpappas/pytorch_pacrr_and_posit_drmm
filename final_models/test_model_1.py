@@ -285,43 +285,25 @@ def GetWords(data, doc_text, words):
       for w in dwds:
         words[w] = 1
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+def load_all_data(w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
     #
-    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
-        bioasq6_data = json.load(f)
-        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
-    # logger.info('loading pickle data')
-    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
+    with open(retrieved, 'rb') as f:
         test_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
+    with open(docs, 'rb') as f:
         test_docs = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
-        dev_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
-        dev_docs = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
-        train_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
-        train_docs = pickle.load(f)
-    print('loading words')
     #
-    train_data  = RemoveBadYears(train_data, train_docs, True)
-    train_data  = RemoveTrainLargeYears(train_data, train_docs)
-    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
-    test_data   = RemoveBadYears(test_data, test_docs, False)
+    test_data = RemoveBadYears(test_data, test_docs, False)
     #
-    words           = {}
-    GetWords(train_data, train_docs, words)
-    GetWords(dev_data,   dev_docs,   words)
-    GetWords(test_data,  test_docs,  words)
-    # mgmx
+    words = {}
+    GetWords(test_data, test_docs, words)
     print('loading idfs')
-    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    idf, max_idf = load_idfs(idf_pickle_path, words)
     print('loading w2v')
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
+    #
+    return test_data, test_docs, idf, max_idf, wv
 
 def get_snips(quest_id, gid):
     good_snips = []
@@ -788,18 +770,16 @@ max_epoch       = 15
 odir            = '/home/dpappas/test_model_1/'
 resume_from     = '/home/dpappas/model_2_run0/best_checkpoint.pth.tar'
 
-(
-    test_data, test_docs, dev_data, dev_docs, train_data,
-    train_docs, idf, max_idf, wv, bioasq6_data
-) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+docs            = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_docset_top100.test.pkl'
+retrieved       = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_top100.test.pkl'
+golden          = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_top100.test.golden.pkl'
+
+test_data, test_docs, idf, max_idf, wv = load_all_data(w2v_bin_path, idf_pickle_path)
 
 model           = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
 params          = model.parameters()
 
 load_model_from_checkpoint(resume_from)
 
-docs        = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_docset_top100.test.pkl'
-retrieved   = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_top100.test.pkl'
-golden      = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioasq6_bm25_top100.test.golden.pkl'
-
-epoch_dev_map   = get_one_map('test', dev_data, dev_docs)
+epoch_dev_map   = get_one_map('test', test_data, test_docs)
+pprint(epoch_dev_map)
