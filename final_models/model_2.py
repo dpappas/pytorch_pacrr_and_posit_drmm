@@ -902,7 +902,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = self.out_layer(res)
         print(res.size())
         res = F.sigmoid(res)
+        print(res.size())
         ret = self.get_max(res).unsqueeze(0)
+        print(ret.size())
+        print(20*'-')
         return ret, res
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
