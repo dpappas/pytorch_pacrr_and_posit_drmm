@@ -787,8 +787,8 @@ def init_the_logger(hdlr):
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim, k_for_maxpool, k_sent_maxpool):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.k                                      = k_for_maxpool         # k is for the average k pooling
-        self.k2                                     = k_sent_maxpool        # k is for the average k pooling
+        self.k                                      = k_for_maxpool
+        self.k2                                     = k_sent_maxpool
         #
         self.embedding_dim                          = embedding_dim
         self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=True)
