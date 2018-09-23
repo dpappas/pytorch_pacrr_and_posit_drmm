@@ -804,12 +804,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         # num_layers * num_directions, batch, hidden_size
         self.mesh_h0_first                          = autograd.Variable(torch.randn(1, 1, 10))
-        self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10)
+        self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10, batch_first=False)
         self.mesh_h0_second                         = autograd.Variable(torch.randn(1, 1, 10))
-        self.mesh_gru_second                        = nn.GRU(10, 10)
+        self.mesh_gru_second                        = nn.GRU(10, 10, batch_first=False)
         #
         self.sent_res_h0                            = autograd.Variable(torch.randn(2, 1, 5))
-        self.sent_res_bigru                         = nn.GRU(input_size=4, hidden_size=5, bidirectional=True)
+        self.sent_res_bigru                         = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
         self.sent_res_mlp                           = nn.Linear(10, 1, bias=True)
     def min_max_norm(self, x):
         minn        = torch.min(x)
@@ -865,7 +865,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
     def apply_sent_res_bigru(self, the_input):
-        output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0, batch_first=False)
+        output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output          = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
@@ -959,7 +959,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = torch.cat([q_conv_res_trigram, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
+        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
         good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
         final_good_output   = self.final_layer(good_out_pp)
