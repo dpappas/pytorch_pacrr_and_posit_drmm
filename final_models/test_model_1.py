@@ -786,10 +786,10 @@ for quer in test_data[u'queries']:
     quest_tokens, quest_embeds  = get_embeds(tokenize(qtext), wv)
     q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     for retr_doc in quer['retrieved_documents']:
-        doc_id      = retr_doc['doc_id']
-        bm25        = retr_doc['norm_bm25_score']
-        the_doc     = test_docs[doc_id]
-        is_relevant = retr_doc['is_relevant']
+        doc_id                  = retr_doc['doc_id']
+        bm25                    = retr_doc['norm_bm25_score']
+        the_doc                 = test_docs[doc_id]
+        is_relevant             = retr_doc['is_relevant']
         (good_sents_embeds, good_sents_escores, good_doc_af, good_meshes_embeds, held_out_sents) = prep_data(qtext, the_doc, bm25)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = good_sents_embeds,
