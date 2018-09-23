@@ -10,10 +10,10 @@ use mesh hierarchical 2 grus  + sigmoid         done
 
 model_2:
 nltk sentence split
-cnn 3grams
+cnn 3grams + LeakyReLU + residuals
 pdrmm on each sentence
-used entire document as sent as well
-use mesh hierarchical
+used entire document as sent as well            pending
+use mesh hierarchical 2 grus  + sigmoid
 rnn on outputs of sents
 
 
