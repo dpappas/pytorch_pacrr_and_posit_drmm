@@ -796,7 +796,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1                               = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-        self.out_layer                              = nn.Linear(4, 1, bias=True)
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
         self.final_layer                            = nn.Linear(5 + 10, 1, bias=True)
         #
@@ -808,24 +807,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10)
         self.mesh_h0_second                         = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru_second                        = nn.GRU(10, 10)
-    def init_xavier(self):
-        nn.init.xavier_uniform_(self.trigram_conv.weight)
-        nn.init.xavier_uniform_(self.q_weights_mlp.weight)
-        nn.init.xavier_uniform_(self.linear_per_q1.weight)
-        nn.init.xavier_uniform_(self.linear_per_q2.weight)
-        nn.init.xavier_uniform_(self.out_layer.weight)
-    def init_using_value(self, value):
-        self.trigram_conv.weight.data.fill_(value)
-        self.q_weights_mlp.weight.data.fill_(value)
-        self.linear_per_q1.weight.data.fill_(value)
-        self.linear_per_q2.weight.data.fill_(value)
-        self.out_layer.weight.data.fill_(value)
-        self.trigram_conv.bias.data.fill_(value)
-        self.q_weights_mlp.bias.data.fill_(value)
-        self.linear_per_q1.bias.data.fill_(value)
-        self.linear_per_q2.bias.data.fill_(value)
-        self.out_layer.weight.data.fill_(value)
-        self.final_layer.weight.data.fill_(value)
+        #
+        self.sent_res_h0                            = autograd.Variable(torch.randn(2, 1, 5))
+        self.sent_res_bigru                         = nn.GRU(input_size=4, hidden_size=5, bidirectional=True)
+        self.sent_res_mlp                           = nn.Linear(10, 1, bias=True)
     def min_max_norm(self, x):
         minn        = torch.min(x)
         maxx        = torch.max(x)
@@ -879,6 +864,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
+    def apply_sent_res_bigru(self, the_input):
+
+        output, hn      = self.context_gru(the_input.unsqueeze(1), h0)
+        output          = self.context_gru_activation(output)
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         for i in range(len(doc_sents_embeds)):
@@ -897,15 +886,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
-        res = torch.stack(res)
+        res = torch.stack(res).unsqueeze()
         print(res.size())
         res = self.out_layer(res)
-        print(res.size())
         res = F.sigmoid(res)
-        print(res.size())
         ret = self.get_max(res).unsqueeze(0)
-        print(ret.size())
-        print(20*'-')
         return ret, res
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
