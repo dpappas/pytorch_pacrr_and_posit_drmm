@@ -773,16 +773,26 @@ golden          = '/home/dpappas/for_ryan/test_batch_1/bioasq6_bm25_top100/bioas
 test_data, test_docs, idf, max_idf, wv = load_all_data(w2v_bin_path, idf_pickle_path)
 
 for quer in test_data[u'queries']:
-    qid     = quer['query_id']
-    qtext   = quer['query_text']
+    qid                         = quer['query_id']
+    qtext                       = quer['query_text']
+    quest_tokens, quest_embeds  = get_embeds(tokenize(qtext), wv)
+    q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     for retr_doc in quer['retrieved_documents']:
         doc_id      = retr_doc['doc_id']
         bm25        = retr_doc['norm_bm25_score']
         the_doc     = test_docs[doc_id]
-        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-        dtext       = ['title'] + test_docs[doc_id]['abstractText']
-        good_doc_af = GetScores(qtext, dtext, bm25)
-
+        (
+            good_sents_embeds, good_sents_escores, good_doc_af,
+            good_meshes_embeds, held_out_sents
+        ) = prep_data(qtext, the_doc, bm25)
+        doc_emit_, gs_emits_    = model.emit_one(
+            doc1_sents_embeds   = good_sents_embeds,
+            question_embeds     = quest_embeds,
+            q_idfs              = q_idfs,
+            sents_gaf           = good_sents_escores,
+            doc_gaf             = good_doc_af,
+            good_meshes_embeds  = good_meshes_embeds
+        )
 
 
 
