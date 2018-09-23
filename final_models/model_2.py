@@ -865,9 +865,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
     def apply_sent_res_bigru(self, the_input):
-
-        output, hn      = self.context_gru(the_input.unsqueeze(1), h0)
-        output          = self.context_gru_activation(output)
+        output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0, batch_first=False)
+        output          = self.sent_res_mlp(output)
+        return output.squeeze(-1).squeeze(-1)
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         for i in range(len(doc_sents_embeds)):
@@ -886,9 +886,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
-        res = torch.stack(res).unsqueeze()
-        print(res.size())
-        res = self.out_layer(res)
+        res = torch.stack(res)
+        res = self.apply_sent_res_bigru(res)
         res = F.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
         return ret, res
