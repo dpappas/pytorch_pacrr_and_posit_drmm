@@ -804,14 +804,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.trigram_conv_activation                = torch.nn.LeakyReLU(negative_slope=0.1)
         #
         # num_layers * num_directions, batch, hidden_size
-        self.context_h0                             = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
-        self.context_gru                            = nn.GRU(
-            input_size      = self.embedding_dim,
-            hidden_size     = self.embedding_dim,
-            bidirectional   = True
-        )
-        self.context_gru_activation                 = torch.nn.LeakyReLU(negative_slope=0.1)
-        # num_layers * num_directions, batch, hidden_size
         self.mesh_h0_first                          = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10)
         self.mesh_h0_second                         = autograd.Variable(torch.randn(1, 1, 10))
