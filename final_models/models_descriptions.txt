@@ -18,3 +18,20 @@ rnn on outputs of sents                         done
 
 
 
+
+some data:
+
+https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/RESTful/tmTool.cgi/BioConcept/8896569/JSON/
+https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/RESTful/tmTool.cgi/Disease/8896569/JSON/
+https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/RESTful/tmTool.cgi/Chemical/8896569/JSON/
+
+Bioconcept: We support five kinds of bioconcepts, i.e., Gene, Disease, Chemical, Species, Mutation. When 'BioConcept' is used, all five are included.
+links
+https://www.ncbi.nlm.nih.gov/research/bionlp/APIs/usage/
+ftp://ftp.ncbi.nlm.nih.gov/pub/lu/PubTator/
+https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/index.cgi
+
+Europe pmc
+https://www.ebi.ac.uk/europepmc/annotations_api/annotationsByArticleIds?articleIds=MED:8896569&section=Abstract&format=JSON
+
+
