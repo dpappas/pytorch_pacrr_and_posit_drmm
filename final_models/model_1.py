@@ -873,7 +873,34 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
-    def do_for_one_doc(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
+    def apply_sent_res_bigru(self, the_input):
+        output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
+        output          = self.sent_res_mlp(output)
+        return output.squeeze(-1).squeeze(-1)
+    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
+        res = []
+        for i in range(len(doc_sents_embeds)):
+            sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
+            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
+            conv_res            = self.apply_convolution(sent_embeds, self.trigram_conv, self.trigram_conv_activation)
+            #
+            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
+            sim_oh              = (sim_insens > (1 - (1e-3))).float()
+            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+            #
+            insensitive_pooled  = self.pooling_method(sim_insens)
+            sensitive_pooled    = self.pooling_method(sim_sens)
+            oh_pooled           = self.pooling_method(sim_oh)
+            #
+            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            res.append(sent_add_feats)
+        res = torch.stack(res)
+        res = self.apply_sent_res_bigru(res)
+        res = F.sigmoid(res)
+        ret = self.get_max(res).unsqueeze(0)
+        return ret, res
+    def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         hn  = self.context_h0
         for i in range(len(doc_sents_embeds)):
@@ -891,9 +918,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
-            sent_out            = self.out_layer(sent_add_feats)
-            res.append(sent_out)
+            res.append(sent_add_feats)
         res = torch.stack(res)
+        res = self.apply_sent_res_bigru(res)
         res = F.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
         return ret, res
@@ -940,7 +967,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = torch.cat([q_gru_res, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
+        good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
         good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
         good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
         final_good_output   = self.final_layer(good_out_pp)
@@ -956,8 +983,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
-        bad_out,  bs_emits  = self.do_for_one_doc(doc2_sents_embeds, sents_baf, question_embeds, q_gru_res, q_weights)
+        good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
+        bad_out,  bs_emits  = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_gru_res, q_weights)
         #
         good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
         bad_meshes_out      = self.apply_stacked_mesh_gru(bad_meshes_embeds)
