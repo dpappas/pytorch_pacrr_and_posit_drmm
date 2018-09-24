@@ -797,7 +797,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
-        self.final_layer                            = nn.Linear(5 + 10, 1, bias=True)
+        self.final_layer                            = nn.Linear(5, 1, bias=True)
         #
         self.trigram_conv                           = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation                = torch.nn.LeakyReLU(negative_slope=0.1)
@@ -961,8 +961,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
-        good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
-        good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         final_good_output   = self.final_layer(good_out_pp)
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds):
@@ -979,11 +978,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_conv_res_trigram, q_weights)
         bad_out,  bs_emits  = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_conv_res_trigram, q_weights)
         #
-        good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
-        bad_meshes_out      = self.apply_stacked_mesh_gru(bad_meshes_embeds)
-        #
-        good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-        bad_out_pp          = torch.cat([bad_out,  doc_baf, bad_meshes_out],  -1)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        bad_out_pp          = torch.cat([bad_out,  doc_baf],  -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
@@ -991,17 +987,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
 
-# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-# retrieval_jar_path  = '/home/DATA/Biomedical/bioasq6/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+retrieval_jar_path  = '/home/DATA/Biomedical/bioasq6/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
