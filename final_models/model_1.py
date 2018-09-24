@@ -80,9 +80,9 @@ def print_params(model):
     print(40 * '=')
     print(model)
     print(40 * '=')
-    # logger.info(40 * '=')
-    # logger.info(model)
-    # logger.info(40 * '=')
+    logger.info(40 * '=')
+    logger.info(model)
+    logger.info(40 * '=')
     trainable       = 0
     untrainable     = 0
     for parameter in model.parameters():
@@ -98,9 +98,9 @@ def print_params(model):
     print(40 * '=')
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
-    # logger.info(40 * '=')
-    # logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
-    # logger.info(40 * '=')
+    logger.info(40 * '=')
+    logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
+    logger.info(40 * '=')
 
 def dummy_test():
     doc1_embeds         = np.random.rand(40, 200)
