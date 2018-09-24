@@ -808,9 +808,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.mesh_h0_second                         = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru_second                        = nn.GRU(10, 10, batch_first=False)
         #
-        self.sent_res_h0                            = autograd.Variable(torch.randn(2, 1, 5))
-        self.sent_res_bigru                         = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
-        self.sent_res_mlp                           = nn.Linear(10, 1, bias=True)
+        self.out_layer                              = nn.Linear(4, 1, bias=True)
+        # self.sent_res_h0                            = autograd.Variable(torch.randn(2, 1, 5))
+        # self.sent_res_bigru                         = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
+        # self.sent_res_mlp                           = nn.Linear(10, 1, bias=True)
     def min_max_norm(self, x):
         minn        = torch.min(x)
         maxx        = torch.max(x)
@@ -887,7 +888,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
-        res = self.apply_sent_res_bigru(res)
+        # res = self.apply_sent_res_bigru(res)
+        res = self.outp(res)
         res = F.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
         return ret, res
@@ -1015,7 +1017,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/model_2_run{}/'.format(run)
+    odir            = '/home/dpappas/model_3_run{}/'.format(run)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
