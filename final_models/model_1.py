@@ -813,6 +813,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10)
         self.mesh_h0_second                         = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru_second                        = nn.GRU(10, 10)
+        #
+        self.sent_res_h0                            = autograd.Variable(torch.randn(2, 1, 5))
+        self.sent_res_bigru                         = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
+        self.sent_res_mlp                           = nn.Linear(10, 1, bias=True)
     def init_xavier(self):
         nn.init.xavier_uniform_(self.trigram_conv.weight)
         nn.init.xavier_uniform_(self.q_weights_mlp.weight)
@@ -1016,7 +1020,7 @@ k_sent_maxpool  = 2
 embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
-max_epoch       = 15
+max_epoch       = 10
 
 hdlr = None
 for run in range(5):

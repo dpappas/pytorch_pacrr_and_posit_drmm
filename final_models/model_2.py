@@ -1032,6 +1032,7 @@ for run in range(5):
     model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
     params      = model.parameters()
     print_params(model)
+    exit()
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
