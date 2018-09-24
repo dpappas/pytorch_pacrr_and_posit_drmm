@@ -18,7 +18,7 @@ use mesh hierarchical 2 grus  + sigmoid         done
 bigru on outputs of sents                       done
 
 
-model_1:
+model_3:
 nltk sentence split                             YES
 cnn 3grams for context + LeakyReLU + residuals  YES
 pdrmm on each sentence                          YES
