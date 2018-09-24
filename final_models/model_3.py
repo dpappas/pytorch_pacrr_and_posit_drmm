@@ -889,7 +889,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_add_feats)
         res = torch.stack(res)
         # res = self.apply_sent_res_bigru(res)
-        res = self.outp(res)
+        res = self.out_layer(res)
         res = F.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
         return ret, res
