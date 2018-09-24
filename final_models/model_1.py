@@ -543,7 +543,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1
     ./drmm-experimental_submit.json
     '''
-    jar_path = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+    jar_path = retrieval_jar_path
     #
     fgold    = './{}_data_for_revision.json'.format(prefix)
     fgold    = os.path.abspath(fgold)
@@ -998,15 +998,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc         = '/home/dpappas/for_ryan/'
-eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
-# w2v_bin_path    = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-# idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
-# dataloc         = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-# eval_path       = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+
+# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# retrieval_jar_path  = '/home/DATA/Biomedical/bioasq6/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
