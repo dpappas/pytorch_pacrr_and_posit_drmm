@@ -19,9 +19,9 @@ bigru on outputs of sents                       done
 
 
 model_1:
-nltk sentence split                             done
-cnn 3grams for context + LeakyReLU + residuals  done
-pdrmm on each sentence                          done
+nltk sentence split                             YES
+cnn 3grams for context + LeakyReLU + residuals  YES
+pdrmm on each sentence                          YES
 used entire document as sent as well            pending
 use mesh hierarchical 2 grus  + sigmoid         NO
 bigru on outputs of sents                       NO
