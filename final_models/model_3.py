@@ -993,11 +993,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 # eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 # retrieval_jar_path  = '/home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
 
-w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-retrieval_jar_path  = '/home/DATA/Biomedical/bioasq6/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# retrieval_jar_path  = '/home/DATA/Biomedical/bioasq6/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
+
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/BioASQEvaluation.jar'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
@@ -1033,7 +1039,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
+        # train_one(epoch + 1)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
