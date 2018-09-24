@@ -1003,7 +1003,7 @@ w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/BioASQEvaluation.jar'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
