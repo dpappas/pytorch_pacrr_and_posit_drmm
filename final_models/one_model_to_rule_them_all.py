@@ -920,7 +920,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
-        res = self.apply_sent_res_bigru(res)
+        if(self.sentence_out_method == 'MLP'):
+            res = self.sent_out_layer(res).squeeze(-1)
+        else:
+            res = self.apply_sent_res_bigru(res)
         res = F.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
         return ret, res
