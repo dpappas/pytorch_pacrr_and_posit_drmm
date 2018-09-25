@@ -801,7 +801,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-        #
+    #
     def init_mesh_module(self):
         self.mesh_h0_first      = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru_first     = nn.GRU(self.embedding_dim, 10)
@@ -809,7 +809,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # self.mesh_gru_second    = nn.GRU(10, 10)
     def init_context_module(self):
         if(self.context_method == 'CNN'):
-            pass
+            self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+            self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
+            self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+            self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
         else:
             self.context_h0     = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
             self.context_gru    = nn.GRU(
@@ -837,24 +840,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.final_layer = nn.Linear(5 + 10, 1, bias=True)
         else:
             self.final_layer = nn.Linear(5, 1, bias=True)
-    def init_xavier(self):
-        nn.init.xavier_uniform_(self.trigram_conv.weight)
-        nn.init.xavier_uniform_(self.q_weights_mlp.weight)
-        nn.init.xavier_uniform_(self.linear_per_q1.weight)
-        nn.init.xavier_uniform_(self.linear_per_q2.weight)
-        nn.init.xavier_uniform_(self.out_layer.weight)
-    def init_using_value(self, value):
-        self.trigram_conv.weight.data.fill_(value)
-        self.q_weights_mlp.weight.data.fill_(value)
-        self.linear_per_q1.weight.data.fill_(value)
-        self.linear_per_q2.weight.data.fill_(value)
-        self.out_layer.weight.data.fill_(value)
-        self.trigram_conv.bias.data.fill_(value)
-        self.q_weights_mlp.bias.data.fill_(value)
-        self.linear_per_q1.bias.data.fill_(value)
-        self.linear_per_q2.bias.data.fill_(value)
-        self.out_layer.weight.data.fill_(value)
-        self.final_layer.weight.data.fill_(value)
     #
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
@@ -913,7 +898,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            conv_res            = self.apply_context_convolution(sent_embeds, self.trigram_conv, self.trigram_conv_activation)
+            conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+            conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
             #
             sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
             sim_oh              = (sim_insens > (1 - (1e-3))).float()
@@ -1016,23 +1002,24 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         #
         if(self.context_method=='CNN'):
-            q_gru_res       = self.apply_context_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         else:
-            q_gru_res, _    = self.apply_context_gru(question_embeds, self.context_h0)
-        q_weights           = torch.cat([q_gru_res, q_idfs], -1)
+            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
+        q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         if(self.context_method=='CNN'):
             good_out, gs_emits  = self.do_for_one_doc_cnn(
-                doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res,q_weights)
+                doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
             bad_out, bs_emits   = self.do_for_one_doc_cnn(
-                doc2_sents_embeds, sents_baf, question_embeds, q_gru_res, q_weights)
+                doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         else:
             good_out, gs_emits = self.do_for_one_doc_bigru(
-                doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
+                doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
             bad_out, bs_emits = self.do_for_one_doc_bigru(
-                doc2_sents_embeds, sents_baf, question_embeds, q_gru_res, q_weights)
+                doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
         good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
         bad_meshes_out      = self.apply_stacked_mesh_gru(bad_meshes_embeds)
