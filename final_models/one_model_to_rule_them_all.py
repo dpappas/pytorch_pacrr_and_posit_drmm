@@ -545,8 +545,9 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
     jar_path = retrieval_jar_path
     #
-    fgold    = './{}_data_for_revision.json'.format(prefix)
-    fgold    = os.path.abspath(fgold)
+    fgold   = '{}_data_for_revision.json'.format(prefix)
+    fgold   = os.path.join(odir, fgold)
+    fgold   = os.path.abspath(fgold)
     with open(fgold, 'w') as f:
         f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
         f.close()
@@ -558,14 +559,16 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             del (tt['ideal_answer'])
         if ('type' in tt):
             del (tt['type'])
-    fgold    = './{}_gold_bioasq.json'.format(prefix)
-    fgold    = os.path.abspath(fgold)
+    fgold    = '{}_gold_bioasq.json'.format(prefix)
+    fgold   = os.path.join(odir, fgold)
+    fgold   = os.path.abspath(fgold)
     with open(fgold, 'w') as f:
         f.write(json.dumps(data_gold, indent=4, sort_keys=True))
         f.close()
     #
-    femit    = './{}_emit_bioasq.json'.format(prefix)
-    femit    = os.path.abspath(femit)
+    femit    = '{}_emit_bioasq.json'.format(prefix)
+    femit   = os.path.join(odir, femit)
+    femit   = os.path.abspath(femit)
     with open(femit, 'w') as f:
         f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
         f.close()
@@ -1065,7 +1068,7 @@ for run in range(5):
         k_for_maxpool       = k_for_maxpool,
         context_method      = 'CNN',
         sentence_out_method = 'MLP',
-        use_mesh            = True
+        use_mesh            = False
     )
     params      = model.parameters()
     print_params(model)
