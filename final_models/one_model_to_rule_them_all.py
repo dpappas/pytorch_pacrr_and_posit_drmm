@@ -803,10 +803,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
     #
     def init_mesh_module(self):
-        self.mesh_h0_first      = autograd.Variable(torch.randn(1, 1, 10))
-        self.mesh_gru_first     = nn.GRU(self.embedding_dim, 10)
-        # self.mesh_h0_second     = autograd.Variable(torch.randn(1, 1, 10))
-        # self.mesh_gru_second    = nn.GRU(10, 10)
+        self.mesh_h0    = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
+        self.mesh_gru   = nn.GRU(self.embedding_dim, self.embedding_dim)
     def init_context_module(self):
         if(self.context_method == 'CNN'):
             self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
@@ -975,26 +973,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return res
     def apply_mesh_gru(self, mesh_embeds):
         mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-        output, hn      = self.mesh_gru_first(mesh_embeds.unsqueeze(1), self.mesh_h0_first)
+        output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         return output[-1,0,:]
-    def apply_stacked_mesh_gru(self, meshes_embeds):
+    def get_mesh_rep(self, meshes_embeds, q_context):
         meshes_embeds   = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
         meshes_embeds   = torch.stack(meshes_embeds)
+        print(meshes_embeds.size())
+        print(q_context.size())
+        similarity      = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
+        print(similarity.size())
         output, hn      = self.mesh_gru_second(meshes_embeds.unsqueeze(1), self.mesh_h0_second)
         return output[-1, 0, :]
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_meshes_embeds):
-        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
-        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
-        q_gru_res, _        = self.apply_context_gru(question_embeds, self.context_h0)
-        q_weights           = torch.cat([q_gru_res, q_idfs], -1)
-        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights           = F.softmax(q_weights, dim=-1)
-        good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
-        good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
-        good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-        final_good_output   = self.final_layer(good_out_pp)
-        return final_good_output, gs_emits
+        pass
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -1011,18 +1002,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         if(self.context_method=='CNN'):
-            good_out, gs_emits  = self.do_for_one_doc_cnn(
-                doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-            bad_out, bs_emits   = self.do_for_one_doc_cnn(
-                doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+            bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         else:
-            good_out, gs_emits = self.do_for_one_doc_bigru(
-                doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-            bad_out, bs_emits = self.do_for_one_doc_bigru(
-                doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+            good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+            bad_out, bs_emits = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
-        good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
-        bad_meshes_out      = self.apply_stacked_mesh_gru(bad_meshes_embeds)
+        good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
+        bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds,  q_context)
         #
         good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
         bad_out_pp          = torch.cat([bad_out,  doc_baf, bad_meshes_out],  -1)
