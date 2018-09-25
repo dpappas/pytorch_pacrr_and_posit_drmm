@@ -785,6 +785,23 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
+    def __init__(self, embedding_dim=30, k_for_maxpool=5, context_method='CNN', sentence_out_method='MLP', use_mesh=True):
+        super(Sent_Posit_Drmm_Modeler, self).__init__()
+        self.k                                      = k_for_maxpool
+        #
+        self.embedding_dim                          = embedding_dim
+        self.use_mesh                               = use_mesh
+        self.context_method                         = context_method
+        self.sentence_out_method                    = sentence_out_method
+        # to create q weights
+        self.init_context_module()
+        self.init_question_weight_module()
+        self.init_mlps_for_pooled_attention()
+        self.init_sent_output_layer()
+        self.init_doc_out_layer()
+        # doc loss func
+        self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
+        #
     def init_mesh_module(self):
         self.mesh_h0_first      = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru_first     = nn.GRU(self.embedding_dim, 10)
@@ -820,30 +837,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.final_layer = nn.Linear(5 + 10, 1, bias=True)
         else:
             self.final_layer = nn.Linear(5, 1, bias=True)
-    def __init__(
-            self,
-            embedding_dim       = 30,
-            k_for_maxpool       = 5,
-            context_method      = 'CNN',
-            sentence_out_method = 'MLP',
-            use_mesh            = True
-    ):
-        super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.k                                      = k_for_maxpool
-        #
-        self.embedding_dim                          = embedding_dim
-        self.use_mesh                               = use_mesh
-        self.context_method                         = context_method
-        self.sentence_out_method                    = sentence_out_method
-        # to create q weights
-        self.init_context_module()
-        self.init_question_weight_module()
-        self.init_mlps_for_pooled_attention()
-        self.init_sent_output_layer()
-        self.init_doc_out_layer()
-        # doc loss func
-        self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-        #
     def init_xavier(self):
         nn.init.xavier_uniform_(self.trigram_conv.weight)
         nn.init.xavier_uniform_(self.q_weights_mlp.weight)
