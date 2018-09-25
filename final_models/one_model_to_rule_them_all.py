@@ -807,12 +807,25 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q1      = nn.Linear(6, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
+    def init_sent_output_layer(self):
+        if(self.sentence_out_method == 'MLP'):
+            self.sent_out_layer = nn.Linear(4, 1, bias=True)
+        else:
+            self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
+            self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
+            self.sent_res_mlp   = nn.Linear(10, 1, bias=True)
+    def init_final_layer(self):
+        if(self.use_mesh):
+            self.init_mesh_module()
+            self.final_layer = nn.Linear(5 + 10, 1, bias=True)
+        else:
+            self.final_layer = nn.Linear(5, 1, bias=True)
     def __init__(
             self,
             embedding_dim       = 30,
             k_for_maxpool       = 5,
             context_method      = 'CNN',
-            sentence_out_method = 'CNN',
+            sentence_out_method = 'MLP',
             use_mesh            = True
     ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -825,22 +838,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # to create q weights
         self.init_question_weight_module()
         self.init_mpls_for_pooled_attention()
+        self.init_sent_output_layer()
+        self.init_final_layer()
+        self.init_context_module()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-        self.out_layer                              = nn.Linear(4, 1, bias=True)
-        # MESH
-        if(self.use_mesh):
-            self.init_mesh_module()
-            self.final_layer = nn.Linear(5 + 10, 1, bias=True)
-        else:
-            self.final_layer = nn.Linear(5, 1, bias=True)
-        # num_layers * num_directions, batch, hidden_size
-        self.init_context_module()
-        # num_layers * num_directions, batch, hidden_size
         #
-        self.sent_res_h0                            = autograd.Variable(torch.randn(2, 1, 5))
-        self.sent_res_bigru                         = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
-        self.sent_res_mlp                           = nn.Linear(10, 1, bias=True)
     def init_xavier(self):
         nn.init.xavier_uniform_(self.trigram_conv.weight)
         nn.init.xavier_uniform_(self.q_weights_mlp.weight)
