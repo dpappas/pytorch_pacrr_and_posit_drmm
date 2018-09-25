@@ -944,7 +944,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
-        res = self.apply_sent_res_bigru(res)
+        if(self.sentence_out_method == 'MLP'):
+            res = self.sent_out_layer(res).squeeze(-1)
+        else:
+            res = self.apply_sent_res_bigru(res)
         res = F.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
         return ret, res
@@ -1007,8 +1010,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
-        bad_out,  bs_emits  = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_gru_res, q_weights)
+        if(self.context_method=='CNN'):
+            pass
+        else:
+            good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res,
+                                                           q_weights)
+            bad_out, bs_emits = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_gru_res,
+                                                          q_weights)
         #
         good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
         bad_meshes_out      = self.apply_stacked_mesh_gru(bad_meshes_embeds)
@@ -1048,7 +1056,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/model_1_run{}/'.format(run)
+    odir            = '/home/dpappas/the_one_run{}/'.format(run)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
