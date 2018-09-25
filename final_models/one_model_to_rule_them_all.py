@@ -584,12 +584,10 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     lines       = out.decode("utf-8").split('\n')
     ret = {}
     for line in lines:
-        if('GMAP snippets:' in line):
-            ret['GMAP'] = float(line.split()[-1])
-        elif('MAP snippets:' in line):
-            ret['MAP'] = float(line.split()[-1])
-        elif('F1 snippets:' in line):
-            ret['F1'] = float(line.split()[-1])
+        if(':' in line):
+            k       = line.split(':')[0].strip()
+            v       = line.split(':')[1].strip()
+            ret[k]  = float(v)
     return ret
 
 def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
@@ -691,9 +689,10 @@ def get_one_map(prefix, data, docs):
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
-    logger.info('{} snippets F1: {}'.format(prefix, bioasq_snip_res['F1']))
-    logger.info('{} snippets GMAP: {}'.format(prefix, bioasq_snip_res['GMAP']))
-    logger.info('{} snippets MAP: {}'.format(prefix, bioasq_snip_res['MAP']))
+    logger.info('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
+    logger.info('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    logger.info('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
+    logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     if (prefix == 'dev'):
         with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
