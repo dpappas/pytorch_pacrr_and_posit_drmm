@@ -1014,12 +1014,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         if(self.context_method=='CNN'):
-            pass
+            good_out, gs_emits  = self.do_for_one_doc_cnn(
+                doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res,q_weights)
+            bad_out, bs_emits   = self.do_for_one_doc_cnn(
+                doc2_sents_embeds, sents_baf, question_embeds, q_gru_res, q_weights)
         else:
-            good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res,
-                                                           q_weights)
-            bad_out, bs_emits = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_gru_res,
-                                                          q_weights)
+            good_out, gs_emits = self.do_for_one_doc_bigru(
+                doc1_sents_embeds, sents_gaf, question_embeds, q_gru_res, q_weights)
+            bad_out, bs_emits = self.do_for_one_doc_bigru(
+                doc2_sents_embeds, sents_baf, question_embeds, q_gru_res, q_weights)
         #
         good_meshes_out     = self.apply_stacked_mesh_gru(good_meshes_embeds)
         bad_meshes_out      = self.apply_stacked_mesh_gru(bad_meshes_embeds)
