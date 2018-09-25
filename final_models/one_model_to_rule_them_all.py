@@ -803,7 +803,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.context_gru_activation = torch.nn.LeakyReLU(negative_slope=0.1)
     def init_question_weight_module(self):
         self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
-    def init_mpls_for_pooled_attention(self):
+    def init_mlps_for_pooled_attention(self):
         self.linear_per_q1      = nn.Linear(6, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
@@ -814,7 +814,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
             self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
             self.sent_res_mlp   = nn.Linear(10, 1, bias=True)
-    def init_final_layer(self):
+    def init_doc_out_layer(self):
         if(self.use_mesh):
             self.init_mesh_module()
             self.final_layer = nn.Linear(5 + 10, 1, bias=True)
@@ -836,11 +836,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.context_method                         = context_method
         self.sentence_out_method                    = sentence_out_method
         # to create q weights
-        self.init_question_weight_module()
-        self.init_mpls_for_pooled_attention()
-        self.init_sent_output_layer()
-        self.init_final_layer()
         self.init_context_module()
+        self.init_question_weight_module()
+        self.init_mlps_for_pooled_attention()
+        self.init_sent_output_layer()
+        self.init_doc_out_layer()
+        self.init_mesh_module()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         #
