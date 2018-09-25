@@ -785,11 +785,11 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def init_mesh(self):
-        if(self.use_mesh):
-            self.final_layer    = nn.Linear(5 + 10, 1, bias=True)
-        else:
-            self.final_layer    = nn.Linear(5,      1, bias=True)
+    def init_mesh_module(self):
+        self.mesh_h0_first      = autograd.Variable(torch.randn(1, 1, 10))
+        self.mesh_gru_first     = nn.GRU(self.embedding_dim, 10)
+        # self.mesh_h0_second     = autograd.Variable(torch.randn(1, 1, 10))
+        # self.mesh_gru_second    = nn.GRU(10, 10)
     def init_context_module(self):
         if(self.context_method == 'CNN'):
             pass
@@ -801,6 +801,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 bidirectional   = True
             )
             self.context_gru_activation = torch.nn.LeakyReLU(negative_slope=0.1)
+    def init_question_weight_module(self):
+        self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
+    def init_mpls_for_pooled_attention(self):
+        self.linear_per_q1      = nn.Linear(6, 8, bias=True)
+        self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.linear_per_q2      = nn.Linear(8, 1, bias=True)
     def __init__(
             self,
             embedding_dim       = 30,
@@ -817,22 +823,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.context_method                         = context_method
         self.sentence_out_method                    = sentence_out_method
         # to create q weights
-        self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=True)
-        self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
-        self.my_relu1                               = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
+        self.init_question_weight_module()
+        self.init_mpls_for_pooled_attention()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(4, 1, bias=True)
         # MESH
-        self.init_mesh()
+        if(self.use_mesh):
+            self.init_mesh_module()
+            self.final_layer = nn.Linear(5 + 10, 1, bias=True)
+        else:
+            self.final_layer = nn.Linear(5, 1, bias=True)
         # num_layers * num_directions, batch, hidden_size
-
+        self.init_context_module()
         # num_layers * num_directions, batch, hidden_size
-        self.mesh_h0_first                          = autograd.Variable(torch.randn(1, 1, 10))
-        self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10)
-        self.mesh_h0_second                         = autograd.Variable(torch.randn(1, 1, 10))
-        self.mesh_gru_second                        = nn.GRU(10, 10)
         #
         self.sent_res_h0                            = autograd.Variable(torch.randn(2, 1, 5))
         self.sent_res_bigru                         = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
