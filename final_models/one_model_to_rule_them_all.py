@@ -791,14 +791,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         else:
             self.final_layer    = nn.Linear(5,      1, bias=True)
     def init_context_module(self):
-        if():
-
-
+        if(self.context_method == 'CNN'):
+            pass
+        else:
+            self.context_h0     = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
+            self.context_gru    = nn.GRU(
+                input_size      = self.embedding_dim,
+                hidden_size     = self.embedding_dim,
+                bidirectional   = True
+            )
+            self.context_gru_activation = torch.nn.LeakyReLU(negative_slope=0.1)
     def __init__(
             self,
-            embedding_dim,
-            k_for_maxpool,
-            k_sent_maxpool,
+            embedding_dim       = 30,
+            k_for_maxpool       = 5,
             context_method      = 'CNN',
             sentence_out_method = 'CNN',
             use_mesh            = True
@@ -821,13 +827,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # MESH
         self.init_mesh()
         # num_layers * num_directions, batch, hidden_size
-        self.context_h0                             = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
-        self.context_gru                            = nn.GRU(
-            input_size      = self.embedding_dim,
-            hidden_size     = self.embedding_dim,
-            bidirectional   = True
-        )
-        self.context_gru_activation                 = torch.nn.LeakyReLU(negative_slope=0.1)
+
         # num_layers * num_directions, batch, hidden_size
         self.mesh_h0_first                          = autograd.Variable(torch.randn(1, 1, 10))
         self.mesh_gru_first                         = nn.GRU(self.embedding_dim, 10)
