@@ -841,7 +841,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_mlps_for_pooled_attention()
         self.init_sent_output_layer()
         self.init_doc_out_layer()
-        self.init_mesh_module()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         #
