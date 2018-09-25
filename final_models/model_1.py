@@ -1104,3 +1104,12 @@ do everything with and without loss 2
 '''
 
 
+
+
+'''
+model = Sequential()
+model.add(LSTM(hidden_size, return_sequences=False, input_length=num_steps))
+model.add(Activation('tanh'))
+model.add(Dense(vocabulary))
+
+'''
