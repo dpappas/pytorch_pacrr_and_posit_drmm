@@ -1016,7 +1016,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         #
         if(self.context_method=='CNN'):
-            self.apply_context_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
+            q_gru_res       = self.apply_context_convolution(question_embeds, self.trigram_conv, self.trigram_conv_activation)
         else:
             q_gru_res, _    = self.apply_context_gru(question_embeds, self.context_h0)
         q_weights           = torch.cat([q_gru_res, q_idfs], -1)
