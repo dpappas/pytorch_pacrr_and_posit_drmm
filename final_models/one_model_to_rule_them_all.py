@@ -986,7 +986,32 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_meshes_embeds):
-        pass
+        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
+        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
+        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
+        #
+        if(self.context_method=='CNN'):
+            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        else:
+            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
+        q_weights           = torch.cat([q_context, q_idfs], -1)
+        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights           = F.softmax(q_weights, dim=-1)
+        #
+        if(self.context_method=='CNN'):
+            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        else:
+            good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        #
+        if(self.use_mesh):
+            good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
+            good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
+        else:
+            good_out_pp = torch.cat([good_out, doc_gaf], -1)
+        #
+        final_good_output   = self.final_layer(good_out_pp)
+        return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -1050,7 +1075,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/the_one_run{}/'.format(run)
+    odir            = '/home/dpappas/model_17_run_{}/'.format(run)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
