@@ -785,21 +785,41 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim, k_for_maxpool, k_sent_maxpool):
+    def init_mesh(self):
+        if(self.use_mesh):
+            self.final_layer    = nn.Linear(5 + 10, 1, bias=True)
+        else:
+            self.final_layer    = nn.Linear(5,      1, bias=True)
+    def init_context_module(self):
+        if():
+
+
+    def __init__(
+            self,
+            embedding_dim,
+            k_for_maxpool,
+            k_sent_maxpool,
+            context_method      = 'CNN',
+            sentence_out_method = 'CNN',
+            use_mesh            = True
+    ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.k                                      = k_for_maxpool         # k is for the average k pooling
-        self.k2                                     = k_sent_maxpool        # k is for the average k pooling
+        self.k                                      = k_for_maxpool
         #
         self.embedding_dim                          = embedding_dim
+        self.use_mesh                               = use_mesh
+        self.context_method                         = context_method
+        self.sentence_out_method                    = sentence_out_method
+        # to create q weights
         self.q_weights_mlp                          = nn.Linear(self.embedding_dim+1, 1, bias=True)
         self.linear_per_q1                          = nn.Linear(6, 8, bias=True)
         self.my_relu1                               = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2                          = nn.Linear(8, 1, bias=True)
+        # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
         self.out_layer                              = nn.Linear(4, 1, bias=True)
-        # self.final_layer                            = nn.Linear(self.k2, 1, bias=True)
-        self.final_layer                            = nn.Linear(5 + 10, 1, bias=True)
-        #
+        # MESH
+        self.init_mesh()
         # num_layers * num_directions, batch, hidden_size
         self.context_h0                             = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
         self.context_gru                            = nn.GRU(
