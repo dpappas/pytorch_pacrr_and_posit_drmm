@@ -835,7 +835,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def init_doc_out_layer(self):
         if(self.use_mesh):
             self.init_mesh_module()
-            self.final_layer = nn.Linear(5 + 10, 1, bias=True)
+            self.final_layer = nn.Linear(5 + 30, 1, bias=True)
         else:
             self.final_layer = nn.Linear(5, 1, bias=True)
     #
@@ -978,12 +978,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def get_mesh_rep(self, meshes_embeds, q_context):
         meshes_embeds   = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
         meshes_embeds   = torch.stack(meshes_embeds)
-        print(meshes_embeds.size())
-        print(q_context.size())
-        similarity      = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
-        print(similarity.size())
-        output, hn      = self.mesh_gru_second(meshes_embeds.unsqueeze(1), self.mesh_h0_second)
-        return output[-1, 0, :]
+        sim_matrix      = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
+        max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
+        output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
+        return output
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_meshes_embeds):
         pass
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds):
@@ -1008,11 +1006,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
             bad_out, bs_emits = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
-        good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
-        bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds,  q_context)
-        #
-        good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-        bad_out_pp          = torch.cat([bad_out,  doc_baf, bad_meshes_out],  -1)
+        if(self.use_mesh):
+            good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
+            bad_meshes_out = self.get_mesh_rep(bad_meshes_embeds, q_context)
+            good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
+            bad_out_pp = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
+        else:
+            good_out_pp = torch.cat([good_out, doc_gaf], -1)
+            bad_out_pp = torch.cat([bad_out, doc_baf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
