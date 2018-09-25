@@ -1061,7 +1061,13 @@ for run in range(5):
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, k_sent_maxpool=k_sent_maxpool)
+    model       = Sent_Posit_Drmm_Modeler(
+        embedding_dim       = embedding_dim,
+        k_for_maxpool       = k_for_maxpool,
+        context_method      = 'CNN',
+        sentence_out_method = 'MLP',
+        use_mesh            = True
+    )
     params      = model.parameters()
     print_params(model)
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
