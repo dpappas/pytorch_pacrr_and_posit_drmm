@@ -1074,7 +1074,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/model_17_run_{}/'.format(run)
+    odir            = '/home/dpappas/model_18_run_{}/'.format(run)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
@@ -1092,7 +1092,7 @@ for run in range(5):
         k_for_maxpool       = k_for_maxpool,
         context_method      = 'CNN',
         sentence_out_method = 'MLP',
-        use_mesh            = False
+        use_mesh            = True
     )
     params      = model.parameters()
     print_params(model)
