@@ -1107,7 +1107,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
+        train_one(epoch + 1, two_losses=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
