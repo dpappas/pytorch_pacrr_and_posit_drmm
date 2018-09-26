@@ -918,7 +918,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.sent_out_layer(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
-        res = F.sigmoid(res)
+        res = torch.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
         return ret, res
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
@@ -945,7 +945,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.sent_out_layer(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
-        res = F.sigmoid(res)
+        res = torch.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
         return ret, res
     def get_max_and_average_of_k_max(self, res, k):
@@ -1081,7 +1081,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/model_20_run_{}/'.format(run)
+    odir            = '/home/dpappas/model_9_run_{}/'.format(run)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
@@ -1098,8 +1098,8 @@ for run in range(5):
         embedding_dim       = embedding_dim,
         k_for_maxpool       = k_for_maxpool,
         context_method      = 'CNN',
-        sentence_out_method = 'BIGRU',
-        use_mesh            = True
+        sentence_out_method = 'MLP',
+        use_mesh            = False
     )
     params      = model.parameters()
     print_params(model)
@@ -1107,7 +1107,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1, two_losses=True)
+        train_one(epoch + 1, two_losses=False)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
