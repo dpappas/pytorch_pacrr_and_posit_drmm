@@ -1074,6 +1074,42 @@ lr              = 0.01
 b_size          = 32
 max_epoch       = 10
 
+
+models = [
+# ['Model_01', ]
+# ['Model_02', ],
+# ['Model_03', ],
+# ['Model_04', ],
+# ['Model_05', ],
+# ['Model_06', ],
+# ['Model_07', ],
+# ['Model_08', ],
+['Model_09', 'CNN',     'MLP',   False, False],
+['Model_10', 'CNN',     'MLP',   True,  False],
+['Model_11', 'CNN',     'BIGRU', False, False],
+['Model_12', 'CNN',     'BIGRU', True,  False],
+['Model_13', 'BIGRU',   'MLP',   False, False],
+['Model_14', 'BIGRU',   'MLP',   True,  False],
+['Model_15', 'BIGRU',   'BIGRU', False, False],
+['Model_16', 'BIGRU',   'BIGRU', True,  False],
+['Model_17', 'CNN',     'MLP',   False, True],
+['Model_18', 'CNN',     'MLP',   True,  True],
+['Model_19', 'CNN',     'BIGRU', False, True],
+['Model_20', 'CNN',     'BIGRU', True,  True],
+['Model_21', 'BIGRU',   'MLP',   False, True],
+['Model_22', 'BIGRU',   'MLP',   True,  True],
+['Model_23', 'BIGRU',   'BIGRU', False, True],
+['Model_24', 'BIGRU',   'BIGRU', True,  True],
+]
+models = dict(
+    [
+        (item[0], item[1:])
+        for item in models
+    ]
+)
+
+which_model = 'Model_21'
+
 hdlr = None
 for run in range(5):
     #
@@ -1081,7 +1117,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/model_9_run_{}/'.format(run)
+    odir            = '/home/dpappas/{}_run_{}/'.format(which_model, run)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
@@ -1097,9 +1133,9 @@ for run in range(5):
     model       = Sent_Posit_Drmm_Modeler(
         embedding_dim       = embedding_dim,
         k_for_maxpool       = k_for_maxpool,
-        context_method      = 'CNN',
-        sentence_out_method = 'MLP',
-        use_mesh            = False
+        context_method      = models[which_model][0],
+        sentence_out_method = models[which_model][1],
+        use_mesh            = models[which_model][2]
     )
     params      = model.parameters()
     print_params(model)
@@ -1107,7 +1143,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1, two_losses=False)
+        train_one(epoch + 1, two_losses=models[which_model][3])
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
