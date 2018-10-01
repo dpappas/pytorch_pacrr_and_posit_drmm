@@ -554,7 +554,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
 
 def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
     (good_embeds, good_doc_af, good_mesh_embeds) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
-    doc_emit_, gs_emits_    = model.emit_one(
+    doc_emit_ = model.emit_one(
         doc1_embeds         = good_embeds,
         question_embeds     = quest_embeds,
         q_idfs              = q_idfs,
@@ -562,22 +562,8 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
         good_meshes_embeds  = good_mesh_embeds
     )
     emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_.tolist()
-    mmax                    = max(emitss)
-    all_emits, extracted_from_one = [], []
-    for ind in range(len(emitss)):
-        t = (
-            snip_is_relevant(held_out_sents[ind], gold_snips),
-            emitss[ind],
-            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind]
-        )
-        all_emits.append(t)
-        if(emitss[ind] == mmax):
-            extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
-    all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
-    return doc_res, extracted_from_one, all_emits
+    return doc_res
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
@@ -623,26 +609,21 @@ def get_one_map(prefix, data, docs):
         bm25s                       = { t['doc_id'] : t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         gold_snips                  = get_gold_snips(dato['query_id'])
         doc_res = {}
-        # for retr in get_pseudo_retrieved(dato):
         for retr in dato['retrieved_documents']:
-            doc_res, extracted_from_one, all_emits  = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
-            extracted_snippets.extend(extracted_from_one)
-            #
+            doc_res = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
             if (dato['query_id'] not in data_for_revision):
                 data_for_revision[dato['query_id']] = {
                     'query_text': dato['query_text'],
-                    'snippets'  : {retr['doc_id']: all_emits}
+                    'snippets'  : {retr['doc_id']: []}
                 }
             else:
-                data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
+                data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = []
         doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
         doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
         emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
         #
-        extracted_snippets          = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
-        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-        snips_res                   = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+        snips_res                   = prep_extracted_snippets([], docs, dato['query_id'], doc_res[:10], dato['query_text'])
         all_bioasq_subm_data['questions'].append(snips_res)
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
@@ -1013,7 +994,7 @@ models = dict(
     ]
 )
 
-which_model = 'Model_16'
+which_model = 'Model_01'
 
 hdlr = None
 for run in range(5):
