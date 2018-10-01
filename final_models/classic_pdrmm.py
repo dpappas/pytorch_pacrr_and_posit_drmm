@@ -399,58 +399,33 @@ def get_the_mesh(the_doc):
 
 def train_data_step2(train_instances):
     for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
-        quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
-        q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+        quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
+        q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         #
-        good_meshes                             = get_the_mesh(train_docs[gid])
-        good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
-        good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
-        good_sents_title                        = sent_tokenize(train_docs[gid]['title'])
-        good_sents_abs                          = sent_tokenize(train_docs[gid]['abstractText'])
+        good_meshes                 = get_the_mesh(train_docs[gid])
+        good_doc_text               = train_docs[gid]['title'] + train_docs[gid]['abstractText']
+        good_doc_af                 = GetScores(quest, good_doc_text, bm25s_gid)
+        good_tokens, good_embeds    = get_embeds(tokenize(good_doc_text), wv)
+        good_escores                = GetScores(quest, good_doc_text, bm25s_gid)[:-1]
         #
-        good_sents                              = good_sents_title + good_sents_abs
+        bad_meshes                  = get_the_mesh(train_docs[bid])
+        bad_doc_text                = train_docs[bid]['title'] + train_docs[bid]['abstractText']
+        bad_doc_af                  = GetScores(quest, bad_doc_text, bm25s_bid)
         #
-        good_snips                              = get_snips(quest_id, gid)
-        good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
+        bad_tokens, bad_embeds      = get_embeds(tokenize(bad_text), wv)
+        bad_escores                 = GetScores(quest, bad_text, bm25s_bid)[:-1]
         #
-        good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
-        for good_text in good_sents:
-            good_tokens, good_embeds            = get_embeds(tokenize(good_text), wv)
-            good_escores                        = GetScores(quest, good_text, bm25s_gid)[:-1]
-            if(len(good_embeds)>0):
-                good_sents_embeds.append(good_embeds)
-                good_sents_escores.append(good_escores)
-                tt          = ' '.join(bioclean(good_text))
-                good_sent_tags.append(snip_is_relevant(tt, good_snips))
-                # sims        = [similar(gs, tt) for gs in good_snips]
-                # best_sim    = max(sims) if(len(sims)>0) else 0.
-                # good_sent_tags.append(int(best_sim>0.9))
-        #
-        bad_meshes                              = get_the_mesh(train_docs[bid])
-        bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
-        bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
-        bad_sents                               = sent_tokenize(train_docs[bid]['title']) + sent_tokenize(train_docs[bid]['abstractText'])
-        #
-        bad_sent_tags                           = len(bad_sents) * [0]
-        bad_sents_embeds, bad_sents_escores     = [], []
-        for bad_text in bad_sents:
-            bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
-            bad_escores                         = GetScores(quest, bad_text, bm25s_bid)[:-1]
-            if(len(bad_embeds)>0):
-                bad_sents_embeds.append(bad_embeds)
-                bad_sents_escores.append(bad_escores)
-        if(sum(good_sent_tags)>0):
-            # bmt, bad_mesh_embeds    = get_embeds(bad_mesh, wv)
-            # gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-            bad_mesh_embeds     = [get_embeds(bad_mesh, wv)     for bad_mesh            in bad_meshes ]
-            bad_mesh_embeds     = [bad_mesh[1] for bad_mesh     in  bad_mesh_embeds     if(len(bad_mesh[0])>0)]
-            good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
-            good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
-            yield (
-                good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
-                good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
-                good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds
-            )
+        bad_mesh_embeds     = [get_embeds(bad_mesh, wv)     for bad_mesh            in bad_meshes ]
+        bad_mesh_embeds     = [bad_mesh[1] for bad_mesh     in  bad_mesh_embeds     if(len(bad_mesh[0])>0)]
+        good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
+        good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
+        yield (
+            good_embeds,  bad_embeds,
+            quest_embeds, q_idfs,
+            good_escores, bad_escores,
+            good_doc_af,  bad_doc_af,
+            good_mesh_embeds, bad_mesh_embeds
+        )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
