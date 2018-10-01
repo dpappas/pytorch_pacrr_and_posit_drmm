@@ -671,7 +671,7 @@ def train_one(epoch):
             good_embeds, bad_embeds, quest_embeds, q_idfs,
             good_doc_af, bad_doc_af, good_mesh_embeds, bad_mesh_embeds
         ) in train_data_step2(train_instances):
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+        cost_, doc1_emit_, doc2_emit_ = model(
             doc1_embeds         = good_embeds,
             doc2_embeds         = bad_embeds,
             question_embeds     = quest_embeds,
@@ -826,7 +826,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sensitive_pooled    = self.pooling_method(sim_sens)
         oh_pooled           = self.pooling_method(sim_oh)
         doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-        return doc_emit
+        return doc_emit.unsqueeze(0)
     def do_for_one_doc_bigru(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
         hn                  = self.context_h0
         conv_res, hn        = self.apply_context_gru(doc_embeds, hn)
@@ -839,7 +839,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         oh_pooled           = self.pooling_method(sim_oh)
         #
         doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-        return doc_emit
+        return doc_emit.unsqueeze(0)
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
         k_max_pooled            = sorted_res[-k:]
