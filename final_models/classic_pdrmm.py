@@ -406,14 +406,11 @@ def train_data_step2(train_instances):
         good_doc_text               = train_docs[gid]['title'] + train_docs[gid]['abstractText']
         good_doc_af                 = GetScores(quest, good_doc_text, bm25s_gid)
         good_tokens, good_embeds    = get_embeds(tokenize(good_doc_text), wv)
-        good_escores                = GetScores(quest, good_doc_text, bm25s_gid)[:-1]
         #
         bad_meshes                  = get_the_mesh(train_docs[bid])
         bad_doc_text                = train_docs[bid]['title'] + train_docs[bid]['abstractText']
         bad_doc_af                  = GetScores(quest, bad_doc_text, bm25s_bid)
-        #
-        bad_tokens, bad_embeds      = get_embeds(tokenize(bad_text), wv)
-        bad_escores                 = GetScores(quest, bad_text, bm25s_bid)[:-1]
+        bad_tokens, bad_embeds      = get_embeds(tokenize(bad_doc_text), wv)
         #
         bad_mesh_embeds     = [get_embeds(bad_mesh, wv)     for bad_mesh            in bad_meshes ]
         bad_mesh_embeds     = [bad_mesh[1] for bad_mesh     in  bad_mesh_embeds     if(len(bad_mesh[0])>0)]
@@ -422,7 +419,6 @@ def train_data_step2(train_instances):
         yield (
             good_embeds,  bad_embeds,
             quest_embeds, q_idfs,
-            good_escores, bad_escores,
             good_doc_af,  bad_doc_af,
             good_mesh_embeds, bad_mesh_embeds
         )
@@ -695,36 +691,28 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
 
-def train_one(epoch, two_losses=True):
+def train_one(epoch):
     model.train()
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    batch_counter = 0
-    train_instances = train_data_step1()
-    # train_instances = train_instances[:len(train_instances)/2]
-    epoch_aver_cost, epoch_aver_acc = 0., 0.
+    batch_costs, batch_acc, epoch_costs, epoch_acc  = [], [], [], []
+    batch_counter                                   = 0
+    train_instances                                 = train_data_step1()
+    epoch_aver_cost, epoch_aver_acc                 = 0., 0.
     random.shuffle(train_instances)
-    # for instance in train_data_step2(train_instances[:90*50]):
-    start_time      = time.time()
-    for instance in train_data_step2(train_instances):
+    start_time                                      = time.time()
+    for (
+            good_embeds, bad_embeds, quest_embeds, q_idfs,
+            good_doc_af, bad_doc_af, good_mesh_embeds, bad_mesh_embeds
+        ) in train_data_step2(train_instances):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = instance[0],
-            doc2_sents_embeds   = instance[1],
-            question_embeds     = instance[2],
-            q_idfs              = instance[3],
-            sents_gaf           = instance[4],
-            sents_baf           = instance[5],
-            doc_gaf             = instance[6],
-            doc_baf             = instance[7],
-            good_meshes_embeds  = instance[10],
-            bad_meshes_embeds   = instance[11]
+            doc1_embeds         = good_embeds,
+            doc2_embeds         = bad_embeds,
+            question_embeds     = quest_embeds,
+            q_idfs              = q_idfs,
+            doc_gaf             = good_doc_af,
+            doc_baf             = bad_doc_af,
+            good_meshes_embeds  = good_mesh_embeds,
+            bad_meshes_embeds   = bad_mesh_embeds
         )
-        #
-        good_sent_tags, bad_sent_tags       = instance[8], instance[9]
-        if(two_losses):
-            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss                       = sn_d1_l + sn_d2_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
