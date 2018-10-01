@@ -751,19 +751,17 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim=30, k_for_maxpool=5, context_method='CNN', sentence_out_method='MLP', use_mesh=True):
+    def __init__(self, embedding_dim=30, k_for_maxpool=5, context_method='CNN', use_mesh=True):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         #
         self.embedding_dim                          = embedding_dim
         self.use_mesh                               = use_mesh
         self.context_method                         = context_method
-        self.sentence_out_method                    = sentence_out_method
         # to create q weights
         self.init_context_module()
         self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
-        self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
@@ -791,13 +789,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q1      = nn.Linear(6, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
-    def init_sent_output_layer(self):
-        if(self.sentence_out_method == 'MLP'):
-            self.sent_out_layer = nn.Linear(4, 1, bias=True)
-        else:
-            self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
-            self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
-            self.sent_res_mlp   = nn.Linear(10, 1, bias=True)
     def init_doc_out_layer(self):
         if(self.use_mesh):
             self.init_mesh_module()
@@ -947,18 +938,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         if(self.use_mesh):
             good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
-            bad_meshes_out = self.get_mesh_rep(bad_meshes_embeds, q_context)
-            good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-            bad_out_pp = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
+            bad_meshes_out  = self.get_mesh_rep(bad_meshes_embeds, q_context)
+            good_out_pp     = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
+            bad_out_pp      = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
         else:
-            good_out_pp = torch.cat([good_out, doc_gaf], -1)
-            bad_out_pp = torch.cat([bad_out, doc_baf], -1)
+            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
+            bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        return loss1, final_good_output, final_bad_output
 
 # w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
@@ -993,14 +984,14 @@ max_epoch       = 10
 
 
 models = [
-['Model_01', 'CNN',     'MLP',      False],
-['Model_02', 'CNN',     'MLP',      True],
-['Model_03', 'CNN',     'BIGRU',    False],
-['Model_04', 'CNN',     'BIGRU',    True],
-['Model_05', 'BIGRU',   'MLP',      False],
-['Model_06', 'BIGRU',   'MLP',      True],
-['Model_07', 'BIGRU',   'BIGRU',    False],
-['Model_08', 'BIGRU',   'BIGRU',    True],
+['Model_01', 'CNN',     False],
+['Model_02', 'CNN',     True],
+['Model_03', 'CNN',     False],
+['Model_04', 'CNN',     True],
+['Model_05', 'BIGRU',   False],
+['Model_06', 'BIGRU',   True],
+['Model_07', 'BIGRU',   False],
+['Model_08', 'BIGRU',   True],
 ]
 
 models = dict(
@@ -1033,8 +1024,7 @@ for run in range(5):
         embedding_dim       = embedding_dim,
         k_for_maxpool       = k_for_maxpool,
         context_method      = models[which_model][0],
-        sentence_out_method = models[which_model][1],
-        use_mesh            = models[which_model][2]
+        use_mesh            = models[which_model][1]
     )
     params      = model.parameters()
     print_params(model)
