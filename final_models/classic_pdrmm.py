@@ -979,12 +979,12 @@ max_epoch       = 10
 models = [
 ['Model_01', 'CNN',     False],
 ['Model_02', 'CNN',     True],
-['Model_03', 'CNN',     False],
-['Model_04', 'CNN',     True],
+# ['Model_03', 'CNN',     False],
+# ['Model_04', 'CNN',     True],
 ['Model_05', 'BIGRU',   False],
 ['Model_06', 'BIGRU',   True],
-['Model_07', 'BIGRU',   False],
-['Model_08', 'BIGRU',   True],
+# ['Model_07', 'BIGRU',   False],
+# ['Model_08', 'BIGRU',   True],
 ]
 
 models = dict(
@@ -994,7 +994,7 @@ models = dict(
     ]
 )
 
-which_model = 'Model_01'
+which_model = 'Model_02'
 
 hdlr = None
 for run in range(5):
