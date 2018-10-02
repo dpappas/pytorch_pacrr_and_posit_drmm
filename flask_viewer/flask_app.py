@@ -219,6 +219,14 @@ def similar(upstream_seq, downstream_seq):
     r1              = SequenceMatcher(None, to_match, longest_match).ratio()
     return r1
 
+def load_model_from_checkpoint(resume_from):
+    global start_epoch, optimizer
+    if os.path.isfile(resume_from):
+        print("=> loading checkpoint '{}'".format(resume_from))
+        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
+        model.load_state_dict(checkpoint['state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, context_method='CNN', sentence_out_method='MLP', use_mesh=True):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -480,14 +488,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
-
-def load_model_from_checkpoint(resume_from):
-    global start_epoch, optimizer
-    if os.path.isfile(resume_from):
-        print("=> loading checkpoint '{}'".format(resume_from))
-        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
-        model.load_state_dict(checkpoint['state_dict'])
-        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
