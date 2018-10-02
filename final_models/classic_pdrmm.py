@@ -1035,5 +1035,10 @@ for run in range(5):
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
 
-
+'''
+deytera 
+trith 
+5-7
+a21
+'''
 
