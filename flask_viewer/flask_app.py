@@ -569,7 +569,7 @@ lr              = 0.01
 b_size          = 32
 max_epoch       = 10
 
-models      = [
+models          = [
 ['Model_09', 'CNN',     'MLP',   False, False],
 ['Model_10', 'CNN',     'MLP',   True,  False],
 ['Model_11', 'CNN',     'BIGRU', False, False],
@@ -587,13 +587,13 @@ models      = [
 ['Model_23', 'BIGRU',   'BIGRU', False, True],
 ['Model_24', 'BIGRU',   'BIGRU', True,  True],
 ]
-models      = dict([
+models          = dict([
         (item[0], item[1:])
         for item in models
     ])
-which_model = 'Model_18'
+which_model     = 'Model_18'
 
-model       = Sent_Posit_Drmm_Modeler(
+model           = Sent_Posit_Drmm_Modeler(
     embedding_dim       = embedding_dim,
     k_for_maxpool       = k_for_maxpool,
     context_method      = models[which_model][0],
