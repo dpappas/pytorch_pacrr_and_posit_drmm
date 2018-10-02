@@ -484,25 +484,27 @@ resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 print('LOADED model')
 
+
+def get_one_output(quest, good_doc_text, good_meshes):
+    (
+        good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds,
+        held_out_sents, quest_tokens, quest_embeds, q_idfs
+    ) = prep_data(quest, good_doc_text, good_meshes, the_bm25=7.45)
+    doc_emit_, gs_emits_    = model.emit_one(
+        doc1_sents_embeds   = good_sents_embeds,
+        question_embeds     = quest_embeds,
+        q_idfs              = q_idfs,
+        sents_gaf           = good_sents_escores,
+        doc_gaf             = good_doc_af,
+        good_meshes_embeds  = good_mesh_embeds
+    )
+    emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_.tolist()
+    return emition, emitss
+
 quest                       = 'What is my name?'
 good_doc_text               = 'my name is tilalop'
 good_meshes                 = ['A B', 'C']
-
-(
-    good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds,
-    held_out_sents, quest_tokens, quest_embeds, q_idfs
-) = prep_data(quest, good_doc_text, good_meshes, the_bm25=7.45)
-
-doc_emit_, gs_emits_    = model.emit_one(
-    doc1_sents_embeds   = good_sents_embeds,
-    question_embeds     = quest_embeds,
-    q_idfs              = q_idfs,
-    sents_gaf           = good_sents_escores,
-    doc_gaf             = good_doc_af,
-    good_meshes_embeds  = good_mesh_embeds
-)
-print(doc_emit_)
-print(gs_emits_)
 
 exit()
 
