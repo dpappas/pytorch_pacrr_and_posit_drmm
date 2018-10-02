@@ -135,10 +135,11 @@ def prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
-    good_meshes         = [gm.lower().split() for gm in good_mesh]
-    good_meshes         = ['mgmx'] + good_meshes
-    good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
-    good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
+    good_mesh_embeds = []
+    for gm in ['mgmx']+good_mesh:
+        mtoks, membs = get_embeds(gm.lower().split(), wv)
+        if(len(mtoks)>0):
+            good_mesh_embeds.append(membs)
     return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, quest_tokens, quest_embeds, q_idfs
 
 def similar(upstream_seq, downstream_seq):
