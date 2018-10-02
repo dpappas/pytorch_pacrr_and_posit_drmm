@@ -24,7 +24,8 @@ def get_quest_results():
     m = [t.strip() for t in m.split('||')]
     # return render_template("home.html")
     # add the question as header
-    ret_html = '<h2>Question: {}</h2>'.format(q)
+    ret_html = '<h2>Question: </h2>'
+    ret_html += '<p>{}</p>'.format(q)
     ret_html += '</br></br>'
     # add the scored sentences
     ret_html += '<h2>Document:</h2>'
