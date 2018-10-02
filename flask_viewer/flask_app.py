@@ -201,73 +201,11 @@ def prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
-    good_meshes         = [gm.split() for gm in good_mesh]
+    good_meshes         = [gm.lower().split() for gm in good_mesh]
+    good_meshes         = ['mgmx'] + good_meshes
     good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
     good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
     return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, quest_tokens, quest_embeds, q_idfs
-
-def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
-    ret = {
-        'body'      : quest_body,
-        'documents' : top10docs,
-        'id'        : qid,
-        'snippets'  : [],
-    }
-    for esnip in extracted_snippets:
-        pid         = esnip[2].split('/')[-1]
-        the_text    = esnip[3]
-        esnip_res = {
-            # 'score'     : esnip[1],
-            "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
-            "text"      : the_text
-        }
-        try:
-            ind_from    = docs[pid]['title'].index(the_text)
-            ind_to      = ind_from + len(the_text)
-            esnip_res["beginSection"]           = "title"
-            esnip_res["endSection"]             = "title"
-            esnip_res["offsetInBeginSection"]   = ind_from
-            esnip_res["offsetInEndSection"]     = ind_to
-        except:
-            ind_from    = docs[pid]['abstractText'].index(the_text)
-            ind_to      = ind_from + len(the_text)
-            esnip_res["beginSection"]           = "abstract"
-            esnip_res["endSection"]             = "abstract"
-            esnip_res["offsetInBeginSection"]   = ind_from
-            esnip_res["offsetInEndSection"]     = ind_to
-        ret['snippets'].append(esnip_res)
-    return ret
-
-def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
-    (
-        good_sents_embeds, good_sents_escores, good_doc_af,
-        good_meshes_embeds, held_out_sents
-    ) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
-    doc_emit_, gs_emits_    = model.emit_one(
-        doc1_sents_embeds   = good_sents_embeds,
-        question_embeds     = quest_embeds,
-        q_idfs              = q_idfs,
-        sents_gaf           = good_sents_escores,
-        doc_gaf             = good_doc_af,
-        good_meshes_embeds  = good_meshes_embeds
-    )
-    emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_.tolist()
-    mmax                    = max(emitss)
-    all_emits, extracted_from_one = [], []
-    for ind in range(len(emitss)):
-        t = (
-            snip_is_relevant(held_out_sents[ind], gold_snips),
-            emitss[ind],
-            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind]
-        )
-        all_emits.append(t)
-        if(emitss[ind] == mmax):
-            extracted_from_one.append(t)
-    doc_res[retr['doc_id']] = float(emition)
-    all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
-    return doc_res, extracted_from_one, all_emits
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
