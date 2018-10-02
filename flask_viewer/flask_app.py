@@ -1,15 +1,14 @@
 
 from colour import Color
-red     = Color("white")
-colors  = list(red.range_to(Color("yellow"), 100))
-colors  = [c.get_hex_l() for c in colors]
-
-# print(colors)
-# exit()
-
+from    nltk.tokenize import sent_tokenize
 from flask import Flask
 from flask import render_template
 from flask import request
+import random
+
+red     = Color("white")
+colors  = list(red.range_to(Color("yellow"), 100))
+colors  = [c.get_hex_l() for c in colors]
 
 app = Flask(__name__)
 
@@ -19,10 +18,25 @@ def get_news():
 
 @app.route("/submit_question", methods=["POST"])
 def get_quest_results():
-    print(request.form.get("the_quest"))
-    print(request.form.get("the_doc"))
-    print(request.form.get("the_mesh"))
-    return render_template("home.html")
+    q = request.form.get("the_quest")
+    d = request.form.get("the_doc")
+    m = request.form.get("the_mesh")
+    m = [t.strip() for t in m.split('||')]
+    # return render_template("home.html")
+    # add the question as header
+    ret_html = '<h2>{}</h2>'.format(q)
+    ret_html += '</br></br>'
+    # add the scored sentences
+    for sent in sent_tokenize(d):
+        score = random.randint(1,100)
+        ret_html += '<div style="background-color:{}">{}</div>'.format(colors[score], sent)
+    ret_html += '</br></br>'
+    # add the scored mesh terms
+    for sent in m:
+        score = random.randint(1,100)
+        ret_html += '<div style="background-color:{}">{}</div>'.format(colors[score], sent)
+    ret_html += '</br></br>'
+    return ret_html
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
