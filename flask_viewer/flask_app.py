@@ -494,9 +494,9 @@ resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 print('LOADED model')
 
-quest                       = 'What is my name?'
-good_doc_text               = 'my name is tilalop'
-good_meshes                 = ['A B', 'C']
+# quest                       = 'What is my name?'
+# good_doc_text               = 'my name is tilalop'
+# good_meshes                 = ['A B', 'C']
 
 from colour import Color
 from flask import Flask
@@ -520,7 +520,7 @@ def get_quest_results():
     d = request.form.get("the_doc")
     m = request.form.get("the_mesh")
     m = [t.strip() for t in m.split('||')]
-    held_out_sents, emitss = get_one_output(quest, good_doc_text, good_meshes)
+    held_out_sents, emitss = get_one_output(q, d, m)
     pprint(held_out_sents)
     pprint(emitss)
     # return render_template("home.html")
