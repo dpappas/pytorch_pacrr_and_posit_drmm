@@ -188,10 +188,10 @@ def snip_is_relevant(one_sent, gold_snips):
     #     ]
     # )
 
-def prep_data(quest, the_doc, the_bm25):
-    good_doc_text   = the_doc['title'] + the_doc['abstractText']
+def prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45):
+    quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
     good_doc_af     = GetScores(quest, good_doc_text, the_bm25)
-    good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    good_sents      = sent_tokenize(good_doc_text)
     good_sents_embeds, good_sents_escores, held_out_sents = [], [], []
     for good_text in good_sents:
         good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
@@ -200,11 +200,10 @@ def prep_data(quest, the_doc, the_bm25):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
-    good_meshes         = get_the_mesh(the_doc)
+    good_meshes         = [gm.split() for gm in good_mesh]
     good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
     good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
-    # gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
+    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, quest_tokens, quest_embeds
 
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
@@ -607,21 +606,12 @@ print('LOADED model')
 
 quest                       = 'What is my name?'
 good_doc_text               = 'my name is tilalop'
-good_meshes                 = [['A', 'B'],['C']]
+good_meshes                 = ['A B', 'C']
 
-quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
-q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-good_doc_af                 = GetScores(quest, good_doc_text, 7.45)
-good_sents                  = sent_tokenize(good_doc_text)
-held_out_sents, good_sents_embeds, good_sents_escores = [], [], []
-for good_text in good_sents:
-    good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
-    good_escores = GetScores(quest, good_text, 7.45)[:-1]
-    if (len(good_embeds) > 0):
-        good_sents_embeds.append(good_embeds)
-        good_sents_escores.append(good_escores)
-        held_out_sents.append(good_text)
-good_meshes_embeds          = [get_embeds(good_mesh, wv) for good_mesh in good_meshes]
+(
+    good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds,
+    held_out_sents, quest_tokens, quest_embeds
+) = prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45)
 
 doc_emit_, gs_emits_    = model.emit_one(
     doc1_sents_embeds   = good_sents_embeds,
