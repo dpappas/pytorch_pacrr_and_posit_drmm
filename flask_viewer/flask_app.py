@@ -604,6 +604,36 @@ model           = Sent_Posit_Drmm_Modeler(
 resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 print('LOADED model')
+
+quest                       = 'What is my name?'
+good_doc_text               = 'my name is tilalop'
+good_meshes                 = [['A', 'B'],['C']]
+
+quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
+q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+good_doc_af                 = GetScores(quest, good_doc_text, 7.45)
+good_sents                  = sent_tokenize(good_doc_text)
+held_out_sents, good_sents_embeds, good_sents_escores = [], [], []
+for good_text in good_sents:
+    good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
+    good_escores = GetScores(quest, good_text, 7.45)[:-1]
+    if (len(good_embeds) > 0):
+        good_sents_embeds.append(good_embeds)
+        good_sents_escores.append(good_escores)
+        held_out_sents.append(good_text)
+good_meshes_embeds          = [get_embeds(good_mesh, wv) for good_mesh in good_meshes]
+
+doc_emit_, gs_emits_    = model.emit_one(
+    doc1_sents_embeds   = good_sents_embeds,
+    question_embeds     = quest_embeds,
+    q_idfs              = q_idfs,
+    sents_gaf           = good_sents_escores,
+    doc_gaf             = good_doc_af,
+    good_meshes_embeds  = good_meshes_embeds
+)
+print(doc_emit_)
+print(gs_emits_)
+
 exit()
 
 from colour import Color
