@@ -27,13 +27,13 @@ def get_quest_results():
     ret_html = '<h2>Question: {}</h2>'.format(q)
     ret_html += '</br></br>'
     # add the scored sentences
-    ret_html = '<h2>Document:</h2>'
+    ret_html += '<h2>Document:</h2>'
     for sent in sent_tokenize(d):
         score = random.randint(1,100)
         ret_html += '<div style="background-color:{}">{}</div>'.format(colors[score], sent)
     ret_html += '</br></br>'
     # add the scored mesh terms
-    ret_html = '<h2>Mesh Terms:</h2>'
+    ret_html += '<h2>Mesh Terms:</h2>'
     for sent in m:
         score = random.randint(1,100)
         ret_html += '<div style="background-color:{}">{}</div>'.format(colors[score], sent)
