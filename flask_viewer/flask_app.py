@@ -129,65 +129,6 @@ def GetScores(qtext, dtext, bm25):
     bm25        = [bm25]
     return qd1[0:3] + bm25
 
-def GetWords(data, doc_text, words):
-  for i in range(len(data['queries'])):
-    qwds = tokenize(data['queries'][i]['query_text'])
-    for w in qwds:
-      words[w] = 1
-    for j in range(len(data['queries'][i]['retrieved_documents'])):
-      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      dtext = (
-              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
-              ' '.join(
-                  [
-                      ' '.join(mm) for mm in
-                      get_the_mesh(doc_text[doc_id])
-                  ]
-              )
-      )
-      dwds = tokenize(dtext)
-      for w in dwds:
-        words[w] = 1
-
-def get_the_mesh(the_doc):
-    good_meshes = []
-    if('meshHeadingsList' in the_doc):
-        for t in the_doc['meshHeadingsList']:
-            t = t.split(':', 1)
-            t = t[1].strip()
-            t = t.lower()
-            good_meshes.append(t)
-    elif('MeshHeadings' in the_doc):
-        for mesh_head_set in the_doc['MeshHeadings']:
-            for item in mesh_head_set:
-                good_meshes.append(item['text'].strip().lower())
-    if('Chemicals' in the_doc):
-        for t in the_doc['Chemicals']:
-            t = t['NameOfSubstance'].strip().lower()
-            good_meshes.append(t)
-    good_mesh = sorted(good_meshes)
-    good_mesh = ['mgmx'] + good_mesh
-    # good_mesh = ' # '.join(good_mesh)
-    # good_mesh = good_mesh.split()
-    good_mesh = [gm.split() for gm in good_mesh]
-    return good_mesh
-
-def snip_is_relevant(one_sent, gold_snips):
-    return any(
-        [
-            (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
-            or
-            (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
-            for gold_snip in gold_snips
-        ]
-    )
-    # return max(
-    #     [
-    #         similar(one_sent, gold_snip)
-    #         for gold_snip in gold_snips
-    #     ]
-    # )
-
 def prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45):
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
     q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
