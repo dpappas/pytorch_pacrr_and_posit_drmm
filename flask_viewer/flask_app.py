@@ -6,23 +6,16 @@ sys.setdefaultencoding("utf-8")
 
 import  os
 import  re
-import  json
-import  time
-import  random
-import  logging
-import  subprocess
 import  numpy as np
 import  torch
 import  torch.nn as nn
-import  torch.optim as optim
 import  torch.nn.functional as F
-from    pprint import pprint
 import  cPickle as pickle
 import  torch.autograd as autograd
-from    tqdm import tqdm
 from    gensim.models.keyedvectors import KeyedVectors
 from    nltk.tokenize import sent_tokenize
 from    difflib import SequenceMatcher
+from    pprint import pprint
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
