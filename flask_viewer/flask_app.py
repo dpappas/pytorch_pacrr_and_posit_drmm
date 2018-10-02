@@ -189,9 +189,10 @@ def snip_is_relevant(one_sent, gold_snips):
     # )
 
 def prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45):
-    quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
-    good_doc_af     = GetScores(quest, good_doc_text, the_bm25)
-    good_sents      = sent_tokenize(good_doc_text)
+    quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
+    q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+    good_doc_af                 = GetScores(quest, good_doc_text, the_bm25)
+    good_sents                  = sent_tokenize(good_doc_text)
     good_sents_embeds, good_sents_escores, held_out_sents = [], [], []
     for good_text in good_sents:
         good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
@@ -203,7 +204,7 @@ def prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45):
     good_meshes         = [gm.split() for gm in good_mesh]
     good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
     good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
-    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, quest_tokens, quest_embeds
+    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, quest_tokens, quest_embeds, q_idfs
 
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
@@ -610,8 +611,8 @@ good_meshes                 = ['A B', 'C']
 
 (
     good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds,
-    held_out_sents, quest_tokens, quest_embeds
-) = prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45)
+    held_out_sents, quest_tokens, quest_embeds, q_idfs
+) = prep_data(quest, good_doc_text, good_meshes, the_bm25=7.45)
 
 doc_emit_, gs_emits_    = model.emit_one(
     doc1_sents_embeds   = good_sents_embeds,
@@ -619,7 +620,7 @@ doc_emit_, gs_emits_    = model.emit_one(
     q_idfs              = q_idfs,
     sents_gaf           = good_sents_escores,
     doc_gaf             = good_doc_af,
-    good_meshes_embeds  = good_meshes_embeds
+    good_meshes_embeds  = good_mesh_embeds
 )
 print(doc_emit_)
 print(gs_emits_)
