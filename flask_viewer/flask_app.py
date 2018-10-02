@@ -24,14 +24,16 @@ def get_quest_results():
     m = [t.strip() for t in m.split('||')]
     # return render_template("home.html")
     # add the question as header
-    ret_html = '<h2>{}</h2>'.format(q)
+    ret_html = '<h2>Question: {}</h2>'.format(q)
     ret_html += '</br></br>'
     # add the scored sentences
+    ret_html = '<h2>Document:</h2>'
     for sent in sent_tokenize(d):
         score = random.randint(1,100)
         ret_html += '<div style="background-color:{}">{}</div>'.format(colors[score], sent)
     ret_html += '</br></br>'
     # add the scored mesh terms
+    ret_html = '<h2>Mesh Terms:</h2>'
     for sent in m:
         score = random.randint(1,100)
         ret_html += '<div style="background-color:{}">{}</div>'.format(colors[score], sent)
