@@ -161,6 +161,23 @@ def load_model_from_checkpoint(resume_from):
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
+def get_one_output(quest, good_doc_text, good_meshes):
+    (
+        good_sents_embeds,  good_sents_escores, good_doc_af,    good_mesh_embeds,
+        held_out_sents,     quest_tokens,       quest_embeds,   q_idfs
+    ) = prep_data(quest, good_doc_text, good_meshes, the_bm25=7.45)
+    doc_emit_, gs_emits_    = model.emit_one(
+        doc1_sents_embeds   = good_sents_embeds,
+        question_embeds     = quest_embeds,
+        q_idfs              = q_idfs,
+        sents_gaf           = good_sents_escores,
+        doc_gaf             = good_doc_af,
+        good_meshes_embeds  = good_mesh_embeds
+    )
+    # emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_.tolist()
+    return held_out_sents, emitss
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, context_method='CNN', sentence_out_method='MLP', use_mesh=True):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -476,23 +493,6 @@ model           = Sent_Posit_Drmm_Modeler(
 resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 print('LOADED model')
-
-def get_one_output(quest, good_doc_text, good_meshes):
-    (
-        good_sents_embeds,  good_sents_escores, good_doc_af,    good_mesh_embeds,
-        held_out_sents,     quest_tokens,       quest_embeds,   q_idfs
-    ) = prep_data(quest, good_doc_text, good_meshes, the_bm25=7.45)
-    doc_emit_, gs_emits_    = model.emit_one(
-        doc1_sents_embeds   = good_sents_embeds,
-        question_embeds     = quest_embeds,
-        q_idfs              = q_idfs,
-        sents_gaf           = good_sents_escores,
-        doc_gaf             = good_doc_af,
-        good_meshes_embeds  = good_mesh_embeds
-    )
-    emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_.tolist()
-    return emition, emitss
 
 quest                       = 'What is my name?'
 good_doc_text               = 'my name is tilalop'
