@@ -206,13 +206,6 @@ def prep_data(quest, the_doc, the_bm25):
     # gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
     return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
 
-def get_gold_snips(quest_id):
-    gold_snips                  = []
-    if ('snippets' in bioasq6_data[quest_id]):
-        for sn in bioasq6_data[quest_id]['snippets']:
-            gold_snips.extend(sent_tokenize(sn['text']))
-    return list(set(gold_snips))
-
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
         'body'      : quest_body,
@@ -243,60 +236,6 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             esnip_res["offsetInBeginSection"]   = ind_from
             esnip_res["offsetInEndSection"]     = ind_to
         ret['snippets'].append(esnip_res)
-    return ret
-
-def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
-    '''
-    java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
-    evaluation.EvaluatorTask1b -phaseA -e 5
-    /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1
-    ./drmm-experimental_submit.json
-    '''
-    jar_path = retrieval_jar_path
-    #
-    fgold   = '{}_data_for_revision.json'.format(prefix)
-    fgold   = os.path.join(odir, fgold)
-    fgold   = os.path.abspath(fgold)
-    with open(fgold, 'w') as f:
-        f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
-        f.close()
-    #
-    for tt in data_gold['questions']:
-        if ('exact_answer' in tt):
-            del (tt['exact_answer'])
-        if ('ideal_answer' in tt):
-            del (tt['ideal_answer'])
-        if ('type' in tt):
-            del (tt['type'])
-    fgold    = '{}_gold_bioasq.json'.format(prefix)
-    fgold   = os.path.join(odir, fgold)
-    fgold   = os.path.abspath(fgold)
-    with open(fgold, 'w') as f:
-        f.write(json.dumps(data_gold, indent=4, sort_keys=True))
-        f.close()
-    #
-    femit    = '{}_emit_bioasq.json'.format(prefix)
-    femit   = os.path.join(odir, femit)
-    femit   = os.path.abspath(femit)
-    with open(femit, 'w') as f:
-        f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
-        f.close()
-    #
-    bioasq_eval_res = subprocess.Popen(
-        [
-            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
-            '-phaseA', '-e', '5', fgold, femit
-        ],
-        stdout=subprocess.PIPE, shell=False
-    )
-    (out, err)  = bioasq_eval_res.communicate()
-    lines       = out.decode("utf-8").split('\n')
-    ret = {}
-    for line in lines:
-        if(':' in line):
-            k       = line.split(':')[0].strip()
-            v       = line.split(':')[1].strip()
-            ret[k]  = float(v)
     return ret
 
 def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
@@ -341,19 +280,6 @@ def similar(upstream_seq, downstream_seq):
     to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
     r1              = SequenceMatcher(None, to_match, longest_match).ratio()
     return r1
-
-def get_pseudo_retrieved(dato):
-    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq6_data[dato['query_id']]['snippets']]
-    pseudo_retrieved            = [
-        {
-            'bm25_score'        : 7.76,
-            'doc_id'            : id,
-            'is_relevant'       : True,
-            'norm_bm25_score'   : 3.85
-        }
-        for id in set(some_ids)
-    ]
-    return pseudo_retrieved
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, context_method='CNN', sentence_out_method='MLP', use_mesh=True):
