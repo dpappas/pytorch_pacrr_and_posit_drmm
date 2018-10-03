@@ -465,11 +465,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+resume_from         = './best_checkpoint.pth.tar'
 
 idf, max_idf        = load_idfs(idf_pickle_path)
 print('loading w2v')
@@ -515,7 +513,7 @@ model           = Sent_Posit_Drmm_Modeler(
     use_mesh            = models[which_model][2]
 )
 
-resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
+# resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 print('LOADED model')
 
@@ -570,7 +568,8 @@ def get_quest_results():
     return ret_html
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    # app.run(port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
 
 '''
 In what substances is Papilin largely resistant ?
