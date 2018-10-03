@@ -425,6 +425,7 @@ def train_data_step2(train_instances):
                 # sims        = [similar(gs, tt) for gs in good_snips]
                 # best_sim    = max(sims) if(len(sims)>0) else 0.
                 # good_sent_tags.append(int(best_sim>0.9))
+        # Handle good mesh terms
         good_mesh_embeds    = []
         good_mesh_escores   = []
         for good_mesh in good_meshes:
@@ -447,15 +448,21 @@ def train_data_step2(train_instances):
             if(len(bad_embeds)>0):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
+        # Handle bad mesh terms
+        bad_mesh_embeds    = []
+        bad_mesh_escores   = []
+        for bad_mesh in bad_meshes:
+            gm_tokens, gm_embeds = get_embeds(bad_mesh, wv)
+            if(len(gm_tokens)>0):
+                bad_mesh_embeds.append(gm_embeds)
+                bad_escores = GetScores(quest, bad_mesh, bm25s_gid)[:-1]
+                bad_mesh_escores.append(bad_escores)
         if(sum(good_sent_tags)>0):
-            # bmt, bad_mesh_embeds    = get_embeds(bad_mesh, wv)
-            # gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-            bad_mesh_embeds     = [get_embeds(bad_mesh, wv)     for bad_mesh            in bad_meshes ]
-            bad_mesh_embeds     = [bad_mesh[1] for bad_mesh     in  bad_mesh_embeds     if(len(bad_mesh[0])>0)]
             yield (
                 good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
                 good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
-                good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds
+                good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds,
+                good_mesh_escores,  bad_mesh_escores
             )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
@@ -736,21 +743,29 @@ def train_one(epoch, two_losses=True):
     random.shuffle(train_instances)
     # for instance in train_data_step2(train_instances[:90*50]):
     start_time      = time.time()
-    for instance in train_data_step2(train_instances):
+
+    for (
+        good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
+        good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
+        good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds,
+        good_mesh_escores,  bad_mesh_escores
+    ) in train_data_step2(train_instances):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = instance[0],
-            doc2_sents_embeds   = instance[1],
-            question_embeds     = instance[2],
-            q_idfs              = instance[3],
-            sents_gaf           = instance[4],
-            sents_baf           = instance[5],
-            doc_gaf             = instance[6],
-            doc_baf             = instance[7],
-            good_meshes_embeds  = instance[10],
-            bad_meshes_embeds   = instance[11]
+            doc1_sents_embeds   = good_sents_embeds,
+            doc2_sents_embeds   = bad_sents_embeds,
+            question_embeds     = quest_embeds,
+            q_idfs              = q_idfs,
+            sents_gaf           = good_sents_escores,
+            sents_baf           = bad_sents_escores,
+            doc_gaf             = good_doc_af,
+            doc_baf             = bad_doc_af,
+            good_meshes_embeds  = good_mesh_embeds,
+            bad_meshes_embeds   = bad_mesh_embeds,
+            mesh_gaf            = good_mesh_escores,
+            mesh_baf            = bad_mesh_escores
         )
         #
-        good_sent_tags, bad_sent_tags       = instance[8], instance[9]
+        good_sent_tags, bad_sent_tags       = good_sent_tags, bad_sent_tags
         if(two_losses):
             sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss                       = sn_d1_l + sn_d2_l
