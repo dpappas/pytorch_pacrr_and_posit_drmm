@@ -565,6 +565,8 @@ def get_quest_results():
         sent    = res[0]
         ret_html += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
     ret_html += '</br></br>'
+    ret_html += '<p>Extracted from model: {}</p>'.format(resume_from)
+    #
     return ret_html
 
 if __name__ == '__main__':
