@@ -183,8 +183,6 @@ def get_one_output(quest, good_doc_text, good_meshes):
     )
     # emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
-    max_mesh_sim_           = max_mesh_sim_.tolist()
-    print(max_mesh_sim_)
     sent_ret                = [
         (
             sent,
@@ -192,7 +190,18 @@ def get_one_output(quest, good_doc_text, good_meshes):
         )
         for sent in good_sents
     ]
-    return sent_ret
+    #
+    max_mesh_sim_           = max_mesh_sim_.tolist()
+    mesh_res                = [
+        (
+            sent,
+            int(math.floor(max_mesh_sim_[held_out_mesh.index(sent)]*100))
+            if(sent in held_out_mesh) else 0
+        )
+        for sent in good_meshes
+    ]
+    #
+    return sent_ret, mesh_res
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, context_method='CNN', sentence_out_method='MLP', use_mesh=True):
@@ -536,7 +545,7 @@ def get_quest_results():
     d = request.form.get("the_doc")
     m = request.form.get("the_mesh")
     m = [t.strip() for t in m.split('||')]
-    results = get_one_output(q, d, m)
+    sent_res, mesh_res = get_one_output(q, d, m)
     # return render_template("home.html")
     # add the question as header
     ret_html = '<h2>Question: </h2>'
@@ -544,15 +553,16 @@ def get_quest_results():
     ret_html += '</br></br>'
     # add the scored sentences
     ret_html += '<h2>Document:</h2>'
-    for res in results:
+    for res in sent_res:
         score   = res[1]
         sent    = res[0]
         ret_html += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
     ret_html += '</br></br>'
     # add the scored mesh terms
     ret_html += '<h2>Mesh Terms:</h2>'
-    for sent in m:
-        score = random.randint(1,100)
+    for res in mesh_res:
+        score   = res[1]
+        sent    = res[0]
         ret_html += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
     ret_html += '</br></br>'
     return ret_html
