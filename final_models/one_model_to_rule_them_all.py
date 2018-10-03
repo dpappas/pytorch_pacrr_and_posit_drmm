@@ -1036,7 +1036,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         if(self.use_mesh):
             good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
-            bad_meshes_out = self.get_mesh_rep(bad_meshes_embeds, q_context)
+            bad_meshes_out  = self.get_mesh_rep(bad_meshes_embeds, q_context)
             good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
             bad_out_pp = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
         else:
