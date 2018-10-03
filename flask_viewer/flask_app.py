@@ -543,14 +543,15 @@ def get_quest_results():
     # add the scored sentences
     ret_html += '<h2>Document:</h2>'
     for res in results:
-        score    = res[1]
-        ret_html += '<div style="background-color:{}">{}</div>'.format(colors[score], res[0])
+        score   = res[1]
+        sent    = res[0]
+        ret_html += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
     ret_html += '</br></br>'
     # add the scored mesh terms
     ret_html += '<h2>Mesh Terms:</h2>'
     for sent in m:
         score = random.randint(1,100)
-        ret_html += '<div style="background-color:{}">{}</div>'.format(colors[score], sent)
+        ret_html += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
     ret_html += '</br></br>'
     return ret_html
 
