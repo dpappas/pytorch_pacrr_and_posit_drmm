@@ -394,7 +394,8 @@ def get_the_mesh(the_doc):
     good_mesh = ['mgmx'] + good_mesh
     # good_mesh = ' # '.join(good_mesh)
     # good_mesh = good_mesh.split()
-    good_mesh = [gm.split() for gm in good_mesh]
+    # good_mesh = [gm.split() for gm in good_mesh]
+    good_mesh = [gm for gm in good_mesh]
     return good_mesh
 
 def train_data_step2(train_instances):
