@@ -4,6 +4,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
+import math
 import  os
 import  re
 import  numpy as np
@@ -142,7 +143,7 @@ def prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45):
         if(len(mtoks)>0):
             good_mesh_embeds.append(membs)
             held_out_mesh.append(gm)
-    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_mesh, held_out_sents, quest_tokens, quest_embeds, q_idfs
+    return good_sents, good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_mesh, held_out_sents, quest_tokens, quest_embeds, q_idfs
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
@@ -166,9 +167,11 @@ def load_model_from_checkpoint(resume_from):
 
 def get_one_output(quest, good_doc_text, good_meshes):
     (
-        good_sents_embeds,  good_sents_escores,
-        good_doc_af,        good_mesh_embeds,       held_out_mesh,
-        held_out_sents,     quest_tokens,           quest_embeds,   q_idfs
+        good_sents,         good_sents_embeds,
+        good_sents_escores, good_doc_af,
+        good_mesh_embeds,   held_out_mesh,
+        held_out_sents,     quest_tokens,
+        quest_embeds,       q_idfs
     ) = prep_data(quest, good_doc_text, good_meshes, the_bm25=7.45)
     doc_emit_, gs_emits_    = model.emit_one(
         doc1_sents_embeds   = good_sents_embeds,
@@ -183,9 +186,9 @@ def get_one_output(quest, good_doc_text, good_meshes):
     sent_ret                = [
         (
             sent,
-
+            int(math.floor(emitss[held_out_sents.index(sent)]*100)) if(sent in held_out_sents) else 0
         )
-        for sent in
+        for sent in good_sents
     ]
     return sent_ret
 
@@ -531,9 +534,7 @@ def get_quest_results():
     d = request.form.get("the_doc")
     m = request.form.get("the_mesh")
     m = [t.strip() for t in m.split('||')]
-    held_out_sents, emitss = get_one_output(q, d, m)
-    pprint(held_out_sents)
-    pprint(emitss)
+    results = get_one_output(q, d, m)
     # return render_template("home.html")
     # add the question as header
     ret_html = '<h2>Question: </h2>'
@@ -541,9 +542,8 @@ def get_quest_results():
     ret_html += '</br></br>'
     # add the scored sentences
     ret_html += '<h2>Document:</h2>'
-    for sent in sent_tokenize(d):
-        score = random.randint(1,100)
-        ret_html += '<div style="background-color:{}">{}</div>'.format(colors[score], sent)
+    for res in results:
+        ret_html += '<div style="background-color:{}">{}</div>'.format(res[1], res[0])
     ret_html += '</br></br>'
     # add the scored mesh terms
     ret_html += '<h2>Mesh Terms:</h2>'
