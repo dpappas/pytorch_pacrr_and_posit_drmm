@@ -788,12 +788,19 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim=30, k_for_maxpool=5, context_method='CNN', sentence_out_method='MLP', use_mesh=True):
+    def __init__(
+        self,
+        embedding_dim       = 30,
+        k_for_maxpool       = 5,
+        context_method      = 'CNN',
+        sentence_out_method ='MLP',
+        mesh_style          = None
+    ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         #
         self.embedding_dim                          = embedding_dim
-        self.use_mesh                               = use_mesh
+        self.mesh_style                             = mesh_style
         self.context_method                         = context_method
         self.sentence_out_method                    = sentence_out_method
         # to create q weights
@@ -836,7 +843,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
             self.sent_res_mlp   = nn.Linear(10, 1, bias=True)
     def init_doc_out_layer(self):
-        if(self.use_mesh):
+        if(self.mesh_style=='BIGRU'):
             self.init_mesh_module()
             self.final_layer = nn.Linear(5 + 30, 1, bias=True)
         else:
@@ -1004,7 +1011,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         else:
             good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         #
-        if(self.use_mesh):
+        if(self.mesh_style=='BIGRU'):
             good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
             good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
         else:
@@ -1034,7 +1041,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
             bad_out, bs_emits = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
-        if(self.use_mesh):
+        if(self.mesh_style=='BIGRU'):
             good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
             bad_meshes_out  = self.get_mesh_rep(bad_meshes_embeds, q_context)
             good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
