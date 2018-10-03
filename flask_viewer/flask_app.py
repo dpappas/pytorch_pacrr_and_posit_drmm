@@ -173,7 +173,7 @@ def get_one_output(quest, good_doc_text, good_meshes):
         held_out_sents,     quest_tokens,
         quest_embeds,       q_idfs
     ) = prep_data(quest, good_doc_text, good_meshes, the_bm25=7.45)
-    doc_emit_, gs_emits_    = model.emit_one(
+    doc_emit_, gs_emits_, max_mesh_sim_ = model.emit_one(
         doc1_sents_embeds   = good_sents_embeds,
         question_embeds     = quest_embeds,
         q_idfs              = q_idfs,
@@ -183,6 +183,8 @@ def get_one_output(quest, good_doc_text, good_meshes):
     )
     # emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
+    max_mesh_sim_           = max_mesh_sim_.tolist()
+    print(max_mesh_sim_)
     sent_ret                = [
         (
             sent,
@@ -389,7 +391,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_matrix      = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
-        return output
+        return output, max_sim
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_meshes_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -410,13 +412,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         #
         if(self.use_mesh):
-            good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
-            good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
+            good_meshes_out, max_mesh_sim   = self.get_mesh_rep(good_meshes_embeds, q_context)
+            good_out_pp                     = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
         else:
             good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
-        return final_good_output, gs_emits
+        return final_good_output, gs_emits, max_mesh_sim
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
