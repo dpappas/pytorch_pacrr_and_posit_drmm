@@ -1014,7 +1014,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
-    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_meshes_embeds):
+    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_meshes_embeds, mesh_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
@@ -1036,6 +1036,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         if(self.mesh_style=='BIGRU'):
             good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
             good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
+        elif (self.mesh_style == 'SENT'):
+            if (self.context_method == 'CNN'):
+                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
+            else:
+                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
+            good_out_pp = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
         else:
             good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
