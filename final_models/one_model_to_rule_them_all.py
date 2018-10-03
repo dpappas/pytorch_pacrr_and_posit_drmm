@@ -866,6 +866,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         if(self.mesh_style=='BIGRU'):
             self.init_mesh_module()
             self.final_layer = nn.Linear(5 + 30, 1, bias=True)
+        elif(self.mesh_style=='SENT'):
+            self.final_layer = nn.Linear(1 + 4 + 1, 1, bias=True)
         else:
             self.final_layer = nn.Linear(5, 1, bias=True)
     #
@@ -1085,6 +1087,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 bad_mesh_out, bs_mesh_emits  = self.do_for_one_doc_bigru(
                     bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights
                 )
+            good_out_pp = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
+            bad_out_pp  = torch.cat([bad_out, doc_baf, bad_mesh_out], -1)
         else:
             good_out_pp         = torch.cat([good_out, doc_gaf], -1)
             bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
