@@ -504,10 +504,14 @@ def prep_data(quest, the_doc, the_bm25):
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
     good_meshes         = get_the_mesh(the_doc)
-    good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
-    good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
-    # gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
-    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents
+    good_mesh_embeds, good_mesh_escores = [], []
+    for good_mesh in good_meshes:
+        gm_tokens, gm_embeds = get_embeds(good_mesh, wv)
+        if (len(gm_tokens) > 0):
+            good_mesh_embeds.append(gm_embeds)
+            good_escores = GetScores(quest, good_mesh, the_bm25)[:-1]
+            good_mesh_escores.append(good_escores)
+    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, good_mesh_escores
 
 def get_gold_snips(quest_id):
     gold_snips                  = []
@@ -605,7 +609,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
 def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
     (
         good_sents_embeds, good_sents_escores, good_doc_af,
-        good_meshes_embeds, held_out_sents
+        good_meshes_embeds, held_out_sents, good_mesh_escores
     ) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
     doc_emit_, gs_emits_    = model.emit_one(
         doc1_sents_embeds   = good_sents_embeds,
@@ -613,7 +617,8 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
         q_idfs              = q_idfs,
         sents_gaf           = good_sents_escores,
         doc_gaf             = good_doc_af,
-        good_meshes_embeds  = good_meshes_embeds
+        good_meshes_embeds  = good_meshes_embeds,
+        mesh_gaf            = good_mesh_escores
     )
     emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
