@@ -1038,17 +1038,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
             bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         else:
-            good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-            bad_out, bs_emits = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+            bad_out, bs_emits   = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
         if(self.mesh_style=='BIGRU'):
-            good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
-            bad_meshes_out  = self.get_mesh_rep(bad_meshes_embeds, q_context)
-            good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-            bad_out_pp = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
+            good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
+            bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds, q_context)
+            good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
+            bad_out_pp          = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
         else:
-            good_out_pp = torch.cat([good_out, doc_gaf], -1)
-            bad_out_pp = torch.cat([bad_out, doc_baf], -1)
+            good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+            bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
