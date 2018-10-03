@@ -539,9 +539,9 @@ def get_news():
 
 @app.route("/submit_question", methods=["POST"])
 def get_quest_results():
-    q = request.form.get("the_quest")
-    d = request.form.get("the_doc")
-    m = request.form.get("the_mesh")
+    q = request.form.get("the_quest").strip()
+    d = request.form.get("the_doc").strip()
+    m = request.form.get("the_mesh").strip()
     m = [t.strip() for t in m.split('||')]
     sent_res, mesh_res = get_one_output(q, d, m)
     # return render_template("home.html")
