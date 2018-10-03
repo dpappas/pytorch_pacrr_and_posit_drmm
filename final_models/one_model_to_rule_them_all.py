@@ -743,7 +743,6 @@ def train_one(epoch, two_losses=True):
     random.shuffle(train_instances)
     # for instance in train_data_step2(train_instances[:90*50]):
     start_time      = time.time()
-
     for (
         good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
         good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
