@@ -813,8 +813,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         embedding_dim       = 30,
         k_for_maxpool       = 5,
         context_method      = 'CNN',
-        sentence_out_method ='MLP',
-        mesh_style          = None
+        sentence_out_method = 'MLP',
+        mesh_style          = 'SENT'
     ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
@@ -1070,6 +1070,21 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds, q_context)
             good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
             bad_out_pp          = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
+        elif(self.mesh_style=='SENT'):
+            if(self.context_method=='CNN'):
+                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_cnn(
+                    good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights
+                )
+                bad_mesh_out, bs_mesh_emits = self.do_for_one_doc_cnn(
+                    bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights
+                )
+            else:
+                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_bigru(
+                    good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights
+                )
+                bad_mesh_out, bs_mesh_emits  = self.do_for_one_doc_bigru(
+                    bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights
+                )
         else:
             good_out_pp         = torch.cat([good_out, doc_gaf], -1)
             bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
