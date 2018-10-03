@@ -1090,22 +1090,22 @@ models = [
 # ['Model_06', ],
 # ['Model_07', ],
 # ['Model_08', ],
-['Model_09', 'CNN',     'MLP',   False, False],
-['Model_10', 'CNN',     'MLP',   True,  False],
-['Model_11', 'CNN',     'BIGRU', False, False],
-['Model_12', 'CNN',     'BIGRU', True,  False],
-['Model_13', 'BIGRU',   'MLP',   False, False],
-['Model_14', 'BIGRU',   'MLP',   True,  False],
-['Model_15', 'BIGRU',   'BIGRU', False, False],
-['Model_16', 'BIGRU',   'BIGRU', True,  False],
-['Model_17', 'CNN',     'MLP',   False, True],
-['Model_18', 'CNN',     'MLP',   True,  True],
-['Model_19', 'CNN',     'BIGRU', False, True],
-['Model_20', 'CNN',     'BIGRU', True,  True],
-['Model_21', 'BIGRU',   'MLP',   False, True],
-['Model_22', 'BIGRU',   'MLP',   True,  True],
-['Model_23', 'BIGRU',   'BIGRU', False, True],
-['Model_24', 'BIGRU',   'BIGRU', True,  True],
+['Model_09', 'CNN',     'MLP',   None,      False],
+['Model_10', 'CNN',     'MLP',   'BIGRU',   False],
+['Model_11', 'CNN',     'BIGRU', None,      False],
+['Model_12', 'CNN',     'BIGRU', 'BIGRU',   False],
+['Model_13', 'BIGRU',   'MLP',   None,      False],
+['Model_14', 'BIGRU',   'MLP',   'BIGRU',   False],
+['Model_15', 'BIGRU',   'BIGRU', None,      False],
+['Model_16', 'BIGRU',   'BIGRU', 'BIGRU',   False],
+['Model_17', 'CNN',     'MLP',   None,      True],
+['Model_18', 'CNN',     'MLP',   'BIGRU',   True],
+['Model_19', 'CNN',     'BIGRU', None,      True],
+['Model_20', 'CNN',     'BIGRU', 'BIGRU',   True],
+['Model_21', 'BIGRU',   'MLP',   None,      True],
+['Model_22', 'BIGRU',   'MLP',   'BIGRU',   True],
+['Model_23', 'BIGRU',   'BIGRU', None,      True],
+['Model_24', 'BIGRU',   'BIGRU', 'BIGRU',   True],
 ]
 models = dict(
     [
@@ -1141,7 +1141,7 @@ for run in range(5):
         k_for_maxpool       = k_for_maxpool,
         context_method      = models[which_model][0],
         sentence_out_method = models[which_model][1],
-        use_mesh            = models[which_model][2]
+        mesh_style          = models[which_model][2]
     )
     params      = model.parameters()
     print_params(model)
