@@ -426,8 +426,7 @@ def train_data_step2(train_instances):
                 # best_sim    = max(sims) if(len(sims)>0) else 0.
                 # good_sent_tags.append(int(best_sim>0.9))
         # Handle good mesh terms
-        good_mesh_embeds    = []
-        good_mesh_escores   = []
+        good_mesh_embeds, good_mesh_escores = [], []
         for good_mesh in good_meshes:
             gm_tokens, gm_embeds = get_embeds(good_mesh, wv)
             if(len(gm_tokens)>0):
@@ -449,8 +448,7 @@ def train_data_step2(train_instances):
                 bad_sents_embeds.append(bad_embeds)
                 bad_sents_escores.append(bad_escores)
         # Handle bad mesh terms
-        bad_mesh_embeds    = []
-        bad_mesh_escores   = []
+        bad_mesh_embeds, bad_mesh_escores = [], []
         for bad_mesh in bad_meshes:
             gm_tokens, gm_embeds = get_embeds(bad_mesh, wv)
             if(len(gm_tokens)>0):
