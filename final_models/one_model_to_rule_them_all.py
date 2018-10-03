@@ -808,14 +808,7 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(
-        self,
-        embedding_dim       = 30,
-        k_for_maxpool       = 5,
-        context_method      = 'CNN',
-        sentence_out_method = 'MLP',
-        mesh_style          = 'SENT'
-    ):
+    def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', sentence_out_method = 'MLP', mesh_style = 'SENT'):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         #
