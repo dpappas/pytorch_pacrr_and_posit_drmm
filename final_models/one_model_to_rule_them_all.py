@@ -425,6 +425,14 @@ def train_data_step2(train_instances):
                 # sims        = [similar(gs, tt) for gs in good_snips]
                 # best_sim    = max(sims) if(len(sims)>0) else 0.
                 # good_sent_tags.append(int(best_sim>0.9))
+        good_mesh_embeds    = []
+        good_mesh_escores   = []
+        for good_mesh in good_meshes:
+            gm_tokens, gm_embeds = get_embeds(good_mesh, wv)
+            if(len(gm_tokens)>0):
+                good_mesh_embeds.append(gm_embeds)
+                good_escores = GetScores(quest, good_mesh, bm25s_gid)[:-1]
+                good_mesh_escores.append(good_escores)
         #
         bad_meshes                              = get_the_mesh(train_docs[bid])
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
@@ -444,8 +452,6 @@ def train_data_step2(train_instances):
             # gmt, good_mesh_embeds   = get_embeds(good_mesh, wv)
             bad_mesh_embeds     = [get_embeds(bad_mesh, wv)     for bad_mesh            in bad_meshes ]
             bad_mesh_embeds     = [bad_mesh[1] for bad_mesh     in  bad_mesh_embeds     if(len(bad_mesh[0])>0)]
-            good_mesh_embeds    = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
-            good_mesh_embeds    = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
             yield (
                 good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
                 good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
