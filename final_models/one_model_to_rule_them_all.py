@@ -1151,6 +1151,16 @@ models = [
 ['Model_22', 'BIGRU',   'MLP',   'BIGRU',   True],
 ['Model_23', 'BIGRU',   'BIGRU', None,      True],
 ['Model_24', 'BIGRU',   'BIGRU', 'BIGRU',   True],
+#
+['Model_25', 'CNN',     'MLP',   'SENT',    False],
+['Model_26', 'CNN',     'BIGRU', 'SENT',    False],
+['Model_27', 'BIGRU',   'MLP',   'SENT',    False],
+['Model_28', 'BIGRU',   'BIGRU', 'SENT',    False],
+['Model_29', 'CNN',     'MLP',   'SENT',    True],
+['Model_30', 'CNN',     'BIGRU', 'SENT',    True],
+['Model_31', 'BIGRU',   'MLP',   'SENT',    True],
+['Model_32', 'BIGRU',   'BIGRU', 'SENT',    True],
+
 ]
 models = dict(
     [
@@ -1159,7 +1169,7 @@ models = dict(
     ]
 )
 
-which_model = 'Model_16'
+which_model = 'Model_25'
 
 hdlr = None
 for run in range(5):
