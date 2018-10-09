@@ -1262,3 +1262,23 @@ compare to polivios scores                              -- pending
 # grep "test_map:" -B4  Model_14_run_4/model.log
 
 
+'''
+mail
+ergasthria A48 apo epomenh
+i wra askiseis mia kwdika
+15 lepta dialleima. Sto 16 ksekinaw.
+Posoi einai apo persi
+posoi den kseroun python
+posoi den kseroun java
+posoi einai apo allo tmima
+posoi to phrane giati einai efkolo
+posoi to phrane giati theloun na kinigisoun ton tomea
+ergasies 2 20% kathe mia (2-3 atoma)
+oxi antigrafes
+an argisw pote 10 lepta tis defteres mh shkwthoun na fygoun.
+apories genikes
+apories gia th prohgoumenh evdomada
+ta ektos den paizoun (tupou den mporw na erthw Deftera kai Triti mporeite na mou ta peite alli mera/skype/til klp.)
+'''
+
+
