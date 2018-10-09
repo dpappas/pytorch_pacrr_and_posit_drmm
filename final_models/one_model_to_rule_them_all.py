@@ -854,11 +854,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
     def init_sent_output_layer(self):
         if(self.sentence_out_method == 'MLP'):
-            self.sent_out_layer = nn.Linear(4, 1, bias=True)
+            self.sent_out_layer = nn.Linear(4, 1, bias=False)
         else:
             self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
             self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
-            self.sent_res_mlp   = nn.Linear(10, 1, bias=True)
+            self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
     def init_doc_out_layer(self):
         if(self.mesh_style=='BIGRU'):
             self.init_mesh_module()
@@ -944,8 +944,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.sent_out_layer(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
-        res = torch.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
+        res = torch.sigmoid(res)
         return ret, res
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
@@ -971,8 +971,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.sent_out_layer(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
-        res = torch.sigmoid(res)
         ret = self.get_max(res).unsqueeze(0)
+        res = torch.sigmoid(res)
         return ret, res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
@@ -1217,6 +1217,23 @@ for run in range(5):
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
+
+'''
+Petros
+give the htmls to peter for annotation
+keep the original text and keep what metamap thought
+
+Sotiris
+
+
+Me
+remove the bias on snippet extraction before sigmoid    -- DONE
+add average similarity score as 3rd feature             -- pending
+add oracle scores for snippets                          -- pending
+compare to polivios scores                              -- pending
+
+
+'''
 
 
 
