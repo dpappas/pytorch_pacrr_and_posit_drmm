@@ -901,11 +901,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         dist_mat    = num / den
         return dist_mat
     def pooling_method(self, sim_matrix):
-        sorted_res              = torch.sort(sim_matrix, -1)[0]             # sort the input minimum to maximum
-        k_max_pooled            = sorted_res[:,-self.k:]                    # select the last k of each instance in our data
-        average_k_max_pooled    = k_max_pooled.sum(-1)/float(self.k)        # average these k values
-        the_maximum             = k_max_pooled[:, -1]                       # select the maximum value of each instance
-        the_concatenation       = torch.stack([the_maximum, average_k_max_pooled], dim=-1) # concatenate maximum value and average of k-max values
+        sorted_res              = torch.sort(sim_matrix, -1)[0]                             # sort the input minimum to maximum
+        k_max_pooled            = sorted_res[:,-self.k:]                                    # select the last k of each instance in our data
+        average_k_max_pooled    = k_max_pooled.sum(-1)/float(self.k)                        # average these k values
+        the_maximum             = k_max_pooled[:, -1]                                       # select the maximum value of each instance
+        the_average_over_all    = sorted_res.sum(-1)/float(sim_matrix.size(1))              # add average of all elements as long sentences might have more matches
+        the_concatenation       = torch.stack([the_maximum, average_k_max_pooled, the_average_over_all], dim=-1)  # concatenate maximum value and average of k-max values
         return the_concatenation     # return the concatenation
     def get_output(self, input_list, weights):
         temp    = torch.cat(input_list, -1)
