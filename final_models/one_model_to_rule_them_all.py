@@ -1253,7 +1253,7 @@ Sotiris
 
 Me
 remove the bias on snippet extraction before sigmoid    -- DONE
-add average similarity score as 3rd feature             -- pending
+add average similarity score as 3rd feature             -- DONE
 add oracle scores for snippets                          -- pending
 compare to polivios scores                              -- pending
 
