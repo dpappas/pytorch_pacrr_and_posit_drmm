@@ -867,7 +867,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.final_layer = nn.Linear(1 + 4 + 1, 1, bias=True)
         else:
             self.final_layer = nn.Linear(5, 1, bias=True)
-    #
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
