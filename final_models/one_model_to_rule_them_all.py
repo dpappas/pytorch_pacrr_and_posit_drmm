@@ -849,7 +849,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def init_question_weight_module(self):
         self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
     def init_mlps_for_pooled_attention(self):
-        self.linear_per_q1      = nn.Linear(6, 8, bias=True)
+        self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
     def init_sent_output_layer(self):
