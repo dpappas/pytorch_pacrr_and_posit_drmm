@@ -1257,8 +1257,8 @@ add average similarity score as 3rd feature             -- pending
 add oracle scores for snippets                          -- pending
 compare to polivios scores                              -- pending
 
-
 '''
 
+# grep "test_map:" -B4  Model_14_run_4/model.log
 
 
