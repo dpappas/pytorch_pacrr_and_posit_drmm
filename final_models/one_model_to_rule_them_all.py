@@ -667,6 +667,7 @@ def get_one_map(prefix, data, docs):
     model.eval()
     ret_data                = {'questions': []}
     all_bioasq_subm_data    = {"questions": []}
+    all_bioasq_subm_data_known = {"questions": []}
     all_bioasq_gold_data    = {'questions': []}
     data_for_revision       = {}
     for dato in tqdm(data['queries']):
@@ -686,14 +687,11 @@ def get_one_map(prefix, data, docs):
         # for retr in get_pseudo_retrieved(dato):
         for retr in dato['retrieved_documents']:
             doc_res, extracted_from_one, all_emits = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
-            # pprint(all_emits)
-            # exit()
-            total_relevant = sum([1 for em in all_emits if(em[0]==True)])
-            # print total_relevant
-            if(total_relevant>0):
-                extracted_snippets.extend(extracted_from_one)
-                extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
+            extracted_snippets.extend(extracted_from_one)
             #
+            total_relevant = sum([1 for em in all_emits if(em[0]==True)])
+            if(total_relevant>0):
+                extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
             if (dato['query_id'] not in data_for_revision):
                 data_for_revision[dato['query_id']] = {
                     'query_text': dato['query_text'],
@@ -706,16 +704,22 @@ def get_one_map(prefix, data, docs):
         emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
         #
-        extracted_snippets          = [
-            tt
-            for tt in extracted_snippets
-            if(tt[2] in doc_res[:10])
-        ]
+        extracted_snippets          = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
         extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-        snips_res                   = prep_extracted_snippets(
-            extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text']
-        )
+        snips_res                   = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
         all_bioasq_subm_data['questions'].append(snips_res)
+        #
+        extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if(tt[2] in doc_res[:10])]
+        extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num , key=lambda x: x[1], reverse=True)
+        snips_res_known_rel_num             = prep_extracted_snippets(extracted_snippets_known_rel_num, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+        all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
+    #
+    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
+    pprint(bioasq_snip_res)
+    logger.info('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
+    logger.info('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    logger.info('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
+    logger.info('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
