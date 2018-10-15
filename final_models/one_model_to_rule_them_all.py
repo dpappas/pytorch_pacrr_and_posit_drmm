@@ -719,13 +719,8 @@ def get_one_map(prefix, data, docs):
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known = do_for_some_retrieved(
-            docs,
-            dato,
-            dato['retrieved_documents'],
-            data_for_revision,
-            ret_data,
-            all_bioasq_subm_data,
-            all_bioasq_subm_data_known
+            docs, dato, dato['retrieved_documents'], data_for_revision,
+            ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
         )
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
