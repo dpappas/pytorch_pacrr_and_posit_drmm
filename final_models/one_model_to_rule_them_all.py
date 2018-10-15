@@ -663,6 +663,41 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
+def do_for_some_retrieved(retr_docs):
+    doc_res, extracted_snippets, extracted_snippets_known_rel_num = {}, [], []
+    # for retr in get_pseudo_retrieved(dato):
+    for retr in retr_docs:
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
+            quest, q_idfs, quest_embeds, bm25s, docs, retr,
+            doc_res, gold_snips)
+        extracted_snippets.extend(extracted_from_one)
+        #
+        total_relevant = sum([1 for em in all_emits if (em[0] == True)])
+        if (total_relevant > 0):
+            extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
+        if (dato['query_id'] not in data_for_revision):
+            data_for_revision[dato['query_id']] = {
+                'query_text': dato['query_text'],
+                'snippets': {retr['doc_id']: all_emits}
+            }
+        else:
+            data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
+    doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+    emitions['documents'] = doc_res[:100]
+    ret_data['questions'].append(emitions)
+    #
+    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+    extracted_snippets = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+    snips_res = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    all_bioasq_subm_data['questions'].append(snips_res)
+    #
+    extracted_snippets_known_rel_num = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
+    extracted_snippets_known_rel_num = sorted(extracted_snippets_known_rel_num, key=lambda x: x[1], reverse=True)
+    snips_res_known_rel_num = prep_extracted_snippets(extracted_snippets_known_rel_num, docs, dato['query_id'],
+                                                      doc_res[:10], dato['query_text'])
+    all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
+
 def get_one_map(prefix, data, docs):
     model.eval()
     ret_data                = {'questions': []}
@@ -682,37 +717,9 @@ def get_one_map(prefix, data, docs):
         }
         bm25s                       = { t['doc_id'] : t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         gold_snips                  = get_gold_snips(dato['query_id'])
-        doc_res, extracted_snippets = {}, []
-        extracted_snippets_known_rel_num = []
-        # for retr in get_pseudo_retrieved(dato):
-        for retr in dato['retrieved_documents']:
-            doc_res, extracted_from_one, all_emits = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
-            extracted_snippets.extend(extracted_from_one)
-            #
-            total_relevant = sum([1 for em in all_emits if(em[0]==True)])
-            if(total_relevant>0):
-                extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
-            if (dato['query_id'] not in data_for_revision):
-                data_for_revision[dato['query_id']] = {
-                    'query_text': dato['query_text'],
-                    'snippets'  : {retr['doc_id']: all_emits}
-                }
-            else:
-                data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
-        doc_res                     = sorted(doc_res.items(),    key=lambda x: x[1], reverse=True)
-        doc_res                     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-        emitions['documents']       = doc_res[:100]
-        ret_data['questions'].append(emitions)
-        #
-        extracted_snippets          = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
-        extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-        snips_res                   = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-        all_bioasq_subm_data['questions'].append(snips_res)
-        #
-        extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if(tt[2] in doc_res[:10])]
-        extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num , key=lambda x: x[1], reverse=True)
-        snips_res_known_rel_num             = prep_extracted_snippets(extracted_snippets_known_rel_num, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-        all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
+        do_for_some_retrieved(
+            dato['retrieved_documents']
+        )
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     pprint(bioasq_snip_res)
