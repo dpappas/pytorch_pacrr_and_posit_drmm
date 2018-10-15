@@ -663,7 +663,17 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-def do_for_some_retrieved(retr_docs):
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known):
+    quest                       = dato['query_text']
+    quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
+    q_idfs = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+    emitions = {
+        'body': dato['query_text'],
+        'id': dato['query_id'],
+        'documents': []
+    }
+    bm25s = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+    gold_snips = get_gold_snips(dato['query_id'])
     doc_res, extracted_snippets, extracted_snippets_known_rel_num = {}, [], []
     # for retr in get_pseudo_retrieved(dato):
     for retr in retr_docs:
@@ -697,6 +707,7 @@ def do_for_some_retrieved(retr_docs):
     snips_res_known_rel_num = prep_extracted_snippets(extracted_snippets_known_rel_num, docs, dato['query_id'],
                                                       doc_res[:10], dato['query_text'])
     all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
+    return data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
 
 def get_one_map(prefix, data, docs):
     model.eval()
@@ -707,18 +718,14 @@ def get_one_map(prefix, data, docs):
     data_for_revision       = {}
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
-        quest                       = dato['query_text']
-        quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
-        q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-        emitions                    = {
-            'body'      : dato['query_text'],
-            'id'        : dato['query_id'],
-            'documents' : []
-        }
-        bm25s                       = { t['doc_id'] : t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        gold_snips                  = get_gold_snips(dato['query_id'])
         do_for_some_retrieved(
-            dato['retrieved_documents']
+            docs,
+            dato,
+            dato['retrieved_documents'],
+            data_for_revision,
+            ret_data,
+            all_bioasq_subm_data,
+            all_bioasq_subm_data_known
         )
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
