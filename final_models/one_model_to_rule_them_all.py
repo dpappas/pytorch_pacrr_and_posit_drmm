@@ -607,10 +607,12 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     return ret
 
 def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
+    doc = docs[retr['doc_id']]
+    bm  = bm25s[retr['doc_id']]
     (
         good_sents_embeds, good_sents_escores, good_doc_af,
         good_meshes_embeds, held_out_sents, good_mesh_escores
-    ) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
+    ) = prep_data(quest, doc, bm)
     doc_emit_, gs_emits_    = model.emit_one(
         doc1_sents_embeds   = good_sents_embeds,
         question_embeds     = quest_embeds,
