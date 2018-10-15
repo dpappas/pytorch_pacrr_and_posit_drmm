@@ -684,7 +684,7 @@ def get_one_map(prefix, data, docs):
         doc_res, extracted_snippets = {}, []
         # for retr in get_pseudo_retrieved(dato):
         for retr in dato['retrieved_documents']:
-            doc_res, extracted_from_one, all_emits  = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
+            doc_res, extracted_from_one, all_emits = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
             extracted_snippets.extend(extracted_from_one)
             #
             if (dato['query_id'] not in data_for_revision):
@@ -699,9 +699,15 @@ def get_one_map(prefix, data, docs):
         emitions['documents']       = doc_res[:100]
         ret_data['questions'].append(emitions)
         #
-        extracted_snippets          = [tt for tt in extracted_snippets if(tt[2] in doc_res[:10])]
+        extracted_snippets          = [
+            tt
+            for tt in extracted_snippets
+            if(tt[2] in doc_res[:10])
+        ]
         extracted_snippets          = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-        snips_res                   = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+        snips_res                   = prep_extracted_snippets(
+            extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text']
+        )
         all_bioasq_subm_data['questions'].append(snips_res)
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
