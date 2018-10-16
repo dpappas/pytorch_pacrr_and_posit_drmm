@@ -1159,6 +1159,7 @@ dataloc             = '/home/dpappas/for_ryan/'
 eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 
+# # lab21
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
 # dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
