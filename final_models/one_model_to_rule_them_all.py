@@ -1243,8 +1243,6 @@ models = [
 ['Model_54', 'BIGRU',   'MLP',      'SENT',    True],
 ['Model_55', 'BIGRU',   'BIGRU',    None,      True],
 ['Model_56', 'BIGRU',   'BIGRU',    'SENT',    True],
-
-
 ]
 models = dict(
     [
