@@ -787,7 +787,7 @@ def train_one(epoch):
         good_mesh_embeds,   bad_mesh_embeds,
         good_mesh_escores,  bad_mesh_escores
     ) in train_data_step2(train_instances):
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+        cost_, doc1_emit_, doc2_emit_ = model(
             doc1_embeds         = good_embeds,
             doc2_embeds         = bad_embeds,
             question_embeds     = quest_embeds,
@@ -800,7 +800,6 @@ def train_one(epoch):
             mesh_baf            = bad_mesh_escores
         )
         #
-        good_sent_tags, bad_sent_tags       = good_sent_tags, bad_sent_tags
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
