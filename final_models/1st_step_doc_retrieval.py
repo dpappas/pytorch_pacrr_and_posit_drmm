@@ -406,26 +406,8 @@ def train_data_step2(train_instances):
         good_meshes                             = get_the_mesh(train_docs[gid])
         good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
         good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
-        good_sents_title                        = sent_tokenize(train_docs[gid]['title'])
-        good_sents_abs                          = sent_tokenize(train_docs[gid]['abstractText'])
+        good_tokens, good_embeds                = get_embeds(tokenize(good_doc_text), wv)
         #
-        good_sents                              = good_sents_title + good_sents_abs
-        #
-        good_snips                              = get_snips(quest_id, gid)
-        good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
-        #
-        good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
-        for good_text in good_sents:
-            good_tokens, good_embeds            = get_embeds(tokenize(good_text), wv)
-            good_escores                        = GetScores(quest, good_text, bm25s_gid)[:-1]
-            if(len(good_embeds)>0):
-                good_sents_embeds.append(good_embeds)
-                good_sents_escores.append(good_escores)
-                tt          = ' '.join(bioclean(good_text))
-                good_sent_tags.append(snip_is_relevant(tt, good_snips))
-                # sims        = [similar(gs, tt) for gs in good_snips]
-                # best_sim    = max(sims) if(len(sims)>0) else 0.
-                # good_sent_tags.append(int(best_sim>0.9))
         # Handle good mesh terms
         good_mesh_embeds, good_mesh_escores = [], []
         for good_mesh in good_meshes:
@@ -438,16 +420,8 @@ def train_data_step2(train_instances):
         bad_meshes                              = get_the_mesh(train_docs[bid])
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
         bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
-        bad_sents                               = sent_tokenize(train_docs[bid]['title']) + sent_tokenize(train_docs[bid]['abstractText'])
+        bad_tokens, bad_embeds                  = get_embeds(tokenize(bad_doc_text), wv)
         #
-        bad_sent_tags                           = len(bad_sents) * [0]
-        bad_sents_embeds, bad_sents_escores     = [], []
-        for bad_text in bad_sents:
-            bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
-            bad_escores                         = GetScores(quest, bad_text, bm25s_bid)[:-1]
-            if(len(bad_embeds)>0):
-                bad_sents_embeds.append(bad_embeds)
-                bad_sents_escores.append(bad_escores)
         # Handle bad mesh terms
         bad_mesh_embeds, bad_mesh_escores = [], []
         for bad_mesh in bad_meshes:
@@ -456,13 +430,13 @@ def train_data_step2(train_instances):
                 bad_mesh_embeds.append(gm_embeds)
                 bad_escores = GetScores(quest, bad_mesh, bm25s_gid)[:-1]
                 bad_mesh_escores.append(bad_escores)
-        if(sum(good_sent_tags)>0):
-            yield (
-                good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
-                good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
-                good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds,
-                good_mesh_escores,  bad_mesh_escores
-            )
+        yield (
+            good_embeds,        bad_embeds,
+            quest_embeds,       q_idfs,
+            good_doc_af,        bad_doc_af,
+            good_mesh_embeds,   bad_mesh_embeds,
+            good_mesh_escores,  bad_mesh_escores
+        )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -797,7 +771,7 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
 
-def train_one(epoch, two_losses=True):
+def train_one(epoch):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter = 0
@@ -805,21 +779,19 @@ def train_one(epoch, two_losses=True):
     # train_instances = train_instances[:len(train_instances)/2]
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
-    # for instance in train_data_step2(train_instances[:90*50]):
     start_time      = time.time()
     for (
-        good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
-        good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
-        good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds,
+        good_embeds,        bad_embeds,
+        quest_embeds,       q_idfs,
+        good_doc_af,        bad_doc_af,
+        good_mesh_embeds,   bad_mesh_embeds,
         good_mesh_escores,  bad_mesh_escores
     ) in train_data_step2(train_instances):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = good_sents_embeds,
-            doc2_sents_embeds   = bad_sents_embeds,
+            doc1_embeds         = good_embeds,
+            doc2_embeds         = bad_embeds,
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
-            sents_gaf           = good_sents_escores,
-            sents_baf           = bad_sents_escores,
             doc_gaf             = good_doc_af,
             doc_baf             = bad_doc_af,
             good_meshes_embeds  = good_mesh_embeds,
@@ -829,12 +801,6 @@ def train_one(epoch, two_losses=True):
         )
         #
         good_sent_tags, bad_sent_tags       = good_sent_tags, bad_sent_tags
-        if(two_losses):
-            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss                       = sn_d1_l + sn_d2_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
-        #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
@@ -872,19 +838,17 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', sentence_out_method = 'MLP', mesh_style = 'SENT'):
+    def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', mesh_style = 'SENT'):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         #
         self.embedding_dim                          = embedding_dim
         self.mesh_style                             = mesh_style
         self.context_method                         = context_method
-        self.sentence_out_method                    = sentence_out_method
         # to create q weights
         self.init_context_module()
         self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
-        self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
@@ -911,13 +875,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
-    def init_sent_output_layer(self):
-        if(self.sentence_out_method == 'MLP'):
-            self.sent_out_layer = nn.Linear(4, 1, bias=False)
-        else:
-            self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
-            self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
-            self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
     def init_doc_out_layer(self):
         if(self.mesh_style=='BIGRU'):
             self.init_mesh_module()
@@ -1103,7 +1060,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         final_good_output   = self.final_layer(good_out_pp)
         return final_good_output, gs_emits
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
+    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
@@ -1119,11 +1076,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         if(self.context_method=='CNN'):
-            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-            bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+            good_out, gs_emits  = self.do_for_one_doc_cnn([doc1_embeds], [doc_gaf], question_embeds, q_context, q_weights)
+            bad_out, bs_emits   = self.do_for_one_doc_cnn([doc2_embeds], [doc_baf], question_embeds, q_context, q_weights)
         else:
-            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-            bad_out, bs_emits   = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+            good_out, gs_emits  = self.do_for_one_doc_bigru([doc1_embeds], [doc_gaf], question_embeds, q_context, q_weights)
+            bad_out, bs_emits   = self.do_for_one_doc_bigru([doc2_embeds], [doc_baf], question_embeds, q_context, q_weights)
         #
         if(self.mesh_style=='BIGRU'):
             good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
@@ -1185,7 +1142,6 @@ retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 # retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 
 k_for_maxpool   = 5
-k_sent_maxpool  = 2
 embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
@@ -1198,14 +1154,9 @@ models = [
 ['Model_03', 'BIGRU',   None  ],
 ['Model_04', 'BIGRU',   'SENT'],
 ]
-models = dict(
-    [
-        (item[0], item[1:])
-        for item in models
-    ]
-)
+models = dict([(item[0], item[1:]) for item in models])
 
-which_model = 'Model_41'
+which_model = 'Model_01'
 
 hdlr = None
 for run in range(5):
@@ -1231,8 +1182,7 @@ for run in range(5):
         embedding_dim       = embedding_dim,
         k_for_maxpool       = k_for_maxpool,
         context_method      = models[which_model][0],
-        sentence_out_method = models[which_model][1],
-        mesh_style          = models[which_model][2]
+        mesh_style          = models[which_model][1]
     )
     params      = model.parameters()
     print_params(model)
@@ -1240,7 +1190,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1, two_losses=models[which_model][3])
+        train_one(epoch + 1)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
