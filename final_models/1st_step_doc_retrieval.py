@@ -587,32 +587,17 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
         good_sents_embeds, good_sents_escores, good_doc_af,
         good_meshes_embeds, held_out_sents, good_mesh_escores
     ) = prep_data(quest, doc, bm)
-    doc_emit_, gs_emits_    = model.emit_one(
-        doc1_sents_embeds   = good_sents_embeds,
+    doc_emit_               = model.emit_one(
+        doc1_embeds         = good_sents_embeds,
         question_embeds     = quest_embeds,
         q_idfs              = q_idfs,
-        sents_gaf           = good_sents_escores,
         doc_gaf             = good_doc_af,
         good_meshes_embeds  = good_meshes_embeds,
         mesh_gaf            = good_mesh_escores
     )
     emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_.tolist()
-    mmax                    = max(emitss)
-    all_emits, extracted_from_one = [], []
-    for ind in range(len(emitss)):
-        t = (
-            snip_is_relevant(held_out_sents[ind], gold_snips),
-            emitss[ind],
-            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind]
-        )
-        all_emits.append(t)
-        if(emitss[ind] == mmax):
-            extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
-    all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
-    return doc_res, extracted_from_one, all_emits
+    return doc_res, extracted_from_one
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
