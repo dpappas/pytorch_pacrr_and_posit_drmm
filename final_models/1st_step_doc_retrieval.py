@@ -597,7 +597,7 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
     )
     emition                 = doc_emit_.cpu().item()
     doc_res[retr['doc_id']] = float(emition)
-    return doc_res, extracted_from_one
+    return doc_res
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
@@ -624,7 +624,7 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known):
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data):
     quest                       = dato['query_text']
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
     q_idfs = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
@@ -635,93 +635,41 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     }
     bm25s = {t['doc_id']: t['norm_bm25_score'] for t in retr_docs}
     gold_snips = get_gold_snips(dato['query_id'])
-    doc_res, extracted_snippets, extracted_snippets_known_rel_num = {}, [], []
-    # for retr in get_pseudo_retrieved(dato):
+    doc_res = {}
     for retr in retr_docs:
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
-            quest, q_idfs, quest_embeds, bm25s, docs, retr,
-            doc_res, gold_snips)
-        extracted_snippets.extend(extracted_from_one)
+        doc_res = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
         #
-        total_relevant = sum([1 for em in all_emits if (em[0] == True)])
-        if (total_relevant > 0):
-            extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
         if (dato['query_id'] not in data_for_revision):
             data_for_revision[dato['query_id']] = {
                 'query_text': dato['query_text'],
-                'snippets': {retr['doc_id']: all_emits}
+                'snippets': {
+                    retr['doc_id']: []
+                }
             }
         else:
-            data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
+            data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = []
     doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
     doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
     emitions['documents'] = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
-    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-    extracted_snippets  = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-    snips_res           = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    all_bioasq_subm_data['questions'].append(snips_res)
-    #
-    extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
-    extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num, key=lambda x: x[1], reverse=True)
-    snips_res_known_rel_num             = prep_extracted_snippets(
-        extracted_snippets_known_rel_num,
-        docs,
-        dato['query_id'],
-        doc_res[:10],
-        dato['query_text']
-    )
-    all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
-    return data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
+    return data_for_revision, ret_data, all_bioasq_subm_data
 
 def get_one_map(prefix, data, docs):
     model.eval()
     #
     ret_data                    = {'questions': []}
     all_bioasq_subm_data        = {"questions": []}
-    all_bioasq_subm_data_known  = {"questions": []}
     all_bioasq_gold_data        = {'questions': []}
     data_for_revision           = {}
     #
-    # ret_data_2                    = {'questions': []}
-    # all_bioasq_subm_data_2        = {"questions": []}
-    # all_bioasq_subm_data_known_2  = {"questions": []}
-    # all_bioasq_gold_data_2        = {'questions': []}
-    # data_for_revision_2           = {}
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         #
-        data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known = do_for_some_retrieved(
+        data_for_revision, ret_data, all_bioasq_subm_data = do_for_some_retrieved(
             docs, dato, dato['retrieved_documents'],
-            data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
+            data_for_revision, ret_data, all_bioasq_subm_data
         )
-        # for retr in get_pseudo_retrieved(dato):
-        # data_for_revision_2, ret_data_2, all_bioasq_subm_data_2, all_bioasq_subm_data_known_2 = do_for_some_retrieved(
-        #     docs, dato, get_pseudo_retrieved(dato),
-        #     data_for_revision_2, ret_data_2, all_bioasq_subm_data_2, all_bioasq_subm_data_known_2
-        # )
-    #
-    # bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data_2, all_bioasq_subm_data_known_2, data_for_revision_2)
-    # pprint(bioasq_snip_res)
-    # logger.info('{} gold docs known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    # logger.info('{} gold docs known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    # logger.info('{} gold docs known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    # logger.info('{} gold docs known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    #
-    # bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data_2, all_bioasq_subm_data_2, data_for_revision_2)
-    # pprint(bioasq_snip_res)
-    # logger.info('{} gold docs MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    # logger.info('{} gold docs F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    # logger.info('{} gold docs MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    # logger.info('{} gold docs GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    #
-    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
-    pprint(bioasq_snip_res)
-    logger.info('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    logger.info('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    logger.info('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    logger.info('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
@@ -1117,19 +1065,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 
-# cslab241
-w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# # cslab241
+# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
