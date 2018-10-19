@@ -942,7 +942,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         insensitive_pooled  = self.pooling_method(sim_insens)
         sensitive_pooled    = self.pooling_method(sim_sens)
         oh_pooled           = self.pooling_method(sim_oh)
-        doc_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+        doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+        doc_emit            = doc_emit.unsqueeze(-1)
         return doc_emit
     def emit_doc_bigru(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
         conv_res, hn        = self.apply_context_gru(doc_embeds, self.context_h0)
@@ -953,6 +954,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sensitive_pooled    = self.pooling_method(sim_sens)
         oh_pooled           = self.pooling_method(sim_oh)
         doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+        doc_emit            = doc_emit.unsqueeze(-1)
         return doc_emit
     def get_max(self, res):
         return torch.max(res)
