@@ -572,7 +572,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             ret[k]  = float(v)
     return ret
 
-def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
+def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res):
     doc = docs[retr['doc_id']]
     bm  = bm25s[retr['doc_id']]
     (good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores) = prep_data(quest, doc, bm)
@@ -623,10 +623,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
         'documents': []
     }
     bm25s = {t['doc_id']: t['norm_bm25_score'] for t in retr_docs}
-    gold_snips = get_gold_snips(dato['query_id'])
     doc_res = {}
     for retr in retr_docs:
-        doc_res = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
+        doc_res = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res)
         #
         if (dato['query_id'] not in data_for_revision):
             data_for_revision[dato['query_id']] = {
