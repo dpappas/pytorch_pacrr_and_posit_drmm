@@ -616,7 +616,7 @@ def get_pseudo_retrieved(dato):
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data):
     quest                       = dato['query_text']
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
-    q_idfs = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+    q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     emitions = {
         'body': dato['query_text'],
         'id': dato['query_id'],
@@ -626,16 +626,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     doc_res = {}
     for retr in retr_docs:
         doc_res = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res)
-        #
-        if (dato['query_id'] not in data_for_revision):
-            data_for_revision[dato['query_id']] = {
-                'query_text': dato['query_text'],
-                'snippets': {
-                    retr['doc_id']: []
-                }
-            }
-        else:
-            data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = []
     doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
     doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
     emitions['documents'] = doc_res[:100]
