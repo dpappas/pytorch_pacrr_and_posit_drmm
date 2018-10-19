@@ -628,10 +628,10 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     }
     doc_res = {}
     for retr in retr_docs:
-        doc_res = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res)
-    doc_res     = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-    doc_res     = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-    emitions['documents'] = doc_res[:100]
+        doc_res             = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res)
+    doc_res                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    doc_res                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+    emitions['documents']   = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
     return data_for_revision, ret_data, all_bioasq_subm_data
