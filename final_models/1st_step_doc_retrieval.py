@@ -467,7 +467,7 @@ def snip_is_relevant(one_sent, gold_snips):
 
 def prep_data(quest, the_doc, the_bm25):
     good_doc_text                       = the_doc['title'] + the_doc['abstractText']
-    good_doc_af                         = GetScores(quest, good_doc_text, the_bm25))
+    good_doc_af                         = GetScores(quest, good_doc_text, the_bm25)
     good_doc_tokens, good_doc_embeds    = get_embeds(tokenize(good_doc_text), wv)
     good_meshes                         = get_the_mesh(the_doc)
     good_mesh_embeds, good_mesh_escores = [], []
@@ -575,16 +575,13 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
 def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
     doc = docs[retr['doc_id']]
     bm  = bm25s[retr['doc_id']]
-    (
-        good_doc_embeds, good_escores, good_doc_af,
-        good_meshes_embeds, good_mesh_escores
-    ) = prep_data(quest, doc, bm)
+    (good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores) = prep_data(quest, doc, bm)
     doc_emit_               = model.emit_one(
         doc1_embeds         = good_doc_embeds,
         question_embeds     = quest_embeds,
         q_idfs              = q_idfs,
         doc_gaf             = good_doc_af,
-        good_meshes_embeds  = good_meshes_embeds,
+        good_meshes_embeds  = good_mesh_embeds,
         mesh_gaf            = good_mesh_escores
     )
     emition                 = doc_emit_.cpu().item()
