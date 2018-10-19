@@ -622,7 +622,10 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
         'id': dato['query_id'],
         'documents': []
     }
-    bm25s = {t['doc_id']: t['norm_bm25_score'] for t in retr_docs}
+    bm25s = {
+        t['doc_id']: t['norm_bm25_score']
+        for t in retr_docs
+    }
     doc_res = {}
     for retr in retr_docs:
         doc_res = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res)
