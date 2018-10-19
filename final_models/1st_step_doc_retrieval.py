@@ -466,26 +466,18 @@ def snip_is_relevant(one_sent, gold_snips):
     # )
 
 def prep_data(quest, the_doc, the_bm25):
-    good_doc_text   = the_doc['title'] + the_doc['abstractText']
-    good_doc_af     = GetScores(quest, good_doc_text, the_bm25)
-    good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-    good_sents_embeds, good_sents_escores, held_out_sents = [], [], []
-    for good_text in good_sents:
-        good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
-        good_escores = GetScores(quest, good_text, the_bm25)[:-1]
-        if (len(good_embeds) > 0):
-            good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores)
-            held_out_sents.append(good_text)
-    good_meshes         = get_the_mesh(the_doc)
+    good_doc_text                       = the_doc['title'] + the_doc['abstractText']
+    good_doc_af                         = GetScores(quest, good_doc_text, the_bm25))
+    good_doc_tokens, good_doc_embeds    = get_embeds(tokenize(good_doc_text), wv)
+    good_meshes                         = get_the_mesh(the_doc)
     good_mesh_embeds, good_mesh_escores = [], []
     for good_mesh in good_meshes:
-        gm_tokens, gm_embeds = get_embeds(good_mesh, wv)
+        gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
         if (len(gm_tokens) > 0):
             good_mesh_embeds.append(gm_embeds)
-            good_escores = GetScores(quest, good_mesh, the_bm25)[:-1]
+            good_escores                = GetScores(quest, good_mesh, the_bm25)[:-1]
             good_mesh_escores.append(good_escores)
-    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, good_mesh_escores
+    return good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores
 
 def get_gold_snips(quest_id):
     gold_snips                  = []
@@ -584,11 +576,11 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
     doc = docs[retr['doc_id']]
     bm  = bm25s[retr['doc_id']]
     (
-        good_sents_embeds, good_sents_escores, good_doc_af,
-        good_meshes_embeds, held_out_sents, good_mesh_escores
+        good_doc_embeds, good_escores, good_doc_af,
+        good_meshes_embeds, good_mesh_escores
     ) = prep_data(quest, doc, bm)
     doc_emit_               = model.emit_one(
-        doc1_embeds         = good_sents_embeds,
+        doc1_embeds         = good_doc_embeds,
         question_embeds     = quest_embeds,
         q_idfs              = q_idfs,
         doc_gaf             = good_doc_af,
