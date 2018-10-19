@@ -618,9 +618,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
     q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     emitions = {
-        'body': dato['query_text'],
-        'id': dato['query_id'],
-        'documents': []
+        'body'      : dato['query_text'],
+        'id'        : dato['query_id'],
+        'documents' : []
     }
     bm25s = {
         t['doc_id']: t['norm_bm25_score']
