@@ -423,16 +423,16 @@ def train_data_step2(train_instances):
         if(sum(good_sent_tags)>0):
             yield (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags)
 
-def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
+def back_prop(batch_costs, epoch_costs, batch_auc, epoch_auc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
     batch_cost.backward()
     optimizer.step()
     optimizer.zero_grad()
     batch_aver_cost = batch_cost.cpu().item()
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    batch_aver_acc  = sum(batch_acc) / float(len(batch_acc))
-    epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
-    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
+    batch_aver_auc  = sum(batch_auc) / float(len(batch_auc))
+    epoch_aver_auc  = sum(epoch_auc) / float(len(epoch_auc))
+    return batch_aver_cost, epoch_aver_cost, batch_aver_auc, epoch_aver_auc
 
 def snip_is_relevant(one_sent, gold_snips):
     return any(
@@ -755,11 +755,12 @@ def get_two_snip_losses(good_sent_tags, gs_emits_):
 
 def train_one(epoch):
     model.train()
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
+    epoch_costs, batch_costs    = [], []
+    epoch_auc, batch_auc        = [], []
     batch_counter = 0
     train_instances = train_data_step1()
     # train_instances = train_instances[:len(train_instances)/2]
-    epoch_aver_cost, epoch_aver_acc = 0., 0.
+    epoch_aver_cost, epoch_aver_auc = 0., 0.
     random.shuffle(train_instances)
     # for instance in train_data_step2(train_instances[:90*50]):
     start_time      = time.time()
@@ -772,32 +773,31 @@ def train_one(epoch):
         )
         #
         cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
-        print good_sent_tags
-        print gs_emits_.data.cpu().numpy()
-        print roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy())
-        exit()
+        # print good_sent_tags
+        # print gs_emits_.data.cpu().numpy()
+        # print roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy())
         #
-        # batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        # epoch_acc.append(float(doc1_emit_ > doc2_emit_))
+        batch_auc.append(roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy()))
+        epoch_auc.append(roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy()))
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         if (len(batch_costs) == b_size):
             batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+            batch_aver_cost, epoch_aver_cost, batch_aver_auc, epoch_aver_auc = back_prop(batch_costs, epoch_costs, batch_auc, epoch_auc)
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            batch_costs, batch_acc = [], []
+            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_auc, epoch_aver_auc, elapsed_time))
+            logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_auc, epoch_aver_auc, elapsed_time))
+            batch_costs, batch_auc = [], []
     if (len(batch_costs) > 0):
         batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+        batch_aver_cost, epoch_aver_cost, batch_aver_auc, epoch_aver_auc = back_prop(batch_costs, epoch_costs, batch_auc, epoch_auc)
         elapsed_time = time.time() - start_time
         start_time = time.time()
-        print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-        logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-    print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+        print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_auc, epoch_aver_auc, elapsed_time))
+        logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_auc, epoch_aver_auc, elapsed_time))
+    print('Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {}'.format(epoch, epoch_aver_cost, epoch_aver_auc))
+    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {}'.format(epoch, epoch_aver_cost, epoch_aver_auc))
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
