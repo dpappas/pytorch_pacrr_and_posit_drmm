@@ -824,9 +824,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.sent_out_layer(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
-        ret = self.get_max(res).unsqueeze(0)
         res = torch.sigmoid(res)
-        return ret, res
+        return res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
         k_max_pooled            = sorted_res[-k:]
@@ -920,7 +919,9 @@ max_epoch       = 10
 
 models = [
     ['Snip_Extr_Model_01', 'CNN'   , 'MLP'  ],
-    ['Snip_Extr_Model_02', 'BIGRU' , 'BIGRU']
+    ['Snip_Extr_Model_02', 'BIGRU' , 'BIGRU'],
+    ['Snip_Extr_Model_03', 'CNN'   , 'BIGRU'],
+    ['Snip_Extr_Model_04', 'BIGRU' , 'MLP'  ]
 ]
 models = dict(
     [
