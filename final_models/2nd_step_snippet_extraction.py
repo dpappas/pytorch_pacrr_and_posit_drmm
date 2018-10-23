@@ -762,7 +762,6 @@ def train_one(epoch):
     # train_instances = train_instances[:len(train_instances)/2]
     epoch_aver_cost, epoch_aver_auc = 0., 0.
     random.shuffle(train_instances)
-    # for instance in train_data_step2(train_instances[:90*50]):
     start_time      = time.time()
     for (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags) in train_data_step2(train_instances):
         gs_emits_               = model(
@@ -773,9 +772,10 @@ def train_one(epoch):
         )
         #
         cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
-        # print good_sent_tags
-        # print gs_emits_.data.cpu().numpy()
-        # print roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy())
+        gs_emits_               = gs_emits_.data.cpu().numpy().tolist()
+        good_sent_tags          = good_sent_tags + [0, 1]
+        gs_emits_               = gs_emits_ + [0, 1]
+        # print roc_auc_score(good_sent_tags, gs_emits_)
         #
         batch_auc.append(roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy()))
         epoch_auc.append(roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy()))
