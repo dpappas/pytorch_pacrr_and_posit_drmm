@@ -777,8 +777,8 @@ def train_one(epoch):
         gs_emits_               = gs_emits_ + [0, 1]
         # print roc_auc_score(good_sent_tags, gs_emits_)
         #
-        batch_auc.append(roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy()))
-        epoch_auc.append(roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy()))
+        batch_auc.append(roc_auc_score(good_sent_tags, gs_emits_))
+        epoch_auc.append(roc_auc_score(good_sent_tags, gs_emits_))
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         if (len(batch_costs) == b_size):
