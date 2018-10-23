@@ -26,6 +26,7 @@ from    tqdm import tqdm
 from    gensim.models.keyedvectors import KeyedVectors
 from    nltk.tokenize import sent_tokenize
 from    difflib import SequenceMatcher
+from    sklearn.metrics import roc_auc_score
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -773,6 +774,8 @@ def train_one(epoch):
         cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
         print good_sent_tags
         print gs_emits_.data.cpu().numpy()
+        print roc_auc_score(good_sent_tags, gs_emits_.data.cpu().numpy())
+        exit()
         #
         # batch_acc.append(float(doc1_emit_ > doc2_emit_))
         # epoch_acc.append(float(doc1_emit_ > doc2_emit_))
