@@ -772,7 +772,7 @@ def train_one(epoch):
         #
         cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
         print good_sent_tags
-        print gs_emits_.data
+        print gs_emits_.cpu().data
         #
         # batch_acc.append(float(doc1_emit_ > doc2_emit_))
         # epoch_acc.append(float(doc1_emit_ > doc2_emit_))
