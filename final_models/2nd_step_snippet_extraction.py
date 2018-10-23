@@ -772,7 +772,7 @@ def train_one(epoch):
         #
         cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
         print good_sent_tags
-        print gs_emits_.cpu().data
+        print gs_emits_.data.cpu().numpy()
         #
         # batch_acc.append(float(doc1_emit_ > doc2_emit_))
         # epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1041,9 +1041,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         if(self.context_method=='CNN'):
-            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+            gs_emits        = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         else:
-            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+            gs_emits        = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         return gs_emits
 
 # laptop
