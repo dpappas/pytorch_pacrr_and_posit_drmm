@@ -406,8 +406,26 @@ def train_data_step2(train_instances):
         good_meshes                             = get_the_mesh(train_docs[gid])
         good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
         good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
-        good_tokens, good_embeds                = get_embeds(tokenize(good_doc_text), wv)
+        good_sents_title                        = sent_tokenize(train_docs[gid]['title'])
+        good_sents_abs                          = sent_tokenize(train_docs[gid]['abstractText'])
         #
+        good_sents                              = good_sents_title + good_sents_abs
+        #
+        good_snips                              = get_snips(quest_id, gid)
+        good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
+        #
+        good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
+        for good_text in good_sents:
+            good_tokens, good_embeds            = get_embeds(tokenize(good_text), wv)
+            good_escores                        = GetScores(quest, good_text, bm25s_gid)[:-1]
+            if(len(good_embeds)>0):
+                good_sents_embeds.append(good_embeds)
+                good_sents_escores.append(good_escores)
+                tt          = ' '.join(bioclean(good_text))
+                good_sent_tags.append(snip_is_relevant(tt, good_snips))
+                # sims        = [similar(gs, tt) for gs in good_snips]
+                # best_sim    = max(sims) if(len(sims)>0) else 0.
+                # good_sent_tags.append(int(best_sim>0.9))
         # Handle good mesh terms
         good_mesh_embeds, good_mesh_escores = [], []
         for good_mesh in good_meshes:
@@ -420,8 +438,16 @@ def train_data_step2(train_instances):
         bad_meshes                              = get_the_mesh(train_docs[bid])
         bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
         bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
-        bad_tokens, bad_embeds                  = get_embeds(tokenize(bad_doc_text), wv)
+        bad_sents                               = sent_tokenize(train_docs[bid]['title']) + sent_tokenize(train_docs[bid]['abstractText'])
         #
+        bad_sent_tags                           = len(bad_sents) * [0]
+        bad_sents_embeds, bad_sents_escores     = [], []
+        for bad_text in bad_sents:
+            bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
+            bad_escores                         = GetScores(quest, bad_text, bm25s_bid)[:-1]
+            if(len(bad_embeds)>0):
+                bad_sents_embeds.append(bad_embeds)
+                bad_sents_escores.append(bad_escores)
         # Handle bad mesh terms
         bad_mesh_embeds, bad_mesh_escores = [], []
         for bad_mesh in bad_meshes:
@@ -430,13 +456,13 @@ def train_data_step2(train_instances):
                 bad_mesh_embeds.append(gm_embeds)
                 bad_escores = GetScores(quest, bad_mesh, bm25s_gid)[:-1]
                 bad_mesh_escores.append(bad_escores)
-        yield (
-            good_embeds,        bad_embeds,
-            quest_embeds,       q_idfs,
-            good_doc_af,        bad_doc_af,
-            good_mesh_embeds,   bad_mesh_embeds,
-            good_mesh_escores,  bad_mesh_escores
-        )
+        if(sum(good_sent_tags)>0):
+            yield (
+                good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
+                good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
+                good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds,
+                good_mesh_escores,  bad_mesh_escores
+            )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -466,18 +492,26 @@ def snip_is_relevant(one_sent, gold_snips):
     # )
 
 def prep_data(quest, the_doc, the_bm25):
-    good_doc_text                       = the_doc['title'] + the_doc['abstractText']
-    good_doc_af                         = GetScores(quest, good_doc_text, the_bm25)
-    good_doc_tokens, good_doc_embeds    = get_embeds(tokenize(good_doc_text), wv)
-    good_meshes                         = get_the_mesh(the_doc)
+    good_doc_text   = the_doc['title'] + the_doc['abstractText']
+    good_doc_af     = GetScores(quest, good_doc_text, the_bm25)
+    good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    good_sents_embeds, good_sents_escores, held_out_sents = [], [], []
+    for good_text in good_sents:
+        good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
+        good_escores = GetScores(quest, good_text, the_bm25)[:-1]
+        if (len(good_embeds) > 0):
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores)
+            held_out_sents.append(good_text)
+    good_meshes         = get_the_mesh(the_doc)
     good_mesh_embeds, good_mesh_escores = [], []
     for good_mesh in good_meshes:
-        gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
+        gm_tokens, gm_embeds = get_embeds(good_mesh, wv)
         if (len(gm_tokens) > 0):
             good_mesh_embeds.append(gm_embeds)
-            good_escores                = GetScores(quest, good_mesh, the_bm25)[:-1]
+            good_escores = GetScores(quest, good_mesh, the_bm25)[:-1]
             good_mesh_escores.append(good_escores)
-    return good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores
+    return good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_sents, good_mesh_escores
 
 def get_gold_snips(quest_id):
     gold_snips                  = []
@@ -572,21 +606,39 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             ret[k]  = float(v)
     return ret
 
-def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res):
+def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
     doc = docs[retr['doc_id']]
     bm  = bm25s[retr['doc_id']]
-    (good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores) = prep_data(quest, doc, bm)
-    doc_emit_               = model.emit_one(
-        doc1_embeds         = good_doc_embeds,
+    (
+        good_sents_embeds, good_sents_escores, good_doc_af,
+        good_meshes_embeds, held_out_sents, good_mesh_escores
+    ) = prep_data(quest, doc, bm)
+    doc_emit_, gs_emits_    = model.emit_one(
+        doc1_sents_embeds   = good_sents_embeds,
         question_embeds     = quest_embeds,
         q_idfs              = q_idfs,
+        sents_gaf           = good_sents_escores,
         doc_gaf             = good_doc_af,
-        good_meshes_embeds  = good_mesh_embeds,
+        good_meshes_embeds  = good_meshes_embeds,
         mesh_gaf            = good_mesh_escores
     )
     emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_.tolist()
+    mmax                    = max(emitss)
+    all_emits, extracted_from_one = [], []
+    for ind in range(len(emitss)):
+        t = (
+            snip_is_relevant(held_out_sents[ind], gold_snips),
+            emitss[ind],
+            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+            held_out_sents[ind]
+        )
+        all_emits.append(t)
+        if(emitss[ind] == mmax):
+            extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
-    return doc_res
+    all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
+    return doc_res, extracted_from_one, all_emits
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
@@ -613,43 +665,104 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data):
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known):
     quest                       = dato['query_text']
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
-    q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+    q_idfs = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     emitions = {
-        'body'      : dato['query_text'],
-        'id'        : dato['query_id'],
-        'documents' : []
+        'body': dato['query_text'],
+        'id': dato['query_id'],
+        'documents': []
     }
-    bm25s   = {t['doc_id']: t['norm_bm25_score'] for t in retr_docs}
-    doc_res = {}
+    bm25s = {t['doc_id']: t['norm_bm25_score'] for t in retr_docs}
+    gold_snips = get_gold_snips(dato['query_id'])
+    doc_res, extracted_snippets, extracted_snippets_known_rel_num = {}, [], []
+    # for retr in get_pseudo_retrieved(dato):
     for retr in retr_docs:
-        doc_res             = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res)
-    doc_res                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-    doc_res                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-    emitions['documents']   = doc_res[:100]
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
+            quest, q_idfs, quest_embeds, bm25s, docs, retr,
+            doc_res, gold_snips)
+        extracted_snippets.extend(extracted_from_one)
+        #
+        total_relevant = sum([1 for em in all_emits if (em[0] == True)])
+        if (total_relevant > 0):
+            extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
+        if (dato['query_id'] not in data_for_revision):
+            data_for_revision[dato['query_id']] = {
+                'query_text': dato['query_text'],
+                'snippets': {retr['doc_id']: all_emits}
+            }
+        else:
+            data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
+    doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+    emitions['documents'] = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
-    snips_res               = prep_extracted_snippets([], docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+    extracted_snippets  = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+    snips_res           = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     all_bioasq_subm_data['questions'].append(snips_res)
-    return data_for_revision, ret_data, all_bioasq_subm_data
+    #
+    extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
+    extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num, key=lambda x: x[1], reverse=True)
+    snips_res_known_rel_num             = prep_extracted_snippets(
+        extracted_snippets_known_rel_num,
+        docs,
+        dato['query_id'],
+        doc_res[:10],
+        dato['query_text']
+    )
+    all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
+    return data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
 
 def get_one_map(prefix, data, docs):
     model.eval()
     #
     ret_data                    = {'questions': []}
     all_bioasq_subm_data        = {"questions": []}
+    all_bioasq_subm_data_known  = {"questions": []}
     all_bioasq_gold_data        = {'questions': []}
     data_for_revision           = {}
     #
+    # ret_data_2                    = {'questions': []}
+    # all_bioasq_subm_data_2        = {"questions": []}
+    # all_bioasq_subm_data_known_2  = {"questions": []}
+    # all_bioasq_gold_data_2        = {'questions': []}
+    # data_for_revision_2           = {}
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         #
-        data_for_revision, ret_data, all_bioasq_subm_data = do_for_some_retrieved(
+        data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known = do_for_some_retrieved(
             docs, dato, dato['retrieved_documents'],
-            data_for_revision, ret_data, all_bioasq_subm_data
+            data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
         )
+        # for retr in get_pseudo_retrieved(dato):
+        # data_for_revision_2, ret_data_2, all_bioasq_subm_data_2, all_bioasq_subm_data_known_2 = do_for_some_retrieved(
+        #     docs, dato, get_pseudo_retrieved(dato),
+        #     data_for_revision_2, ret_data_2, all_bioasq_subm_data_2, all_bioasq_subm_data_known_2
+        # )
+    #
+    # bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data_2, all_bioasq_subm_data_known_2, data_for_revision_2)
+    # pprint(bioasq_snip_res)
+    # logger.info('{} gold docs known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
+    # logger.info('{} gold docs known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    # logger.info('{} gold docs known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
+    # logger.info('{} gold docs known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
+    #
+    # bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data_2, all_bioasq_subm_data_2, data_for_revision_2)
+    # pprint(bioasq_snip_res)
+    # logger.info('{} gold docs MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
+    # logger.info('{} gold docs F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    # logger.info('{} gold docs MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
+    # logger.info('{} gold docs GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
+    #
+    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
+    pprint(bioasq_snip_res)
+    logger.info('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
+    logger.info('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    logger.info('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
+    logger.info('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
@@ -684,7 +797,7 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
 
-def train_one(epoch):
+def train_one(epoch, two_losses=True):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter = 0
@@ -692,19 +805,21 @@ def train_one(epoch):
     # train_instances = train_instances[:len(train_instances)/2]
     epoch_aver_cost, epoch_aver_acc = 0., 0.
     random.shuffle(train_instances)
+    # for instance in train_data_step2(train_instances[:90*50]):
     start_time      = time.time()
     for (
-        good_embeds,        bad_embeds,
-        quest_embeds,       q_idfs,
-        good_doc_af,        bad_doc_af,
-        good_mesh_embeds,   bad_mesh_embeds,
+        good_sents_embeds,  bad_sents_embeds,   quest_embeds,       q_idfs,
+        good_sents_escores, bad_sents_escores,  good_doc_af,        bad_doc_af,
+        good_sent_tags,     bad_sent_tags,      good_mesh_embeds,   bad_mesh_embeds,
         good_mesh_escores,  bad_mesh_escores
     ) in train_data_step2(train_instances):
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds         = good_embeds,
-            doc2_embeds         = bad_embeds,
+        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+            doc1_sents_embeds   = good_sents_embeds,
+            doc2_sents_embeds   = bad_sents_embeds,
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
+            sents_gaf           = good_sents_escores,
+            sents_baf           = bad_sents_escores,
             doc_gaf             = good_doc_af,
             doc_baf             = bad_doc_af,
             good_meshes_embeds  = good_mesh_embeds,
@@ -712,6 +827,13 @@ def train_one(epoch):
             mesh_gaf            = good_mesh_escores,
             mesh_baf            = bad_mesh_escores
         )
+        #
+        good_sent_tags, bad_sent_tags       = good_sent_tags, bad_sent_tags
+        if(two_losses):
+            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            snip_loss                       = sn_d1_l + sn_d2_l
+            l                               = 0.5
+            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -750,17 +872,19 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', mesh_style = 'SENT'):
+    def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', sentence_out_method = 'MLP', mesh_style = 'SENT'):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         #
         self.embedding_dim                          = embedding_dim
         self.mesh_style                             = mesh_style
         self.context_method                         = context_method
+        self.sentence_out_method                    = sentence_out_method
         # to create q weights
         self.init_context_module()
         self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
+        self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
@@ -787,6 +911,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
+    def init_sent_output_layer(self):
+        if(self.sentence_out_method == 'MLP'):
+            self.sent_out_layer = nn.Linear(4, 1, bias=False)
+        else:
+            self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
+            self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
+            self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
     def init_doc_out_layer(self):
         if(self.mesh_style=='BIGRU'):
             self.init_mesh_module()
@@ -913,29 +1044,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # print(average_k_max_pooled.size())
         the_concatenation       = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
         return the_concatenation
-    def emit_doc_cnn(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
-        conv_res            = self.apply_context_convolution(doc_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        conv_res            = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
-        sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
-        sim_oh              = (sim_insens > (1 - (1e-3))).float()
-        sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-        insensitive_pooled  = self.pooling_method(sim_insens)
-        sensitive_pooled    = self.pooling_method(sim_sens)
-        oh_pooled           = self.pooling_method(sim_oh)
-        doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-        doc_emit            = doc_emit.unsqueeze(-1)
-        return doc_emit
-    def emit_doc_bigru(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
-        conv_res, hn        = self.apply_context_gru(doc_embeds, self.context_h0)
-        sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
-        sim_oh              = (sim_insens > (1 - (1e-3))).float()
-        sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-        insensitive_pooled  = self.pooling_method(sim_insens)
-        sensitive_pooled    = self.pooling_method(sim_sens)
-        oh_pooled           = self.pooling_method(sim_oh)
-        doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-        doc_emit            = doc_emit.unsqueeze(-1)
-        return doc_emit
     def get_max(self, res):
         return torch.max(res)
     def get_kmax(self, res):
@@ -962,13 +1070,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
-    def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf, good_meshes_embeds, mesh_gaf):
+    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_meshes_embeds, mesh_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
-        doc1_embeds         = autograd.Variable(torch.FloatTensor(doc1_embeds),         requires_grad=False)
-        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
-        # HANDLE QUESTION
+        #
         if(self.context_method=='CNN'):
             q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
             q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -977,36 +1083,32 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        # HANDLE DOCS
+        #
         if(self.context_method=='CNN'):
-            good_out    = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
+            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         else:
-            good_out    = self.emit_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
-        # HANDLE MESH TERMS
+            good_out, gs_emits = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        #
         if(self.mesh_style=='BIGRU'):
-            good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
-            good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-        elif(self.mesh_style=='SENT'):
-            if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
+            good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
+            good_out_pp = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
+        elif (self.mesh_style == 'SENT'):
+            if (self.context_method == 'CNN'):
+                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
             else:
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-            good_out_pp     = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
+                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
+            good_out_pp = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
         else:
-            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
+            good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
-        return final_good_output
-    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
+        return final_good_output, gs_emits
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
-        doc1_embeds         = autograd.Variable(torch.FloatTensor(doc1_embeds),         requires_grad=False)
-        doc2_embeds         = autograd.Variable(torch.FloatTensor(doc2_embeds),         requires_grad=False)
-        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
-        doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
-        # HANDLE QUESTION
+        #
         if(self.context_method=='CNN'):
             q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
             q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1015,14 +1117,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        # HANDLE DOCS
+        #
         if(self.context_method=='CNN'):
-            good_out    = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
-            bad_out     = self.emit_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
+            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+            bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         else:
-            good_out    = self.emit_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
-            bad_out     = self.emit_doc_bigru(doc2_embeds, question_embeds, q_context, q_weights)
-        # HANDLE MESH TERMS
+            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+            bad_out, bs_emits   = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+        #
         if(self.mesh_style=='BIGRU'):
             good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
             bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds, q_context)
@@ -1030,36 +1132,44 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             bad_out_pp          = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
         elif(self.mesh_style=='SENT'):
             if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
+                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_cnn(
+                    good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights
+                )
+                bad_mesh_out, bs_mesh_emits = self.do_for_one_doc_cnn(
+                    bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights
+                )
             else:
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_bigru(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
-            good_out_pp     = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
-            bad_out_pp      = torch.cat([bad_out, doc_baf, bad_mesh_out], -1)
+                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_bigru(
+                    good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights
+                )
+                bad_mesh_out, bs_mesh_emits  = self.do_for_one_doc_bigru(
+                    bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights
+                )
+            good_out_pp = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
+            bad_out_pp  = torch.cat([bad_out, doc_baf, bad_mesh_out], -1)
         else:
-            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
-            bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
+            good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+            bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output
+        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 
-# # cslab241
-# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# cslab241
+w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1075,6 +1185,7 @@ retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_b
 # retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 
 k_for_maxpool   = 5
+k_sent_maxpool  = 2
 embedding_dim   = 30 #200
 lr              = 0.01
 b_size          = 32
@@ -1082,14 +1193,17 @@ max_epoch       = 10
 
 
 models = [
-['Model_01', 'CNN',     None  ],
-['Model_02', 'CNN',     'SENT'],
-['Model_03', 'BIGRU',   None  ],
-['Model_04', 'BIGRU',   'SENT'],
+    ['Snip_Extr_Model_01', 'CNN'    ],
+    ['Snip_Extr_Model_02', 'BIGRU'  ]
 ]
-models = dict([(item[0], item[1:]) for item in models])
+models = dict(
+    [
+        (item[0], item[1:])
+        for item in models
+    ]
+)
 
-which_model = 'Model_01'
+which_model = 'Model_41'
 
 hdlr = None
 for run in range(5):
@@ -1115,7 +1229,8 @@ for run in range(5):
         embedding_dim       = embedding_dim,
         k_for_maxpool       = k_for_maxpool,
         context_method      = models[which_model][0],
-        mesh_style          = models[which_model][1]
+        sentence_out_method = models[which_model][1],
+        mesh_style          = models[which_model][2]
     )
     params      = model.parameters()
     print_params(model)
@@ -1123,7 +1238,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
+        train_one(epoch + 1, two_losses=models[which_model][3])
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
@@ -1131,4 +1246,3 @@ for run in range(5):
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
-
