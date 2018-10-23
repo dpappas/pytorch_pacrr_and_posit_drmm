@@ -421,24 +421,20 @@ def train_data_step2(train_instances):
                 # sims        = [similar(gs, tt) for gs in good_snips]
                 # best_sim    = max(sims) if(len(sims)>0) else 0.
                 # good_sent_tags.append(int(best_sim>0.9))
-        #
-        bad_sents                               = sent_tokenize(train_docs[bid]['title']) + sent_tokenize(train_docs[bid]['abstractText'])
-        bad_sent_tags                           = len(bad_sents) * [0]
-        bad_sents_embeds, bad_sents_escores     = [], []
-        for bad_text in bad_sents:
-            bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
-            bad_escores                         = GetScores(quest, bad_text, bm25s_bid)[:-1]
-            if(len(bad_embeds)>0):
-                bad_sents_embeds.append(bad_embeds)
-                bad_sents_escores.append(bad_escores)
-        #
+        # #
+        # bad_sents                               = sent_tokenize(train_docs[bid]['title']) + sent_tokenize(train_docs[bid]['abstractText'])
+        # bad_sent_tags                           = len(bad_sents) * [0]
+        # bad_sents_embeds, bad_sents_escores     = [], []
+        # for bad_text in bad_sents:
+        #     bad_tokens, bad_embeds              = get_embeds(tokenize(bad_text), wv)
+        #     bad_escores                         = GetScores(quest, bad_text, bm25s_bid)[:-1]
+        #     if(len(bad_embeds)>0):
+        #         bad_sents_embeds.append(bad_embeds)
+        #         bad_sents_escores.append(bad_escores)
+        # #
         if(sum(good_sent_tags)>0):
-            yield (
-                good_sents_embeds,  bad_sents_embeds,
-                quest_embeds,       q_idfs,
-                good_sents_escores, bad_sents_escores,
-                good_sent_tags,     bad_sent_tags,
-            )
+            # yield (good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores, good_sent_tags, bad_sent_tags)
+            yield (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags)
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -764,14 +760,11 @@ def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
     losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
     return sum(losses) / float(len(losses))
 
-def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
-    bs_emits_       = bs_emits_.squeeze(-1)
+def get_two_snip_losses(good_sent_tags, gs_emits_):
     gs_emits_       = gs_emits_.squeeze(-1)
     good_sent_tags  = torch.FloatTensor(good_sent_tags)
-    #
     sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
-    sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
-    return sn_d1_l, sn_d2_l
+    return sn_d1_l
 
 def train_one(epoch):
     model.train()
@@ -783,26 +776,18 @@ def train_one(epoch):
     random.shuffle(train_instances)
     # for instance in train_data_step2(train_instances[:90*50]):
     start_time      = time.time()
-    for (
-        good_sents_embeds,  bad_sents_embeds,
-        quest_embeds,       q_idfs,
-        good_sents_escores, bad_sents_escores,
-        good_sent_tags,     bad_sent_tags,
-    ) in train_data_step2(train_instances):
-        cost_, gs_emits_, bs_emits_ = model(
+    for (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags) in train_data_step2(train_instances):
+        cost_, gs_emits_ = model(
             doc1_sents_embeds   = good_sents_embeds,
-            doc2_sents_embeds   = bad_sents_embeds,
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
             sents_gaf           = good_sents_escores,
-            sents_baf           = bad_sents_escores,
         )
         #
-        sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-        cost_                           = sn_d1_l + sn_d2_l
+        cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
         #
-        batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
+        # batch_acc.append(float(doc1_emit_ > doc2_emit_))
+        # epoch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         if (len(batch_costs) == b_size):
@@ -838,12 +823,11 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', sentence_out_method = 'MLP', mesh_style = 'SENT'):
+    def __init__(self, embedding_dim= 30, context_method = 'CNN', sentence_out_method = 'MLP'):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         #
         self.embedding_dim                          = embedding_dim
-        self.mesh_style                             = mesh_style
         self.context_method                         = context_method
         self.sentence_out_method                    = sentence_out_method
         # to create q weights
@@ -851,7 +835,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
         self.init_sent_output_layer()
-        self.init_doc_out_layer()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
     def init_mesh_module(self):
@@ -884,14 +867,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
             self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
             self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
-    def init_doc_out_layer(self):
-        if(self.mesh_style=='BIGRU'):
-            self.init_mesh_module()
-            self.final_layer = nn.Linear(5 + 30, 1, bias=True)
-        elif(self.mesh_style=='SENT'):
-            self.final_layer = nn.Linear(1 + 4 + 1, 1, bias=True)
-        else:
-            self.final_layer = nn.Linear(5, 1, bias=True)
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
@@ -1123,19 +1098,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 
-# cslab241
-w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# # cslab241
+# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1193,10 +1168,8 @@ for run in range(5):
     logger.info('Compiling model...')
     model       = Sent_Posit_Drmm_Modeler(
         embedding_dim       = embedding_dim,
-        k_for_maxpool       = k_for_maxpool,
         context_method      = models[which_model][0],
-        sentence_out_method = models[which_model][1],
-        mesh_style          = models[which_model][2]
+        sentence_out_method = models[which_model][1]
     )
     params      = model.parameters()
     print_params(model)
