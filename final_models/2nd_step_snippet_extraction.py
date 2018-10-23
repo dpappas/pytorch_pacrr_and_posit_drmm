@@ -580,7 +580,7 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-def get_one_map(prefix, data, docs):
+def get_one_auc(prefix, data, docs):
     model.eval()
     #
     epoch_costs, epoch_auc = [], []
@@ -603,8 +603,8 @@ def get_one_map(prefix, data, docs):
         epoch_costs.append(cost_.cpu().item())
     epoch_aver_auc          = sum(epoch_auc) / float(len(epoch_auc))
     epoch_aver_cost         = sum(epoch_costs) / float(len(epoch_costs))
-    print('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {}'.format(prefix, epoch, epoch_aver_cost, epoch_aver_auc))
-    logger.info('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {}'.format(prefix, epoch, epoch_aver_cost, epoch_aver_auc))
+    print('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {}'.format(prefix, epoch+1, epoch_aver_cost, epoch_aver_auc))
+    logger.info('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {}'.format(prefix, epoch+1, epoch_aver_cost, epoch_aver_auc))
     return epoch_aver_auc
 
 def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
@@ -883,19 +883,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             gs_emits        = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         return gs_emits
 
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 
-# # cslab241
-# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# cslab241
+w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -929,7 +929,7 @@ models = dict(
     ]
 )
 
-which_model = 'Snip_Extr_Model_01'
+which_model = 'Snip_Extr_Model_02'
 
 hdlr = None
 for run in range(5):
@@ -960,13 +960,13 @@ for run in range(5):
     print_params(model)
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
-    best_dev_map, test_map = None, None
+    best_dev_auc, test_auc = None, None
     for epoch in range(max_epoch):
         train_one(epoch + 1)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
-        if(best_dev_map is None or epoch_dev_map>=best_dev_map):
-            best_dev_map    = epoch_dev_map
-            test_map        = get_one_map('test', test_data, test_docs)
-            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
-        print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
-        logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
+        if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
+            best_dev_auc    = epoch_dev_auc
+            test_auc        = get_one_auc('test', test_data, test_docs)
+            save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
+        print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
+        logger.info('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
