@@ -763,7 +763,7 @@ def train_one(epoch):
     # for instance in train_data_step2(train_instances[:90*50]):
     start_time      = time.time()
     for (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags) in train_data_step2(train_instances):
-        cost_, gs_emits_ = model(
+        gs_emits_               = model(
             doc1_sents_embeds   = good_sents_embeds,
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
@@ -771,6 +771,8 @@ def train_one(epoch):
         )
         #
         cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
+        print good_sent_tags
+        print gs_emits_.data
         #
         # batch_acc.append(float(doc1_emit_ > doc2_emit_))
         # epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -853,10 +855,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
             self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
             self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
-    def my_hinge_loss(self, positives, negatives, margin=1.0):
-        delta      = negatives - positives
-        loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
-        return loss_q_pos
     def apply_context_gru(self, the_input, h0):
         output, hn      = self.context_gru(the_input.unsqueeze(1), h0)
         output          = self.context_gru_activation(output)
@@ -930,9 +928,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.sent_out_layer(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
-        ret = self.get_max(res).unsqueeze(0)
         res = torch.sigmoid(res)
-        return ret, res
+        return res
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         hn  = self.context_h0
@@ -1030,11 +1027,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         final_good_output   = self.final_layer(good_out_pp)
         return final_good_output, gs_emits
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
+    def forward(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
-        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
-        doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         #
         if(self.context_method=='CNN'):
             q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -1047,42 +1042,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         if(self.context_method=='CNN'):
             good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-            bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         else:
             good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-            bad_out, bs_emits   = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
-        #
-        if(self.mesh_style=='BIGRU'):
-            good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
-            bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds, q_context)
-            good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-            bad_out_pp          = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
-        elif(self.mesh_style=='SENT'):
-            if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_cnn(
-                    good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights
-                )
-                bad_mesh_out, bs_mesh_emits = self.do_for_one_doc_cnn(
-                    bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights
-                )
-            else:
-                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_bigru(
-                    good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights
-                )
-                bad_mesh_out, bs_mesh_emits  = self.do_for_one_doc_bigru(
-                    bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights
-                )
-            good_out_pp = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
-            bad_out_pp  = torch.cat([bad_out, doc_baf, bad_mesh_out], -1)
-        else:
-            good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-            bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
-        #
-        final_good_output   = self.final_layer(good_out_pp)
-        final_bad_output    = self.final_layer(bad_out_pp)
-        #
-        loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        return gs_emits
 
 # laptop
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
@@ -1120,8 +1082,8 @@ max_epoch       = 10
 
 
 models = [
-    ['Snip_Extr_Model_01', 'CNN'    ],
-    ['Snip_Extr_Model_02', 'BIGRU'  ]
+    ['Snip_Extr_Model_01', 'CNN'   , 'MLP'  ],
+    ['Snip_Extr_Model_02', 'BIGRU' , 'BIGRU']
 ]
 models = dict(
     [
