@@ -756,9 +756,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         self.embedding_dim                          = embedding_dim
         self.mesh_style                             = mesh_style
+        self.context_method                         = context_method
         if(mesh_style is not None):
             self.init_sent_output_layer()
-        self.context_method                         = context_method
         # to create q weights
         self.init_context_module()
         self.init_question_weight_module()
