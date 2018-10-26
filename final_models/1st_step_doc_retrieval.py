@@ -756,6 +756,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         self.embedding_dim                          = embedding_dim
         self.mesh_style                             = mesh_style
+        if(mesh_style is not None):
+            self.init_sent_output_layer()
         self.context_method                         = context_method
         # to create q weights
         self.init_context_module()
@@ -795,6 +797,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.final_layer = nn.Linear(1 + 4 + 1, 1, bias=True)
         else:
             self.final_layer = nn.Linear(5, 1, bias=True)
+    def init_sent_output_layer(self):
+        if(self.context_method == 'MLP'):
+            self.sent_out_layer = nn.Linear(4, 1, bias=False)
+        else:
+            self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
+            self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
+            self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
