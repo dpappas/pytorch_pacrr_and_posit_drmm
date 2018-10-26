@@ -1082,10 +1082,10 @@ max_epoch       = 10
 
 
 models = [
-['Model_01', 'CNN',     None  ],
-['Model_02', 'CNN',     'SENT'],
-['Model_03', 'BIGRU',   None  ],
-['Model_04', 'BIGRU',   'SENT'],
+['Doc_Ret_Model_01', 'CNN',     None  ],
+['Doc_Ret_Model_02', 'CNN',     'SENT'],
+['Doc_Ret_Model_03', 'BIGRU',   None  ],
+['Doc_Ret_Model_04', 'BIGRU',   'SENT'],
 ]
 models = dict([(item[0], item[1:]) for item in models])
 

@@ -930,7 +930,7 @@ models = dict(
     ]
 )
 
-which_model = 'Snip_Extr_Model_03'
+which_model = 'Snip_Extr_Model_04'
 
 hdlr = None
 for run in range(5):
