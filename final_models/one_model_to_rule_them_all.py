@@ -1259,7 +1259,7 @@ models = dict(
     ]
 )
 
-which_model = 'Model_41'
+which_model = 'Model_34'
 
 hdlr = None
 for run in range(5):
