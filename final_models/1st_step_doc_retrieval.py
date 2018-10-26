@@ -1047,12 +1047,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -1061,12 +1061,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 # eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
 # retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 
 # w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
