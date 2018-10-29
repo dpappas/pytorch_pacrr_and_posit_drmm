@@ -225,7 +225,7 @@ def GetWords(data, doc_text, words):
       for w in dwds:
         words[w] = 1
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path, logger):
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
     #
     with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
@@ -250,8 +250,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path, logger):
     train_data  = RemoveTrainLargeYears(train_data, train_docs)
     dev_data    = RemoveBadYears(dev_data, dev_docs, False)
     test_data   = RemoveBadYears(test_data, test_docs, False)
-    #
-    logger.info('loading words')
     #
     words           = {}
     GetWords(train_data, train_docs, words)
@@ -383,4 +381,12 @@ def get_gold_snips(quest_id, bioasq6_data):
             gold_snips.extend(sent_tokenize(sn['text']))
     return list(set(gold_snips))
 
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+
+(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
