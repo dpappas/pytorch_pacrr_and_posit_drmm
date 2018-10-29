@@ -257,10 +257,8 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(test_data,  test_docs,  words)
     # mgmx
     print('loading idfs')
-    logger.info('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
-    logger.info('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
@@ -389,4 +387,8 @@ eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+
+pprint(test_data.keys())
+pprint(test_docs.keys())
+pprint(bioasq6_data.keys())
 
