@@ -428,7 +428,6 @@ for dato in tqdm(test_data['queries']):
         good_snips  = get_snips(quest_id, gid, bioasq6_data)
         datum       = prep_data(quest_text, test_docs[gid], retr['norm_bm25_score'], wv, good_snips, False)
         pprint(datum)
-        print(len(datum[0]))
         exit()
 
 
