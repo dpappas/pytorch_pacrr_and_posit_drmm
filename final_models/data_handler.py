@@ -375,7 +375,8 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, use_sent_tokenizer=False
         'good_doc_af'           : good_doc_af,
         'good_sent_tags'        : good_sent_tags,
         'good_mesh_embeds'      : good_mesh_embeds,
-        'good_mesh_escores'     : good_mesh_escores
+        'good_mesh_escores'     : good_mesh_escores,
+        'held_out_sents'        : held_out_sents,
     }
 
 def snip_is_relevant(one_sent, gold_snips):
