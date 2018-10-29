@@ -394,3 +394,27 @@ pprint(test_docs.items()[0])
 #
 pprint(bioasq6_data.items()[0])
 
+def get_retrieved(dato):
+    for retr in dato['retrieved_documents']:
+        yield dato['query_id'], dato['query_text'], retr['doc_id'], retr['bm25_score'], retr['norm_bm25_score']
+
+
+all_bioasq_gold_data    = {'questions': []}
+for dato in tqdm(test_data['queries']):
+    for retr in get_retrieved(dato):
+        print retr
+    # all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
+    # #
+    # sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    # #
+    # quest           = dato['query_text']
+    # quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
+    # q_idfs          = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+    # emitions = {
+    #     'body': dato['query_text'],
+    #     'id': dato['query_id'],
+    #     'documents': []
+    # }
+    # bm25s = {t['doc_id']: t['norm_bm25_score'] for t in retr_docs}
+    # gold_snips = get_gold_snips(dato['query_id'])
+    # doc_res, extracted_snippets, extracted_snippets_known_rel_num = {}, [], []
