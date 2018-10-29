@@ -369,7 +369,14 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, use_sent_tokenizer=False
             good_escores                = GetScores(quest, good_mesh, the_bm25)[:-1]
             good_mesh_escores.append(good_escores)
     ####
-    return (good_sents_embeds, good_sents_escores, good_doc_af, good_sent_tags, good_mesh_embeds, good_mesh_escores)
+    return {
+        'good_sents_embeds'     : good_sents_embeds,
+        'good_sents_escores'    : good_sents_escores,
+        'good_doc_af'           : good_doc_af,
+        'good_sent_tags'        : good_sent_tags,
+        'good_mesh_embeds'      : good_mesh_embeds,
+        'good_mesh_escores'     : good_mesh_escores
+    }
 
 def snip_is_relevant(one_sent, gold_snips):
     return any(
