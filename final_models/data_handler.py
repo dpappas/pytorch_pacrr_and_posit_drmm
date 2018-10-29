@@ -89,7 +89,7 @@ def get_embeds(tokens, wv):
 
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
-    # logger.info('Loading IDF tables')
+    #
     # with open(dataloc + 'idf.pkl', 'rb') as f:
     with open(idf_path, 'rb') as f:
         idf = pickle.load(f)
@@ -103,7 +103,7 @@ def load_idfs(idf_path, words):
             max_idf = idf[w]
     idf = None
     print('Loaded idf tables with max idf {}'.format(max_idf))
-    # logger.info('Loaded idf tables with max idf {}'.format(max_idf))
+    #
     return ret, max_idf
 
 def uwords(words):
@@ -231,7 +231,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
         bioasq6_data = json.load(f)
         bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
-    # logger.info('loading pickle data')
+    #
     with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
         test_data = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
@@ -285,7 +285,7 @@ def train_data_yielder(train_data, train_docs, wv):
                 bad_escores                 = GetScores(quest, bad_text,  bm25s[bid])
                 yield(good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
 
-def train_data_step1(train_data, logger):
+def train_data_step1(train_data):
     ret = []
     for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
@@ -299,7 +299,6 @@ def train_data_step1(train_data, logger):
                 bid = random.choice(bad_pmids)
                 ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
     print('')
-    logger.info('')
     return ret
 
 def train_data_step2(train_instances, train_docs, wv):
