@@ -177,7 +177,7 @@ def get_snips(quest_id, gid, bioasq6_data):
     good_snips = []
     if('snippets' in bioasq6_data[quest_id]):
         for sn in bioasq6_data[quest_id]['snippets']:
-            if (sn['document'].endswith(gid)):
+            if(sn['document'].endswith(gid)):
                 good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
 
@@ -342,7 +342,7 @@ def train_data_step2(train_instances, train_docs, wv):
             good_mesh_escores,  bad_mesh_escores
         )
 
-def prep_data(quest, the_doc, the_bm25, wv, use_sent_tokenizer=False, good_snips):
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, use_sent_tokenizer=False):
     if(use_sent_tokenizer):
         good_sents = [the_doc['title'] + the_doc['abstractText']]
     else:
@@ -409,11 +409,21 @@ pprint(test_docs.items()[0])
 #
 pprint(bioasq6_data.items()[0])
 
-
 all_bioasq_gold_data    = {'questions': []}
 for dato in tqdm(test_data['queries']):
-    quest_embeds, q_idfs, good_snips
+    quest_text                  = dato['query_text']
+    quest_id                    = dato['query_id']
+    quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+    q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     for retr in dato['retrieved_documents']:
-        print retr
-        datum = prep_data(dato['query_text'], test_docs[retr[u'doc_id']], retr['norm_bm25_score'], wv)
+        gid         = retr[u'doc_id']
+        good_snips  = get_snips(quest_id, gid, bioasq6_data)
+        datum       = prep_data(quest_text, test_docs[gid], retr['norm_bm25_score'], wv, good_snips, False)
         pprint(datum)
+        print(len(datum[0]))
+        exit()
+
+
+
+
+
