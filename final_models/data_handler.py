@@ -68,7 +68,7 @@ def RemoveBadYears(data, doc_text, train):
 def tokenize(x):
   return bioclean(x)
 
-def idf_val(w, idf, max_idf):
+def idf_val(w):
     if w in idf:
         return idf[w]
     return max_idf
@@ -342,7 +342,7 @@ def train_data_step2(train_instances, train_docs, wv):
             good_mesh_escores,  bad_mesh_escores
         )
 
-def prep_data(quest, the_doc, the_bm25, wv):
+def prep_data_only_doc(quest, the_doc, the_bm25, wv):
     good_doc_text                       = the_doc['title'] + the_doc['abstractText']
     good_doc_af                         = GetScores(quest, good_doc_text, the_bm25)
     good_doc_tokens, good_doc_embeds    = get_embeds(tokenize(good_doc_text), wv)
@@ -355,6 +355,19 @@ def prep_data(quest, the_doc, the_bm25, wv):
             good_escores                = GetScores(quest, good_mesh, the_bm25)[:-1]
             good_mesh_escores.append(good_escores)
     return good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores
+
+def prep_data_with_sents(quest, the_doc, the_bm25, wv):
+    good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    good_sents_embeds, good_sents_escores, held_out_sents = [], [], []
+    for good_text in good_sents:
+        good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
+        good_escores = GetScores(quest, good_text, the_bm25)[:-1]
+        if (len(good_embeds) > 0):
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores)
+            held_out_sents.append(good_text)
+    return good_sents_embeds, good_sents_escores, held_out_sents
+
 
 def snip_is_relevant(one_sent, gold_snips):
     return any(
@@ -394,15 +407,16 @@ pprint(test_docs.items()[0])
 #
 pprint(bioasq6_data.items()[0])
 
-def get_retrieved(dato):
-    for retr in dato['retrieved_documents']:
-        yield dato['query_id'], dato['query_text'], retr['doc_id'], retr['bm25_score'], retr['norm_bm25_score']
-
 
 all_bioasq_gold_data    = {'questions': []}
 for dato in tqdm(test_data['queries']):
-    for retr in get_retrieved(dato):
+    for retr in dato['retrieved_documents']:
         print retr
+        datum = prep_data_only_doc(dato['query_text'], test_docs[retr[u'doc_id']], retr['norm_bm25_score'], wv)
+        pprint(datum)
+        datum = prep_data_with_sents(dato['query_text'], test_docs[retr[u'doc_id']], retr['norm_bm25_score'], wv)
+        pprint(datum)
+        exit()
     # all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
     # #
     # sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
