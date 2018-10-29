@@ -366,8 +366,16 @@ def prep_data_with_sents(quest, the_doc, the_bm25, wv):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
+    ####
+    good_meshes = get_the_mesh(the_doc)
+    good_mesh_embeds, good_mesh_escores = [], []
+    for good_mesh in good_meshes:
+        gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
+        if (len(gm_tokens) > 0):
+            good_mesh_embeds.append(gm_embeds)
+            good_escores                = GetScores(quest, good_mesh, the_bm25)[:-1]
+            good_mesh_escores.append(good_escores)
     return good_sents_embeds, good_sents_escores, held_out_sents
-
 
 def snip_is_relevant(one_sent, gold_snips):
     return any(
@@ -416,19 +424,3 @@ for dato in tqdm(test_data['queries']):
         pprint(datum)
         datum = prep_data_with_sents(dato['query_text'], test_docs[retr[u'doc_id']], retr['norm_bm25_score'], wv)
         pprint(datum)
-        exit()
-    # all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
-    # #
-    # sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-    # #
-    # quest           = dato['query_text']
-    # quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
-    # q_idfs          = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-    # emitions = {
-    #     'body': dato['query_text'],
-    #     'id': dato['query_id'],
-    #     'documents': []
-    # }
-    # bm25s = {t['doc_id']: t['norm_bm25_score'] for t in retr_docs}
-    # gold_snips = get_gold_snips(dato['query_id'])
-    # doc_res, extracted_snippets, extracted_snippets_known_rel_num = {}, [], []
