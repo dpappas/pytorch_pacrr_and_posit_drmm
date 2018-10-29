@@ -388,7 +388,9 @@ retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_b
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-pprint(test_data.keys())
-pprint(test_docs.keys())
-pprint(bioasq6_data.keys())
+pprint(test_data['queries'][0])
+#
+pprint(test_docs.items()[0])
+#
+pprint(bioasq6_data.items()[0])
 
