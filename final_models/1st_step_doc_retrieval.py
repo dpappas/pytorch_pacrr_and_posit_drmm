@@ -26,7 +26,7 @@ from    tqdm import tqdm
 from    gensim.models.keyedvectors import KeyedVectors
 from    nltk.tokenize import sent_tokenize
 from    difflib import SequenceMatcher
-from    data_handler import prep_data, tokenize, get_embeds, train_data_step1, train_data_step2, load_all_data
+from    data_handler import prep_data, tokenize, get_embeds, train_data_step1, train_data_step2, load_all_data, idf_val
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -289,7 +289,8 @@ def get_one_map(prefix, data, docs):
         #
         data_for_revision, ret_data, all_bioasq_subm_data = do_for_some_retrieved(
             docs, dato, dato['retrieved_documents'],
-            data_for_revision, ret_data, all_bioasq_subm_data
+            data_for_revision, ret_data,
+            all_bioasq_subm_data, idf_val=
         )
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
