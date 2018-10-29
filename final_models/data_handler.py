@@ -342,22 +342,12 @@ def train_data_step2(train_instances, train_docs, wv):
             good_mesh_escores,  bad_mesh_escores
         )
 
-def prep_data_only_doc(quest, the_doc, the_bm25, wv):
-    good_doc_text                       = the_doc['title'] + the_doc['abstractText']
-    good_doc_af                         = GetScores(quest, good_doc_text, the_bm25)
-    good_doc_tokens, good_doc_embeds    = get_embeds(tokenize(good_doc_text), wv)
-    good_meshes                         = get_the_mesh(the_doc)
-    good_mesh_embeds, good_mesh_escores = [], []
-    for good_mesh in good_meshes:
-        gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
-        if (len(gm_tokens) > 0):
-            good_mesh_embeds.append(gm_embeds)
-            good_escores                = GetScores(quest, good_mesh, the_bm25)[:-1]
-            good_mesh_escores.append(good_escores)
-    return good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores
-
-def prep_data_with_sents(quest, the_doc, the_bm25, wv):
-    good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+def prep_data(quest, the_doc, the_bm25, wv, use_sent_tokenizer=False):
+    if(use_sent_tokenizer):
+        good_sents = [the_doc['title'] + the_doc['abstractText']]
+    else:
+        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    ####
     good_sents_embeds, good_sents_escores, held_out_sents = [], [], []
     for good_text in good_sents:
         good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
@@ -375,7 +365,10 @@ def prep_data_with_sents(quest, the_doc, the_bm25, wv):
             good_mesh_embeds.append(gm_embeds)
             good_escores                = GetScores(quest, good_mesh, the_bm25)[:-1]
             good_mesh_escores.append(good_escores)
-    return good_sents_embeds, good_sents_escores, held_out_sents
+    return (
+        good_sents_embeds, quest_embeds, q_idfs, good_sents_escores,
+        good_doc_af, good_sent_tags, good_mesh_embeds, good_mesh_escores
+    )
 
 def snip_is_relevant(one_sent, gold_snips):
     return any(
