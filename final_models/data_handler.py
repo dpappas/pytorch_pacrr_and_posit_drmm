@@ -68,16 +68,15 @@ def RemoveBadYears(data, doc_text, train):
 def tokenize(x):
   return bioclean(x)
 
-def idf_val(w):
-    global idf, max_idf
+def idf_val(w, idf, max_idf):
     if w in idf:
         return idf[w]
     return max_idf
 
-def get_words(s):
+def get_words(s, idf, max_idf):
     sl  = tokenize(s)
     sl  = [s for s in sl]
-    sl2 = [s for s in sl if idf_val(s) >= 2.0]
+    sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
     return sl, sl2
 
 def get_embeds(tokens, wv):
@@ -121,16 +120,16 @@ def ubigrams(words):
     prevw = w
   return [w for w in uw]
 
-def query_doc_overlap(qwords, dwords):
+def query_doc_overlap(qwords, dwords, idf, max_idf):
     # % Query words in doc.
     qwords_in_doc = 0
     idf_qwords_in_doc = 0.0
     idf_qwords = 0.0
     for qword in uwords(qwords):
-      idf_qwords += idf_val(qword)
+      idf_qwords += idf_val(qword, idf, max_idf)
       for dword in uwords(dwords):
         if qword == dword:
-          idf_qwords_in_doc += idf_val(qword)
+          idf_qwords_in_doc += idf_val(qword, idf, max_idf)
           qwords_in_doc     += 1
           break
     if len(qwords) <= 0:
@@ -148,11 +147,11 @@ def query_doc_overlap(qwords, dwords):
     idf_bigrams = 0.0
     for qword in ubigrams(qwords):
       wrds = qword.split('_')
-      idf_bigrams += idf_val(wrds[0]) * idf_val(wrds[1])
+      idf_bigrams += idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf)
       for dword in ubigrams(dwords):
         if qword == dword:
           qwords_bigrams_in_doc += 1
-          idf_qwords_bigrams_in_doc += (idf_val(wrds[0]) * idf_val(wrds[1]))
+          idf_qwords_bigrams_in_doc += (idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf))
           break
     if len(qwords) <= 0:
       qwords_bigrams_in_doc_val = 0.0
@@ -167,9 +166,9 @@ def query_doc_overlap(qwords, dwords):
             idf_qwords_in_doc_val,
             idf_qwords_bigrams_in_doc_val]
 
-def GetScores(qtext, dtext, bm25):
-    qwords, qw2 = get_words(qtext)
-    dwords, dw2 = get_words(dtext)
+def GetScores(qtext, dtext, bm25, idf, max_idf):
+    qwords, qw2 = get_words(qtext, idf, max_idf)
+    dwords, dw2 = get_words(dtext, idf, max_idf)
     qd1         = query_doc_overlap(qwords, dwords)
     bm25        = [bm25]
     return qd1[0:3] + bm25
@@ -264,7 +263,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
-def train_data_yielder(train_data, train_docs, wv):
+def train_data_yielder(train_data, train_docs, wv, idf, max_idf):
     for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
         bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
@@ -273,7 +272,7 @@ def train_data_yielder(train_data, train_docs, wv):
         bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
         #
         quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
-        q_idfs      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float64')
+        q_idfs      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float64')
         #
         if(len(bad_pmids)>0):
             for gid in good_pmids:
@@ -282,8 +281,8 @@ def train_data_yielder(train_data, train_docs, wv):
                 good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
                 bad_text                    = train_docs[bid]['title'] + ' <title> ' + train_docs[bid]['abstractText']
                 bad_tokens, bad_embeds      = get_embeds(tokenize(bad_text), wv)
-                good_escores                = GetScores(quest, good_text, bm25s[gid])
-                bad_escores                 = GetScores(quest, bad_text,  bm25s[bid])
+                good_escores                = GetScores(quest, good_text, bm25s[gid], idf, max_idf)
+                bad_escores                 = GetScores(quest, bad_text,  bm25s[bid], idf, max_idf)
                 yield(good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
 
 def train_data_step1(train_data):
@@ -302,24 +301,24 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def train_data_step2(instances, docs, wv, bioasq6_data, use_sent_tokenizer=False):
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer=False):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         #
         good_snips              = get_snips(quest_id, gid, bioasq6_data)
-        datum                   = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, use_sent_tokenizer)
+        datum                   = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
         good_embeds             = datum['good_sents_embeds']
         good_mesh_escores       = datum['good_mesh_escores']
         good_mesh_embeds        = datum['good_mesh_embeds']
         good_doc_af             = datum['good_doc_af']
         #
-        datum                   = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], use_sent_tokenizer)
+        datum                   = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_embeds              = datum['good_sents_embeds']
         bad_mesh_escores        = datum['good_mesh_escores']
         bad_mesh_embeds         = datum['good_mesh_embeds']
         bad_doc_af              = datum['good_doc_af']
         #
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-        q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         yield (
             good_embeds,        bad_embeds,
@@ -329,18 +328,18 @@ def train_data_step2(instances, docs, wv, bioasq6_data, use_sent_tokenizer=False
             good_mesh_escores,  bad_mesh_escores
         )
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, use_sent_tokenizer=False):
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer=False):
     if(use_sent_tokenizer):
         good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     else:
         good_sents = [the_doc['title'] + the_doc['abstractText']]
     ####
-    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25)
+    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
         good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
-        good_escores = GetScores(quest, good_text, the_bm25)[:-1]
+        good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         if (len(good_embeds) > 0):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
@@ -353,7 +352,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, use_sent_tokenizer=False
         gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
         if (len(gm_tokens) > 0):
             good_mesh_embeds.append(gm_embeds)
-            good_escores                = GetScores(quest, good_mesh, the_bm25)[:-1]
+            good_escores                = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
             good_mesh_escores.append(good_escores)
     ####
     return {

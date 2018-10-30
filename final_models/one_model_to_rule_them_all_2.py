@@ -297,7 +297,7 @@ def train_one(epoch, bioasq6_data, two_losses=True, use_sent_tokenizer=False):
     for (
         good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores, good_doc_af,
         bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
-    ) in train_data_step2(train_instances, train_docs, wv, bioasq6_data, use_sent_tokenizer=use_sent_tokenizer):
+    ) in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = good_sents_embeds,
             doc2_sents_embeds   = bad_sents_embeds,
