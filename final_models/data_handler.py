@@ -302,42 +302,26 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def train_data_step2(train_instances, train_docs, wv):
-    for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
-        good_snips  = get_snips(quest_id, gid, bioasq6_data)
-        datum       = prep_data(quest_text, test_docs[gid], retr['norm_bm25_score'], wv, good_snips, False)
-
-
-        quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
-        q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+def train_data_step2(instances, docs, wv, use_sent_tokenizer=False):
+    global bioasq6_data
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         #
-        good_meshes                             = get_the_mesh(train_docs[gid])
-        good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
-        good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
-        good_tokens, good_embeds                = get_embeds(tokenize(good_doc_text), wv)
+        good_snips              = get_snips(quest_id, gid, bioasq6_data)
+        datum                   = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, use_sent_tokenizer)
+        good_embeds             = datum['good_sents_embeds']
+        good_mesh_escores       = datum['good_mesh_escores']
+        good_mesh_embeds        = datum['good_mesh_embeds']
+        good_doc_af             = datum['good_doc_af']
         #
-        # Handle good mesh terms
-        good_mesh_embeds, good_mesh_escores = [], []
-        for good_mesh in good_meshes:
-            gm_tokens, gm_embeds = get_embeds(good_mesh, wv)
-            if(len(gm_tokens)>0):
-                good_mesh_embeds.append(gm_embeds)
-                good_escores = GetScores(quest, good_mesh, bm25s_gid)[:-1]
-                good_mesh_escores.append(good_escores)
+        datum                   = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], use_sent_tokenizer)
+        bad_embeds              = datum['good_sents_embeds']
+        bad_mesh_escores        = datum['good_mesh_escores']
+        bad_mesh_embeds         = datum['good_mesh_embeds']
+        bad_doc_af              = datum['good_doc_af']
         #
-        bad_meshes                              = get_the_mesh(train_docs[bid])
-        bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
-        bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
-        bad_tokens, bad_embeds                  = get_embeds(tokenize(bad_doc_text), wv)
+        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+        q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         #
-        # Handle bad mesh terms
-        bad_mesh_embeds, bad_mesh_escores = [], []
-        for bad_mesh in bad_meshes:
-            gm_tokens, gm_embeds = get_embeds(bad_mesh, wv)
-            if(len(gm_tokens)>0):
-                bad_mesh_embeds.append(gm_embeds)
-                bad_escores = GetScores(quest, bad_mesh, bm25s_gid)[:-1]
-                bad_mesh_escores.append(bad_escores)
         yield (
             good_embeds,        bad_embeds,
             quest_embeds,       q_idfs,
