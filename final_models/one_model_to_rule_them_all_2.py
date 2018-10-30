@@ -739,12 +739,7 @@ models = [
 ['Model_55', 'BIGRU',   'BIGRU',    None,      True,    True],
 ['Model_56', 'BIGRU',   'BIGRU',    'SENT',    True,    True],
 ]
-models = dict(
-    [
-        (item[0], item[1:])
-        for item in models
-    ]
-)
+models = dict([(item[0], item[1:]) for item in models])
 
 which_model = 'Model_34'
 
