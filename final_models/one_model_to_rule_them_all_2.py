@@ -284,7 +284,7 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
 
-def train_one(epoch, two_losses=True, use_sent_tokenizer=False):
+def train_one(epoch, bioasq6_data, two_losses=True, use_sent_tokenizer=False):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter = 0
@@ -297,7 +297,7 @@ def train_one(epoch, two_losses=True, use_sent_tokenizer=False):
     for (
         good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores, good_doc_af,
         bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
-    ) in train_data_step2(train_instances, train_docs, wv, use_sent_tokenizer=use_sent_tokenizer):
+    ) in train_data_step2(train_instances, train_docs, wv, bioasq6_data, use_sent_tokenizer=use_sent_tokenizer):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = good_sents_embeds,
             doc2_sents_embeds   = bad_sents_embeds,
@@ -774,7 +774,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, two_losses=models[which_model][3], use_sent_tokenizer=models[which_model][4])
+        train_one(epoch+1, bioasq6_data, two_losses=models[which_model][3], use_sent_tokenizer=models[which_model][4])
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
