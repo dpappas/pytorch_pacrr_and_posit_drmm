@@ -295,11 +295,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer=False):
     all_bioasq_gold_data        = {'questions': []}
     data_for_revision           = {}
     #
-    # ret_data_2                    = {'questions': []}
-    # all_bioasq_subm_data_2        = {"questions": []}
-    # all_bioasq_subm_data_known_2  = {"questions": []}
-    # all_bioasq_gold_data_2        = {'questions': []}
-    # data_for_revision_2           = {}
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         #
@@ -312,20 +307,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer=False):
         #     docs, dato, get_pseudo_retrieved(dato),
         #     data_for_revision_2, ret_data_2, all_bioasq_subm_data_2, all_bioasq_subm_data_known_2
         # )
-    #
-    # bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data_2, all_bioasq_subm_data_known_2, data_for_revision_2)
-    # pprint(bioasq_snip_res)
-    # logger.info('{} gold docs known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    # logger.info('{} gold docs known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    # logger.info('{} gold docs known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    # logger.info('{} gold docs known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    #
-    # bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data_2, all_bioasq_subm_data_2, data_for_revision_2)
-    # pprint(bioasq_snip_res)
-    # logger.info('{} gold docs MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    # logger.info('{} gold docs F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    # logger.info('{} gold docs MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    # logger.info('{} gold docs GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     pprint(bioasq_snip_res)
