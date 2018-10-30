@@ -169,7 +169,7 @@ def query_doc_overlap(qwords, dwords, idf, max_idf):
 def GetScores(qtext, dtext, bm25, idf, max_idf):
     qwords, qw2 = get_words(qtext, idf, max_idf)
     dwords, dw2 = get_words(dtext, idf, max_idf)
-    qd1         = query_doc_overlap(qwords, dwords)
+    qd1         = query_doc_overlap(qwords, dwords, idf, max_idf)
     bm25        = [bm25]
     return qd1[0:3] + bm25
 
