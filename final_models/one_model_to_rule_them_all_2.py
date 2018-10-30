@@ -292,9 +292,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
-        t = (snip_is_relevant(held_out_sents[ind], gold_snips),             emitss[ind],
-            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']), held_out_sents[ind]
-        )
+        t = (snip_is_relevant(held_out_sents[ind], gold_snips), emitss[ind], "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']), held_out_sents[ind])
         all_emits.append(t)
         if(emitss[ind] == mmax):
             extracted_from_one.append(t)
