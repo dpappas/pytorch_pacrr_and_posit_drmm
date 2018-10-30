@@ -343,9 +343,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
-    doc_res                             = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-    doc_res                             = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-    emitions['documents']               = doc_res[:100]
+    doc_res                                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    doc_res                                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+    emitions['documents']                   = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
     if(use_sent_tokenizer == True):
@@ -360,7 +360,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     snips_res                               = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     all_bioasq_subm_data['questions'].append(snips_res)
     #
-    snips_res_known_rel_num             = prep_extracted_snippets(extracted_snippets_known_rel_num, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num                 = prep_extracted_snippets(extracted_snippets_known_rel_num, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
     return data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
 
