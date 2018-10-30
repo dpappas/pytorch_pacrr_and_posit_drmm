@@ -299,14 +299,9 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer=False):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         #
         data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known = do_for_some_retrieved(
-            docs, dato, dato['retrieved_documents'],
-            data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
+            docs, dato, dato['retrieved_documents'], data_for_revision,
+            ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
         )
-        # for retr in get_pseudo_retrieved(dato):
-        # data_for_revision_2, ret_data_2, all_bioasq_subm_data_2, all_bioasq_subm_data_known_2 = do_for_some_retrieved(
-        #     docs, dato, get_pseudo_retrieved(dato),
-        #     data_for_revision_2, ret_data_2, all_bioasq_subm_data_2, all_bioasq_subm_data_known_2
-        # )
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     pprint(bioasq_snip_res)
