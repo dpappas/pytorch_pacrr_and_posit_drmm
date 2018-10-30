@@ -391,38 +391,29 @@ def get_gold_snips(quest_id, bioasq6_data):
             gold_snips.extend(sent_tokenize(sn['text']))
     return list(set(gold_snips))
 
-'''
-
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-
-(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
-
-pprint(test_data['queries'][0])
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 #
-pprint(test_docs.items()[0])
+# (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 #
-pprint(bioasq6_data.items()[0])
-
-for dato in tqdm(test_data['queries']):
-    quest_text                  = dato['query_text']
-    quest_id                    = dato['query_id']
-    quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-    q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-    for retr in dato['retrieved_documents']:
-        gid         = retr[u'doc_id']
-        good_snips  = get_snips(quest_id, gid, bioasq6_data)
-        datum       = prep_data(quest_text, test_docs[gid], retr['norm_bm25_score'], wv, good_snips, False)
-        pprint(datum)
-        exit()
-
-'''
-
-
-
+# pprint(test_data['queries'][0])
+# pprint(test_docs.items()[0])
+# pprint(bioasq6_data.items()[0])
+#
+# for dato in tqdm(test_data['queries']):
+#     quest_text                  = dato['query_text']
+#     quest_id                    = dato['query_id']
+#     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+#     q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+#     for retr in dato['retrieved_documents']:
+#         gid         = retr[u'doc_id']
+#         good_snips  = get_snips(quest_id, gid, bioasq6_data)
+#         datum       = prep_data(quest_text, test_docs[gid], retr['norm_bm25_score'], wv, good_snips, idf, max_idf, False)
+#         pprint(datum)
+#         exit()
 
 
