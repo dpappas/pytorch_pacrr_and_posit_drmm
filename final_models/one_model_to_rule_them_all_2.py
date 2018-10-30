@@ -715,7 +715,6 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 # eval_path           = '/media/large_space_1/DATA/bioasq_all/eval/run_eval.py'
 # retrieval_jar_path  = '/media/large_space_1/DATA/bioasq_all/dist/my_bioasq_eval_2.jar'
 
-
 # # gpu_server_2
 # w2v_bin_path        = '/home/cave/bioasq_all/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/cave/bioasq_all/idf.pkl'
