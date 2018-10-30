@@ -302,7 +302,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known):
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known, use_sent_tokenizer):
     emitions = {
         'body': dato['query_text'],
         'id': dato['query_id'],
@@ -348,13 +348,19 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     emitions['documents']               = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
-    extracted_snippets                  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-    extracted_snippets                  = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-    snips_res                           = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    if(use_sent_tokenizer == True):
+        extracted_snippets                  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+        extracted_snippets                  = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+    else:
+        extracted_snippets                  = []
+    snips_res                               = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     all_bioasq_subm_data['questions'].append(snips_res)
     #
-    extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
-    extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num, key=lambda x: x[1], reverse=True)
+    if(use_sent_tokenizer == True):
+        extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
+        extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num, key=lambda x: x[1], reverse=True)
+    else:
+        extracted_snippets_known_rel_num    = []
     snips_res_known_rel_num             = prep_extracted_snippets(extracted_snippets_known_rel_num, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
     return data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
@@ -373,7 +379,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer=False):
         #
         data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known = do_for_some_retrieved(
             docs, dato, dato['retrieved_documents'], data_for_revision,
-            ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
+            ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known, use_sent_tokenizer
         )
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
