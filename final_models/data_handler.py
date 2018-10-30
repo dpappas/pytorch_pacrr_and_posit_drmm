@@ -69,6 +69,7 @@ def tokenize(x):
   return bioclean(x)
 
 def idf_val(w):
+    global idf, max_idf
     if w in idf:
         return idf[w]
     return max_idf
@@ -303,6 +304,10 @@ def train_data_step1(train_data):
 
 def train_data_step2(train_instances, train_docs, wv):
     for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
+        good_snips  = get_snips(quest_id, gid, bioasq6_data)
+        datum       = prep_data(quest_text, test_docs[gid], retr['norm_bm25_score'], wv, good_snips, False)
+
+
         quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
         q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         #
@@ -401,6 +406,8 @@ def get_gold_snips(quest_id, bioasq6_data):
             gold_snips.extend(sent_tokenize(sn['text']))
     return list(set(gold_snips))
 
+'''
+
 # laptop
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
@@ -428,6 +435,7 @@ for dato in tqdm(test_data['queries']):
         pprint(datum)
         exit()
 
+'''
 
 
 
