@@ -416,7 +416,6 @@ pprint(test_docs.items()[0])
 #
 pprint(bioasq6_data.items()[0])
 
-all_bioasq_gold_data    = {'questions': []}
 for dato in tqdm(test_data['queries']):
     quest_text                  = dato['query_text']
     quest_id                    = dato['query_id']
@@ -428,6 +427,7 @@ for dato in tqdm(test_data['queries']):
         datum       = prep_data(quest_text, test_docs[gid], retr['norm_bm25_score'], wv, good_snips, False)
         pprint(datum)
         exit()
+
 
 
 
