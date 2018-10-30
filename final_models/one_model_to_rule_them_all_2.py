@@ -765,6 +765,7 @@ models = [
 ['Model_38', 'BIGRU',   'MLP',      'SENT',    False,   False],
 ['Model_39', 'BIGRU',   'BIGRU',    None,      False,   False],
 ['Model_40', 'BIGRU',   'BIGRU',    'SENT',    False,   False],
+
 ['Model_41', 'CNN',     'MLP',      None,      False,   True],
 ['Model_42', 'CNN',     'MLP',      'SENT',    False,   True],
 ['Model_43', 'CNN',     'BIGRU',    None,      False,   True],
@@ -773,6 +774,7 @@ models = [
 ['Model_46', 'BIGRU',   'MLP',      'SENT',    False,   True],
 ['Model_47', 'BIGRU',   'BIGRU',    None,      False,   True],
 ['Model_48', 'BIGRU',   'BIGRU',    'SENT',    False,   True],
+
 ['Model_49', 'CNN',     'MLP',      None,      True,    True],
 ['Model_50', 'CNN',     'MLP',      'SENT',    True,    True],
 ['Model_51', 'CNN',     'BIGRU',    None,      True,    True],
