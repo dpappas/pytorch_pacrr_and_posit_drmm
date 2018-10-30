@@ -325,10 +325,8 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         yield (
-            good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores,
-            good_doc_af,
-            bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores,
-            bad_mesh_escores
+            good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores, good_doc_af,
+            bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
         )
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer=False):
@@ -408,7 +406,7 @@ def get_gold_snips(quest_id, bioasq6_data):
 #     quest_text                  = dato['query_text']
 #     quest_id                    = dato['query_id']
 #     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-#     q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+#     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
 #     for retr in dato['retrieved_documents']:
 #         gid         = retr[u'doc_id']
 #         good_snips  = get_snips(quest_id, gid, bioasq6_data)
