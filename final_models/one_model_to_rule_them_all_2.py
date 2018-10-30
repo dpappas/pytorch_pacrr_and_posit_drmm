@@ -330,7 +330,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
         #
         extracted_snippets.extend(extracted_from_one)
         #
-        total_relevant = sum([1 for em in all_emits if (em[0] == True)])
+        total_relevant = sum([1 for em in all_emits if(em[0]==True)])
         if (total_relevant > 0):
             extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
         if (dato['query_id'] not in data_for_revision):
