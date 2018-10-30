@@ -20,7 +20,7 @@ from    pprint import pprint
 import  torch.autograd as autograd
 from    tqdm import tqdm
 from    difflib import SequenceMatcher
-from    data_handler import train_data_step1, train_data_step2, load_all_data
+from    data_handler import *
 
 def print_params(model):
     '''
@@ -285,6 +285,57 @@ def train_one(epoch, bioasq6_data, two_losses=True, use_sent_tokenizer=False):
         logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known):
+    emitions = {
+        'body': dato['query_text'],
+        'id': dato['query_id'],
+        'documents': []
+    }
+    #
+    quest_text                  = dato['query_text']
+    quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+    q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    gold_snips                  = get_gold_snips(dato['query_id'], bioasq6_data)
+    #
+    doc_res, extracted_snippets, extracted_snippets_known_rel_num = {}, [], []
+    for retr in retr_docs:
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
+            quest, q_idfs, quest_embeds, bm25s, docs, retr,
+            doc_res, gold_snips)
+        extracted_snippets.extend(extracted_from_one)
+        #
+        total_relevant = sum([1 for em in all_emits if (em[0] == True)])
+        if (total_relevant > 0):
+            extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
+        if (dato['query_id'] not in data_for_revision):
+            data_for_revision[dato['query_id']] = {
+                'query_text': dato['query_text'],
+                'snippets': {retr['doc_id']: all_emits}
+            }
+        else:
+            data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
+    doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+    emitions['documents'] = doc_res[:100]
+    ret_data['questions'].append(emitions)
+    #
+    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+    extracted_snippets  = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+    snips_res           = prep_extracted_snippets(extracted_snippets, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    all_bioasq_subm_data['questions'].append(snips_res)
+    #
+    extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
+    extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num, key=lambda x: x[1], reverse=True)
+    snips_res_known_rel_num             = prep_extracted_snippets(
+        extracted_snippets_known_rel_num,
+        docs,
+        dato['query_id'],
+        doc_res[:10],
+        dato['query_text']
+    )
+    all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
+    return data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer=False):
     model.eval()

@@ -382,6 +382,38 @@ def snip_is_relevant(one_sent, gold_snips):
     #     ]
     # )
 
+def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
+    ret = {
+        'body'      : quest_body,
+        'documents' : top10docs,
+        'id'        : qid,
+        'snippets'  : [],
+    }
+    for esnip in extracted_snippets:
+        pid         = esnip[2].split('/')[-1]
+        the_text    = esnip[3]
+        esnip_res = {
+            # 'score'     : esnip[1],
+            "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
+            "text"      : the_text
+        }
+        try:
+            ind_from                            = docs[pid]['title'].index(the_text)
+            ind_to                              = ind_from + len(the_text)
+            esnip_res["beginSection"]           = "title"
+            esnip_res["endSection"]             = "title"
+            esnip_res["offsetInBeginSection"]   = ind_from
+            esnip_res["offsetInEndSection"]     = ind_to
+        except:
+            ind_from                            = docs[pid]['abstractText'].index(the_text)
+            ind_to                              = ind_from + len(the_text)
+            esnip_res["beginSection"]           = "abstract"
+            esnip_res["endSection"]             = "abstract"
+            esnip_res["offsetInBeginSection"]   = ind_from
+            esnip_res["offsetInEndSection"]     = ind_to
+        ret['snippets'].append(esnip_res)
+    return ret
+
 def get_gold_snips(quest_id, bioasq6_data):
     gold_snips                  = []
     if ('snippets' in bioasq6_data[quest_id]):
