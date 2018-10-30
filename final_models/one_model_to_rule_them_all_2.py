@@ -198,7 +198,95 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-def get_one_map(prefix, data, docs):
+def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
+    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
+    wrong  = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
+    wrong  = torch.cat(wrong + [bs_emits_.squeeze(-1)])
+    losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
+    return sum(losses) / float(len(losses))
+
+def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
+    bs_emits_       = bs_emits_.squeeze(-1)
+    gs_emits_       = gs_emits_.squeeze(-1)
+    good_sent_tags  = torch.FloatTensor(good_sent_tags)
+    #
+    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
+    sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
+    return sn_d1_l, sn_d2_l
+
+def init_the_logger(hdlr):
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
+    logger      = logging.getLogger(od)
+    if(hdlr is not None):
+        logger.removeHandler(hdlr)
+    hdlr        = logging.FileHandler(odir+'model.log')
+    formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+    return logger, hdlr
+
+def train_one(epoch, bioasq6_data, two_losses=True, use_sent_tokenizer=False):
+    model.train()
+    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
+    batch_counter = 0
+    train_instances = train_data_step1(train_data)
+    #
+    epoch_aver_cost, epoch_aver_acc = 0., 0.
+    random.shuffle(train_instances)
+    #
+    start_time      = time.time()
+    for (
+        good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores, good_doc_af,
+        bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
+    ) in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer):
+        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+            doc1_sents_embeds   = good_sents_embeds,
+            doc2_sents_embeds   = bad_sents_embeds,
+            question_embeds     = quest_embeds,
+            q_idfs              = q_idfs,
+            sents_gaf           = good_sents_escores,
+            sents_baf           = bad_sents_escores,
+            doc_gaf             = good_doc_af,
+            doc_baf             = bad_doc_af,
+            good_meshes_embeds  = good_mesh_embeds,
+            bad_meshes_embeds   = bad_mesh_embeds,
+            mesh_gaf            = good_mesh_escores,
+            mesh_baf            = bad_mesh_escores
+        )
+        #
+        good_sent_tags, bad_sent_tags       = good_sent_tags, bad_sent_tags
+        if(two_losses):
+            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            snip_loss                       = sn_d1_l + sn_d2_l
+            l                               = 0.5
+            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
+        #
+        batch_acc.append(float(doc1_emit_ > doc2_emit_))
+        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
+        epoch_costs.append(cost_.cpu().item())
+        batch_costs.append(cost_)
+        if (len(batch_costs) == b_size):
+            batch_counter += 1
+            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+            elapsed_time    = time.time() - start_time
+            start_time      = time.time()
+            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+            logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+            batch_costs, batch_acc = [], []
+    if (len(batch_costs) > 0):
+        batch_counter += 1
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+        elapsed_time = time.time() - start_time
+        start_time = time.time()
+        print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+        logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+    print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+
+def get_one_map(prefix, data, docs, use_sent_tokenizer=False):
     model.eval()
     #
     ret_data                    = {'questions': []}
@@ -262,94 +350,6 @@ def get_one_map(prefix, data, docs):
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
         res_map = get_map_res(dataloc+'bioasq.test.json', odir + 'elk_relevant_abs_posit_drmm_lists_test.json')
     return res_map
-
-def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
-    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
-    wrong  = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
-    wrong  = torch.cat(wrong + [bs_emits_.squeeze(-1)])
-    losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
-    return sum(losses) / float(len(losses))
-
-def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
-    bs_emits_       = bs_emits_.squeeze(-1)
-    gs_emits_       = gs_emits_.squeeze(-1)
-    good_sent_tags  = torch.FloatTensor(good_sent_tags)
-    #
-    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
-    sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
-    return sn_d1_l, sn_d2_l
-
-def train_one(epoch, bioasq6_data, two_losses=True, use_sent_tokenizer=False):
-    model.train()
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    batch_counter = 0
-    train_instances = train_data_step1(train_data)
-    #
-    epoch_aver_cost, epoch_aver_acc = 0., 0.
-    random.shuffle(train_instances)
-    #
-    start_time      = time.time()
-    for (
-        good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores, good_doc_af,
-        bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
-    ) in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer):
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = good_sents_embeds,
-            doc2_sents_embeds   = bad_sents_embeds,
-            question_embeds     = quest_embeds,
-            q_idfs              = q_idfs,
-            sents_gaf           = good_sents_escores,
-            sents_baf           = bad_sents_escores,
-            doc_gaf             = good_doc_af,
-            doc_baf             = bad_doc_af,
-            good_meshes_embeds  = good_mesh_embeds,
-            bad_meshes_embeds   = bad_mesh_embeds,
-            mesh_gaf            = good_mesh_escores,
-            mesh_baf            = bad_mesh_escores
-        )
-        #
-        good_sent_tags, bad_sent_tags       = good_sent_tags, bad_sent_tags
-        if(two_losses):
-            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss                       = sn_d1_l + sn_d2_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
-        #
-        batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_costs.append(cost_.cpu().item())
-        batch_costs.append(cost_)
-        if (len(batch_costs) == b_size):
-            batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-            elapsed_time    = time.time() - start_time
-            start_time      = time.time()
-            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            batch_costs, batch_acc = [], []
-    if (len(batch_costs) > 0):
-        batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-        elapsed_time = time.time() - start_time
-        start_time = time.time()
-        print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-        logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-    print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-
-def init_the_logger(hdlr):
-    if not os.path.exists(odir):
-        os.makedirs(odir)
-    od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
-    logger      = logging.getLogger(od)
-    if(hdlr is not None):
-        logger.removeHandler(hdlr)
-    hdlr        = logging.FileHandler(odir+'model.log')
-    formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    hdlr.setFormatter(formatter)
-    logger.addHandler(hdlr)
-    logger.setLevel(logging.INFO)
-    return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', sentence_out_method = 'MLP', mesh_style = 'SENT'):
