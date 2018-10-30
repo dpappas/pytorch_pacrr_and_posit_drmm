@@ -321,7 +321,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
             q_idfs              = q_idfs,
             sents_gaf           = datum['good_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
-            good_meshes_embeds  = datum['good_meshes_embeds'],
+            good_meshes_embeds  = datum['good_mesh_embeds'],
             mesh_gaf            = datum['good_mesh_escores']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
