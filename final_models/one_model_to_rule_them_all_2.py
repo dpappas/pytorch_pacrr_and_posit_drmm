@@ -286,6 +286,22 @@ def train_one(epoch, bioasq6_data, two_losses=True, use_sent_tokenizer=False):
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
+def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
+    emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_.tolist()
+    mmax                    = max(emitss)
+    all_emits, extracted_from_one = [], []
+    for ind in range(len(emitss)):
+        t = (snip_is_relevant(held_out_sents[ind], gold_snips),             emitss[ind],
+            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']), held_out_sents[ind]
+        )
+        all_emits.append(t)
+        if(emitss[ind] == mmax):
+            extracted_from_one.append(t)
+    doc_res[retr['doc_id']] = float(emition)
+    all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
+    return doc_res, extracted_from_one, all_emits
+
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known):
     emitions = {
         'body': dato['query_text'],
@@ -300,9 +316,20 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     #
     doc_res, extracted_snippets, extracted_snippets_known_rel_num = {}, [], []
     for retr in retr_docs:
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
-            quest, q_idfs, quest_embeds, bm25s, docs, retr,
-            doc_res, gold_snips)
+        datum = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips,
+            idf, max_idf, use_sent_tokenizer=False
+        )
+        doc_emit_, gs_emits_    = model.emit_one(
+            doc1_sents_embeds   = datum['good_sents_embeds'],
+            question_embeds     = quest_embeds,
+            q_idfs              = q_idfs,
+            sents_gaf           = datum['good_sents_escores'],
+            doc_gaf             = datum['good_doc_af'],
+            good_meshes_embeds  = datum['good_meshes_embeds'],
+            mesh_gaf            = datum['good_mesh_escores']
+        )
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
+        #
         extracted_snippets.extend(extracted_from_one)
         #
         total_relevant = sum([1 for em in all_emits if (em[0] == True)])
