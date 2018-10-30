@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import sys
-
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
 import  os
-import  re
 import  json
 import  time
 import  random
@@ -20,12 +17,10 @@ import  torch.nn as nn
 import  torch.optim as optim
 import  torch.nn.functional as F
 from    pprint import pprint
-import  cPickle as pickle
 import  torch.autograd as autograd
 from    tqdm import tqdm
-from    nltk.tokenize import sent_tokenize
 from    difflib import SequenceMatcher
-from data_handler import train_data_step1, train_data_step2, load_all_data
+from    data_handler import train_data_step1, train_data_step2, load_all_data
 
 def print_params(model):
     '''
