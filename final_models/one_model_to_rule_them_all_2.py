@@ -711,21 +711,21 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 # retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/dpappas/'
 
-# gpu_server_1
-w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/media/large_space_1/DATA/bioasq_all/idf.pkl'
-dataloc             = '/media/large_space_1/DATA/bioasq_all/bioasq_data/'
-eval_path           = '/media/large_space_1/DATA/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/media/large_space_1/DATA/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/media/large_space_1/dpappas/'
+# # gpu_server_1
+# w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/media/large_space_1/DATA/bioasq_all/idf.pkl'
+# dataloc             = '/media/large_space_1/DATA/bioasq_all/bioasq_data/'
+# eval_path           = '/media/large_space_1/DATA/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/media/large_space_1/DATA/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/media/large_space_1/dpappas/'
 
-# # gpu_server_2
-# w2v_bin_path        = '/home/cave/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/cave/bioasq_all/idf.pkl'
-# dataloc             = '/home/cave/bioasq_all/bioasq_data/'
-# eval_path           = '/home/cave/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/cave/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/cave/dpappas/'
+# gpu_server_2
+w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/cave/dpappas/'
 
 # w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
@@ -806,7 +806,7 @@ models = [
 ]
 models = dict([(item[0], item[1:]) for item in models])
 
-which_model = 'Model_38'
+which_model = 'Model_39'
 
 hdlr = None
 for run in range(5):
