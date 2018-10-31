@@ -816,6 +816,8 @@ for run in range(5):
     torch.manual_seed(my_seed)
     #
     odir            = os.path.join(odd, '/{}_run_{}/'.format(which_model, run))
+    if(not os.path.exists(odir)):
+        os.makedirs(odir)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
