@@ -693,6 +693,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 # dataloc             = '/home/dpappas/for_ryan/'
 # eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 # retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -700,6 +701,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 # dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
 # eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
 # retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 
 # atlas , cslab243
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -707,6 +709,7 @@ idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
 
 # # gpu_server_1
 # w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -714,6 +717,7 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 # dataloc             = '/media/large_space_1/DATA/bioasq_all/bioasq_data/'
 # eval_path           = '/media/large_space_1/DATA/bioasq_all/eval/run_eval.py'
 # retrieval_jar_path  = '/media/large_space_1/DATA/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 
 # # gpu_server_2
 # w2v_bin_path        = '/home/cave/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -721,12 +725,14 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 # dataloc             = '/home/cave/bioasq_all/bioasq_data/'
 # eval_path           = '/home/cave/bioasq_all/eval/run_eval.py'
 # retrieval_jar_path  = '/home/cave/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 
 # w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
 # dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
 # eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
 # retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
@@ -809,7 +815,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/{}_run_{}/'.format(which_model, run)
+    odir            = os.path.join(odd, '/{}_run_{}/'.format(which_model, run))
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
