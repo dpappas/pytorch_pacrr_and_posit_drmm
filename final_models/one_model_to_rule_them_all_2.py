@@ -292,7 +292,12 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
-        t = (snip_is_relevant(held_out_sents[ind], gold_snips), emitss[ind], "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']), held_out_sents[ind])
+        t = (
+            snip_is_relevant(held_out_sents[ind], gold_snips),
+            emitss[ind],
+            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+            held_out_sents[ind]
+        )
         all_emits.append(t)
         if(emitss[ind] == mmax):
             extracted_from_one.append(t)
@@ -314,7 +319,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     #
     doc_res, extracted_snippets, extracted_snippets_known_rel_num = {}, [], []
     for retr in retr_docs:
-        datum = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=False)
+        datum = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['good_sents_embeds'],
             question_embeds     = quest_embeds,
@@ -845,7 +850,7 @@ for run in range(5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq6_data, two_losses=models[which_model][3], use_sent_tokenizer=models[which_model][4])
+        # train_one(epoch+1, bioasq6_data, two_losses=models[which_model][3], use_sent_tokenizer=models[which_model][4])
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=models[which_model][4])
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map

@@ -405,6 +405,8 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             esnip_res["offsetInBeginSection"]   = ind_from
             esnip_res["offsetInEndSection"]     = ind_to
         except:
+            # print(the_text)
+            # pprint(docs[pid])
             ind_from                            = docs[pid]['abstractText'].index(the_text)
             ind_to                              = ind_from + len(the_text)
             esnip_res["beginSection"]           = "abstract"
