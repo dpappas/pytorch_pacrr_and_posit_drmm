@@ -687,13 +687,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -719,13 +719,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 # retrieval_jar_path  = '/media/large_space_1/DATA/bioasq_all/dist/my_bioasq_eval_2.jar'
 # odd                 = '/media/large_space_1/dpappas/'
 
-# gpu_server_2
-w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/cave/dpappas/'
+# # gpu_server_2
+# w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/cave/dpappas/'
 
 # w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
