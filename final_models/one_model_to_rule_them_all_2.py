@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import sys
+
+from absl.logging import use_absl_handler
+from numpy.core.tests.test_dtype import user_def_subcls
+
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -846,10 +850,10 @@ for run in range(5):
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
         train_one(epoch+1, bioasq6_data, two_losses=models[which_model][3], use_sent_tokenizer=models[which_model][4])
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
+        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=models[which_model][4])
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
-            test_map        = get_one_map('test', test_data, test_docs)
+            test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=models[which_model][4])
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
