@@ -339,8 +339,8 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
-        good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
-        good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
+        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         if (len(good_embeds) > 0):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
