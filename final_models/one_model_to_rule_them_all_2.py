@@ -2,10 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-
-from absl.logging import use_absl_handler
-from numpy.core.tests.test_dtype import user_def_subcls
-
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
