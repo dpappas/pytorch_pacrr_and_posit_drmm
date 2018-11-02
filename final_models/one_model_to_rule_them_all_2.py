@@ -562,10 +562,11 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
-        yield (
-            good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores, good_doc_af,
-            bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
-        )
+        if(sum(good_sent_tags)>0):
+            yield (
+                good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores, good_doc_af,
+                bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
+            )
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
