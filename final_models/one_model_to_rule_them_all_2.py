@@ -833,6 +833,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
             self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
             self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
+            if(torch.cuda.is_available()):
+                self.trigram_conv_1             = self.trigram_conv_1.cuda()
+                self.trigram_conv_2             = self.trigram_conv_2.cuda()
+                self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
+                self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
         else:
             self.context_h0     = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
             self.context_gru    = nn.GRU(
@@ -841,6 +846,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 bidirectional   = True
             )
             self.context_gru_activation = torch.nn.LeakyReLU(negative_slope=0.1)
+            if(torch.cuda.is_available()):
+                self.context_gru            = self.context_gru.cuda()
+                self.context_h0             = self.context_h0.cuda()
+                self.context_gru_activation = self.context_gru_activation.cuda()
     def init_question_weight_module(self):
         self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
     def init_mlps_for_pooled_attention(self):
@@ -1093,13 +1102,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -1109,13 +1118,13 @@ odd                 = '/home/dpappas/'
 # retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/dpappas/'
 
-# # atlas , cslab243
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
+# atlas , cslab243
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
 
 # # gpu_server_1
 # w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1212,6 +1221,7 @@ for run in range(5):
         sentence_out_method = models[which_model][1],
         mesh_style          = models[which_model][2]
     )
+    model.cuda()
     params      = model.parameters()
     print_params(model)
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
