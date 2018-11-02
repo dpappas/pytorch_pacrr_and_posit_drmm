@@ -1288,7 +1288,8 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/{}_run_{}/'.format(which_model, run)
+    odir    = '{}_run_{}/'.format(which_model, run)
+    odir    = os.path.join(odd, odir)
     #
     logger, hdlr    = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
