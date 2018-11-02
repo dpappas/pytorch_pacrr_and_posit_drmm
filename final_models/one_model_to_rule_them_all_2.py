@@ -486,7 +486,7 @@ def snip_is_relevant(one_sent, gold_snips):
         ]
     )
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer=False):
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     if(use_sent_tokenizer):
         good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     else:
@@ -539,7 +539,7 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer=False):
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         #
         good_snips              = get_snips(quest_id, gid, bioasq6_data)
@@ -567,7 +567,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
             bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
         )
 
-def train_one(epoch, bioasq6_data, two_losses=True, use_sent_tokenizer=False):
+def train_one(epoch, bioasq6_data, two_losses=True, use_sent_tokenizer):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter = 0
@@ -688,7 +688,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     emitions['documents']                   = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
-    if(use_sent_tokenizer == True):
+    if(use_sent_tokenizer):
         extracted_snippets                  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
         extracted_snippets                  = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
         extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
@@ -704,7 +704,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
     return data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known
 
-def get_one_map(prefix, data, docs, use_sent_tokenizer=False):
+def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
     #
     ret_data                    = {'questions': []}
