@@ -600,40 +600,23 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     random.shuffle(train_instances)
     #
     start_time      = time.time()
-    for (
-        good_sents_embeds,
-        bad_sents_embeds,
-        quest_embeds,
-        q_idfs,
-        good_sents_escores,
-        bad_sents_escores,
-        good_doc_af,
-        bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
-    ) in train_data_step2(
-        train_instances,
-        train_docs,
-        wv,
-        bioasq6_data,
-        idf,
-        max_idf,
-        use_sent_tokenizer=use_sent_tokenizer
-    ):
+    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = good_sents_embeds,
-            doc2_sents_embeds   = bad_sents_embeds,
-            question_embeds     = quest_embeds,
-            q_idfs              = q_idfs,
-            sents_gaf           = good_sents_escores,
-            sents_baf           = bad_sents_escores,
-            doc_gaf             = good_doc_af,
-            doc_baf             = bad_doc_af,
-            good_meshes_embeds  = good_mesh_embeds,
-            bad_meshes_embeds   = bad_mesh_embeds,
-            mesh_gaf            = good_mesh_escores,
-            mesh_baf            = bad_mesh_escores
+            doc1_sents_embeds   = datum['good_sents_embeds'],
+            doc2_sents_embeds   = datum['bad_sents_embeds'],
+            question_embeds     = datum['quest_embeds'],
+            q_idfs              = datum['q_idfs'],
+            sents_gaf           = datum['good_sents_escores'],
+            sents_baf           = datum['bad_sents_escores'],
+            doc_gaf             = datum['good_doc_af'],
+            doc_baf             = datum['bad_doc_af'],
+            good_meshes_embeds  = datum['good_mesh_embeds'],
+            bad_meshes_embeds   = datum['bad_mesh_embeds'],
+            mesh_gaf            = datum['good_mesh_escores'],
+            mesh_baf            = datum['bad_mesh_escores']
         )
         #
-        good_sent_tags, bad_sent_tags       = good_sent_tags, bad_sent_tags
+        good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
         if(two_losses):
             sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss                       = sn_d1_l + sn_d2_l
