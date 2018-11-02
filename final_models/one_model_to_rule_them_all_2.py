@@ -569,8 +569,11 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    batch_counter = 0
+    batch_costs     = []
+    batch_acc       = []
+    epoch_costs     = []
+    epoch_acc       = []
+    batch_counter   = 0
     train_instances = train_data_step1(train_data)
     #
     epoch_aver_cost, epoch_aver_acc = 0., 0.
@@ -645,7 +648,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     return doc_res, extracted_from_one, all_emits
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known, use_sent_tokenizer):
-    emitions = {
+    emitions                    = {
         'body': dato['query_text'],
         'id': dato['query_id'],
         'documents': []
