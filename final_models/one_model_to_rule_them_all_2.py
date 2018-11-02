@@ -952,6 +952,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
+            if(torch.cuda.is_available()):
+                sent_embeds     = sent_embeds.cuda()
+                gaf             = gaf.cuda()
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
             #
@@ -980,6 +983,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
+            if(torch.cuda.is_available()):
+                sent_embeds     = sent_embeds.cuda()
+                gaf             = gaf.cuda()
             conv_res, hn        = self.apply_context_gru(sent_embeds, hn)
             #
             sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
@@ -1028,8 +1034,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = torch.max(res)
         return res
     def apply_mesh_gru(self, mesh_embeds):
-        mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-        output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
+        mesh_embeds             = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
+        if(torch.cuda.is_available()):
+            mesh_embeds         = mesh_embeds.cuda()
+        output, hn              = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         return output[-1,0,:]
     def get_mesh_rep(self, meshes_embeds, q_context):
         meshes_embeds   = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
@@ -1042,6 +1050,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
+        if(torch.cuda.is_available()):
+            q_idfs          = q_idfs.cuda()
+            question_embeds = question_embeds.cuda()
+            doc_gaf         = doc_gaf.cuda()
         #
         if(self.context_method=='CNN'):
             q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -1076,6 +1088,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
+        if(torch.cuda.is_available()):
+            q_idfs          = q_idfs.cuda()
+            question_embeds = question_embeds.cuda()
+            doc_gaf         = doc_gaf.cuda()
+            doc_baf         = doc_baf.cuda()
         #
         if(self.context_method=='CNN'):
             q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
