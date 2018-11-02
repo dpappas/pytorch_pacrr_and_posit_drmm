@@ -20,7 +20,8 @@ from    pprint import pprint
 import  torch.autograd as autograd
 from    tqdm import tqdm
 from    difflib import SequenceMatcher
-from    data_handler import *
+from    nltk.tokenize import sent_tokenize
+# from    data_handler import *
 
 def print_params(model):
     '''
@@ -227,6 +228,126 @@ def init_the_logger(hdlr):
     logger.addHandler(hdlr)
     logger.setLevel(logging.INFO)
     return logger, hdlr
+
+def GetScores(qtext, dtext, bm25, idf, max_idf):
+    qwords, qw2 = get_words(qtext, idf, max_idf)
+    dwords, dw2 = get_words(dtext, idf, max_idf)
+    qd1         = query_doc_overlap(qwords, dwords, idf, max_idf)
+    bm25        = [bm25]
+    return qd1[0:3] + bm25
+
+def get_snips(quest_id, gid, bioasq6_data):
+    good_snips = []
+    if('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            if(sn['document'].endswith(gid)):
+                good_snips.extend(sent_tokenize(sn['text']))
+    return good_snips
+
+def get_the_mesh(the_doc):
+    good_meshes = []
+    if('meshHeadingsList' in the_doc):
+        for t in the_doc['meshHeadingsList']:
+            t = t.split(':', 1)
+            t = t[1].strip()
+            t = t.lower()
+            good_meshes.append(t)
+    elif('MeshHeadings' in the_doc):
+        for mesh_head_set in the_doc['MeshHeadings']:
+            for item in mesh_head_set:
+                good_meshes.append(item['text'].strip().lower())
+    if('Chemicals' in the_doc):
+        for t in the_doc['Chemicals']:
+            t = t['NameOfSubstance'].strip().lower()
+            good_meshes.append(t)
+    good_mesh = sorted(good_meshes)
+    good_mesh = ['mgmx'] + good_mesh
+    # good_mesh = ' # '.join(good_mesh)
+    # good_mesh = good_mesh.split()
+    # good_mesh = [gm.split() for gm in good_mesh]
+    good_mesh = [gm for gm in good_mesh]
+    return good_mesh
+
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer=False):
+    if(use_sent_tokenizer):
+        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    else:
+        good_sents = [the_doc['title'] + the_doc['abstractText']]
+    ####
+    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    ####
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    for good_text in good_sents:
+        good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
+        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        if (len(good_embeds) > 0):
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores)
+            held_out_sents.append(good_text)
+            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    ####
+    good_meshes = get_the_mesh(the_doc)
+    good_mesh_embeds, good_mesh_escores = [], []
+    for good_mesh in good_meshes:
+        gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
+        if (len(gm_tokens) > 0):
+            good_mesh_embeds.append(gm_embeds)
+            good_escores                = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
+            good_mesh_escores.append(good_escores)
+    ####
+    return {
+        'good_sents_embeds'     : good_sents_embeds,
+        'good_sents_escores'    : good_sents_escores,
+        'good_doc_af'           : good_doc_af,
+        'good_sent_tags'        : good_sent_tags,
+        'good_mesh_embeds'      : good_mesh_embeds,
+        'good_mesh_escores'     : good_mesh_escores,
+        'held_out_sents'        : held_out_sents,
+    }
+
+def train_data_step1(train_data):
+    ret = []
+    for dato in tqdm(train_data['queries']):
+        quest       = dato['query_text']
+        quest_id    = dato['query_id']
+        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        if(len(bad_pmids)>0):
+            for gid in good_pmids:
+                bid = random.choice(bad_pmids)
+                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
+    print('')
+    return ret
+
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer=False):
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
+        #
+        good_snips              = get_snips(quest_id, gid, bioasq6_data)
+        datum                   = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
+        good_sents_embeds       = datum['good_sents_embeds']
+        good_sents_escores      = datum['good_sents_escores']
+        good_mesh_escores       = datum['good_mesh_escores']
+        good_mesh_embeds        = datum['good_mesh_embeds']
+        good_doc_af             = datum['good_doc_af']
+        good_sent_tags          = datum['good_sent_tags']
+        #
+        datum                   = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
+        bad_sents_embeds        = datum['good_sents_embeds']
+        bad_sents_escores       = datum['good_sents_escores']
+        bad_mesh_escores        = datum['good_mesh_escores']
+        bad_mesh_embeds         = datum['good_mesh_embeds']
+        bad_doc_af              = datum['good_doc_af']
+        bad_sent_tags           = [0] * len(datum['good_sent_tags'])
+        #
+        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        #
+        yield (
+            good_sents_embeds, bad_sents_embeds, quest_embeds, q_idfs, good_sents_escores, bad_sents_escores, good_doc_af,
+            bad_doc_af, good_sent_tags, bad_sent_tags, good_mesh_embeds, bad_mesh_embeds, good_mesh_escores, bad_mesh_escores
+        )
 
 def train_one(epoch, bioasq6_data, two_losses=True, use_sent_tokenizer=False):
     model.train()
