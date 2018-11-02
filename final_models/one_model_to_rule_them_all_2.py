@@ -21,6 +21,7 @@ import  torch.autograd as autograd
 from    tqdm import tqdm
 from    difflib import SequenceMatcher
 from    nltk.tokenize import sent_tokenize
+import cPickle as pickle
 import  re
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
@@ -381,6 +382,47 @@ def GetScores(qtext, dtext, bm25, idf, max_idf):
     bm25        = [bm25]
     return qd1[0:3] + bm25
 
+def get_gold_snips(quest_id, bioasq6_data):
+    gold_snips                  = []
+    if ('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            gold_snips.extend(sent_tokenize(sn['text']))
+    return list(set(gold_snips))
+
+def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
+    ret = {
+        'body'      : quest_body,
+        'documents' : top10docs,
+        'id'        : qid,
+        'snippets'  : [],
+    }
+    for esnip in extracted_snippets:
+        pid         = esnip[2].split('/')[-1]
+        the_text    = esnip[3]
+        esnip_res = {
+            # 'score'     : esnip[1],
+            "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
+            "text"      : the_text
+        }
+        try:
+            ind_from                            = docs[pid]['title'].index(the_text)
+            ind_to                              = ind_from + len(the_text)
+            esnip_res["beginSection"]           = "title"
+            esnip_res["endSection"]             = "title"
+            esnip_res["offsetInBeginSection"]   = ind_from
+            esnip_res["offsetInEndSection"]     = ind_to
+        except:
+            # print(the_text)
+            # pprint(docs[pid])
+            ind_from                            = docs[pid]['abstractText'].index(the_text)
+            ind_to                              = ind_from + len(the_text)
+            esnip_res["beginSection"]           = "abstract"
+            esnip_res["endSection"]             = "abstract"
+            esnip_res["offsetInBeginSection"]   = ind_from
+            esnip_res["offsetInEndSection"]     = ind_to
+        ret['snippets'].append(esnip_res)
+    return ret
+
 def get_snips(quest_id, gid, bioasq6_data):
     good_snips = []
     if('snippets' in bioasq6_data[quest_id]):
@@ -412,6 +454,16 @@ def get_the_mesh(the_doc):
     # good_mesh = [gm.split() for gm in good_mesh]
     good_mesh = [gm for gm in good_mesh]
     return good_mesh
+
+def snip_is_relevant(one_sent, gold_snips):
+    return any(
+        [
+            (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
+            or
+            (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
+            for gold_snip in gold_snips
+        ]
+    )
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer=False):
     if(use_sent_tokenizer):
@@ -671,6 +723,44 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer=False):
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
         res_map = get_map_res(dataloc+'bioasq.test.json', odir + 'elk_relevant_abs_posit_drmm_lists_test.json')
     return res_map
+
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+    print('loading pickle data')
+    #
+    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
+        bioasq6_data = json.load(f)
+        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
+    #
+    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
+        test_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
+        test_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+        dev_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+        dev_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+        train_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+        train_docs = pickle.load(f)
+    print('loading words')
+    #
+    train_data  = RemoveBadYears(train_data, train_docs, True)
+    train_data  = RemoveTrainLargeYears(train_data, train_docs)
+    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
+    test_data   = RemoveBadYears(test_data, test_docs, False)
+    #
+    words           = {}
+    GetWords(train_data, train_docs, words)
+    GetWords(dev_data,   dev_docs,   words)
+    GetWords(test_data,  test_docs,  words)
+    # mgmx
+    print('loading idfs')
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    print('loading w2v')
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', sentence_out_method = 'MLP', mesh_style = 'SENT'):
@@ -1014,39 +1104,6 @@ max_epoch       = 10
 
 # model_name, context_method, sentence_method, mesh_method, two_losses_or_not
 models = [
-# ['Model_01', ]
-# ['Model_02', ],
-# ['Model_03', ],
-# ['Model_04', ],
-# ['Model_05', ],
-# ['Model_06', ],
-# ['Model_07', ],
-# ['Model_08', ],
-# ['Model_09', 'CNN',     'MLP',   None,      False],
-# ['Model_10', 'CNN',     'MLP',   'BIGRU',   False],
-# ['Model_11', 'CNN',     'BIGRU', None,      False],
-# ['Model_12', 'CNN',     'BIGRU', 'BIGRU',   False],
-# ['Model_13', 'BIGRU',   'MLP',   None,      False],
-# ['Model_14', 'BIGRU',   'MLP',   'BIGRU',   False],
-# ['Model_15', 'BIGRU',   'BIGRU', None,      False],
-# ['Model_16', 'BIGRU',   'BIGRU', 'BIGRU',   False],
-# ['Model_17', 'CNN',     'MLP',   None,      True],
-# ['Model_18', 'CNN',     'MLP',   'BIGRU',   True],
-# ['Model_19', 'CNN',     'BIGRU', None,      True],
-# ['Model_20', 'CNN',     'BIGRU', 'BIGRU',   True],
-# ['Model_21', 'BIGRU',   'MLP',   None,      True],
-# ['Model_22', 'BIGRU',   'MLP',   'BIGRU',   True],
-# ['Model_23', 'BIGRU',   'BIGRU', None,      True],
-# ['Model_24', 'BIGRU',   'BIGRU', 'BIGRU',   True],
-# #
-# ['Model_25', 'CNN',     'MLP',   'SENT',    False],
-# ['Model_26', 'CNN',     'BIGRU', 'SENT',    False],
-# ['Model_27', 'BIGRU',   'MLP',   'SENT',    False],
-# ['Model_28', 'BIGRU',   'BIGRU', 'SENT',    False],
-# ['Model_29', 'CNN',     'MLP',   'SENT',    True],
-# ['Model_30', 'CNN',     'BIGRU', 'SENT',    True],
-# ['Model_31', 'BIGRU',   'MLP',   'SENT',    True],
-# ['Model_32', 'BIGRU',   'BIGRU', 'SENT',    True],
 #
 ['Model_33', 'CNN',     'MLP',      None,      False,   False],
 ['Model_34', 'CNN',     'MLP',      'SENT',    False,   False],
@@ -1056,7 +1113,7 @@ models = [
 ['Model_38', 'BIGRU',   'MLP',      'SENT',    False,   False],
 ['Model_39', 'BIGRU',   'BIGRU',    None,      False,   False],
 ['Model_40', 'BIGRU',   'BIGRU',    'SENT',    False,   False],
-
+#
 ['Model_41', 'CNN',     'MLP',      None,      False,   True],
 ['Model_42', 'CNN',     'MLP',      'SENT',    False,   True],
 ['Model_43', 'CNN',     'BIGRU',    None,      False,   True],
@@ -1065,7 +1122,7 @@ models = [
 ['Model_46', 'BIGRU',   'MLP',      'SENT',    False,   True],
 ['Model_47', 'BIGRU',   'BIGRU',    None,      False,   True],
 ['Model_48', 'BIGRU',   'BIGRU',    'SENT',    False,   True],
-
+#
 ['Model_49', 'CNN',     'MLP',      None,      True,    True],
 ['Model_50', 'CNN',     'MLP',      'SENT',    True,    True],
 ['Model_51', 'CNN',     'BIGRU',    None,      True,    True],
