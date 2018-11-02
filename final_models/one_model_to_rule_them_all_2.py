@@ -1128,7 +1128,7 @@ lr              = 0.01
 b_size          = 32
 max_epoch       = 10
 
-# model_name, context_method, sentence_method, mesh_method, two_losses_or_not
+# model_name, context_method, sentence_ouput, mesh_method, two_losses_or_not
 models = [
 #
 ['Model_33', 'CNN',     'MLP',      None,      False,   False],
