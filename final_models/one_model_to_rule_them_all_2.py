@@ -21,7 +21,8 @@ import  torch.autograd as autograd
 from    tqdm import tqdm
 from    difflib import SequenceMatcher
 from    nltk.tokenize import sent_tokenize
-import cPickle as pickle
+from    gensim.models.keyedvectors import KeyedVectors
+import  cPickle as pickle
 import  re
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
@@ -381,6 +382,26 @@ def GetScores(qtext, dtext, bm25, idf, max_idf):
     qd1         = query_doc_overlap(qwords, dwords, idf, max_idf)
     bm25        = [bm25]
     return qd1[0:3] + bm25
+
+def GetWords(data, doc_text, words):
+  for i in range(len(data['queries'])):
+    qwds = tokenize(data['queries'][i]['query_text'])
+    for w in qwds:
+      words[w] = 1
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      dtext = (
+              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
+              ' '.join(
+                  [
+                      ' '.join(mm) for mm in
+                      get_the_mesh(doc_text[doc_id])
+                  ]
+              )
+      )
+      dwds = tokenize(dtext)
+      for w in dwds:
+        words[w] = 1
 
 def get_gold_snips(quest_id, bioasq6_data):
     gold_snips                  = []
