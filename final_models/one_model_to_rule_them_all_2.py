@@ -229,6 +229,107 @@ def init_the_logger(hdlr):
     logger.setLevel(logging.INFO)
     return logger, hdlr
 
+def get_words(s, idf, max_idf):
+    sl  = tokenize(s)
+    sl  = [s for s in sl]
+    sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
+    return sl, sl2
+
+def tokenize(x):
+  return bioclean(x)
+
+def idf_val(w, idf, max_idf):
+    if w in idf:
+        return idf[w]
+    return max_idf
+
+def get_embeds(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        if(tok in wv):
+            ret1.append(tok)
+            ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
+def load_idfs(idf_path, words):
+    print('Loading IDF tables')
+    #
+    # with open(dataloc + 'idf.pkl', 'rb') as f:
+    with open(idf_path, 'rb') as f:
+        idf = pickle.load(f)
+    ret = {}
+    for w in words:
+        if w in idf:
+            ret[w] = idf[w]
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    idf = None
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    #
+    return ret, max_idf
+
+def uwords(words):
+  uw = {}
+  for w in words:
+    uw[w] = 1
+  return [w for w in uw]
+
+def ubigrams(words):
+  uw = {}
+  prevw = "<pw>"
+  for w in words:
+    uw[prevw + '_' + w] = 1
+    prevw = w
+  return [w for w in uw]
+
+def query_doc_overlap(qwords, dwords, idf, max_idf):
+    # % Query words in doc.
+    qwords_in_doc = 0
+    idf_qwords_in_doc = 0.0
+    idf_qwords = 0.0
+    for qword in uwords(qwords):
+      idf_qwords += idf_val(qword, idf, max_idf)
+      for dword in uwords(dwords):
+        if qword == dword:
+          idf_qwords_in_doc += idf_val(qword, idf, max_idf)
+          qwords_in_doc     += 1
+          break
+    if len(qwords) <= 0:
+      qwords_in_doc_val = 0.0
+    else:
+      qwords_in_doc_val = (float(qwords_in_doc) /
+                           float(len(uwords(qwords))))
+    if idf_qwords <= 0.0:
+      idf_qwords_in_doc_val = 0.0
+    else:
+      idf_qwords_in_doc_val = float(idf_qwords_in_doc) / float(idf_qwords)
+    # % Query bigrams  in doc.
+    qwords_bigrams_in_doc = 0
+    idf_qwords_bigrams_in_doc = 0.0
+    idf_bigrams = 0.0
+    for qword in ubigrams(qwords):
+      wrds = qword.split('_')
+      idf_bigrams += idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf)
+      for dword in ubigrams(dwords):
+        if qword == dword:
+          qwords_bigrams_in_doc += 1
+          idf_qwords_bigrams_in_doc += (idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf))
+          break
+    if len(qwords) <= 0:
+      qwords_bigrams_in_doc_val = 0.0
+    else:
+      qwords_bigrams_in_doc_val = (float(qwords_bigrams_in_doc) / float(len(ubigrams(qwords))))
+    if idf_bigrams <= 0.0:
+      idf_qwords_bigrams_in_doc_val = 0.0
+    else:
+      idf_qwords_bigrams_in_doc_val = (float(idf_qwords_bigrams_in_doc) / float(idf_bigrams))
+    return [qwords_in_doc_val,
+            qwords_bigrams_in_doc_val,
+            idf_qwords_in_doc_val,
+            idf_qwords_bigrams_in_doc_val]
+
 def GetScores(qtext, dtext, bm25, idf, max_idf):
     qwords, qw2 = get_words(qtext, idf, max_idf)
     dwords, dw2 = get_words(dtext, idf, max_idf)
