@@ -1154,21 +1154,21 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 # retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/dpappas/'
 
-# # cslab241
-# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# cslab241
+w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
+
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 
 # # gpu_server_1
 # w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1232,7 +1232,7 @@ models = [
 ]
 models = dict([(item[0], item[1:]) for item in models])
 
-which_model = 'Model_56'
+which_model = 'Model_50'
 
 hdlr = None
 for run in range(5):
@@ -1265,7 +1265,8 @@ for run in range(5):
         sentence_out_method = models[which_model][1],
         mesh_style          = models[which_model][2]
     )
-    model.cuda()
+    if(torch.cuda.is_available()):
+        model = model.cuda()
     params      = model.parameters()
     print_params(model)
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
