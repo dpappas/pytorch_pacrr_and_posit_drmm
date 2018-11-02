@@ -1186,13 +1186,6 @@ odd                 = '/home/dpappas/'
 # retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/cave/dpappas/'
 
-# w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
 embedding_dim   = 30 #200
