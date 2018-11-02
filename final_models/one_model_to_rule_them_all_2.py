@@ -823,10 +823,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
-        self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
+        self.margin_loss        = nn.MarginRankingLoss(margin=1.0)
+        if(torch.cuda.is_available()):
+            self.margin_loss    = self.margin_loss.cuda()
     def init_mesh_module(self):
         self.mesh_h0    = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
         self.mesh_gru   = nn.GRU(self.embedding_dim, self.embedding_dim)
+        if(torch.cuda.is_available()):
+            self.mesh_h0    = self.mesh_h0.cuda()
+            self.mesh_gru   = self.mesh_gru.cuda()
     def init_context_module(self):
         if(self.context_method == 'CNN'):
             self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
@@ -852,25 +857,43 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 self.context_gru_activation = self.context_gru_activation.cuda()
     def init_question_weight_module(self):
         self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
+        if(torch.cuda.is_available()):
+            self.q_weights_mlp  = self.q_weights_mlp.cuda()
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
+        if(torch.cuda.is_available()):
+            self.linear_per_q1  = self.linear_per_q1.cuda()
+            self.linear_per_q2  = self.linear_per_q2.cuda()
+            self.my_relu1       = self.my_relu1.cuda()
     def init_sent_output_layer(self):
         if(self.sentence_out_method == 'MLP'):
             self.sent_out_layer = nn.Linear(4, 1, bias=False)
+            if(torch.cuda.is_available()):
+                self.sent_out_layer  = self.sent_out_layer.cuda()
         else:
             self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
             self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
             self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
+            if(torch.cuda.is_available()):
+                self.sent_res_h0    = self.sent_res_h0.cuda()
+                self.sent_res_bigru = self.sent_res_bigru.cuda()
+                self.sent_res_mlp   = self.sent_res_mlp.cuda()
     def init_doc_out_layer(self):
         if(self.mesh_style=='BIGRU'):
             self.init_mesh_module()
             self.final_layer = nn.Linear(5 + 30, 1, bias=True)
+            if(torch.cuda.is_available()):
+                self.final_layer    = self.final_layer.cuda()
         elif(self.mesh_style=='SENT'):
             self.final_layer = nn.Linear(1 + 4 + 1, 1, bias=True)
+            if(torch.cuda.is_available()):
+                self.final_layer    = self.final_layer.cuda()
         else:
             self.final_layer = nn.Linear(5, 1, bias=True)
+            if(torch.cuda.is_available()):
+                self.final_layer    = self.final_layer.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
