@@ -1247,14 +1247,14 @@ models = [
 # ['Model_31', 'BIGRU',   'MLP',   'SENT',    True],
 # ['Model_32', 'BIGRU',   'BIGRU', 'SENT',    True],
 #
-['Model_33', 'CNN',     'MLP',      None,      False],
-['Model_34', 'CNN',     'MLP',      'SENT',    False],
-['Model_35', 'CNN',     'BIGRU',    None,      False],
-['Model_36', 'CNN',     'BIGRU',    'SENT',    False],
-['Model_37', 'BIGRU',   'MLP',      None,      False],
-['Model_38', 'BIGRU',   'MLP',      'SENT',    False],
-['Model_39', 'BIGRU',   'BIGRU',    None,      False],
-['Model_40', 'BIGRU',   'BIGRU',    'SENT',    False],
+# ['Model_33', 'CNN',     'MLP',      None,      False],
+# ['Model_34', 'CNN',     'MLP',      'SENT',    False],
+# ['Model_35', 'CNN',     'BIGRU',    None,      False],
+# ['Model_36', 'CNN',     'BIGRU',    'SENT',    False],
+# ['Model_37', 'BIGRU',   'MLP',      None,      False],
+# ['Model_38', 'BIGRU',   'MLP',      'SENT',    False],
+# ['Model_39', 'BIGRU',   'BIGRU',    None,      False],
+# ['Model_40', 'BIGRU',   'BIGRU',    'SENT',    False],
 ['Model_41', 'CNN',     'MLP',      None,      False],
 ['Model_42', 'CNN',     'MLP',      'SENT',    False],
 ['Model_43', 'CNN',     'BIGRU',    None,      False],
@@ -1279,7 +1279,7 @@ models = dict(
     ]
 )
 
-which_model = 'Model_34'
+which_model = 'Model_41'
 
 hdlr = None
 for run in range(5):
