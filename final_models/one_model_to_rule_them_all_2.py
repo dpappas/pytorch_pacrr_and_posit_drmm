@@ -21,7 +21,51 @@ import  torch.autograd as autograd
 from    tqdm import tqdm
 from    difflib import SequenceMatcher
 from    nltk.tokenize import sent_tokenize
-# from    data_handler import *
+import  re
+
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
+def RemoveTrainLargeYears(data, doc_text):
+  for i in range(len(data['queries'])):
+    hyear = 1900
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
+        doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+        year = doc_text[doc_id]['publicationDate'].split('-')[0]
+        if year[:1] == '1' or year[:1] == '2':
+          if int(year) > hyear:
+            hyear = int(year)
+    j = 0
+    while True:
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year = doc_text[doc_id]['publicationDate'].split('-')[0]
+      if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
+
+def RemoveBadYears(data, doc_text, train):
+  for i in range(len(data['queries'])):
+    j = 0
+    while True:
+      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
+      ##########################
+      # Skip 2017/2018 docs always. Skip 2016 docs for training.
+      # Need to change for final model - 2017 should be a train year only.
+      # Use only for testing.
+      if year == '2017' or year == '2018' or (train and year == '2016'):
+      #if year == '2018' or (train and year == '2017'):
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      ##########################
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
 
 def print_params(model):
     '''
