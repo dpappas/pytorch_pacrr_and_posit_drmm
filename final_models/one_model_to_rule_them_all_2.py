@@ -541,8 +541,9 @@ def train_data_step1(train_data):
 
 def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        #
         good_snips                  = get_snips(quest_id, gid, bioasq6_data)
+        good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
+        #
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
