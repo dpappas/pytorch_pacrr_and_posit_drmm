@@ -257,7 +257,7 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     gs_emits_       = gs_emits_.squeeze(-1)
     good_sent_tags  = torch.FloatTensor(good_sent_tags)
     #
-    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
+    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags,              size_average=False, reduce=True)
     sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
 
