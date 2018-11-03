@@ -688,13 +688,13 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
-            doc1_sents_embeds   = datum['good_sents_embeds'],
+            doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
-            sents_gaf           = datum['good_sents_escores'],
-            doc_gaf             = datum['good_doc_af'],
-            good_meshes_embeds  = datum['good_mesh_embeds'],
-            mesh_gaf            = datum['good_mesh_escores']
+            sents_gaf           = datum['sents_escores'],
+            doc_gaf             = datum['doc_af'],
+            good_meshes_embeds  = datum['mesh_embeds'],
+            mesh_gaf            = datum['mesh_escores']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
         #
@@ -1225,7 +1225,7 @@ models = [
 ]
 models = dict([(item[0], item[1:]) for item in models])
 
-which_model = 'Model_49'
+which_model = 'Model_51'
 
 hdlr = None
 for run in range(5):
