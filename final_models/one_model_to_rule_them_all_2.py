@@ -1275,3 +1275,6 @@ for run in range(0,5):
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
+'''
+grep "test GMAP" -B 7 -A 1 Model_36_run_*/model.log
+'''
