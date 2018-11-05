@@ -257,7 +257,7 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     gs_emits_       = gs_emits_.squeeze(-1)
     good_sent_tags  = torch.FloatTensor(good_sent_tags)
     tags_2          = torch.zeros_like(bs_emits_)
-    if(torch.cuda.is_available()):
+    if(use_cuda):
         good_sent_tags  = good_sent_tags.cuda()
         tags_2          = tags_2.cuda()
     #
@@ -828,12 +828,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss        = nn.MarginRankingLoss(margin=1.0)
-        if(torch.cuda.is_available()):
+        if(use_cuda):
             self.margin_loss    = self.margin_loss.cuda()
     def init_mesh_module(self):
         self.mesh_h0    = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
         self.mesh_gru   = nn.GRU(self.embedding_dim, self.embedding_dim)
-        if(torch.cuda.is_available()):
+        if(use_cuda):
             self.mesh_h0    = self.mesh_h0.cuda()
             self.mesh_gru   = self.mesh_gru.cuda()
     def init_context_module(self):
@@ -842,7 +842,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
             self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
             self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
-            if(torch.cuda.is_available()):
+            if(use_cuda):
                 self.trigram_conv_1             = self.trigram_conv_1.cuda()
                 self.trigram_conv_2             = self.trigram_conv_2.cuda()
                 self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
@@ -855,32 +855,32 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 bidirectional   = True
             )
             self.context_gru_activation = torch.nn.LeakyReLU(negative_slope=0.1)
-            if(torch.cuda.is_available()):
+            if(use_cuda):
                 self.context_gru            = self.context_gru.cuda()
                 self.context_h0             = self.context_h0.cuda()
                 self.context_gru_activation = self.context_gru_activation.cuda()
     def init_question_weight_module(self):
         self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
-        if(torch.cuda.is_available()):
+        if(use_cuda):
             self.q_weights_mlp  = self.q_weights_mlp.cuda()
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
-        if(torch.cuda.is_available()):
+        if(use_cuda):
             self.linear_per_q1  = self.linear_per_q1.cuda()
             self.linear_per_q2  = self.linear_per_q2.cuda()
             self.my_relu1       = self.my_relu1.cuda()
     def init_sent_output_layer(self):
         if(self.sentence_out_method == 'MLP'):
             self.sent_out_layer = nn.Linear(4, 1, bias=False)
-            if(torch.cuda.is_available()):
+            if(use_cuda):
                 self.sent_out_layer  = self.sent_out_layer.cuda()
         else:
             self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
             self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
             self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
-            if(torch.cuda.is_available()):
+            if(use_cuda):
                 self.sent_res_h0    = self.sent_res_h0.cuda()
                 self.sent_res_bigru = self.sent_res_bigru.cuda()
                 self.sent_res_mlp   = self.sent_res_mlp.cuda()
@@ -888,15 +888,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         if(self.mesh_style=='BIGRU'):
             self.init_mesh_module()
             self.final_layer = nn.Linear(5 + 30, 1, bias=True)
-            if(torch.cuda.is_available()):
+            if(use_cuda):
                 self.final_layer    = self.final_layer.cuda()
         elif(self.mesh_style=='SENT'):
             self.final_layer = nn.Linear(1 + 4 + 1, 1, bias=True)
-            if(torch.cuda.is_available()):
+            if(use_cuda):
                 self.final_layer    = self.final_layer.cuda()
         else:
             self.final_layer = nn.Linear(5, 1, bias=True)
-            if(torch.cuda.is_available()):
+            if(use_cuda):
                 self.final_layer    = self.final_layer.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
@@ -956,7 +956,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            if(torch.cuda.is_available()):
+            if(use_cuda):
                 sent_embeds     = sent_embeds.cuda()
                 gaf             = gaf.cuda()
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -987,7 +987,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            if(torch.cuda.is_available()):
+            if(use_cuda):
                 sent_embeds     = sent_embeds.cuda()
                 gaf             = gaf.cuda()
             conv_res, hn        = self.apply_context_gru(sent_embeds, hn)
@@ -1039,7 +1039,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return res
     def apply_mesh_gru(self, mesh_embeds):
         mesh_embeds             = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-        if(torch.cuda.is_available()):
+        if(use_cuda):
             mesh_embeds         = mesh_embeds.cuda()
         output, hn              = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         return output[-1,0,:]
@@ -1054,7 +1054,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
-        if(torch.cuda.is_available()):
+        if(use_cuda):
             q_idfs          = q_idfs.cuda()
             question_embeds = question_embeds.cuda()
             doc_gaf         = doc_gaf.cuda()
@@ -1092,7 +1092,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
-        if(torch.cuda.is_available()):
+        if(use_cuda):
             q_idfs          = q_idfs.cuda()
             question_embeds = question_embeds.cuda()
             doc_gaf         = doc_gaf.cuda()
@@ -1145,6 +1145,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+
+use_cuda = torch.cuda.is_available()
 
 # # laptop
 # w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
@@ -1258,7 +1260,7 @@ for run in range(0,5):
         sentence_out_method = models[which_model][1],
         mesh_style          = models[which_model][2]
     )
-    if(torch.cuda.is_available()):
+    if(use_cuda):
         model = model.cuda()
     params      = model.parameters()
     print_params(model)
