@@ -1189,12 +1189,12 @@ odd                 = '/home/dpappas/'
 # retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/cave/dpappas/'
 
-k_for_maxpool   = 5
-k_sent_maxpool  = 2
-embedding_dim   = 30 #200
-lr              = 0.01
-b_size          = 32
-max_epoch       = 10
+k_for_maxpool       = 5
+k_sent_maxpool      = 2
+embedding_dim       = 30 #200
+lr                  = 0.01
+b_size              = 32
+max_epoch           = 10
 
 # model_name, context_method, sentence_ouput, mesh_method, two_losses_or_not, sent_tokenize
 models = [
