@@ -1,9 +1,31 @@
 
 import os
 from pprint import pprint
-diri = '/home/dpappas/Model_54_run_{}/model.log'
-
-
+# diri = '/home/dpappas/Model_54_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_34_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_35_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_36_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_37_run_{}/model.log'
+diri = '/home/dpappas/MODELS_OUTPUTS/Model_38_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_40_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_42_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_49_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_50_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_51_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_52_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
 
 for i in range(5):
     fpath = diri.format(i)
@@ -63,7 +85,7 @@ for i in range(5):
                     res['dev']['gmap_snip']         = data[7]
             # print(fpath)
             # pprint(res)
-            print '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
+            print '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
                 res['test']['map_doc'],
                 res['test']['map_doc_bioasq'],
                 res['test']['f1_snip'],
@@ -72,22 +94,16 @@ for i in range(5):
                 res['test']['known_f1_snip'],
                 res['test']['known_map_snip'],
                 res['test']['known_gmap_snip'],
+                res['dev']['map_doc'],
+                res['dev']['map_doc_bioasq'],
+                res['dev']['f1_snip'],
+                res['dev']['map_snip'],
+                res['dev']['gmap_snip'],
+                res['dev']['known_f1_snip'],
+                res['dev']['known_map_snip'],
+                res['dev']['known_gmap_snip'],
                 res['epoch'],
             )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
