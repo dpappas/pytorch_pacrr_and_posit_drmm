@@ -1228,10 +1228,10 @@ models = [
 ]
 models = dict([(item[0], item[1:]) for item in models])
 
-which_model = 'Model_54'
+which_model = 'Model_40'
 
 hdlr = None
-for run in range(2,5):
+for run in range(0,5):
     #
     my_seed = random.randint(1, 2000000)
     random.seed(my_seed)
@@ -1286,7 +1286,9 @@ grep "test GMAP" -B 7 -A 1 Model_36_run_*/model.log
 
 '''
 select 10 best snippets overall.                    -->  Pending
+
 oracle return just 10. Not more!                    -->  Pending
+
 add new dataset + 
 trec robust (FIND english paragraph questions) + 
 5-fold cross validation                             -->  Pending
