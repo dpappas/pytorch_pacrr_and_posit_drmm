@@ -965,12 +965,8 @@ odd                 = '/home/dpappas/'
 resume_from         = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_0/best_checkpoint.pth.tar'
 which_model         = 'Model_33'
 
-k_for_maxpool   = 5
-k_sent_maxpool  = 2
-embedding_dim   = 30 #200
-lr              = 0.01
-b_size          = 32
-max_epoch       = 10
+k_for_maxpool       = 5
+embedding_dim       = 30
 
 # model_name, context_method, sentence_ouput, mesh_method, two_losses_or_not, sent_tokenize
 models = [
