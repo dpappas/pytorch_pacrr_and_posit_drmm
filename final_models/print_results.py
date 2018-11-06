@@ -26,7 +26,7 @@ for i in range(5):
                 'known_gmap_snip'   : 0.,
             },
             'epoch'                 : 0.,
-            'time'                  : 0.,
+            # 'time'                  : 0.,
         }
         dev_known_map_document  = 0.
         dev_known_f1_snips      = 0.
