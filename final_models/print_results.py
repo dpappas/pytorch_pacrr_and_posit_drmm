@@ -3,6 +3,8 @@ import os
 from pprint import pprint
 diri = '/home/dpappas/Model_54_run_{}/model.log'
 
+
+
 for i in range(5):
     fpath = diri.format(i)
     if(os.path.exists(fpath)):

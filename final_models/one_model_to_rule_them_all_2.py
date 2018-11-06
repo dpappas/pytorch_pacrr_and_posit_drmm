@@ -718,9 +718,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     #
     if(use_sent_tokenizer):
         extracted_snippets                  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-        extracted_snippets                  = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+        extracted_snippets                  = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
         extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
-        extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num, key=lambda x: x[1], reverse=True)
+        extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num, key=lambda x: x[1], reverse=True)[:10]
     else:
         extracted_snippets                  = []
         extracted_snippets_known_rel_num    = []
