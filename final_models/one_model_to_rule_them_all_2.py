@@ -1300,5 +1300,10 @@ PRINT DEV SCORES                                    -->  DONE
 
 Create google doc - with overleaf links 
 
+otidipote den exei titlo h' abstracts  
+otidipote den exei identifier
+
+
+
 
 '''
