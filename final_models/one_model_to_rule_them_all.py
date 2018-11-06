@@ -1341,6 +1341,11 @@ compare to polivios scores                              -- pending
 
 Train first doc retrieval and then snippet extraction   -- pending (DONE TRAINING. TESTING pending)
 
+select 10 best snippets overall.
+oracle return just 10. Not more!
++ trec robust
+
+
 '''
 
 # grep "test_map:" -B8  Model_14_run_4/model.log
