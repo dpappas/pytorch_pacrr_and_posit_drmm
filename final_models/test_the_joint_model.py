@@ -103,53 +103,6 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def dummy_test():
-    doc1_embeds         = np.random.rand(40, 200)
-    doc2_embeds         = np.random.rand(30, 200)
-    question_embeds     = np.random.rand(20, 200)
-    q_idfs              = np.random.rand(20, 1)
-    gaf                 = np.random.rand(4)
-    baf                 = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds     = doc1_embeds,
-            doc2_embeds     = doc2_embeds,
-            question_embeds = question_embeds,
-            q_idfs          = q_idfs,
-            gaf             = gaf,
-            baf             = baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
-def compute_the_cost(costs, back_prop=True):
-    cost_ = torch.stack(costs)
-    cost_ = cost_.sum() / (1.0 * cost_.size(0))
-    if(back_prop):
-        cost_.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-    the_cost = cost_.cpu().item()
-    return the_cost
-
-def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
-    '''
-    :param state:       the stete of the pytorch mode
-    :param filename:    the name of the file in which we will store the model.
-    :return:            Nothing. It just saves the model.
-    '''
-    state = {
-        'epoch':            epoch,
-        'state_dict':       model.state_dict(),
-        'best_valid_score': max_dev_map,
-        'optimizer':        optimizer.state_dict(),
-    }
-    torch.save(state, filename)
-
 def get_map_res(fgold, femit):
     trec_eval_res   = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err)      = trec_eval_res.communicate()
@@ -157,17 +110,6 @@ def get_map_res(fgold, femit):
     map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
     map_res         = float(map_res[-1])
     return map_res
-
-def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
-    batch_cost = sum(batch_costs) / float(len(batch_costs))
-    batch_cost.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-    batch_aver_cost = batch_cost.cpu().item()
-    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    batch_aver_acc  = sum(batch_acc) / float(len(batch_acc))
-    epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
-    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
@@ -247,26 +189,6 @@ def get_pseudo_retrieved(dato):
         for id in set(some_ids)
     ]
     return pseudo_retrieved
-
-def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
-    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
-    wrong  = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
-    wrong  = torch.cat(wrong + [bs_emits_.squeeze(-1)])
-    losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
-    return sum(losses) / float(len(losses))
-
-def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
-    bs_emits_       = bs_emits_.squeeze(-1)
-    gs_emits_       = gs_emits_.squeeze(-1)
-    good_sent_tags  = torch.FloatTensor(good_sent_tags)
-    tags_2          = torch.zeros_like(bs_emits_)
-    if(use_cuda):
-        good_sent_tags  = good_sent_tags.cuda()
-        tags_2          = tags_2.cuda()
-    #
-    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
-    sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2,         size_average=False, reduce=True)
-    return sn_d1_l, sn_d2_l
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
@@ -530,132 +452,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         'held_out_sents'   : held_out_sents,
     }
 
-def train_data_step1(train_data):
-    ret = []
-    for dato in tqdm(train_data['queries']):
-        quest       = dato['query_text']
-        quest_id    = dato['query_id']
-        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-        if(len(bad_pmids)>0):
-            for gid in good_pmids:
-                bid = random.choice(bad_pmids)
-                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
-    print('')
-    return ret
-
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
-    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        if(use_sent_tokenizer):
-            good_snips              = get_snips(quest_id, gid, bioasq6_data)
-            good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
-        else:
-            good_snips              = []
-        #
-        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
-        good_sents_embeds           = datum['sents_embeds']
-        good_sents_escores          = datum['sents_escores']
-        good_mesh_escores           = datum['mesh_escores']
-        good_mesh_embeds            = datum['mesh_embeds']
-        good_doc_af                 = datum['doc_af']
-        good_sent_tags              = datum['sent_tags']
-        good_held_out_sents         = datum['held_out_sents']
-        #
-        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
-        bad_sents_embeds            = datum['sents_embeds']
-        bad_sents_escores           = datum['sents_escores']
-        bad_mesh_escores            = datum['mesh_escores']
-        bad_mesh_embeds             = datum['mesh_embeds']
-        bad_doc_af                  = datum['doc_af']
-        bad_sent_tags               = [0] * len(datum['sent_tags'])
-        bad_held_out_sents          = datum['held_out_sents']
-        #
-        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        #
-        if(sum(good_sent_tags)>0):
-            yield {
-                'good_sents_embeds'     : good_sents_embeds,
-                'good_sents_escores'    : good_sents_escores,
-                'good_doc_af'           : good_doc_af,
-                'good_sent_tags'        : good_sent_tags,
-                'good_mesh_embeds'      : good_mesh_embeds,
-                'good_mesh_escores'     : good_mesh_escores,
-                'good_held_out_sents'   : good_held_out_sents,
-                #
-                'bad_sents_embeds'      : bad_sents_embeds,
-                'bad_sents_escores'     : bad_sents_escores,
-                'bad_doc_af'            : bad_doc_af,
-                'bad_sent_tags'         : bad_sent_tags,
-                'bad_mesh_embeds'       : bad_mesh_embeds,
-                'bad_mesh_escores'      : bad_mesh_escores,
-                'bad_held_out_sents'    : bad_held_out_sents,
-                #
-                'quest_embeds'          : quest_embeds,
-                'q_idfs'                : q_idfs,
-            }
-
-def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
-    model.train()
-    batch_costs     = []
-    batch_acc       = []
-    epoch_costs     = []
-    epoch_acc       = []
-    batch_counter   = 0
-    epoch_aver_cost = 0.
-    epoch_aver_acc  = 0.
-    #
-    train_instances = train_data_step1(train_data)
-    random.shuffle(train_instances)
-    #
-    start_time      = time.time()
-    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = datum['good_sents_embeds'],
-            doc2_sents_embeds   = datum['bad_sents_embeds'],
-            question_embeds     = datum['quest_embeds'],
-            q_idfs              = datum['q_idfs'],
-            sents_gaf           = datum['good_sents_escores'],
-            sents_baf           = datum['bad_sents_escores'],
-            doc_gaf             = datum['good_doc_af'],
-            doc_baf             = datum['bad_doc_af'],
-            good_meshes_embeds  = datum['good_mesh_embeds'],
-            bad_meshes_embeds   = datum['bad_mesh_embeds'],
-            mesh_gaf            = datum['good_mesh_escores'],
-            mesh_baf            = datum['bad_mesh_escores']
-        )
-        #
-        good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
-        if(two_losses):
-            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss                       = sn_d1_l + sn_d2_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
-        #
-        batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_costs.append(cost_.cpu().item())
-        batch_costs.append(cost_)
-        if (len(batch_costs) == b_size):
-            batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-            elapsed_time    = time.time() - start_time
-            start_time      = time.time()
-            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            batch_costs, batch_acc = [], []
-    if (len(batch_costs) > 0):
-        batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-        elapsed_time = time.time() - start_time
-        start_time = time.time()
-        print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-        logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-    print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
@@ -815,7 +611,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 def load_model_from_checkpoint(resume_from):
-    global start_epoch, optimizer
     if os.path.isfile(resume_from):
         print("=> loading checkpoint '{}'".format(resume_from))
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
@@ -1248,7 +1043,6 @@ print('LOADED model')
 gc.collect()
 
 print_params(model)
-optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-#
+
 epoch_dev_map   = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=models[which_model][4])
 test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=models[which_model][4])
