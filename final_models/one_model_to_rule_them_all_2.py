@@ -1281,3 +1281,16 @@ for run in range(2,5):
 '''
 grep "test GMAP" -B 7 -A 1 Model_36_run_*/model.log
 '''
+
+
+
+'''
+select 10 best snippets overall.
+oracle return just 10. Not more!
+add new dataset + trec robust (FIND english paragraph questions) + 5-fold cross validation
+
+softmax sta scores twn docs + harmonic mean (F1)        FOR SNIPPET EXTRACTION
+
+PRINT DEV SCORES
+
+'''
