@@ -1289,8 +1289,8 @@ select 10 best snippets overall.                    -->  Pending
 
 oracle return just 10. Not more!                    -->  Pending
 
-add new dataset + 
-trec robust (FIND english paragraph questions) + 
+add new dataset +
+trec robust (FIND english paragraph questions) +
 5-fold cross validation                             -->  Pending
 
 softmax sta scores twn docs + 
