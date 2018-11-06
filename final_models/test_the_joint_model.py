@@ -1164,38 +1164,8 @@ eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 use_cuda            = False
 odd                 = '/home/dpappas/'
-
-# # cslab241
-# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-
-# # atlas , cslab243
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-
-# # gpu_server_1
-# w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/media/large_space_1/DATA/bioasq_all/idf.pkl'
-# dataloc             = '/media/large_space_1/DATA/bioasq_all/bioasq_data/'
-# eval_path           = '/media/large_space_1/DATA/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/media/large_space_1/DATA/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/media/large_space_1/dpappas/'
-
-# # gpu_server_2
-# w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/cave/dpappas/'
+resume_from         = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_0/best_checkpoint.pth.tar'
+which_model         = 'Model_33'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
@@ -1236,8 +1206,6 @@ models = [
 ]
 models = dict([(item[0], item[1:]) for item in models])
 
-which_model = 'Model_54'
-
 hdlr = None
 #
 odir    = 'this_is_me_testing_{}'.format(which_model)
@@ -1268,7 +1236,6 @@ if(use_cuda):
 
 params      = model.parameters()
 
-resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 print('LOADED model')
 
