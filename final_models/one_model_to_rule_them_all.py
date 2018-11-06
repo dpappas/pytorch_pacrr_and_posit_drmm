@@ -1339,7 +1339,7 @@ add average similarity score as 3rd feature             -- DONE
 add oracle scores for snippets                          -- DONE
 compare to polivios scores                              -- pending
 
-Train first doc retrieval and then snippet extraction   -- pending
+Train first doc retrieval and then snippet extraction   -- pending (DONE TRAINING. TESTING pending)
 
 '''
 
