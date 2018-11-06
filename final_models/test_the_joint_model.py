@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import gc
+gc.collect()
+
 import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -1220,7 +1223,10 @@ logger, hdlr    = init_the_logger(hdlr)
     test_data, test_docs, dev_data, dev_docs, train_data,
     train_docs, idf, max_idf, wv, bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+
 #
+gc.collect()
+
 print('Compiling model...')
 logger.info('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(
@@ -1238,6 +1244,8 @@ params      = model.parameters()
 
 load_model_from_checkpoint(resume_from)
 print('LOADED model')
+
+gc.collect()
 
 print_params(model)
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)

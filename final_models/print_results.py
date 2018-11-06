@@ -1,4 +1,7 @@
 
+import gc
+gc.collect()
+
 import os
 from pprint import pprint
 # diri = '/home/dpappas/Model_54_run_{}/model.log'
