@@ -1298,5 +1298,7 @@ harmonic mean (F1) FOR SNIPPET EXTRACTION           -->  Pending
 
 PRINT DEV SCORES                                    -->  DONE
 
+Create google doc - with overleaf links 
+
 
 '''
