@@ -1343,7 +1343,7 @@ Train first doc retrieval and then snippet extraction   -- pending (DONE TRAININ
 
 select 10 best snippets overall.
 oracle return just 10. Not more!
-+ trec robust (FIND english paragraph questions)
+add new dataset + trec robust (FIND english paragraph questions) + 5-fold cross validation
 
 
 '''
