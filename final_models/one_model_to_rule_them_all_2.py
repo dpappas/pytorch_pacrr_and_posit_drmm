@@ -1285,12 +1285,16 @@ grep "test GMAP" -B 7 -A 1 Model_36_run_*/model.log
 
 
 '''
-select 10 best snippets overall.
-oracle return just 10. Not more!
-add new dataset + trec robust (FIND english paragraph questions) + 5-fold cross validation
+select 10 best snippets overall.                    -->  Pending
+oracle return just 10. Not more!                    -->  Pending
+add new dataset + 
+trec robust (FIND english paragraph questions) + 
+5-fold cross validation                             -->  Pending
 
-softmax sta scores twn docs + harmonic mean (F1)        FOR SNIPPET EXTRACTION
+softmax sta scores twn docs + 
+harmonic mean (F1) FOR SNIPPET EXTRACTION           -->  Pending
 
-PRINT DEV SCORES
+PRINT DEV SCORES                                    -->  DONE
+
 
 '''
