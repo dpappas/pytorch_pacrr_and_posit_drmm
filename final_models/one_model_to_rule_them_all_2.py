@@ -576,11 +576,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
-        if(
-            use_sent_tokenizer == False
-            or
-            sum(good_sent_tags)>0
-        ):
+        if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
             yield {
                 'good_sents_embeds'     : good_sents_embeds,
                 'good_sents_escores'    : good_sents_escores,
