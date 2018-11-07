@@ -1225,7 +1225,7 @@ models = [
 ]
 models = dict([(item[0], item[1:]) for item in models])
 
-which_model = 'Model_39'
+which_model = 'Model_38'
 
 hdlr = None
 for run in range(0,5):
