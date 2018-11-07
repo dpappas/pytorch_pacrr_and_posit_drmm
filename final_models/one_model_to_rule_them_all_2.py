@@ -1329,3 +1329,30 @@ PRINT DEV SCORES
 
 '''
 
+'''
+[dpappas@localhost ~]$ ls /home/DATA/Biomedical/document_ranking/rob04_data/split_1/
+rob04_bm25_docset_top1000.dev.s1.pkl    rob04_bm25_docset_top100.train.s1.pkl   rob04_bm25_docset_top500.test.s1.pkl   rob04_bm25_top100.dev.s1.pkl    rob04_bm25_top2000.train.s1.pkl  rob04.test.s1.json
+rob04_bm25_docset_top1000.test.s1.pkl   rob04_bm25_docset_top2000.dev.s1.pkl    rob04_bm25_docset_top500.train.s1.pkl  rob04_bm25_top100.test.s1.pkl   rob04_bm25_top500.dev.s1.pkl     rob04.train.s1.json
+rob04_bm25_docset_top1000.train.s1.pkl  rob04_bm25_docset_top2000.test.s1.pkl   rob04_bm25_top1000.dev.s1.pkl          rob04_bm25_top100.train.s1.pkl  rob04_bm25_top500.test.s1.pkl
+rob04_bm25_docset_top100.dev.s1.pkl     rob04_bm25_docset_top2000.train.s1.pkl  rob04_bm25_top1000.test.s1.pkl         rob04_bm25_top2000.dev.s1.pkl   rob04_bm25_top500.train.s1.pkl
+rob04_bm25_docset_top100.test.s1.pkl    rob04_bm25_docset_top500.dev.s1.pkl     rob04_bm25_top1000.train.s1.pkl        rob04_bm25_top2000.test.s1.pkl  rob04.dev.s1.json
+
+python 
+import json
+import cPickle as pickle
+from pprint import pprint
+
+d = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/split_1/rob04_bm25_docset_top100.train.s1.pkl','rb'))
+pprint(d.keys())
+pprint(d['FBIS3-59725'])
+pprint(d['FBIS3-59725'].keys())
+
+d = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/split_1/rob04_bm25_top100.train.s1.pkl','rb'))
+pprint(d.keys())
+pprint(d['questions'][0])
+
+d = json.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/split_1/rob04.train.s1.json'))
+pprint(d.keys())
+pprint(d['questions'][0])
+
+'''
