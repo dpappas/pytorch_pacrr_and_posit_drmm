@@ -16,7 +16,7 @@ from pprint import pprint
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_42_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
-diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
@@ -27,7 +27,7 @@ diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_52_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
+diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
 
 for i in range(5):
