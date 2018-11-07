@@ -1282,8 +1282,6 @@ for run in range(0,5):
 grep "test GMAP" -B 7 -A 1 Model_36_run_*/model.log
 '''
 
-
-
 '''
 select 10 best snippets overall.                    -->  Pending
 
@@ -1307,3 +1305,4 @@ otidipote den exei identifier
 
 
 '''
+
