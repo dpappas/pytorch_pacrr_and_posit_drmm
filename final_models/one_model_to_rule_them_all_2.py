@@ -481,13 +481,17 @@ def get_the_mesh(the_doc):
     return good_mesh
 
 def snip_is_relevant(one_sent, gold_snips):
-    return any(
-        [
-            (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
-            or
-            (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
-            for gold_snip in gold_snips
-        ]
+    # print one_sent
+    # pprint(gold_snips)
+    return int(
+        any(
+            [
+                (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
+                or
+                (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
+                for gold_snip in gold_snips
+            ]
+        )
     )
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
@@ -572,7 +576,11 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
-        if(sum(good_sent_tags)>0):
+        if(
+            use_sent_tokenizer == False
+            or
+            sum(good_sent_tags)>0
+        ):
             yield {
                 'good_sents_embeds'     : good_sents_embeds,
                 'good_sents_escores'    : good_sents_escores,
