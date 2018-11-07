@@ -596,13 +596,8 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
-    batch_costs     = []
-    batch_acc       = []
-    epoch_costs     = []
-    epoch_acc       = []
-    batch_counter   = 0
-    epoch_aver_cost = 0.
-    epoch_aver_acc  = 0.
+    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
+    batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     #
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
