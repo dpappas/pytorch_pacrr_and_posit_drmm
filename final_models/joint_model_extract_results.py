@@ -999,19 +999,16 @@ models = [
 ]
 models = dict([(item[0], item[1:]) for item in models])
 
-hdlr = None
-#
+hdlr    = None
 odir    = 'this_is_me_testing_{}'.format(which_model)
 odir    = os.path.join(odd, odir)
 print odir
 if(not os.path.exists(odir)):
     os.makedirs(odir)
-#
+
 logger, hdlr    = init_the_logger(hdlr)
 #
-(
-    test_data, test_docs, dev_data, dev_docs, train_data,
-    train_docs, idf, max_idf, wv, bioasq6_data
+(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 gc.collect()
