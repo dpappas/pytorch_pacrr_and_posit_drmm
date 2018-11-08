@@ -962,7 +962,7 @@ eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 use_cuda            = False
 odd                 = '/home/dpappas/'
-which_model         = 'Model_41'
+which_model         = 'Model_42'
 
 k_for_maxpool       = 5
 embedding_dim       = 30
