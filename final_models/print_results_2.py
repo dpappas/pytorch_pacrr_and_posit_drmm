@@ -39,9 +39,6 @@ for i in range(5):
                 if('test known MAP documents' in lines[l]):
                     data = lines[l:l+8]
                     # pprint(data)
-                    res['test']['map_doc']          = float(lines[l+8].split(':')[-1].strip())
-                    res['dev']['map_doc']           = float(lines[l+8].split('epoch_dev_map:')[1].split()[0].strip())
-                    res['epoch']                    = int(lines[l+8].split('epoch:')[1].split()[0])
                     data                            = [float(t.strip().split()[-1]) for t in data]
                     #
                     res['test']['map_doc_bioasq']   = data[0]
