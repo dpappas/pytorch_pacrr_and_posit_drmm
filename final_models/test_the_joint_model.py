@@ -1019,13 +1019,7 @@ gc.collect()
 
 print('Compiling model...')
 logger.info('Compiling model...')
-model       = Sent_Posit_Drmm_Modeler(
-    embedding_dim       = embedding_dim,
-    k_for_maxpool       = k_for_maxpool,
-    context_method      = models[which_model][0],
-    sentence_out_method = models[which_model][1],
-    mesh_style          = models[which_model][2]
-)
+model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, context_method=models[which_model][0], sentence_out_method=models[which_model][1], mesh_style=models[which_model][2])
 
 if(use_cuda):
     model = model.cuda()
