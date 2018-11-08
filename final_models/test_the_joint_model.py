@@ -962,7 +962,6 @@ eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 use_cuda            = False
 odd                 = '/home/dpappas/'
-resume_from         = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_0/best_checkpoint.pth.tar'
 which_model         = 'Model_41'
 
 k_for_maxpool       = 5
@@ -1032,13 +1031,13 @@ if(use_cuda):
     model = model.cuda()
 
 params      = model.parameters()
-
-load_model_from_checkpoint(resume_from)
-print('LOADED model')
-
-gc.collect()
-
 print_params(model)
 
-epoch_dev_map   = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=models[which_model][4])
-test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=models[which_model][4])
+for run in range(5):
+    resume_from = '/home/dpappas/MODELS_OUTPUTS/{}_run_{}/best_checkpoint.pth.tar'.format('Model_41',run)
+    load_model_from_checkpoint(resume_from)
+    print('LOADED model')
+    gc.collect()
+    epoch_dev_map   = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=models[which_model][4])
+    test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=models[which_model][4])
+
