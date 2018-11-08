@@ -4,7 +4,7 @@ gc.collect()
 
 import os
 from pprint import pprint
-fpath = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
+fpath = '/home/dpappas/this_is_me_testing_Model_41/model.log'
 
 if(os.path.exists(fpath)):
     res = {
