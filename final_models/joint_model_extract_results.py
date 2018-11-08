@@ -1026,7 +1026,7 @@ print_params(model)
 for run in range(5):
     logger.info('RUN: {}'.format(run))
     print('RUN: {}'.format(run))
-    resume_from = '/home/dpappas/MODELS_OUTPUTS/{}_run_{}/best_checkpoint.pth.tar'.format('Model_41',run)
+    resume_from = '/home/dpappas/MODELS_OUTPUTS/{}_run_{}/best_checkpoint.pth.tar'.format(which_model, run)
     load_model_from_checkpoint(resume_from)
     print('LOADED model')
     gc.collect()
