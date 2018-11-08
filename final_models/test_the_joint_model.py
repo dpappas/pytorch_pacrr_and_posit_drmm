@@ -197,7 +197,7 @@ def init_the_logger(hdlr):
     logger      = logging.getLogger(od)
     if(hdlr is not None):
         logger.removeHandler(hdlr)
-    hdlr        = logging.FileHandler(odir+'model.log')
+    hdlr        = logging.FileHandler(os.path.join(odir,'model.log'))
     formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
