@@ -1014,7 +1014,6 @@ logger, hdlr    = init_the_logger(hdlr)
     train_docs, idf, max_idf, wv, bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-#
 gc.collect()
 
 print('Compiling model...')
