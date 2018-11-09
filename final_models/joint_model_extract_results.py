@@ -478,16 +478,15 @@ def get_norm_doc_scores(the_doc_scores):
         norm_doc_scores[ks[i]] = vs[i]
     return norm_doc_scores
 
-def select_snippets_v1(extracted_snippets, doc_res):
+def select_snippets_v1(extracted_snippets):
     '''
     :param extracted_snippets:
     :param doc_res:
     :return: returns the best 10 snippets of all docs (0..n from each doc)
     '''
-    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
     return sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
 
-def select_snippets_v2(extracted_snippets, doc_res):
+def select_snippets_v2(extracted_snippets):
     '''
     :param extracted_snippets:
     :param doc_res:
@@ -496,12 +495,11 @@ def select_snippets_v2(extracted_snippets, doc_res):
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
     ret                 = {}
     for es in extracted_snippets:
-        if (es[2] in doc_res[:10]):
-            if(es[2] in ret):
-                if(es[1] > ret[es[2]][1]):
-                    ret[es[2]] = es
-            else:
+        if(es[2] in ret):
+            if(es[1] > ret[es[2]][1]):
                 ret[es[2]] = es
+        else:
+            ret[es[2]] = es
     return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
 
 def select_snippets_v3(extracted_snippets, the_doc_scores):
@@ -558,24 +556,26 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     emitions['documents']                   = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
+    extracted_snippets                      = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+    extracted_snippets_known_rel_num        = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
     if(use_sent_tokenizer):
-        extracted_snippets_v1               = select_snippets_v1(extracted_snippets,                doc_res)
-        extracted_snippets_v2               = select_snippets_v2(extracted_snippets,                doc_res)
+        extracted_snippets_v1               = select_snippets_v1(extracted_snippets)
+        extracted_snippets_v2               = select_snippets_v2(extracted_snippets)
         extracted_snippets_v3               = select_snippets_v3(extracted_snippets,                the_doc_scores)
-        extracted_snippets_known_rel_num_v1 = select_snippets_v1(extracted_snippets_known_rel_num,  doc_res)
-        extracted_snippets_known_rel_num_v2 = select_snippets_v2(extracted_snippets_known_rel_num,  doc_res)
+        extracted_snippets_known_rel_num_v1 = select_snippets_v1(extracted_snippets_known_rel_num)
+        extracted_snippets_known_rel_num_v2 = select_snippets_v2(extracted_snippets_known_rel_num)
         extracted_snippets_known_rel_num_v3 = select_snippets_v3(extracted_snippets_known_rel_num,  the_doc_scores)
     else:
         extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3 = [], [], []
         extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3 = [], [], []
     #
-    snips_res_v1 = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_v2 = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_v3 = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     #
-    snips_res_known_rel_num_v1 = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_known_rel_num_v2 = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_known_rel_num_v3 = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     #
     snips_res = {
         'v1' : snips_res_v1,
