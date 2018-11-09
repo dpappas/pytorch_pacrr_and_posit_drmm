@@ -496,9 +496,9 @@ def select_snippets_v2(extracted_snippets, doc_res):
 
 def select_snippets_v3(extracted_snippets, doc_res, the_doc_scores):
     '''
-    :param extracted_snippets:
-    :param doc_res:
-    :return: returns the best snippet of each doc  (1 from each doc)
+    :param      extracted_snippets:
+    :param      doc_res:
+    :return:    returns the top 10 snippets across all documents (0..n from each doc)
     '''
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
     ret = {}
