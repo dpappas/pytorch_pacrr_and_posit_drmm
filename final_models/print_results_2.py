@@ -14,7 +14,7 @@ from pprint import pprint
 # fpath = '/home/dpappas/this_is_me_testing_Model_51/model.log'
 fpath = '/home/dpappas/this_is_me_testing_Model_52/model.log'
 
-tests, trains = [], []
+tests, devs = [], []
 if(os.path.exists(fpath)):
     res = {
         'dev': {
@@ -61,7 +61,7 @@ if(os.path.exists(fpath)):
                         res['test']['known_f1_snip'],   res['test']['known_map_snip'],  res['test']['known_gmap_snip']
                     )
                 )
-                trains.append(
+                devs.append(
                     '{}\t{}\t{}\t{}\t{}\t{}'.format(
                         res['dev']['f1_snip'], res['dev']['map_snip'], res['dev']['gmap_snip'],
                         res['dev']['known_f1_snip'], res['dev']['known_map_snip'], res['dev']['known_gmap_snip']
@@ -78,11 +78,12 @@ if(os.path.exists(fpath)):
                 res['dev']['f1_snip']           = data[5]
                 res['dev']['map_snip']          = data[6]
                 res['dev']['gmap_snip']         = data[7]
-
-
+print fpath
+print 'test'
 print '\n'.join(tests)
 print ''
-print '\n'.join(trains)
+print 'dev'
+print '\n'.join(devs)
 
 
 
