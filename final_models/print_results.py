@@ -20,16 +20,17 @@ from pprint import pprint
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
-diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_49_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_50_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_51_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_52_run_{}/model.log'
+diri = '/home/dpappas/MODELS_OUTPUTS/Model_52_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
 
+tests, devs = [], []
 for i in range(5):
     fpath = diri.format(i)
     if(os.path.exists(fpath)):
@@ -107,7 +108,29 @@ for i in range(5):
                 res['dev']['known_gmap_snip'],
                 res['epoch'],
             )
+            tests.append(
+                '{}\t{}\t{}\t{}\t{}\t{}'.format(
+                    res['test']['f1_snip'], res['test']['map_snip'], res['test']['gmap_snip'],
+                    res['test']['known_f1_snip'], res['test']['known_map_snip'],
+                    res['test']['known_gmap_snip']
+                )
+            )
+            devs.append(
+                '{}\t{}\t{}\t{}\t{}\t{}'.format(
+                    res['dev']['f1_snip'], res['dev']['map_snip'], res['dev']['gmap_snip'],
+                    res['dev']['known_f1_snip'], res['dev']['known_map_snip'], res['dev']['known_gmap_snip']
+                )
+            )
 
+
+
+print ''
+print diri
+print 'test'
+print '\n'.join(tests)
+print ''
+print 'dev'
+print '\n'.join(devs)
 
 
 
