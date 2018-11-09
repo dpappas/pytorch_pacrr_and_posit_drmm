@@ -563,13 +563,13 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     if (prefix == 'dev'):
-        with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
+        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(dataloc+'bioasq.dev.json', odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
+        res_map = get_map_res(dataloc+'bioasq.dev.json', os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'))
     else:
-        with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
+        with open(os.path.join(odir,'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(dataloc+'bioasq.test.json', odir + 'elk_relevant_abs_posit_drmm_lists_test.json')
+        res_map = get_map_res(dataloc+'bioasq.test.json', os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'))
     return res_map
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):

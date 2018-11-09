@@ -272,7 +272,7 @@ def init_the_logger(hdlr):
     logger      = logging.getLogger(od)
     if(hdlr is not None):
         logger.removeHandler(hdlr)
-    hdlr        = logging.FileHandler(odir+'model.log')
+    hdlr        = logging.FileHandler(os.path.join(odir,'model.log'))
     formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
@@ -763,13 +763,13 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     if (prefix == 'dev'):
-        with open(odir + 'elk_relevant_abs_posit_drmm_lists_dev.json', 'w') as f:
+        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(dataloc+'bioasq.dev.json', odir + 'elk_relevant_abs_posit_drmm_lists_dev.json')
+        res_map = get_map_res(dataloc+'bioasq.dev.json', os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'))
     else:
-        with open(odir + 'elk_relevant_abs_posit_drmm_lists_test.json', 'w') as f:
+        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(dataloc+'bioasq.test.json', odir + 'elk_relevant_abs_posit_drmm_lists_test.json')
+        res_map = get_map_res(dataloc+'bioasq.test.json', os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'))
     return res_map
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
@@ -1270,7 +1270,7 @@ for run in range(0,5):
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
             test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=models[which_model][4])
-            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
+            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir,'best_checkpoint.pth.tar'))
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
