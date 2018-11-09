@@ -675,9 +675,17 @@ def select_snippets_v1(extracted_snippets, doc_res):
     extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
     return sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
 
-def select_snippets_v2(extracted_snippets):
-
-    return sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
+def select_snippets_v2(extracted_snippets, doc_res):
+    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
+    ret                 = {}
+    for es in extracted_snippets:
+        if (es[2] in doc_res[:10]):
+            if(es[2] in ret):
+                if(es[1] > ret[es[2]][1]):
+                    ret[es[2]] = es
+            else:
+                ret[es[2]] = es
+    return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known, use_sent_tokenizer):
     emitions                    = {
