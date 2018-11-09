@@ -587,29 +587,15 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         'v2' : snips_res_known_rel_num_v2,
         'v3' : snips_res_known_rel_num_v3,
     }
-    # all_bioasq_subm_data['questions'].append(snips_res)
-    # all_bioasq_subm_data['questions'].append(snips_res)
-    # all_bioasq_subm_data['questions'].append(snips_res)
-    # #
-    # all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
     return data_for_revision, ret_data, snips_res, snips_res_known
 
-def get_one_map(prefix, data, docs, use_sent_tokenizer):
-    model.eval()
-    #
-    ret_data                    = {'questions': []}
-    all_bioasq_subm_data        = {"questions": []}
-    all_bioasq_subm_data_known  = {"questions": []}
-    all_bioasq_gold_data        = {'questions': []}
-    data_for_revision           = {}
-    #
-    for dato in tqdm(data['queries']):
-        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
-        # all_bioasq_subm_data, all_bioasq_subm_data_known
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
-    #
+def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     pprint(bioasq_snip_res)
+    print('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
+    print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    print('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
+    print('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     logger.info('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
     logger.info('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
     logger.info('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
@@ -617,10 +603,42 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
+    print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
+    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
+    print('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     logger.info('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
     logger.info('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
     logger.info('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
+    #
+
+def get_one_map(prefix, data, docs, use_sent_tokenizer):
+    model.eval()
+    #
+    ret_data                        = {'questions': []}
+    all_bioasq_subm_data_v1         = {"questions": []}
+    all_bioasq_subm_data_known_v1   = {"questions": []}
+    all_bioasq_subm_data_v2         = {"questions": []}
+    all_bioasq_subm_data_known_v2   = {"questions": []}
+    all_bioasq_subm_data_v3         = {"questions": []}
+    all_bioasq_subm_data_known_v3   = {"questions": []}
+    all_bioasq_gold_data            = {'questions': []}
+    data_for_revision               = {}
+    #
+    for dato in tqdm(data['queries']):
+        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
+        all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
+        all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
+        all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
+        all_bioasq_subm_data_known_v1['questions'].append(snips_res_known['v1'])
+        all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
+        all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
+    #
+    print_the_results('v1 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1, data_for_revision)
+    print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
+    print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
     #
     if (prefix == 'dev'):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
