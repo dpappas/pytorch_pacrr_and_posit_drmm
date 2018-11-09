@@ -78,6 +78,7 @@ if(os.path.exists(fpath)):
                 res['dev']['f1_snip']           = data[5]
                 res['dev']['map_snip']          = data[6]
                 res['dev']['gmap_snip']         = data[7]
+
 print fpath
 print 'test'
 print '\n'.join(tests)
