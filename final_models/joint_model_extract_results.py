@@ -546,6 +546,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
             data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets'  : {retr['doc_id']: all_emits}}
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
+        #
+        pprint(doc_res)
+        exit()
     #
     doc_res                                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
     doc_res                                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
