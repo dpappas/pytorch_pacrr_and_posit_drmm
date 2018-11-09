@@ -28,6 +28,14 @@ import  re
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 
+def weighted_binary_cross_entropy(output, target, weights=None):
+    if weights is not None:
+        assert len(weights) == 2
+        loss = weights[1] * (target * torch.log(output)) + weights[0] * ((1 - target) * torch.log(1 - output))
+    else:
+        loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
+    return torch.neg(torch.mean(loss))
+
 def RemoveTrainLargeYears(data, doc_text):
   for i in range(len(data['queries'])):
     hyear = 1900
