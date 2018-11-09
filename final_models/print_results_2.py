@@ -4,10 +4,15 @@ gc.collect()
 
 import os
 from pprint import pprint
-fpath = '/home/dpappas/this_is_me_testing_Model_41/model.log'
-fpath = '/home/dpappas/this_is_me_testing_Model_42/model.log'
-fpath = '/home/dpappas/this_is_me_testing_Model_43/model.log'
-fpath = '/home/dpappas/this_is_me_testing_Model_44/model.log'
+# fpath = '/home/dpappas/this_is_me_testing_Model_41/model.log'
+# fpath = '/home/dpappas/this_is_me_testing_Model_42/model.log'
+# fpath = '/home/dpappas/this_is_me_testing_Model_43/model.log'
+# fpath = '/home/dpappas/this_is_me_testing_Model_44/model.log'
+
+# fpath = '/home/dpappas/this_is_me_testing_Model_49/model.log'
+# fpath = '/home/dpappas/this_is_me_testing_Model_50/model.log'
+# fpath = '/home/dpappas/this_is_me_testing_Model_51/model.log'
+fpath = '/home/dpappas/this_is_me_testing_Model_52/model.log'
 
 if(os.path.exists(fpath)):
     res = {
