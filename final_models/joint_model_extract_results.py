@@ -149,10 +149,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
         f.close()
     #
     bioasq_eval_res = subprocess.Popen(
-        [
-            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
-            '-phaseA', '-e', '5', fgold, femit
-        ],
+        ['java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b', '-phaseA', '-e', '5', fgold, femit],
         stdout=subprocess.PIPE, shell=False
     )
     (out, err)  = bioasq_eval_res.communicate()
