@@ -531,7 +531,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips                  = get_gold_snips(dato['query_id'], bioasq6_data)
     #
-    the_doc_scores                      = {}
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
