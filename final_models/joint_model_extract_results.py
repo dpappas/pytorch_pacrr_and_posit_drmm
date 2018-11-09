@@ -564,8 +564,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     ret_data['questions'].append(emitions)
     #
     if(use_sent_tokenizer):
-        extracted_snippets                  = select_snippets_v1(extracted_snippets, doc_res)
-        extracted_snippets_known_rel_num    = select_snippets_v1(extracted_snippets_known_rel_num, doc_res)
+        extracted_snippets                  = select_snippets_v3(extracted_snippets, the_doc_scores)
+        extracted_snippets_known_rel_num    = select_snippets_v3(extracted_snippets_known_rel_num, the_doc_scores)
     else:
         extracted_snippets                  = []
         extracted_snippets_known_rel_num    = []
