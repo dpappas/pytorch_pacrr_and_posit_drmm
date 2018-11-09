@@ -468,6 +468,49 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
+def select_snippets_v1(extracted_snippets, doc_res):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return: returns the best 10 snippets of all docs (0..n from each doc)
+    '''
+    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+    return sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
+
+def select_snippets_v2(extracted_snippets, doc_res):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return: returns the best snippet of each doc  (1 from each doc)
+    '''
+    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
+    ret                 = {}
+    for es in extracted_snippets:
+        if (es[2] in doc_res[:10]):
+            if(es[2] in ret):
+                if(es[1] > ret[es[2]][1]):
+                    ret[es[2]] = es
+            else:
+                ret[es[2]] = es
+    return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
+
+def select_snippets_v3(extracted_snippets, doc_res):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return: returns the best snippet of each doc  (1 from each doc)
+    '''
+    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
+    ret = {}
+    for es in extracted_snippets:
+        if (es[2] in doc_res[:10]):
+            if(es[2] in ret):
+                if(es[1] > ret[es[2]][1]):
+                    ret[es[2]] = es
+            else:
+                ret[es[2]] = es
+    return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
+
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known, use_sent_tokenizer):
     emitions                    = {
         'body': dato['query_text'],
@@ -493,17 +536,14 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
             mesh_gaf            = datum['mesh_escores']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
-        #
+        # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
         total_relevant = sum([1 for em in all_emits if(em[0]==True)])
         if (total_relevant > 0):
             extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
         if (dato['query_id'] not in data_for_revision):
-            data_for_revision[dato['query_id']] = {
-                'query_text': dato['query_text'],
-                'snippets'  : {retr['doc_id']: all_emits}
-            }
+            data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets'  : {retr['doc_id']: all_emits}}
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
@@ -513,10 +553,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     ret_data['questions'].append(emitions)
     #
     if(use_sent_tokenizer):
-        extracted_snippets                  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-        extracted_snippets                  = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
-        extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
-        extracted_snippets_known_rel_num    = sorted(extracted_snippets_known_rel_num, key=lambda x: x[1], reverse=True)[:10]
+        extracted_snippets                  = select_snippets_v1(extracted_snippets, doc_res)
+        extracted_snippets_known_rel_num    = select_snippets_v1(extracted_snippets_known_rel_num, doc_res)
     else:
         extracted_snippets                  = []
         extracted_snippets_known_rel_num    = []

@@ -697,6 +697,23 @@ def select_snippets_v2(extracted_snippets, doc_res):
                 ret[es[2]] = es
     return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
 
+def select_snippets_v3(extracted_snippets, doc_res):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return: returns the best snippet of each doc  (1 from each doc)
+    '''
+    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
+    ret = {}
+    for es in extracted_snippets:
+        if (es[2] in doc_res[:10]):
+            if(es[2] in ret):
+                if(es[1] > ret[es[2]][1]):
+                    ret[es[2]] = es
+            else:
+                ret[es[2]] = es
+    return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
+
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known, use_sent_tokenizer):
     emitions                    = {
         'body': dato['query_text'],
