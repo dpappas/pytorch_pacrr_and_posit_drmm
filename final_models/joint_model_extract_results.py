@@ -971,8 +971,6 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 
-which_model         = 'Model_56'
-
 k_for_maxpool       = 5
 embedding_dim       = 30
 
@@ -1011,7 +1009,24 @@ models = dict([(item[0], item[1:]) for item in models])
 hdlr    = None
 
 
-test_these_models = []
+test_these_models = [
+'Model_41',
+'Model_42',
+'Model_43',
+'Model_44',
+'Model_45',
+'Model_46',
+'Model_47',
+'Model_48',
+# 'Model_49',
+# 'Model_50',
+# 'Model_51',
+# 'Model_52',
+# 'Model_53',
+# 'Model_54',
+# 'Model_55',
+# 'Model_56',
+]
 for which_model in test_these_models:
     odir    = 'this_is_me_testing_{}'.format(which_model)
     odir    = os.path.join(odd, odir)
