@@ -494,7 +494,7 @@ def select_snippets_v2(extracted_snippets, doc_res):
                 ret[es[2]] = es
     return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
 
-def select_snippets_v3(extracted_snippets, doc_res):
+def select_snippets_v3(extracted_snippets, doc_res, the_doc_scores):
     '''
     :param extracted_snippets:
     :param doc_res:
@@ -548,7 +548,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
             data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets'  : {retr['doc_id']: all_emits}}
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
-    #
     #
     doc_res                                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
     the_doc_scores                          = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
