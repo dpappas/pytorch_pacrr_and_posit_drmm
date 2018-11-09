@@ -468,11 +468,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-def softmax(x):
-    """Compute softmax values for each sets of scores in x."""
-    x   = np.array(x)
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum(axis=0) # only difference
+softmax = lambda z: np.exp(z) / np.sum(np.exp(z))
 
 def get_norm_doc_scores(the_doc_scores):
     ks = the_doc_scores.keys()
