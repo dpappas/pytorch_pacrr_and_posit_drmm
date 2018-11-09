@@ -671,10 +671,12 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-def select_snippets_v1(extracted_snippets):
+def select_snippets_v1(extracted_snippets, doc_res):
+    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
     return sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
 
 def select_snippets_v2(extracted_snippets):
+
     return sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known, use_sent_tokenizer):
@@ -719,10 +721,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
     ret_data['questions'].append(emitions)
     #
     if(use_sent_tokenizer):
-        extracted_snippets                  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-        extracted_snippets                  = select_snippets_v1(extracted_snippets)
-        extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
-        extracted_snippets_known_rel_num    = select_snippets_v1(extracted_snippets_known_rel_num)
+        extracted_snippets                  = select_snippets_v1(extracted_snippets, doc_res)
+        extracted_snippets_known_rel_num    = select_snippets_v1(extracted_snippets_known_rel_num, doc_res)
     else:
         extracted_snippets                  = []
         extracted_snippets_known_rel_num    = []
