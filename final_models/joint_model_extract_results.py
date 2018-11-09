@@ -500,13 +500,13 @@ def softmax(x):
     return e_x / e_x.sum(axis=0) # only difference
 
 def get_norm_doc_scores(the_doc_scores):
-    ks, vs          = the_doc_scores.keys(), [the_doc_scores[k] for k in ks]
-    vs              = softmax(vs)
+    ks = the_doc_scores.keys()
+    vs = [the_doc_scores[k] for k in ks]
+    vs = softmax(vs)
     norm_doc_scores = {}
     for i in range(len(ks)):
         norm_doc_scores[ks[i]] = vs[i]
     return norm_doc_scores
-
 
 def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
