@@ -470,6 +470,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
 
 def softmax(x):
     """Compute softmax values for each sets of scores in x."""
+    x   = np.array(x)
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum(axis=0) # only difference
 
