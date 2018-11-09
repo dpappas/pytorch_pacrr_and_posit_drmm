@@ -1011,34 +1011,33 @@ models = dict([(item[0], item[1:]) for item in models])
 hdlr    = None
 
 
-
-
-
-odir    = 'this_is_me_testing_{}'.format(which_model)
-odir    = os.path.join(odd, odir)
-print odir
-if(not os.path.exists(odir)):
-    os.makedirs(odir)
-
-logger, hdlr    = init_the_logger(hdlr)
-(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
-) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
-gc.collect()
-print('Compiling model...')
-logger.info('Compiling model...')
-model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, context_method=models[which_model][0], sentence_out_method=models[which_model][1], mesh_style=models[which_model][2])
-if(use_cuda):
-    model = model.cuda()
-
-params = model.parameters()
-print_params(model)
-for run in range(5):
-    logger.info('RUN: {}'.format(run))
-    print('RUN: {}'.format(run))
-    resume_from = '/home/dpappas/MODELS_OUTPUTS/{}_run_{}/best_checkpoint.pth.tar'.format(which_model, run)
-    load_model_from_checkpoint(resume_from)
-    print('LOADED model')
+test_these_models = []
+for which_model in test_these_models:
+    odir    = 'this_is_me_testing_{}'.format(which_model)
+    odir    = os.path.join(odd, odir)
+    print odir
+    if(not os.path.exists(odir)):
+        os.makedirs(odir)
+    #
+    logger, hdlr    = init_the_logger(hdlr)
+    (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
     gc.collect()
-    epoch_dev_map   = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=models[which_model][4])
-    test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=models[which_model][4])
+    print('Compiling model...')
+    logger.info('Compiling model...')
+    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, context_method=models[which_model][0], sentence_out_method=models[which_model][1], mesh_style=models[which_model][2])
+    if(use_cuda):
+        model = model.cuda()
+    #
+    params = model.parameters()
+    print_params(model)
+    for run in range(5):
+        logger.info('RUN: {}'.format(run))
+        print('RUN: {}'.format(run))
+        resume_from = '/home/dpappas/MODELS_OUTPUTS/{}_run_{}/best_checkpoint.pth.tar'.format(which_model, run)
+        load_model_from_checkpoint(resume_from)
+        print('LOADED model')
+        gc.collect()
+        epoch_dev_map   = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=models[which_model][4])
+        test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=models[which_model][4])
 
