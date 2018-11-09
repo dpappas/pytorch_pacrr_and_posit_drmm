@@ -28,7 +28,8 @@ from    gensim.models.keyedvectors import KeyedVectors
 import  cPickle as pickle
 import  re
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 
 def RemoveTrainLargeYears(data, doc_text):
   for i in range(len(data['queries'])):
@@ -467,8 +468,6 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     doc_res[retr['doc_id']] = float(emition)
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
-
-softmax = lambda z: np.exp(z) / np.sum(np.exp(z))
 
 def get_norm_doc_scores(the_doc_scores):
     ks = the_doc_scores.keys()
