@@ -14,6 +14,7 @@ from pprint import pprint
 # fpath = '/home/dpappas/this_is_me_testing_Model_51/model.log'
 fpath = '/home/dpappas/this_is_me_testing_Model_52/model.log'
 
+tests, trains = [], []
 if(os.path.exists(fpath)):
     res = {
         'dev': {
@@ -54,15 +55,18 @@ if(os.path.exists(fpath)):
                 res['test']['f1_snip']          = data[5]
                 res['test']['map_snip']         = data[6]
                 res['test']['gmap_snip']        = data[7]
-                print '{}\t{}\t{}\t{}\t{}\t{}'.format(
-                    res['test']['f1_snip'],         res['test']['map_snip'],        res['test']['gmap_snip'],
-                    res['test']['known_f1_snip'],   res['test']['known_map_snip'],  res['test']['known_gmap_snip']
+                tests.append(
+                    '{}\t{}\t{}\t{}\t{}\t{}'.format(
+                        res['test']['f1_snip'],         res['test']['map_snip'],        res['test']['gmap_snip'],
+                        res['test']['known_f1_snip'],   res['test']['known_map_snip'],  res['test']['known_gmap_snip']
+                    )
                 )
-                print '{}\t{}\t{}\t{}\t{}\t{}'.format(
-                    res['dev']['f1_snip'],          res['dev']['map_snip'],         res['dev']['gmap_snip'],
-                    res['dev']['known_f1_snip'],    res['dev']['known_map_snip'],   res['dev']['known_gmap_snip']
+                trains.append(
+                    '{}\t{}\t{}\t{}\t{}\t{}'.format(
+                        res['dev']['f1_snip'], res['dev']['map_snip'], res['dev']['gmap_snip'],
+                        res['dev']['known_f1_snip'], res['dev']['known_map_snip'], res['dev']['known_gmap_snip']
+                    )
                 )
-                print('')
             elif('dev known MAP documents' in lines[l]):
                 data = lines[l:l+8]
                 data = [float(t.strip().split()[-1]) for t in data]
@@ -76,7 +80,9 @@ if(os.path.exists(fpath)):
                 res['dev']['gmap_snip']         = data[7]
 
 
-
+print '\n'.join(tests)
+print ''
+print '\n'.join(trains)
 
 
 
