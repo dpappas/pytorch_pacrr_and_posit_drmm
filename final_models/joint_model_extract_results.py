@@ -494,12 +494,23 @@ def select_snippets_v2(extracted_snippets, doc_res):
                 ret[es[2]] = es
     return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
 
-def select_snippets_v3(extracted_snippets, doc_res, the_doc_scores):
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0) # only difference
+
+def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
     :param      extracted_snippets:
     :param      doc_res:
     :return:    returns the top 10 snippets across all documents (0..n from each doc)
     '''
+    #
+    ks, vs          = the_doc_scores.keys(), [the_doc_scores[k] for k in ks]
+    vs              = softmax(vs)
+    norm_doc_scores = {}
+    for i in range(len(ks)):
+        doc_scores[ks[i]] = vs[i]
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
     ret = {}
     for es in extracted_snippets:
