@@ -672,10 +672,22 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     return doc_res, extracted_from_one, all_emits
 
 def select_snippets_v1(extracted_snippets, doc_res):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return:
+    returns the best 10 snippets of all docs (0..n from each doc)
+    '''
     extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
     return sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
 
 def select_snippets_v2(extracted_snippets, doc_res):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return:
+    returns the best snippet of each doc  (1 from each doc)
+    '''
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
     ret                 = {}
     for es in extracted_snippets:
