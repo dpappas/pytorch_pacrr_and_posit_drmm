@@ -696,7 +696,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, al
             mesh_gaf            = datum['mesh_escores']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
-        #
+        # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
         total_relevant = sum([1 for em in all_emits if(em[0]==True)])
