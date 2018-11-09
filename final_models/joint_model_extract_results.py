@@ -468,6 +468,20 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0) # only difference
+
+def get_norm_doc_scores(the_doc_scores):
+    ks = the_doc_scores.keys()
+    vs = [the_doc_scores[k] for k in ks]
+    vs = softmax(vs)
+    norm_doc_scores = {}
+    for i in range(len(ks)):
+        norm_doc_scores[ks[i]] = vs[i]
+    return norm_doc_scores
+
 def select_snippets_v1(extracted_snippets, doc_res):
     '''
     :param extracted_snippets:
@@ -494,37 +508,16 @@ def select_snippets_v2(extracted_snippets, doc_res):
                 ret[es[2]] = es
     return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
 
-def softmax(x):
-    """Compute softmax values for each sets of scores in x."""
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum(axis=0) # only difference
-
-def get_norm_doc_scores(the_doc_scores):
-    ks = the_doc_scores.keys()
-    vs = [the_doc_scores[k] for k in ks]
-    vs = softmax(vs)
-    norm_doc_scores = {}
-    for i in range(len(ks)):
-        norm_doc_scores[ks[i]] = vs[i]
-    return norm_doc_scores
-
 def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
     :param      extracted_snippets:
     :param      doc_res:
     :return:    returns the top 10 snippets across all documents (0..n from each doc)
     '''
-    norm_doc_scores = get_norm_doc_scores(the_doc_scores)
+    norm_doc_scores     = get_norm_doc_scores(the_doc_scores)
+    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
-    ret = {}
-    for es in extracted_snippets:
-        if (es[2] in doc_res[:10]):
-            if(es[2] in ret):
-                if(es[1] > ret[es[2]][1]):
-                    ret[es[2]] = es
-            else:
-                ret[es[2]] = es
-    return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
+    return sorted(extracted_snippets, key=lambda x: x[1]*norm_doc_scores[x[2]], reverse=True)[:10]
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, all_bioasq_subm_data, all_bioasq_subm_data_known, use_sent_tokenizer):
     emitions                    = {
