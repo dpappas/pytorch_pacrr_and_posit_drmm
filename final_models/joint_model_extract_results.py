@@ -1020,7 +1020,7 @@ model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for
 if(use_cuda):
     model = model.cuda()
 
-params      = model.parameters()
+params = model.parameters()
 print_params(model)
 
 for run in range(5):
