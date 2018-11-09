@@ -577,12 +577,22 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     snips_res_known_rel_num_v2 = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_known_rel_num_v3 = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     #
+    snips_res = {
+        'v1' : snips_res_v1,
+        'v2' : snips_res_v2,
+        'v3' : snips_res_v3,
+    }
+    snips_res_known = {
+        'v1' : snips_res_known_rel_num_v1,
+        'v2' : snips_res_known_rel_num_v2,
+        'v3' : snips_res_known_rel_num_v3,
+    }
     # all_bioasq_subm_data['questions'].append(snips_res)
     # all_bioasq_subm_data['questions'].append(snips_res)
     # all_bioasq_subm_data['questions'].append(snips_res)
     # #
     # all_bioasq_subm_data_known['questions'].append(snips_res_known_rel_num)
-    return data_for_revision, ret_data, snips_res_v1, snips_res_v2, snips_res_v3, snips_res_known_rel_num_v1, snips_res_known_rel_num_v2 snips_res_known_rel_num_v3
+    return data_for_revision, ret_data, snips_res, snips_res_known
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
