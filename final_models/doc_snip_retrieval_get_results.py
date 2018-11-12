@@ -561,6 +561,16 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             good_meshes_embeds  = datum['mesh_embeds'],
             mesh_gaf            = datum['mesh_escores']
         )
+        datum                   = prep_data(
+            quest_text,
+            docs[retr['doc_id']],
+            retr['norm_bm25_score'],
+            wv,
+            gold_snips,
+            idf,
+            max_idf,
+            use_sent_tokenizer=True
+        )
         _, gs_emits_            = sent_model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
