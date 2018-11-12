@@ -1,4 +1,7 @@
 
+import gc
+gc.collect()
+
 import sys
 
 reload(sys)
