@@ -571,7 +571,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             max_idf,
             use_sent_tokenizer=True
         )
-        _, gs_emits_            = sent_model(
+        gs_emits_               = sent_model(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
