@@ -1042,8 +1042,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
-# use_cuda            = False
-
+use_cuda            = False
+#
 # laptop
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
@@ -1099,7 +1099,8 @@ hdlr    = None
 
 
 test_these_models = [
-'Model_41', 'Model_42', 'Model_43', 'Model_44',
+# 'Model_41', 'Model_42', 'Model_43',
+    'Model_44',
 # 'Model_45', 'Model_46', 'Model_47', 'Model_48',
 # 'Model_49', 'Model_50', 'Model_51', 'Model_52',
 # 'Model_53', 'Model_54', 'Model_55', 'Model_56'
