@@ -1099,9 +1099,9 @@ hdlr    = None
 
 
 test_these_models = [
-# 'Model_41', 'Model_42', 'Model_43',
-    'Model_44',
-# 'Model_45', 'Model_46', 'Model_47', 'Model_48',
+'Model_39', 'Model_40', 'Model_45', 'Model_46',
+# 'Model_41', 'Model_42', 'Model_43', 'Model_44',
+# 'Model_47', 'Model_48',
 # 'Model_49', 'Model_50', 'Model_51', 'Model_52',
 # 'Model_53', 'Model_54', 'Model_55', 'Model_56'
 ]
