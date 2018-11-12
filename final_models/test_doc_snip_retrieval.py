@@ -26,6 +26,18 @@ from    difflib import SequenceMatcher
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
+def load_model_from_checkpoint(doc_resume_from, sent_resume_from):
+    if os.path.isfile(doc_resume_from):
+        print("=> loading checkpoint '{}'".format(doc_resume_from))
+        checkpoint = torch.load(doc_resume_from, map_location=lambda storage, loc: storage)
+        doc_model.load_state_dict(checkpoint['state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})".format(doc_resume_from, checkpoint['epoch']))
+    if os.path.isfile(sent_resume_from):
+        print("=> loading checkpoint '{}'".format(sent_resume_from))
+        checkpoint = torch.load(sent_resume_from, map_location=lambda storage, loc: storage)
+        sent_model.load_state_dict(checkpoint['state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})".format(sent_resume_from, checkpoint['epoch']))
+
 class DOC_RET(nn.Module):
     def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', mesh_style = 'SENT'):
         super(DOC_RET, self).__init__()
@@ -543,6 +555,9 @@ b_size          = 32
 max_epoch       = 10
 
 doc_model       = DOC_RET(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, context_method='BIGRU', mesh_style='SENT')
-snet_model      = SENT_RET(embedding_dim=embedding_dim, context_method='BIGRU', sentence_out_method='BIGRU')
+sent_model      = SENT_RET(embedding_dim=embedding_dim, context_method='BIGRU', sentence_out_method='BIGRU')
 
+doc_resume_from     = '/home/dpappas/MODELS_OUTPUTS/Doc_Ret_Model_04_run_0/best_checkpoint.pth.tar'
+sent_resume_from    = '/home/dpappas/MODELS_OUTPUTS/Snip_Extr_Model_02_run_2/best_checkpoint.pth.tar'
+load_model_from_checkpoint(doc_resume_from, sent_resume_from)
 
