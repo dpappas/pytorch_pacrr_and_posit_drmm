@@ -118,6 +118,28 @@ def get_the_mesh(the_doc):
 def tokenize(x):
   return bioclean(x)
 
+def get_words(s, idf, max_idf):
+    sl  = tokenize(s)
+    sl  = [s for s in sl]
+    sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
+    return sl, sl2
+
+def tokenize(x):
+  return bioclean(x)
+
+def idf_val(w, idf, max_idf):
+    if w in idf:
+        return idf[w]
+    return max_idf
+
+def get_embeds(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        if(tok in wv):
+            ret1.append(tok)
+            ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
         os.makedirs(odir)
@@ -201,6 +223,57 @@ def load_model_from_checkpoint(doc_resume_from, sent_resume_from):
         checkpoint = torch.load(sent_resume_from, map_location=lambda storage, loc: storage)
         sent_model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(sent_resume_from, checkpoint['epoch']))
+
+def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
+    '''
+    java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
+    evaluation.EvaluatorTask1b -phaseA -e 5
+    /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1
+    ./drmm-experimental_submit.json
+    '''
+    jar_path = retrieval_jar_path
+    #
+    fgold   = '{}_data_for_revision.json'.format(prefix)
+    fgold   = os.path.join(odir, fgold)
+    fgold   = os.path.abspath(fgold)
+    with open(fgold, 'w') as f:
+        f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
+        f.close()
+    #
+    for tt in data_gold['questions']:
+        if ('exact_answer' in tt):
+            del (tt['exact_answer'])
+        if ('ideal_answer' in tt):
+            del (tt['ideal_answer'])
+        if ('type' in tt):
+            del (tt['type'])
+    fgold    = '{}_gold_bioasq.json'.format(prefix)
+    fgold   = os.path.join(odir, fgold)
+    fgold   = os.path.abspath(fgold)
+    with open(fgold, 'w') as f:
+        f.write(json.dumps(data_gold, indent=4, sort_keys=True))
+        f.close()
+    #
+    femit    = '{}_emit_bioasq.json'.format(prefix)
+    femit   = os.path.join(odir, femit)
+    femit   = os.path.abspath(femit)
+    with open(femit, 'w') as f:
+        f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
+        f.close()
+    #
+    bioasq_eval_res = subprocess.Popen(
+        ['java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b', '-phaseA', '-e', '5', fgold, femit],
+        stdout=subprocess.PIPE, shell=False
+    )
+    (out, err)  = bioasq_eval_res.communicate()
+    lines       = out.decode("utf-8").split('\n')
+    ret = {}
+    for line in lines:
+        if(':' in line):
+            k       = line.split(':')[0].strip()
+            v       = line.split(':')[1].strip()
+            ret[k]  = float(v)
+    return ret
 
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
@@ -294,6 +367,15 @@ def select_snippets_v2(extracted_snippets):
     sorted_snips =  sorted(ret.values(), key=lambda x: x[1], reverse=True)
     return sorted_snips[:10]
 
+def get_norm_doc_scores(the_doc_scores):
+    ks = the_doc_scores.keys()
+    vs = [the_doc_scores[k] for k in ks]
+    vs = softmax(vs)
+    norm_doc_scores = {}
+    for i in range(len(ks)):
+        norm_doc_scores[ks[i]] = vs[i]
+    return norm_doc_scores
+
 def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
     :param      extracted_snippets:
@@ -305,6 +387,146 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
+
+def snip_is_relevant(one_sent, gold_snips):
+    return any(
+        [
+            (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
+            or
+            (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
+            for gold_snip in gold_snips
+        ]
+    )
+
+def uwords(words):
+  uw = {}
+  for w in words:
+    uw[w] = 1
+  return [w for w in uw]
+
+def ubigrams(words):
+  uw = {}
+  prevw = "<pw>"
+  for w in words:
+    uw[prevw + '_' + w] = 1
+    prevw = w
+  return [w for w in uw]
+
+def query_doc_overlap(qwords, dwords, idf, max_idf):
+    # % Query words in doc.
+    qwords_in_doc = 0
+    idf_qwords_in_doc = 0.0
+    idf_qwords = 0.0
+    for qword in uwords(qwords):
+      idf_qwords += idf_val(qword, idf, max_idf)
+      for dword in uwords(dwords):
+        if qword == dword:
+          idf_qwords_in_doc += idf_val(qword, idf, max_idf)
+          qwords_in_doc     += 1
+          break
+    if len(qwords) <= 0:
+      qwords_in_doc_val = 0.0
+    else:
+      qwords_in_doc_val = (float(qwords_in_doc) /
+                           float(len(uwords(qwords))))
+    if idf_qwords <= 0.0:
+      idf_qwords_in_doc_val = 0.0
+    else:
+      idf_qwords_in_doc_val = float(idf_qwords_in_doc) / float(idf_qwords)
+    # % Query bigrams  in doc.
+    qwords_bigrams_in_doc = 0
+    idf_qwords_bigrams_in_doc = 0.0
+    idf_bigrams = 0.0
+    for qword in ubigrams(qwords):
+      wrds = qword.split('_')
+      idf_bigrams += idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf)
+      for dword in ubigrams(dwords):
+        if qword == dword:
+          qwords_bigrams_in_doc += 1
+          idf_qwords_bigrams_in_doc += (idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf))
+          break
+    if len(qwords) <= 0:
+      qwords_bigrams_in_doc_val = 0.0
+    else:
+      qwords_bigrams_in_doc_val = (float(qwords_bigrams_in_doc) / float(len(ubigrams(qwords))))
+    if idf_bigrams <= 0.0:
+      idf_qwords_bigrams_in_doc_val = 0.0
+    else:
+      idf_qwords_bigrams_in_doc_val = (float(idf_qwords_bigrams_in_doc) / float(idf_bigrams))
+    return [qwords_in_doc_val,
+            qwords_bigrams_in_doc_val,
+            idf_qwords_in_doc_val,
+            idf_qwords_bigrams_in_doc_val]
+
+def GetScores(qtext, dtext, bm25, idf, max_idf):
+    qwords, qw2 = get_words(qtext, idf, max_idf)
+    dwords, dw2 = get_words(dtext, idf, max_idf)
+    qd1         = query_doc_overlap(qwords, dwords, idf, max_idf)
+    bm25        = [bm25]
+    return qd1[0:3] + bm25
+
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
+    if(use_sent_tokenizer):
+        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    else:
+        good_sents = [the_doc['title'] + the_doc['abstractText']]
+    ####
+    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    ####
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    for good_text in good_sents:
+        good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
+        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        if (len(good_embeds) > 0):
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores)
+            held_out_sents.append(good_text)
+            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    ####
+    good_meshes = get_the_mesh(the_doc)
+    good_mesh_embeds, good_mesh_escores = [], []
+    for good_mesh in good_meshes:
+        gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
+        if (len(gm_tokens) > 0):
+            good_mesh_embeds.append(gm_embeds)
+            good_escores                = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
+            good_mesh_escores.append(good_escores)
+    ####
+    return {
+        'sents_embeds'     : good_sents_embeds,
+        'sents_escores'    : good_sents_escores,
+        'doc_af'           : good_doc_af,
+        'sent_tags'        : good_sent_tags,
+        'mesh_embeds'      : good_mesh_embeds,
+        'mesh_escores'     : good_mesh_escores,
+        'held_out_sents'   : held_out_sents,
+    }
+
+def get_gold_snips(quest_id, bioasq6_data):
+    gold_snips                  = []
+    if ('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            gold_snips.extend(sent_tokenize(sn['text']))
+    return list(set(gold_snips))
+
+def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
+    emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_.tolist()
+    mmax                    = max(emitss)
+    all_emits, extracted_from_one = [], []
+    for ind in range(len(emitss)):
+        t = (
+            snip_is_relevant(held_out_sents[ind], gold_snips),
+            emitss[ind],
+            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+            held_out_sents[ind]
+        )
+        all_emits.append(t)
+        if(emitss[ind] == mmax):
+            extracted_from_one.append(t)
+    doc_res[retr['doc_id']] = float(emition)
+    all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
+    return doc_res, extracted_from_one, all_emits
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions                    = {
@@ -321,16 +543,25 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
-        doc_emit_, gs_emits_    = model.emit_one(
-            doc1_sents_embeds   = datum['sents_embeds'],
+        datum                   = prep_data(
+            quest_text,
+            docs[retr['doc_id']],
+            retr['norm_bm25_score'],
+            wv,
+            gold_snips,
+            idf,
+            max_idf,
+            use_sent_tokenizer=False
+        )
+        doc_emit_, gs_emits_    = doc_model.emit_one(
+            doc1_embeds         = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
-            sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af'],
             good_meshes_embeds  = datum['mesh_embeds'],
             mesh_gaf            = datum['mesh_escores']
         )
+        #
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
