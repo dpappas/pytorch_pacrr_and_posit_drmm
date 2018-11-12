@@ -220,6 +220,78 @@ def get_map_res(fgold, femit):
     map_res         = float(map_res[-1])
     return map_res
 
+def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
+    ret = {
+        'body'      : quest_body,
+        'documents' : top10docs,
+        'id'        : qid,
+        'snippets'  : [],
+    }
+    for esnip in extracted_snippets:
+        pid         = esnip[2].split('/')[-1]
+        the_text    = esnip[3]
+        esnip_res = {
+            # 'score'     : esnip[1],
+            "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
+            "text"      : the_text
+        }
+        try:
+            ind_from                            = docs[pid]['title'].index(the_text)
+            ind_to                              = ind_from + len(the_text)
+            esnip_res["beginSection"]           = "title"
+            esnip_res["endSection"]             = "title"
+            esnip_res["offsetInBeginSection"]   = ind_from
+            esnip_res["offsetInEndSection"]     = ind_to
+        except:
+            # print(the_text)
+            # pprint(docs[pid])
+            ind_from                            = docs[pid]['abstractText'].index(the_text)
+            ind_to                              = ind_from + len(the_text)
+            esnip_res["beginSection"]           = "abstract"
+            esnip_res["endSection"]             = "abstract"
+            esnip_res["offsetInBeginSection"]   = ind_from
+            esnip_res["offsetInEndSection"]     = ind_to
+        ret['snippets'].append(esnip_res)
+    return ret
+
+def select_snippets_v1(extracted_snippets):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return: returns the best 10 snippets of all docs (0..n from each doc)
+    '''
+    sorted_snips = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+    return sorted_snips[:10]
+
+def select_snippets_v2(extracted_snippets):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return: returns the best snippet of each doc  (1 from each doc)
+    '''
+    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
+    ret                 = {}
+    for es in extracted_snippets:
+        if(es[2] in ret):
+            if(es[1] > ret[es[2]][1]):
+                ret[es[2]] = es
+        else:
+            ret[es[2]] = es
+    sorted_snips =  sorted(ret.values(), key=lambda x: x[1], reverse=True)
+    return sorted_snips[:10]
+
+def select_snippets_v3(extracted_snippets, the_doc_scores):
+    '''
+    :param      extracted_snippets:
+    :param      doc_res:
+    :return:    returns the top 10 snippets across all documents (0..n from each doc)
+    '''
+    norm_doc_scores     = get_norm_doc_scores(the_doc_scores)
+    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
+    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
+    sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
+    return sorted_snips[:10]
+
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions                    = {
         'body': dato['query_text'],
