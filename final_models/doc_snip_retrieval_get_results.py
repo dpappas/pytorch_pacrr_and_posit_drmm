@@ -553,10 +553,19 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             max_idf,
             use_sent_tokenizer=False
         )
-        doc_emit_, gs_emits_    = doc_model.emit_one(
+        doc_emit_, _            = doc_model.emit_one(
             doc1_embeds         = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
+            doc_gaf             = datum['doc_af'],
+            good_meshes_embeds  = datum['mesh_embeds'],
+            mesh_gaf            = datum['mesh_escores']
+        )
+        _, gs_emits_            = sent_model.emit_one(
+            doc1_sents_embeds   = datum['sents_embeds'],
+            question_embeds     = quest_embeds,
+            q_idfs              = q_idfs,
+            sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af'],
             good_meshes_embeds  = datum['mesh_embeds'],
             mesh_gaf            = datum['mesh_escores']
