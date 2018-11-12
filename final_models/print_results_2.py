@@ -4,16 +4,16 @@ gc.collect()
 
 import os
 from pprint import pprint
-fpath = '/home/dpappas/this_is_me_testing_Model_41/model.log'
-# fpath = '/home/dpappas/this_is_me_testing_Model_42/model.log'
-# fpath = '/home/dpappas/this_is_me_testing_Model_43/model.log'
-# fpath = '/home/dpappas/this_is_me_testing_Model_44/model.log'
+fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_41/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_42/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_43/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_44/model.log'
 
-# fpath = '/home/dpappas/this_is_me_testing_Model_49/model.log'
-# fpath = '/home/dpappas/this_is_me_testing_Model_50/model.log'
-# fpath = '/home/dpappas/this_is_me_testing_Model_51/model.log'
-# fpath = '/home/dpappas/this_is_me_testing_Model_52/model.log'
-# fpath = '/home/dpappas/this_is_me_testing_Model_52/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_49/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_50/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_51/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_52/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_52/model.log'
 
 tests, devs = [], []
 if(os.path.exists(fpath)):
@@ -44,7 +44,8 @@ if(os.path.exists(fpath)):
     with open(fpath) as f:
         lines = f.readlines()
         for l in range(len(lines)):
-            if('test known MAP documents' in lines[l]):
+            if('v3 test known MAP documents' in lines[l]):
+                print lines[l]
                 data = lines[l:l+8]
                 # pprint(data)
                 data                            = [float(t.strip().split()[-1]) for t in data]
