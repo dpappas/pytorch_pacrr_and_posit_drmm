@@ -28,7 +28,7 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').re
 
 class DOC_RET(nn.Module):
     def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', mesh_style = 'SENT'):
-        super(Sent_Posit_Drmm_Modeler, self).__init__()
+        super(DOC_RET, self).__init__()
         self.k                                      = k_for_maxpool
         #
         self.embedding_dim                          = embedding_dim
@@ -335,7 +335,7 @@ class DOC_RET(nn.Module):
 
 class SENT_RET(nn.Module):
     def __init__(self, embedding_dim= 30, context_method = 'CNN', sentence_out_method = 'MLP'):
-        super(Sent_Posit_Drmm_Modeler, self).__init__()
+        super(SENT_RET, self).__init__()
         self.k                                      = k_for_maxpool
         #
         self.embedding_dim                          = embedding_dim
