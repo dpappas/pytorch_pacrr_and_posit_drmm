@@ -720,3 +720,6 @@ odd                 = '/home/dpappas/'
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 gc.collect()
+
+epoch_dev_map       = get_one_map('dev',    dev_data,   dev_docs,   use_sent_tokenizer=True)
+test_map            = get_one_map('test',   test_data,  test_docs,  use_sent_tokenizer=True)
