@@ -554,7 +554,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             use_sent_tokenizer=False
         )
         doc_emit_, _            = doc_model.emit_one(
-            doc1_embeds         = datum['sents_embeds'],
+            doc1_embeds         = datum['sents_embeds'][0],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
             doc_gaf             = datum['doc_af'],
