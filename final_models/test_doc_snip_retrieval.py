@@ -535,9 +535,19 @@ class SENT_RET(nn.Module):
             gs_emits        = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         return gs_emits
 
+k_for_maxpool   = 5
+k_sent_maxpool  = 2
+embedding_dim   = 30
+lr              = 0.01
+b_size          = 32
+max_epoch       = 10
 
-
-
+model = DOC_RET(
+    embedding_dim   = embedding_dim,
+    k_for_maxpool   = k_for_maxpool,
+    context_method  = 'BIGRU',
+    mesh_style      = 'SENT'
+)
 
 
 
