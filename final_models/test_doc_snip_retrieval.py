@@ -542,13 +542,7 @@ lr              = 0.01
 b_size          = 32
 max_epoch       = 10
 
-model = DOC_RET(
-    embedding_dim   = embedding_dim,
-    k_for_maxpool   = k_for_maxpool,
-    context_method  = 'BIGRU',
-    mesh_style      = 'SENT'
-)
-
-
+doc_model       = DOC_RET(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, context_method='BIGRU', mesh_style='SENT')
+snet_model      = SENT_RET(embedding_dim=embedding_dim, context_method='BIGRU', sentence_out_method='BIGRU')
 
 
