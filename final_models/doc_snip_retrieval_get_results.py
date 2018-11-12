@@ -118,6 +118,20 @@ def get_the_mesh(the_doc):
 def tokenize(x):
   return bioclean(x)
 
+def init_the_logger(hdlr):
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
+    logger      = logging.getLogger(od)
+    if(hdlr is not None):
+        logger.removeHandler(hdlr)
+    hdlr        = logging.FileHandler(os.path.join(odir,'model.log'))
+    formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+    return logger, hdlr
+
 def GetWords(data, doc_text, words):
   for i in range(len(data['queries'])):
     qwds = tokenize(data['queries'][i]['query_text'])
@@ -930,21 +944,25 @@ lr              = 0.01
 b_size          = 32
 max_epoch       = 10
 
-doc_model       = DOC_RET(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, context_method='BIGRU', mesh_style='SENT')
-sent_model      = SENT_RET(embedding_dim=embedding_dim, context_method='BIGRU', sentence_out_method='BIGRU')
-
-doc_resume_from     = '/home/dpappas/MODELS_OUTPUTS/Doc_Ret_Model_04_run_0/best_checkpoint.pth.tar'
-sent_resume_from    = '/home/dpappas/MODELS_OUTPUTS/Snip_Extr_Model_02_run_2/best_checkpoint.pth.tar'
-load_model_from_checkpoint(doc_resume_from, sent_resume_from)
-
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/'
 eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
+
+doc_resume_from     = '/home/dpappas/MODELS_OUTPUTS/Doc_Ret_Model_04_run_0/best_checkpoint.pth.tar'
+sent_resume_from    = '/home/dpappas/MODELS_OUTPUTS/Snip_Extr_Model_02_run_2/best_checkpoint.pth.tar'
 odir                = 'this_is_me_testing_{}'.format('Doc4Snip2')
 odir                = os.path.join(odd, odir)
+
+hdlr                = None
+logger, hdlr        = init_the_logger(hdlr)
+
+doc_model           = DOC_RET(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, context_method='BIGRU', mesh_style='SENT')
+sent_model          = SENT_RET(embedding_dim=embedding_dim, context_method='BIGRU', sentence_out_method='BIGRU')
+
+load_model_from_checkpoint(doc_resume_from, sent_resume_from)
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 gc.collect()
