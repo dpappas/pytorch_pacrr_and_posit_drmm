@@ -5,7 +5,6 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 import  os
-import  re
 import  json
 import  time
 import  random
@@ -17,14 +16,162 @@ import  torch.nn as nn
 import  torch.optim as optim
 import  torch.nn.functional as F
 from    pprint import pprint
-import  cPickle as pickle
 import  torch.autograd as autograd
 from    tqdm import tqdm
-from    gensim.models.keyedvectors import KeyedVectors
-from    nltk.tokenize import sent_tokenize
 from    difflib import SequenceMatcher
+from    nltk.tokenize import sent_tokenize
+from    gensim.models.keyedvectors import KeyedVectors
+import  cPickle as pickle
+import  re
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
+
+def RemoveTrainLargeYears(data, doc_text):
+  for i in range(len(data['queries'])):
+    hyear = 1900
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
+        doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+        year = doc_text[doc_id]['publicationDate'].split('-')[0]
+        if year[:1] == '1' or year[:1] == '2':
+          if int(year) > hyear:
+            hyear = int(year)
+    j = 0
+    while True:
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year = doc_text[doc_id]['publicationDate'].split('-')[0]
+      if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
+
+def RemoveBadYears(data, doc_text, train):
+  for i in range(len(data['queries'])):
+    j = 0
+    while True:
+      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
+      ##########################
+      # Skip 2017/2018 docs always. Skip 2016 docs for training.
+      # Need to change for final model - 2017 should be a train year only.
+      # Use only for testing.
+      if year == '2017' or year == '2018' or (train and year == '2016'):
+      #if year == '2018' or (train and year == '2017'):
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      ##########################
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
+
+def load_idfs(idf_path, words):
+    print('Loading IDF tables')
+    #
+    # with open(dataloc + 'idf.pkl', 'rb') as f:
+    with open(idf_path, 'rb') as f:
+        idf = pickle.load(f)
+    ret = {}
+    for w in words:
+        if w in idf:
+            ret[w] = idf[w]
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    idf = None
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    #
+    return ret, max_idf
+
+def get_the_mesh(the_doc):
+    good_meshes = []
+    if('meshHeadingsList' in the_doc):
+        for t in the_doc['meshHeadingsList']:
+            t = t.split(':', 1)
+            t = t[1].strip()
+            t = t.lower()
+            good_meshes.append(t)
+    elif('MeshHeadings' in the_doc):
+        for mesh_head_set in the_doc['MeshHeadings']:
+            for item in mesh_head_set:
+                good_meshes.append(item['text'].strip().lower())
+    if('Chemicals' in the_doc):
+        for t in the_doc['Chemicals']:
+            t = t['NameOfSubstance'].strip().lower()
+            good_meshes.append(t)
+    good_mesh = sorted(good_meshes)
+    good_mesh = ['mgmx'] + good_mesh
+    # good_mesh = ' # '.join(good_mesh)
+    # good_mesh = good_mesh.split()
+    # good_mesh = [gm.split() for gm in good_mesh]
+    good_mesh = [gm for gm in good_mesh]
+    return good_mesh
+
+def tokenize(x):
+  return bioclean(x)
+
+def GetWords(data, doc_text, words):
+  for i in range(len(data['queries'])):
+    qwds = tokenize(data['queries'][i]['query_text'])
+    for w in qwds:
+      words[w] = 1
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      dtext = (
+              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
+              ' '.join(
+                  [
+                      ' '.join(mm) for mm in
+                      get_the_mesh(doc_text[doc_id])
+                  ]
+              )
+      )
+      dwds = tokenize(dtext)
+      for w in dwds:
+        words[w] = 1
+
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+    print('loading pickle data')
+    #
+    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
+        bioasq6_data = json.load(f)
+        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
+    #
+    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
+        test_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
+        test_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+        dev_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+        dev_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+        train_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+        train_docs = pickle.load(f)
+    print('loading words')
+    #
+    train_data  = RemoveBadYears(train_data, train_docs, True)
+    train_data  = RemoveTrainLargeYears(train_data, train_docs)
+    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
+    test_data   = RemoveBadYears(test_data, test_docs, False)
+    #
+    words           = {}
+    GetWords(train_data, train_docs, words)
+    GetWords(dev_data,   dev_docs,   words)
+    GetWords(test_data,  test_docs,  words)
+    # mgmx
+    print('loading idfs')
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    print('loading w2v')
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 def load_model_from_checkpoint(doc_resume_from, sent_resume_from):
     if os.path.isfile(doc_resume_from):
@@ -561,3 +708,12 @@ doc_resume_from     = '/home/dpappas/MODELS_OUTPUTS/Doc_Ret_Model_04_run_0/best_
 sent_resume_from    = '/home/dpappas/MODELS_OUTPUTS/Snip_Extr_Model_02_run_2/best_checkpoint.pth.tar'
 load_model_from_checkpoint(doc_resume_from, sent_resume_from)
 
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
+
+(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+gc.collect()
