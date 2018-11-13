@@ -14,15 +14,16 @@ if(python_version.startswith('3')):
 else:
     import cPickle as pickle
 
-import os
-import re
-import json
-import random
-import numpy as np
-from pprint import pprint
-from tqdm import tqdm
-from nltk.tokenize import sent_tokenize
-from difflib import SequenceMatcher
+import  os
+import  re
+import  json
+import  random
+import  numpy as np
+from    pprint import pprint
+from    tqdm import tqdm
+from    nltk.tokenize import sent_tokenize
+from    difflib import SequenceMatcher
+from    gensim.models.keyedvectors import KeyedVectors
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -323,6 +324,57 @@ def load_all_data(dataloc):
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
+
+def snip_is_relevant(one_sent, gold_snips):
+    # print one_sent
+    # pprint(gold_snips)
+    return int(
+        any(
+            [
+                (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
+                or
+                (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
+                for gold_snip in gold_snips
+            ]
+        )
+    )
+
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
+    if(use_sent_tokenizer):
+        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    else:
+        good_sents = [the_doc['title'] + the_doc['abstractText']]
+    ####
+    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    ####
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    for good_text in good_sents:
+        good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
+        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        if (len(good_embeds) > 0):
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores)
+            held_out_sents.append(good_text)
+            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    ####
+    good_meshes = get_the_mesh(the_doc)
+    good_mesh_embeds, good_mesh_escores = [], []
+    for good_mesh in good_meshes:
+        gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
+        if (len(gm_tokens) > 0):
+            good_mesh_embeds.append(gm_embeds)
+            good_escores                = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
+            good_mesh_escores.append(good_escores)
+    ####
+    return {
+        'sents_embeds'     : good_sents_embeds,
+        'sents_escores'    : good_sents_escores,
+        'doc_af'           : good_doc_af,
+        'sent_tags'        : good_sent_tags,
+        'mesh_embeds'      : good_mesh_embeds,
+        'mesh_escores'     : good_mesh_escores,
+        'held_out_sents'   : held_out_sents,
+    }
 
 def train_data_step1(train_data):
     ret = []
