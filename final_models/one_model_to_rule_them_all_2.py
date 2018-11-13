@@ -1060,7 +1060,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output          = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
@@ -1088,10 +1088,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         else:
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
-        ret = self.get_kmax(res, self.k_sent_maxpool)
+        ret = self.get_kmax(res, k2)
         res = torch.sigmoid(res)
         return ret, res
-    def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
+    def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         hn  = self.context_h0
         for i in range(len(doc_sents_embeds)):
@@ -1119,7 +1119,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         else:
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
-        ret = self.get_kmax(res, self.k_sent_maxpool).unsqueeze(0)
+        ret = self.get_kmax(res, k2)
         res = torch.sigmoid(res)
         return ret, res
     def get_max(self, res):
@@ -1211,11 +1211,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         if(self.context_method=='CNN'):
-            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-            bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+            bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         else:
-            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-            bad_out, bs_emits   = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+            bad_out, bs_emits   = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
         if(self.mesh_style=='BIGRU'):
             good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
@@ -1224,19 +1224,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             bad_out_pp          = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
         elif(self.mesh_style=='SENT'):
             if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_cnn(
-                    good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights
-                )
-                bad_mesh_out, bs_mesh_emits = self.do_for_one_doc_cnn(
-                    bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights
-                )
+                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
+                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights, 1)
             else:
-                good_mesh_out, gs_mesh_emits = self.do_for_one_doc_bigru(
-                    good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights
-                )
-                bad_mesh_out, bs_mesh_emits  = self.do_for_one_doc_bigru(
-                    bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights
-                )
+                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
+                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_bigru(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights, 1)
             good_out_pp = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
             bad_out_pp  = torch.cat([bad_out, doc_baf, bad_mesh_out], -1)
         else:
