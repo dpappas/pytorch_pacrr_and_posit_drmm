@@ -1088,7 +1088,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         else:
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
-        ret = self.get_kmax(res, self.k_sent_maxpool).unsqueeze(0)
+        ret = self.get_kmax(res, self.k_sent_maxpool)
         res = torch.sigmoid(res)
         return ret, res
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
@@ -1417,7 +1417,6 @@ trec robust (FIND english paragraph questions) +
 
 
 '''
-
 
 '''
 Petros
