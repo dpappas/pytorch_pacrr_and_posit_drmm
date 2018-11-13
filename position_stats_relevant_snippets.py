@@ -503,10 +503,10 @@ train_instances = train_data_step1(train_data)
 random.shuffle(train_instances)
 #
 counts = []
-for datum in tqdm(train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, True), total=):
+for datum in tqdm(train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, True), total=9684):
     counts.append(sum(datum['good_sent_tags']))
 
-pprint(Counter(counts))
+pprint(dict(Counter(counts)))
 exit()
 
 
