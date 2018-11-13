@@ -689,16 +689,16 @@ def get_norm_doc_scores(the_doc_scores):
         norm_doc_scores[ks[i]] = vs[i]
     return norm_doc_scores
 
-def select_snippets_v1(extracted_snippets, doc_res):
+def select_snippets_v1(extracted_snippets):
     '''
     :param extracted_snippets:
     :param doc_res:
     :return: returns the best 10 snippets of all docs (0..n from each doc)
     '''
-    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-    return sorted(extracted_snippets, key=lambda x: x[1], reverse=True)[:10]
+    sorted_snips = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+    return sorted_snips[:10]
 
-def select_snippets_v2(extracted_snippets, doc_res):
+def select_snippets_v2(extracted_snippets):
     '''
     :param extracted_snippets:
     :param doc_res:
@@ -707,13 +707,13 @@ def select_snippets_v2(extracted_snippets, doc_res):
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
     ret                 = {}
     for es in extracted_snippets:
-        if (es[2] in doc_res[:10]):
-            if(es[2] in ret):
-                if(es[1] > ret[es[2]][1]):
-                    ret[es[2]] = es
-            else:
+        if(es[2] in ret):
+            if(es[1] > ret[es[2]][1]):
                 ret[es[2]] = es
-    return sorted(ret.values(), key=lambda x: x[1], reverse=True)[:10]
+        else:
+            ret[es[2]] = es
+    sorted_snips =  sorted(ret.values(), key=lambda x: x[1], reverse=True)
+    return sorted_snips[:10]
 
 def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
@@ -722,9 +722,10 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     :return:    returns the top 10 snippets across all documents (0..n from each doc)
     '''
     norm_doc_scores     = get_norm_doc_scores(the_doc_scores)
-    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
-    return sorted(extracted_snippets, key=lambda x: x[1]*norm_doc_scores[x[2]], reverse=True)[:10]
+    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
+    sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
+    return sorted_snips[:10]
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions                    = {
