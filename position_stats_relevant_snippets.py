@@ -528,9 +528,6 @@ eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
     train_docs, idf, max_idf, wv, bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-train_instances = train_data_step1()
-# train_instances = train_instances[:len(train_instances)/2]
-
 train_instances = train_data_step1(train_data)
 random.shuffle(train_instances)
 #
