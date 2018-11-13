@@ -1372,10 +1372,6 @@ select 10 best snippets overall.                    --> DONE
 
 oracle return just 10. Not more!                    --> DONE
 
-add new dataset +
-trec robust (FIND english paragraph questions) +
-5-fold cross validation                             --> Pending
-
 softmax sta scores twn docs + 
 harmonic mean (F1) FOR SNIPPET EXTRACTION           --> DONE
 
@@ -1386,6 +1382,10 @@ Create google doc - with overleaf links             --> DONE
 bioread pubtator corpus                             --> DONE
 otidipote den exei titlo h' abstracts
 otidipote den exei identifier
+
+add new dataset +
+trec robust (FIND english paragraph questions) +
+5-fold cross validation                             --> Pending. Exoume ta data tou brokou opws ta xwrise
 
 
 
