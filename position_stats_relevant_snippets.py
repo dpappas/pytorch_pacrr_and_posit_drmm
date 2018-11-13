@@ -290,41 +290,6 @@ def GetWords(data, doc_text, words):
       for w in dwds:
         words[w] = 1
 
-def load_all_data(dataloc):
-    print('loading pickle data')
-    #
-    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
-        bioasq6_data = json.load(f)
-        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
-    # logger.info('loading pickle data')
-    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
-        test_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
-        test_docs = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
-        dev_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
-        dev_docs = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
-        train_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
-        train_docs = pickle.load(f)
-    print('loading words')
-    #
-    train_data  = RemoveBadYears(train_data, train_docs, True)
-    train_data  = RemoveTrainLargeYears(train_data, train_docs)
-    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
-    test_data   = RemoveBadYears(test_data, test_docs, False)
-    #
-    words           = {}
-    GetWords(train_data, train_docs, words)
-    GetWords(dev_data,   dev_docs,   words)
-    GetWords(test_data,  test_docs,  words)
-    # mgmx
-    print('loading idfs')
-    idf, max_idf    = load_idfs(idf_pickle_path, words)
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
-
 def snip_is_relevant(one_sent, gold_snips):
     # print one_sent
     # pprint(gold_snips)
@@ -443,12 +408,12 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'q_idfs'                : q_idfs,
             }
 
-def get_snips(quest_id, gid):
+def get_snips(quest_id, gid, bioasq6_data):
     good_snips = []
     if('snippets' in bioasq6_data[quest_id]):
         for sn in bioasq6_data[quest_id]['snippets']:
-            if (sn['document'].endswith(gid)):
-                good_snips.extend(get_sents(sn['text']))
+            if(sn['document'].endswith(gid)):
+                good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
 
 def get_sent_tags(good_sents, good_snips):
