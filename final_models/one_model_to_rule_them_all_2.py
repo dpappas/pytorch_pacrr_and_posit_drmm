@@ -1130,7 +1130,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res     = torch.sort(res,0)[0]
         res     = res[-k:].squeeze(-1)
         if(res.size()[0] < k):
-            res         = torch.cat([res, torch.zeros(k - res.size()[0])], -1)
+            to_concat       = torch.zeros(k - res.size()[0])
+            if(use_cuda):
+                to_concat   = to_concat.cuda()
+            res             = torch.cat([res, to_concat], -1)
         return res
     def get_max_and_average_of_k_max(self, res, k):
         k_max_pooled            = self.get_kmax(res, k)
