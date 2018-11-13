@@ -900,9 +900,18 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', sentence_out_method = 'MLP', mesh_style = 'SENT'):
+    def __init__(self,
+             embedding_dim          = 30,
+             k_for_maxpool          = 5,
+             context_method         = 'CNN',
+             sentence_out_method    = 'MLP',
+             mesh_style             = 'SENT',
+             k_sent_maxpool         = 1
+         ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
+        self.k_sent_maxpool                         = k_sent_maxpool
+        self.doc_add_feats                          = 4
         #
         self.embedding_dim                          = embedding_dim
         self.mesh_style                             = mesh_style
@@ -975,15 +984,27 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def init_doc_out_layer(self):
         if(self.mesh_style=='BIGRU'):
             self.init_mesh_module()
-            self.final_layer = nn.Linear(5 + 30, 1, bias=True)
+            self.final_layer = nn.Linear(
+                self.doc_add_feats+self.k_sent_maxpool + 30,
+                1,
+                bias=True
+            )
             if(use_cuda):
                 self.final_layer    = self.final_layer.cuda()
         elif(self.mesh_style=='SENT'):
-            self.final_layer = nn.Linear(1 + 4 + 1, 1, bias=True)
+            self.final_layer = nn.Linear(
+                self.doc_add_feats + self.k_sent_maxpool + 1,
+                1,
+                bias=True
+            )
             if(use_cuda):
                 self.final_layer    = self.final_layer.cuda()
         else:
-            self.final_layer = nn.Linear(5, 1, bias=True)
+            self.final_layer = nn.Linear(
+                self.doc_add_feats+self.k_sent_maxpool,
+                1,
+                bias=True
+            )
             if(use_cuda):
                 self.final_layer    = self.final_layer.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
@@ -1275,7 +1296,7 @@ odd                 = '/home/dpappas/'
 # odd                 = '/home/cave/dpappas/'
 
 k_for_maxpool       = 5
-k_sent_maxpool      = 2
+k_sent_maxpool      = 5
 embedding_dim       = 30 #200
 lr                  = 0.01
 b_size              = 32
