@@ -22,7 +22,9 @@ from pprint import pprint
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_53/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_54/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_55/model.log'
-fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_56/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_56/model.log'
+
+fpath = '/home/dpappas/this_is_me_testing_Doc4Snip2/model.log'
 
 tests, devs = [], []
 if(os.path.exists(fpath)):
