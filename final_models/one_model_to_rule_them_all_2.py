@@ -1368,22 +1368,23 @@ grep "test GMAP" -B 7 -A 1 Model_36_run_*/model.log
 '''
 
 '''
-select 10 best snippets overall.                    -->  Pending
+select 10 best snippets overall.                    --> DONE
 
-oracle return just 10. Not more!                    -->  Pending
+oracle return just 10. Not more!                    --> DONE
 
 add new dataset +
 trec robust (FIND english paragraph questions) +
-5-fold cross validation                             -->  Pending
+5-fold cross validation                             --> Pending
 
 softmax sta scores twn docs + 
-harmonic mean (F1) FOR SNIPPET EXTRACTION           -->  Pending
+harmonic mean (F1) FOR SNIPPET EXTRACTION           --> DONE
 
-PRINT DEV SCORES                                    -->  DONE
+PRINT DEV SCORES                                    --> DONE
 
-Create google doc - with overleaf links 
+Create google doc - with overleaf links             --> DONE
 
-otidipote den exei titlo h' abstracts  
+bioread pubtator corpus                             --> DONE
+otidipote den exei titlo h' abstracts
 otidipote den exei identifier
 
 
