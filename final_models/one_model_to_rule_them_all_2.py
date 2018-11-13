@@ -1276,13 +1276,13 @@ use_cuda = torch.cuda.is_available()
 # retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/dpappas/'
 
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 
 # # gpu_server_1
 # w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1292,13 +1292,13 @@ odd                 = '/home/dpappas/'
 # retrieval_jar_path  = '/media/large_space_1/DATA/bioasq_all/dist/my_bioasq_eval_2.jar'
 # odd                 = '/media/large_space_1/dpappas/'
 
-# # gpu_server_2
-# w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/cave/dpappas/'
+# gpu_server_2
+w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/cave/dpappas/'
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
@@ -1342,7 +1342,7 @@ models = dict([(item[0], item[1:]) for item in models])
 which_model = 'Model_50'
 
 hdlr = None
-for run in range(0, 5):
+for run in range(3, 5):
     #
     my_seed = random.randint(1, 2000000)
     random.seed(my_seed)
