@@ -1368,11 +1368,18 @@ grep "test GMAP" -B 7 -A 1 Model_36_run_*/model.log
 '''
 
 '''
+
+1. statistics on k for k max pooling                --> Pending.
+2. use this k as oracle baseline (always return k)  --> Pending.
+3. Manolis ELMO                                     --> Pending.
+4. Pempti skype call me ryan +? Ion                 --> Pending.
+5.  
+
 select 10 best snippets overall.                    --> DONE
 
 oracle return just 10. Not more!                    --> DONE
 
-softmax sta scores twn docs + 
+softmax sta scores twn docs
 harmonic mean (F1) FOR SNIPPET EXTRACTION           --> DONE
 
 PRINT DEV SCORES                                    --> DONE
