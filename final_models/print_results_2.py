@@ -9,7 +9,7 @@ from pprint import pprint
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_43/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_44/model.log'
 
-# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_45/model.log'
+fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_45/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_46/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_47/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_48/model.log'
@@ -24,7 +24,8 @@ from pprint import pprint
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_55/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_56/model.log'
 
-fpath = '/home/dpappas/this_is_me_testing_Doc4Snip2/model.log'
+
+# fpath = '/home/dpappas/this_is_me_testing_Doc4Snip2/model.log'
 
 tests, devs = [], []
 if(os.path.exists(fpath)):
