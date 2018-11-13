@@ -1373,7 +1373,7 @@ grep "test GMAP" -B 7 -A 1 Model_36_run_*/model.log
 2. use this k as oracle baseline (always return k)  --> Pending.
 3. Manolis ELMO                                     --> Pending.
 4. Pempti skype call me ryan +? Ion                 --> Pending.
-5.  
+5. 
 
 select 10 best snippets overall.                    --> DONE
 
