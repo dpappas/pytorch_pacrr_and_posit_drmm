@@ -384,10 +384,12 @@ def query_doc_overlap(qwords, dwords, idf, max_idf):
       idf_qwords_bigrams_in_doc_val = 0.0
     else:
       idf_qwords_bigrams_in_doc_val = (float(idf_qwords_bigrams_in_doc) / float(idf_bigrams))
-    return [qwords_in_doc_val,
-            qwords_bigrams_in_doc_val,
-            idf_qwords_in_doc_val,
-            idf_qwords_bigrams_in_doc_val]
+    return [
+        qwords_in_doc_val,
+        qwords_bigrams_in_doc_val,
+        idf_qwords_in_doc_val,
+        idf_qwords_bigrams_in_doc_val
+    ]
 
 def GetScores(qtext, dtext, bm25, idf, max_idf):
     qwords, qw2 = get_words(qtext, idf, max_idf)
