@@ -1087,7 +1087,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.sent_out_layer(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
-        ret = self.get_max(res).unsqueeze(0)
+        # ret = self.get_max(res).unsqueeze(0)
+        ret = self.get_kmax(res, self.k_sent_maxpool).unsqueeze(0)
         res = torch.sigmoid(res)
         return ret, res
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
@@ -1117,28 +1118,24 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.sent_out_layer(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
-        ret = self.get_max(res).unsqueeze(0)
+        # ret = self.get_max(res).unsqueeze(0)
+        ret = self.get_kmax(res, self.k_sent_maxpool).unsqueeze(0)
         res = torch.sigmoid(res)
         return ret, res
-    def get_max_and_average_of_k_max(self, res, k):
-        sorted_res              = torch.sort(res)[0]
-        k_max_pooled            = sorted_res[-k:]
-        average_k_max_pooled    = k_max_pooled.sum()/float(k)
-        the_maximum             = k_max_pooled[-1]
-        # print(the_maximum)
-        # print(the_maximum.size())
-        # print(average_k_max_pooled)
-        # print(average_k_max_pooled.size())
-        the_concatenation       = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
-        return the_concatenation
     def get_max(self, res):
         return torch.max(res)
-    def get_kmax(self, res):
+    def get_kmax(self, res, k):
         res     = torch.sort(res,0)[0]
-        res     = res[-self.k2:].squeeze(-1)
-        if(res.size()[0] < self.k2):
-            res         = torch.cat([res, torch.zeros(self.k2 - res.size()[0])], -1)
+        res     = res[-k:].squeeze(-1)
+        if(res.size()[0] < k):
+            res         = torch.cat([res, torch.zeros(k - res.size()[0])], -1)
         return res
+    def get_max_and_average_of_k_max(self, res, k):
+        k_max_pooled            = self.get_kmax(res, k)
+        average_k_max_pooled    = k_max_pooled.sum()/float(k)
+        the_maximum             = k_max_pooled[-1]
+        the_concatenation       = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
+        return the_concatenation
     def get_average(self, res):
         res = torch.sum(res) / float(res.size()[0])
         return res
@@ -1343,7 +1340,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = '{}_run_{}/'.format(which_model, run)
+    odir    = '{}_run_5max_{}/'.format(which_model, run)
     odir    = os.path.join(odd, odir)
     print odir
     if(not os.path.exists(odir)):
@@ -1365,7 +1362,8 @@ for run in range(0, 5):
         k_for_maxpool       = k_for_maxpool,
         context_method      = models[which_model][0],
         sentence_out_method = models[which_model][1],
-        mesh_style          = models[which_model][2]
+        mesh_style          = models[which_model][2],
+        k_sent_maxpool      = 5
     )
     if(use_cuda):
         model = model.cuda()
