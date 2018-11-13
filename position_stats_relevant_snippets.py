@@ -324,8 +324,7 @@ def load_all_data(dataloc):
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
-def train_data_step1():
-    # bioasq6_data
+def train_data_step1(train_data):
     ret = []
     for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
@@ -340,6 +339,57 @@ def train_data_step1():
                 ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
     print('')
     return ret
+
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
+        if(use_sent_tokenizer):
+            good_snips              = get_snips(quest_id, gid, bioasq6_data)
+            good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
+        else:
+            good_snips              = []
+        #
+        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
+        good_sents_embeds           = datum['sents_embeds']
+        good_sents_escores          = datum['sents_escores']
+        good_mesh_escores           = datum['mesh_escores']
+        good_mesh_embeds            = datum['mesh_embeds']
+        good_doc_af                 = datum['doc_af']
+        good_sent_tags              = datum['sent_tags']
+        good_held_out_sents         = datum['held_out_sents']
+        #
+        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
+        bad_sents_embeds            = datum['sents_embeds']
+        bad_sents_escores           = datum['sents_escores']
+        bad_mesh_escores            = datum['mesh_escores']
+        bad_mesh_embeds             = datum['mesh_embeds']
+        bad_doc_af                  = datum['doc_af']
+        bad_sent_tags               = [0] * len(datum['sent_tags'])
+        bad_held_out_sents          = datum['held_out_sents']
+        #
+        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        #
+        if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
+            yield {
+                'good_sents_embeds'     : good_sents_embeds,
+                'good_sents_escores'    : good_sents_escores,
+                'good_doc_af'           : good_doc_af,
+                'good_sent_tags'        : good_sent_tags,
+                'good_mesh_embeds'      : good_mesh_embeds,
+                'good_mesh_escores'     : good_mesh_escores,
+                'good_held_out_sents'   : good_held_out_sents,
+                #
+                'bad_sents_embeds'      : bad_sents_embeds,
+                'bad_sents_escores'     : bad_sents_escores,
+                'bad_doc_af'            : bad_doc_af,
+                'bad_sent_tags'         : bad_sent_tags,
+                'bad_mesh_embeds'       : bad_mesh_embeds,
+                'bad_mesh_escores'      : bad_mesh_escores,
+                'bad_held_out_sents'    : bad_held_out_sents,
+                #
+                'quest_embeds'          : quest_embeds,
+                'q_idfs'                : q_idfs,
+            }
 
 def get_snips(quest_id, gid):
     good_snips = []
@@ -368,26 +418,6 @@ def get_the_mesh(the_doc):
     good_mesh = good_mesh.split()
     return good_mesh
 
-def train_data_step2(train_instances):
-    for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
-        #
-        good_mesh                               = get_the_mesh(train_docs[gid])
-        good_sents_title                        = get_sents(train_docs[gid]['title'])
-        good_sents_abs                          = get_sents(train_docs[gid]['abstractText'])
-        #
-        good_sents                              = good_sents_title + good_sents_abs
-        #
-        good_snips                              = get_snips(quest_id, gid)
-        good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
-        #
-        good_sents_embeds, good_sents_escores, good_sent_tags, good_sent_len = [], [], [], []
-        for good_text in good_sents:
-            tt = ' '.join(bioclean(good_text))
-            good_sent_tags.append(int((tt in good_snips) or any([s in tt for s in good_snips])))
-        #
-        if(sum(good_sent_tags)>0):
-            yield good_sent_tags, good_sent_len
-
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
@@ -398,15 +428,68 @@ def get_sim_info(sent, snippets):
     index_of_max    = similarities.index(max_sim)
     return max_sim, index_of_max, snippets[index_of_max]
 
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+    print('loading pickle data')
+    #
+    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
+        bioasq6_data = json.load(f)
+        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
+    #
+    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
+        test_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
+        test_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+        dev_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+        dev_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+        train_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+        train_docs = pickle.load(f)
+    print('loading words')
+    #
+    train_data  = RemoveBadYears(train_data, train_docs, True)
+    train_data  = RemoveTrainLargeYears(train_data, train_docs)
+    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
+    test_data   = RemoveBadYears(test_data, test_docs, False)
+    #
+    words           = {}
+    GetWords(train_data, train_docs, words)
+    GetWords(dev_data,   dev_docs,   words)
+    GetWords(test_data,  test_docs,  words)
+    # mgmx
+    print('loading idfs')
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    print('loading w2v')
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+
 w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc         = '/home/dpappas/for_ryan/'
 eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 
-test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data = load_all_data(dataloc)
+(
+    test_data, test_docs, dev_data, dev_docs, train_data,
+    train_docs, idf, max_idf, wv, bioasq6_data
+) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 train_instances = train_data_step1()
 # train_instances = train_instances[:len(train_instances)/2]
+
+train_instances = train_data_step1(train_data)
+random.shuffle(train_instances)
+#
+for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, True):
+    pprint(datum)
+    exit()
+
+
+
+
+
 epoch_aver_cost, epoch_aver_acc = 0., 0.
 random.shuffle(train_instances)
 
