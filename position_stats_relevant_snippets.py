@@ -21,6 +21,7 @@ import  random
 import  numpy as np
 from    pprint import pprint
 from    tqdm import tqdm
+from    collections import Counter
 from    nltk.tokenize import sent_tokenize
 from    difflib import SequenceMatcher
 from    gensim.models.keyedvectors import KeyedVectors
@@ -501,11 +502,12 @@ eval_path       = '/home/dpappas/for_ryan/eval/run_eval.py'
 train_instances = train_data_step1(train_data)
 random.shuffle(train_instances)
 #
-for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, True):
-    pprint(datum)
-    exit()
+counts = []
+for datum in tqdm(train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, True)):
+    counts.append(sum(datum['good_sent_tags']))
 
-
+pprint(Counter(counts))
+exit()
 
 
 
