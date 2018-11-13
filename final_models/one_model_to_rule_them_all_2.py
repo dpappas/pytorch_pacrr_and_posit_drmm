@@ -1138,10 +1138,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def get_max(self, res):
         return torch.max(res)
     def get_kmax(self, res, k):
-        if(k == 1):
-            return self.get_max(res).unsqueeze(0)
         res     = torch.sort(res,0)[0]
         res     = res[-k:].squeeze(-1)
+        if(len(res.size())==0):
+            res = res.unsqueeze(0)
         if(res.size()[0] < k):
             to_concat       = torch.zeros(k - res.size()[0])
             if(use_cuda):
