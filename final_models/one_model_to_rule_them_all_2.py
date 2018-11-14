@@ -1468,16 +1468,16 @@ import json
 import cPickle as pickle
 from pprint import pprint
 
-d = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/split_1/rob04_bm25_docset_top100.train.s1.pkl','rb'))
+d = pickle.load(open('./split_1/rob04_bm25_docset_top100.train.s1.pkl','rb'))
 pprint(d.keys())
 pprint(d['FBIS3-59725'])
 pprint(d['FBIS3-59725'].keys())
 
-d = pickle.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/split_1/rob04_bm25_top100.train.s1.pkl','rb'))
+d = pickle.load(open('./split_1/rob04_bm25_top100.train.s1.pkl','rb'))
 pprint(d.keys())
-pprint(d['questions'][0])
+pprint(d['queries'][0])
 
-d = json.load(open('/home/DATA/Biomedical/document_ranking/rob04_data/split_1/rob04.train.s1.json'))
+d = json.load(open('./split_1/rob04.train.s1.json'))
 pprint(d.keys())
 pprint(d['questions'][0])
 
