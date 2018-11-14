@@ -121,32 +121,6 @@ def print_the_results(all1, all2, all3):
     print '\t'.join(str(e) for e in np.min(np.array(all3, dtype='float'), axis=0).tolist())
     print ''
 
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_34_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_35_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_36_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_37_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_38_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_40_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_42_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_49_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_50_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_51_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_52_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
-diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
-
 def do_three_losses():
     all1 = []
     all2 = []
@@ -303,6 +277,32 @@ def do_one_loss():
     print ''
     print 'dev'
     print '\n'.join(devs)
+
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_34_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_35_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_36_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_37_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_38_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_40_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_42_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_49_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_50_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_51_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_52_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
+diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
 do_three_losses()
 # do_one_loss()
