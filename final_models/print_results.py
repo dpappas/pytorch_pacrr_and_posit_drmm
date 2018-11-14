@@ -189,13 +189,15 @@ def do_one_loss():
                         res1['test']['gmap_snip']               = data[15]
                         #
                         #
-                print '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
-                    res1['test']['map_doc'], res1['test']['map_doc_bioasq'], res1['test']['f1_snip'],
-                    res1['test']['map_snip'], res1['test']['gmap_snip'], res1['test']['known_f1_snip'],
-                    res1['test']['known_map_snip'], res1['test']['known_gmap_snip'], res1['dev']['map_doc'],
-                    res1['dev']['map_doc_bioasq'], res1['dev']['f1_snip'], res1['dev']['map_snip'],
-                    res1['dev']['gmap_snip'], res1['dev']['known_f1_snip'], res1['dev']['known_map_snip'],
-                    res1['dev']['known_gmap_snip'], res1['epoch'],
+                overall.append(
+                    '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
+                        res1['test']['map_doc'], res1['test']['map_doc_bioasq'], res1['test']['f1_snip'],
+                        res1['test']['map_snip'], res1['test']['gmap_snip'], res1['test']['known_f1_snip'],
+                        res1['test']['known_map_snip'], res1['test']['known_gmap_snip'], res1['dev']['map_doc'],
+                        res1['dev']['map_doc_bioasq'], res1['dev']['f1_snip'], res1['dev']['map_snip'],
+                        res1['dev']['gmap_snip'], res1['dev']['known_f1_snip'], res1['dev']['known_map_snip'],
+                        res1['dev']['known_gmap_snip'], res1['epoch'],
+                    )
                 )
                 tests.append('{}\t{}\t{}\t{}\t{}\t{}'.format(res1['test']['f1_snip'], res1['test']['map_snip'],
                                                              res1['test']['gmap_snip'], res1['test']['known_f1_snip'],
