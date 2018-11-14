@@ -31,11 +31,8 @@ from pprint import pprint
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
 diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
-tests, devs = [], []
-for i in range(5):
-    fpath = diri.format(i)
-    if(os.path.exists(fpath)):
-        res = {
+def init_dic():
+    return {
             'dev': {
                 'map_doc'    : 0.,
                 'map_doc_bioasq'    : 0.,
@@ -59,67 +56,74 @@ for i in range(5):
             'epoch'                 : 0.,
             # 'time'                  : 0.,
         }
+
+tests, devs = [], []
+for i in range(5):
+    fpath = diri.format(i)
+    if(os.path.exists(fpath)):
+        res3 = init_dic()
+        res2 = init_dic()
+        res1 = init_dic()
         with open(fpath) as f:
             lines = f.readlines()
             for l in range(len(lines)):
-                if('test known MAP documents' in lines[l]):
+                if('v3 test known MAP documents' in lines[l]):
                     data = lines[l:l+8]
-                    # # pprint(data)
-                    # res['test']['map_doc']          = float(lines[l+8].split(':')[-1].strip())
-                    # res['dev']['map_doc']           = float(lines[l+8].split('epoch_dev_map:')[1].split()[0].strip())
-                    # res['epoch']                    = int(lines[l+8].split('epoch:')[1].split()[0])
-                    # data                            = [float(t.strip().split()[-1]) for t in data]
+                    # pprint(data)
+                    res3['test']['map_doc']          = float(lines[l+8].split(':')[-1].strip())
+                    res3['dev']['map_doc']           = float(lines[l+8].split('epoch_dev_map:')[1].split()[0].strip())
+                    res3['epoch']                    = int(lines[l+8].split('epoch:')[1].split()[0])
+                    data                            = [float(t.strip().split()[-1]) for t in data]
                     #
-                    res['test']['map_doc_bioasq']   = data[0]
-                    res['test']['known_f1_snip']    = data[1]
-                    res['test']['known_map_snip']   = data[2]
-                    res['test']['known_gmap_snip']  = data[3]
-                    res['test']['f1_snip']          = data[5]
-                    res['test']['map_snip']         = data[6]
-                    res['test']['gmap_snip']        = data[7]
+                    res3['test']['map_doc_bioasq']   = data[0]
+                    res3['test']['known_f1_snip']    = data[1]
+                    res3['test']['known_map_snip']   = data[2]
+                    res3['test']['known_gmap_snip']  = data[3]
+                    res3['test']['f1_snip']          = data[5]
+                    res3['test']['map_snip']         = data[6]
+                    res3['test']['gmap_snip']        = data[7]
                 elif('dev known MAP documents' in lines[l]):
                     data = lines[l:l+8]
                     data = [float(t.strip().split()[-1]) for t in data]
                     #
-                    res['dev']['map_doc_bioasq']    = data[0]
-                    res['dev']['known_f1_snip']     = data[1]
-                    res['dev']['known_map_snip']    = data[2]
-                    res['dev']['known_gmap_snip']   = data[3]
-                    res['dev']['f1_snip']           = data[5]
-                    res['dev']['map_snip']          = data[6]
-                    res['dev']['gmap_snip']         = data[7]
+                    res3['dev']['map_doc_bioasq']    = data[0]
+                    res3['dev']['known_f1_snip']     = data[1]
+                    res3['dev']['known_map_snip']    = data[2]
+                    res3['dev']['known_gmap_snip']   = data[3]
+                    res3['dev']['f1_snip']           = data[5]
+                    res3['dev']['map_snip']          = data[6]
+                    res3['dev']['gmap_snip']         = data[7]
             # print(fpath)
             # pprint(res)
             print '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
-                res['test']['map_doc'],
-                res['test']['map_doc_bioasq'],
-                res['test']['f1_snip'],
-                res['test']['map_snip'],
-                res['test']['gmap_snip'],
-                res['test']['known_f1_snip'],
-                res['test']['known_map_snip'],
-                res['test']['known_gmap_snip'],
-                res['dev']['map_doc'],
-                res['dev']['map_doc_bioasq'],
-                res['dev']['f1_snip'],
-                res['dev']['map_snip'],
-                res['dev']['gmap_snip'],
-                res['dev']['known_f1_snip'],
-                res['dev']['known_map_snip'],
-                res['dev']['known_gmap_snip'],
-                res['epoch'],
+                res3['test']['map_doc'],
+                res3['test']['map_doc_bioasq'],
+                res3['test']['f1_snip'],
+                res3['test']['map_snip'],
+                res3['test']['gmap_snip'],
+                res3['test']['known_f1_snip'],
+                res3['test']['known_map_snip'],
+                res3['test']['known_gmap_snip'],
+                res3['dev']['map_doc'],
+                res3['dev']['map_doc_bioasq'],
+                res3['dev']['f1_snip'],
+                res3['dev']['map_snip'],
+                res3['dev']['gmap_snip'],
+                res3['dev']['known_f1_snip'],
+                res3['dev']['known_map_snip'],
+                res3['dev']['known_gmap_snip'],
+                res3['epoch'],
             )
             tests.append(
                 '{}\t{}\t{}\t{}\t{}\t{}'.format(
-                    res['test']['f1_snip'], res['test']['map_snip'], res['test']['gmap_snip'],
-                    res['test']['known_f1_snip'], res['test']['known_map_snip'],
-                    res['test']['known_gmap_snip']
+                    res3['test']['f1_snip'],        res3['test']['map_snip'],       res3['test']['gmap_snip'],
+                    res3['test']['known_f1_snip'],  res3['test']['known_map_snip'], res3['test']['known_gmap_snip']
                 )
             )
             devs.append(
                 '{}\t{}\t{}\t{}\t{}\t{}'.format(
-                    res['dev']['f1_snip'], res['dev']['map_snip'], res['dev']['gmap_snip'],
-                    res['dev']['known_f1_snip'], res['dev']['known_map_snip'], res['dev']['known_gmap_snip']
+                    res3['dev']['f1_snip'],         res3['dev']['map_snip'],        res3['dev']['gmap_snip'],
+                    res3['dev']['known_f1_snip'],   res3['dev']['known_map_snip'],  res3['dev']['known_gmap_snip']
                 )
             )
 
