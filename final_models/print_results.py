@@ -144,21 +144,19 @@ def do_three_losses():
                 )
                 tests1.append((res1['test']['f1_snip'], res1['test']['map_snip'], res1['test']['gmap_snip'], res1['test']['known_f1_snip'],  res1['test']['known_map_snip'], res1['test']['known_gmap_snip']))
                 devs2.append((res1['dev']['f1_snip'], res1['dev']['map_snip'], res1['dev']['gmap_snip'], res1['dev']['known_f1_snip'],   res1['dev']['known_map_snip'],  res1['dev']['known_gmap_snip']))
-                tests2.append((res3['test']['f1_snip'], res3['test']['map_snip'], res3['test']['gmap_snip'],
-                               res3['test']['known_f1_snip'], res3['test']['known_map_snip'], res3['test']['known_gmap_snip']))
-                devs2.append((res3['dev']['f1_snip'], res3['dev']['map_snip'], res3['dev']['gmap_snip'],
-                              res3['dev']['known_f1_snip'], res3['dev']['known_map_snip'], res3['dev']['known_gmap_snip']))
-                tests3.append((res3['test']['f1_snip'], res3['test']['map_snip'], res3['test']['gmap_snip'],
-                               res3['test']['known_f1_snip'], res3['test']['known_map_snip'], res3['test']['known_gmap_snip']))
-                devs3.append((res3['dev']['f1_snip'], res3['dev']['map_snip'], res3['dev']['gmap_snip'],
-                              res3['dev']['known_f1_snip'], res3['dev']['known_map_snip'], res3['dev']['known_gmap_snip']))
+                tests2.append((res2['test']['f1_snip'], res2['test']['map_snip'], res2['test']['gmap_snip'], res2['test']['known_f1_snip'], res2['test']['known_map_snip'], res2['test']['known_gmap_snip']))
+                devs2.append((res2['dev']['f1_snip'], res2['dev']['map_snip'], res2['dev']['gmap_snip'], res2['dev']['known_f1_snip'], res2['dev']['known_map_snip'], res2['dev']['known_gmap_snip']))
+                tests3.append((res3['test']['f1_snip'], res3['test']['map_snip'], res3['test']['gmap_snip'], res3['test']['known_f1_snip'], res3['test']['known_map_snip'], res3['test']['known_gmap_snip']))
+                devs3.append((res3['dev']['f1_snip'], res3['dev']['map_snip'], res3['dev']['gmap_snip'], res3['dev']['known_f1_snip'], res3['dev']['known_map_snip'], res3['dev']['known_gmap_snip']))
     print ''
     print diri
+    print ''
+    print 'V3'
     print 'test'
-    print '\n'.join(tests3)
+    print '\n'.join('\t'.join(str(e) for e in t) for t in tests3)
     print ''
     print 'dev'
-    print '\n'.join(devs3)
+    print '\n'.join('\t'.join(str(e) for e in t) for t in devs3)
 
 def do_one_loss():
     tests   = []
