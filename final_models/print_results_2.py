@@ -49,9 +49,14 @@ def print_version(version):
                     res['test']['gmap_snip']        = data[7]
                     #
                     tests.append((res['test']['f1_snip'], res['test']['map_snip'], res['test']['gmap_snip'], res['test']['known_f1_snip'], res['test']['known_map_snip'], res['test']['known_gmap_snip']))
+                    devs.append((res['dev']['f1_snip'], res['dev']['map_snip'], res['dev']['gmap_snip'],
+                                 res['dev']['known_f1_snip'], res['dev']['known_map_snip'],
+                                 res['dev']['known_gmap_snip']))
                 elif('{} dev known MAP documents' in lines[l]):
                     data = lines[l:l+8]
                     data = [float(t.strip().split()[-1]) for t in data]
+                    #
+                    pprint(data)
                     #
                     res['dev']['map_doc_bioasq']    = data[0]
                     res['dev']['known_f1_snip']     = data[1]
@@ -61,7 +66,6 @@ def print_version(version):
                     res['dev']['map_snip']          = data[6]
                     res['dev']['gmap_snip']         = data[7]
                     #
-                    devs.append((res['dev']['f1_snip'], res['dev']['map_snip'], res['dev']['gmap_snip'], res['dev']['known_f1_snip'], res['dev']['known_map_snip'], res['dev']['known_gmap_snip']))
     print fpath
     print 'test'
     print '\n'.join('\t'.join(str(e) for e in t) for t in tests)
