@@ -32,7 +32,17 @@ def init_dic():
             # 'time'                  : 0.,
         }
 
-def assign_data(data, res1, res2, res3):
+def assign_data(data, res1, res2, res3, the_line):
+    res1['test']['map_doc']         = float(the_line.split(':')[-1].strip())
+    res1['dev']['map_doc']          = float(the_line.split('epoch_dev_map:')[1].split()[0].strip())
+    res1['epoch']                   = int(the_line.split('epoch:')[1].split()[0])
+    res2['test']['map_doc']         = float(the_line.split(':')[-1].strip())
+    res2['dev']['map_doc']          = float(the_line.split('epoch_dev_map:')[1].split()[0].strip())
+    res2['epoch']                   = int(the_line.split('epoch:')[1].split()[0])
+    res3['test']['map_doc']         = float(the_line.split(':')[-1].strip())
+    res3['dev']['map_doc']          = float(the_line.split('epoch_dev_map:')[1].split()[0].strip())
+    res3['epoch']                   = int(the_line.split('epoch:')[1].split()[0])
+    #
     res1['dev']['known_map_doc_bioasq'] = data[0]
     res1['dev']['known_f1_snip']        = data[1]
     res1['dev']['known_map_snip']       = data[2]
@@ -88,6 +98,29 @@ def assign_data(data, res1, res2, res3):
     res3['test']['gmap_snip']               = data[47]
     return res1, res2, res3
 
+def print_the_results(all1, all2, all3):
+    print ''
+    print diri
+    print ''
+    print 'V1'
+    print '\n'.join('\t'.join(str(e) for e in t) for t in all1)
+    print '\t'.join(str(e) for e in np.average(np.array(all1, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(all1, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(all1, dtype='float'), axis=0).tolist())
+    print ''
+    print 'V2'
+    print '\n'.join('\t'.join(str(e) for e in t) for t in all2)
+    print '\t'.join(str(e) for e in np.average(np.array(all2, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(all2, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(all2, dtype='float'), axis=0).tolist())
+    print ''
+    print 'V3'
+    print '\n'.join('\t'.join(str(e) for e in t) for t in all3)
+    print '\t'.join(str(e) for e in np.average(np.array(all3, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(all3, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(all3, dtype='float'), axis=0).tolist())
+    print ''
+
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_34_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_35_run_{}/model.log'
@@ -115,9 +148,9 @@ def assign_data(data, res1, res2, res3):
 diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
 def do_three_losses():
-    tests1, devs1 = [], []
-    tests2, devs2 = [], []
-    tests3, devs3 = [], []
+    all1 = []
+    all2 = []
+    all3 = []
     for i in range(5):
         fpath = diri.format(i)
         if(os.path.exists(fpath)):
@@ -129,69 +162,75 @@ def do_three_losses():
                 for l in range(len(lines)):
                     if('v3 test known MAP documents' in lines[l]):
                         data = lines[l-40:l+8]
-                        # pprint(data)
-                        res3['test']['map_doc']         = float(lines[l+8].split(':')[-1].strip())
-                        res3['dev']['map_doc']          = float(lines[l+8].split('epoch_dev_map:')[1].split()[0].strip())
-                        res3['epoch']                   = int(lines[l+8].split('epoch:')[1].split()[0])
                         data                            = [float(t.strip().split()[-1]) for t in data]
                         #
-                        res1, res2, res3                = assign_data(data, res1, res2, res3)
+                        # pprint(data)
+                        res1, res2, res3                = assign_data(data, res1, res2, res3, lines[l+8])
                         #
-                print '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
-                    res3['test']['map_doc'],        res3['test']['map_doc_bioasq'],     res3['test']['f1_snip'],
-                    res3['test']['map_snip'],       res3['test']['gmap_snip'],          res3['test']['known_f1_snip'],
-                    res3['test']['known_map_snip'], res3['test']['known_gmap_snip'],    res3['dev']['map_doc'],
-                    res3['dev']['map_doc_bioasq'],  res3['dev']['f1_snip'],             res3['dev']['map_snip'],
-                    res3['dev']['gmap_snip'],       res3['dev']['known_f1_snip'],       res3['dev']['known_map_snip'],
-                    res3['dev']['known_gmap_snip'], res3['epoch'],
+                all1.append(
+                    (
+                        res1['test']['map_doc'],
+                        res1['test']['map_doc_bioasq'],
+                        res1['test']['f1_snip'],
+                        res1['test']['map_snip'],
+                        res1['test']['gmap_snip'],
+                        res1['test']['known_f1_snip'],
+                        res1['test']['known_map_snip'],
+                        res1['test']['known_gmap_snip'],
+                        res1['dev']['map_doc'],
+                        res1['dev']['map_doc_bioasq'],
+                        res1['dev']['f1_snip'],
+                        res1['dev']['map_snip'],
+                        res1['dev']['gmap_snip'],
+                        res1['dev']['known_f1_snip'],
+                        res1['dev']['known_map_snip'],
+                        res1['dev']['known_gmap_snip'],
+                        res1['epoch'],
+                    )
                 )
-                tests1.append((res1['test']['f1_snip'], res1['test']['map_snip'], res1['test']['gmap_snip'], res1['test']['known_f1_snip'],  res1['test']['known_map_snip'], res1['test']['known_gmap_snip']))
-                devs1.append((res1['dev']['f1_snip'], res1['dev']['map_snip'], res1['dev']['gmap_snip'], res1['dev']['known_f1_snip'],   res1['dev']['known_map_snip'],  res1['dev']['known_gmap_snip']))
-                tests2.append((res2['test']['f1_snip'], res2['test']['map_snip'], res2['test']['gmap_snip'], res2['test']['known_f1_snip'], res2['test']['known_map_snip'], res2['test']['known_gmap_snip']))
-                devs2.append((res2['dev']['f1_snip'], res2['dev']['map_snip'], res2['dev']['gmap_snip'], res2['dev']['known_f1_snip'], res2['dev']['known_map_snip'], res2['dev']['known_gmap_snip']))
-                tests3.append((res3['test']['f1_snip'], res3['test']['map_snip'], res3['test']['gmap_snip'], res3['test']['known_f1_snip'], res3['test']['known_map_snip'], res3['test']['known_gmap_snip']))
-                devs3.append((res3['dev']['f1_snip'], res3['dev']['map_snip'], res3['dev']['gmap_snip'], res3['dev']['known_f1_snip'], res3['dev']['known_map_snip'], res3['dev']['known_gmap_snip']))
-    print ''
-    print diri
-    print ''
-    print 'V1'
-    print 'test'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in tests1)
-    print '\t'.join(str(e) for e in np.average(np.array(tests1, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(tests1, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(tests1, dtype='float'), axis=0).tolist())
-    print ''
-    print 'dev'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in devs1)
-    print '\t'.join(str(e) for e in np.average(np.array(devs1, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(devs1, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(devs1, dtype='float'), axis=0).tolist())
-    print ''
-    print 'V2'
-    print 'test'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in tests2)
-    print '\t'.join(str(e) for e in np.average(np.array(tests2, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(tests2, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(tests2, dtype='float'), axis=0).tolist())
-    print ''
-    print 'dev'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in devs2)
-    print '\t'.join(str(e) for e in np.average(np.array(devs2, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(devs2, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(devs2, dtype='float'), axis=0).tolist())
-    print ''
-    print 'V3'
-    print 'test'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in tests3)
-    print '\t'.join(str(e) for e in np.average(np.array(tests3, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(tests3, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(tests3, dtype='float'), axis=0).tolist())
-    print ''
-    print 'dev'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in devs3)
-    print '\t'.join(str(e) for e in np.average(np.array(devs3, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(devs3, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(devs3, dtype='float'), axis=0).tolist())
+                all2.append(
+                    (
+                        res2['test']['map_doc'],
+                        res2['test']['map_doc_bioasq'],
+                        res2['test']['f1_snip'],
+                        res2['test']['map_snip'],
+                        res2['test']['gmap_snip'],
+                        res2['test']['known_f1_snip'],
+                        res2['test']['known_map_snip'],
+                        res2['test']['known_gmap_snip'],
+                        res2['dev']['map_doc'],
+                        res2['dev']['map_doc_bioasq'],
+                        res2['dev']['f1_snip'],
+                        res2['dev']['map_snip'],
+                        res2['dev']['gmap_snip'],
+                        res2['dev']['known_f1_snip'],
+                        res2['dev']['known_map_snip'],
+                        res2['dev']['known_gmap_snip'],
+                        res2['epoch'],
+                    )
+                )
+                all3.append(
+                    (
+                        res3['test']['map_doc'],
+                        res3['test']['map_doc_bioasq'],
+                        res3['test']['f1_snip'],
+                        res3['test']['map_snip'],
+                        res3['test']['gmap_snip'],
+                        res3['test']['known_f1_snip'],
+                        res3['test']['known_map_snip'],
+                        res3['test']['known_gmap_snip'],
+                        res3['dev']['map_doc'],
+                        res3['dev']['map_doc_bioasq'],
+                        res3['dev']['f1_snip'],
+                        res3['dev']['map_snip'],
+                        res3['dev']['gmap_snip'],
+                        res3['dev']['known_f1_snip'],
+                        res3['dev']['known_map_snip'],
+                        res3['dev']['known_gmap_snip'],
+                        res3['epoch'],
+                    )
+                )
+    print_the_results(all1, all2, all3)
 
 def do_one_loss():
     tests   = []
