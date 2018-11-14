@@ -895,11 +895,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
         train_docs = pickle.load(f)
     print('loading words')
     #
-    # train_data  = RemoveBadYears(train_data, train_docs, True)
-    # train_data  = RemoveTrainLargeYears(train_data, train_docs)
-    # dev_data    = RemoveBadYears(dev_data, dev_docs, False)
-    # test_data   = RemoveBadYears(test_data, test_docs, False)
-    #
     words           = {}
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
