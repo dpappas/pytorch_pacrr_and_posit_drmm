@@ -546,7 +546,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
 def train_data_step1(train_data):
     ret = []
     for dato in tqdm(train_data['queries']):
-        pprint(dato)
+        # pprint(dato)
         quest       = dato['query_text']
         quest_id    = dato['query_id']
         bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
