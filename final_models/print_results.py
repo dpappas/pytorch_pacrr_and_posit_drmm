@@ -291,7 +291,7 @@ def do_one_loss():
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
+diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_49_run_{}/model.log'
@@ -302,10 +302,10 @@ def do_one_loss():
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
-diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
+# diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
-do_three_losses()
-# do_one_loss()
+# do_three_losses()
+do_one_loss()
 
 
 
