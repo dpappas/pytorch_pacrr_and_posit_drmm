@@ -1267,7 +1267,7 @@ use_cuda = torch.cuda.is_available()
 
 # laptop
 w2v_bin_path        = '/home/dpappas/for_ryan/rob04_data/rob04_w2v_30D_sg.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/rob04_data/IDF.pkl'
+idf_pickle_path     = '/home/dpappas/for_ryan/rob04_data/IDF_v2.pkl'
 dataloc             = '/home/dpappas/for_ryan/rob04_data/split_1/'
 eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
@@ -1321,7 +1321,7 @@ my_seed = random.randint(1, 2000000)
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir    = '{}_run_5max_{}/'.format(which_model, 0)
+odir    = 'TREC_{}_run_5max_{}/'.format(which_model, 0)
 odir    = os.path.join(odd, odir)
 print odir
 if(not os.path.exists(odir)):
