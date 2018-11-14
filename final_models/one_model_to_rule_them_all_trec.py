@@ -198,14 +198,14 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             del (tt['ideal_answer'])
         if ('type' in tt):
             del (tt['type'])
-    fgold    = '{}_gold_bioasq.json'.format(prefix)
+    fgold    = '{}_gold_trec.json'.format(prefix)
     fgold   = os.path.join(odir, fgold)
     fgold   = os.path.abspath(fgold)
     with open(fgold, 'w') as f:
         f.write(json.dumps(data_gold, indent=4, sort_keys=True))
         f.close()
     #
-    femit    = '{}_emit_bioasq.json'.format(prefix)
+    femit    = '{}_emit_trec.json'.format(prefix)
     femit   = os.path.join(odir, femit)
     femit   = os.path.abspath(femit)
     with open(femit, 'w') as f:
@@ -439,7 +439,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         the_text    = esnip[3]
         esnip_res = {
             # 'score'     : esnip[1],
-            "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
+            "document"  : pid,
             "text"      : the_text
         }
         try:
@@ -683,7 +683,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
         t = (
             snip_is_relevant(held_out_sents[ind], gold_snips),
             emitss[ind],
-            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+            retr['doc_id'],
             held_out_sents[ind]
         )
         all_emits.append(t)
@@ -778,8 +778,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
     doc_res                                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-    the_doc_scores                          = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
-    doc_res                                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
+    the_doc_scores                          = dict([(pm[0], pm[1]) for pm in doc_res[:10]])
+    doc_res                                 = [pm[0] for pm in doc_res]
     emitions['documents']                   = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
