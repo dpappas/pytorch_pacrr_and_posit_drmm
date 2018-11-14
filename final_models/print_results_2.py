@@ -115,10 +115,16 @@ if(os.path.exists(fpath)):
 
 print fpath
 print 'test'
-print '\n'.join(tests)
+print '\n'.join(
+    '\t'.join(str(e) for e in t)
+    for t in tests
+)
 print ''
 print 'dev'
-print '\n'.join(devs)
+print '\n'.join(
+    '\t'.join(str(e) for e in t)
+    for t in devs
+)
 
 
 
