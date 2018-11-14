@@ -32,6 +32,62 @@ def init_dic():
             # 'time'                  : 0.,
         }
 
+def assign_data(data, res1, res2, res3):
+    res1['dev']['known_map_doc_bioasq'] = data[0]
+    res1['dev']['known_f1_snip']        = data[1]
+    res1['dev']['known_map_snip']       = data[2]
+    res1['dev']['known_gmap_snip']      = data[3]
+    res1['dev']['map_doc_bioasq']       = data[4]
+    res1['dev']['f1_snip']              = data[5]
+    res1['dev']['map_snip']             = data[6]
+    res1['dev']['gmap_snip']            = data[7]
+    #
+    res2['dev']['known_map_doc_bioasq'] = data[8]
+    res2['dev']['known_f1_snip']        = data[9]
+    res2['dev']['known_map_snip']       = data[10]
+    res2['dev']['known_gmap_snip']      = data[11]
+    res2['dev']['map_doc_bioasq']       = data[12]
+    res2['dev']['f1_snip']              = data[13]
+    res2['dev']['map_snip']             = data[14]
+    res2['dev']['gmap_snip']            = data[15]
+    #
+    res3['dev']['known_map_doc_bioasq'] = data[16]
+    res3['dev']['known_f1_snip']        = data[17]
+    res3['dev']['known_map_snip']       = data[18]
+    res3['dev']['known_gmap_snip']      = data[19]
+    res3['dev']['map_doc_bioasq']       = data[20]
+    res3['dev']['f1_snip']              = data[21]
+    res3['dev']['map_snip']             = data[22]
+    res3['dev']['gmap_snip']            = data[23]
+    #
+    res1['test']['known_map_doc_bioasq']    = data[24]
+    res1['test']['known_f1_snip']           = data[25]
+    res1['test']['known_map_snip']          = data[26]
+    res1['test']['known_gmap_snip']         = data[27]
+    res1['test']['map_doc_bioasq']          = data[28]
+    res1['test']['f1_snip']                 = data[29]
+    res1['test']['map_snip']                = data[30]
+    res1['test']['gmap_snip']               = data[31]
+    #
+    res2['test']['known_map_doc_bioasq']    = data[32]
+    res2['test']['known_f1_snip']           = data[33]
+    res2['test']['known_map_snip']          = data[34]
+    res2['test']['known_gmap_snip']         = data[35]
+    res2['test']['map_doc_bioasq']          = data[36]
+    res2['test']['f1_snip']                 = data[37]
+    res2['test']['map_snip']                = data[38]
+    res2['test']['gmap_snip']               = data[39]
+    #
+    res3['test']['known_map_doc_bioasq']    = data[40]
+    res3['test']['known_f1_snip']           = data[41]
+    res3['test']['known_map_snip']          = data[42]
+    res3['test']['known_gmap_snip']         = data[43]
+    res3['test']['map_doc_bioasq']          = data[44]
+    res3['test']['f1_snip']                 = data[45]
+    res3['test']['map_snip']                = data[46]
+    res3['test']['gmap_snip']               = data[47]
+    return res1, res2, res3
+
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_34_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_35_run_{}/model.log'
@@ -78,61 +134,8 @@ def do_three_losses():
                         res3['dev']['map_doc']          = float(lines[l+8].split('epoch_dev_map:')[1].split()[0].strip())
                         res3['epoch']                   = int(lines[l+8].split('epoch:')[1].split()[0])
                         data                            = [float(t.strip().split()[-1]) for t in data]
-                        # pprint(data)
-                        # print(len(data))
-                        res1['dev']['known_map_doc_bioasq'] = data[0]
-                        res1['dev']['known_f1_snip']        = data[1]
-                        res1['dev']['known_map_snip']       = data[2]
-                        res1['dev']['known_gmap_snip']      = data[3]
-                        res1['dev']['map_doc_bioasq']       = data[4]
-                        res1['dev']['f1_snip']              = data[5]
-                        res1['dev']['map_snip']             = data[6]
-                        res1['dev']['gmap_snip']            = data[7]
                         #
-                        res2['dev']['known_map_doc_bioasq'] = data[8]
-                        res2['dev']['known_f1_snip']        = data[9]
-                        res2['dev']['known_map_snip']       = data[10]
-                        res2['dev']['known_gmap_snip']      = data[11]
-                        res2['dev']['map_doc_bioasq']       = data[12]
-                        res2['dev']['f1_snip']              = data[13]
-                        res2['dev']['map_snip']             = data[14]
-                        res2['dev']['gmap_snip']            = data[15]
-                        #
-                        res3['dev']['known_map_doc_bioasq'] = data[16]
-                        res3['dev']['known_f1_snip']        = data[17]
-                        res3['dev']['known_map_snip']       = data[18]
-                        res3['dev']['known_gmap_snip']      = data[19]
-                        res3['dev']['map_doc_bioasq']       = data[20]
-                        res3['dev']['f1_snip']              = data[21]
-                        res3['dev']['map_snip']             = data[22]
-                        res3['dev']['gmap_snip']            = data[23]
-                        #
-                        res1['test']['known_map_doc_bioasq']    = data[24]
-                        res1['test']['known_f1_snip']           = data[25]
-                        res1['test']['known_map_snip']          = data[26]
-                        res1['test']['known_gmap_snip']         = data[27]
-                        res1['test']['map_doc_bioasq']          = data[28]
-                        res1['test']['f1_snip']                 = data[29]
-                        res1['test']['map_snip']                = data[30]
-                        res1['test']['gmap_snip']               = data[31]
-                        #
-                        res2['test']['known_map_doc_bioasq']    = data[32]
-                        res2['test']['known_f1_snip']           = data[33]
-                        res2['test']['known_map_snip']          = data[34]
-                        res2['test']['known_gmap_snip']         = data[35]
-                        res2['test']['map_doc_bioasq']          = data[36]
-                        res2['test']['f1_snip']                 = data[37]
-                        res2['test']['map_snip']                = data[38]
-                        res2['test']['gmap_snip']               = data[39]
-                        #
-                        res3['test']['known_map_doc_bioasq']    = data[40]
-                        res3['test']['known_f1_snip']           = data[41]
-                        res3['test']['known_map_snip']          = data[42]
-                        res3['test']['known_gmap_snip']         = data[43]
-                        res3['test']['map_doc_bioasq']          = data[44]
-                        res3['test']['f1_snip']                 = data[45]
-                        res3['test']['map_snip']                = data[46]
-                        res3['test']['gmap_snip']               = data[47]
+                        res1, res2, res3                = assign_data(data, res1, res2, res3)
                         #
                 print '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
                     res3['test']['map_doc'],        res3['test']['map_doc_bioasq'],     res3['test']['f1_snip'],
