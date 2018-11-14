@@ -159,7 +159,7 @@ def do_one_loss():
             with open(fpath) as f:
                 lines = f.readlines()
                 for l in range(len(lines)):
-                    if ('v3 test known MAP documents' in lines[l]):
+                    if ('test known MAP documents' in lines[l]):
                         data = lines[l: l + 8]
                         # pprint(data)
                         res1['test']['map_doc'] = float(lines[l + 8].split(':')[-1].strip())
