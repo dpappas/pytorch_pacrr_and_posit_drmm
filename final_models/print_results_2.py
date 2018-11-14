@@ -37,8 +37,8 @@ def print_version(version):
             lines = f.readlines()
             for l in range(len(lines)):
                 if('{} test known MAP documents'.format(version) in lines[l]):
-                    data                            = lines[l:l+8]
-                    data                            = [float(t.strip().split()[-1]) for t in data]
+                    data = lines[l:l+8]
+                    data = [float(t.strip().split()[-1]) for t in data]
                     #
                     res['test']['map_doc_bioasq']   = data[0]
                     res['test']['known_f1_snip']    = data[1]
