@@ -151,12 +151,44 @@ def do_three_losses():
     print ''
     print diri
     print ''
+    print 'V1'
+    print 'test'
+    print '\n'.join('\t'.join(str(e) for e in t) for t in tests1)
+    print '\t'.join(str(e) for e in np.average(np.array(tests1, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(tests1, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(tests1, dtype='float'), axis=0).tolist())
+    print ''
+    print 'dev'
+    print '\n'.join('\t'.join(str(e) for e in t) for t in devs1)
+    print '\t'.join(str(e) for e in np.average(np.array(devs1, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(devs1, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(devs1, dtype='float'), axis=0).tolist())
+    print ''
+    print 'V2'
+    print 'test'
+    print '\n'.join('\t'.join(str(e) for e in t) for t in tests2)
+    print '\t'.join(str(e) for e in np.average(np.array(tests2, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(tests2, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(tests2, dtype='float'), axis=0).tolist())
+    print ''
+    print 'dev'
+    print '\n'.join('\t'.join(str(e) for e in t) for t in devs2)
+    print '\t'.join(str(e) for e in np.average(np.array(devs2, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(devs2, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(devs2, dtype='float'), axis=0).tolist())
+    print ''
     print 'V3'
     print 'test'
     print '\n'.join('\t'.join(str(e) for e in t) for t in tests3)
+    print '\t'.join(str(e) for e in np.average(np.array(tests3, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(tests3, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(tests3, dtype='float'), axis=0).tolist())
     print ''
     print 'dev'
     print '\n'.join('\t'.join(str(e) for e in t) for t in devs3)
+    print '\t'.join(str(e) for e in np.average(np.array(devs3, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(devs3, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(devs3, dtype='float'), axis=0).tolist())
 
 def do_one_loss():
     tests   = []
