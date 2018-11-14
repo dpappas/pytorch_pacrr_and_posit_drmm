@@ -40,7 +40,7 @@ def init_dic():
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_38_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_40_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
+diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_42_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
@@ -55,7 +55,7 @@ def init_dic():
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
-diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
 # diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
 def do_three_losses():
@@ -222,8 +222,8 @@ def do_one_loss():
     print 'dev'
     print '\n'.join(devs)
 
-# do_three_losses()
-do_one_loss()
+do_three_losses()
+# do_one_loss()
 
 
 
