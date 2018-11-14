@@ -3,6 +3,7 @@ import gc
 gc.collect()
 
 import os
+import numpy as np
 from pprint import pprint
 fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_41/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_42/model.log'
@@ -119,13 +120,18 @@ print '\n'.join(
     '\t'.join(str(e) for e in t)
     for t in tests
 )
+print '\t'.join(str(e) for e in np.average(np.array(tests, dtype='float'), axis=0).tolist())
+print '\t'.join(str(e) for e in np.max(np.array(tests, dtype='float'), axis=0).tolist())
+print '\t'.join(str(e) for e in np.min(np.array(tests, dtype='float'), axis=0).tolist())
 print ''
 print 'dev'
 print '\n'.join(
     '\t'.join(str(e) for e in t)
     for t in devs
 )
-
+print '\t'.join(str(e) for e in np.average(np.array(devs, dtype='float'), axis=0).tolist())
+print '\t'.join(str(e) for e in np.max(np.array(devs, dtype='float'), axis=0).tolist())
+print '\t'.join(str(e) for e in np.min(np.array(devs, dtype='float'), axis=0).tolist())
 
 
 
