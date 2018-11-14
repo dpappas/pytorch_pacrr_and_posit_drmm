@@ -60,7 +60,9 @@ def print_version(version):
                     res['test']['map_snip']         = data[6]
                     res['test']['gmap_snip']        = data[7]
                     #
-                    tests.append((res['test']['f1_snip'], res['test']['map_snip'], res['test']['gmap_snip'], res['test']['known_f1_snip'], res['test']['known_map_snip'], res['test']['known_gmap_snip']))
+                    tests.append((res['test']['f1_snip'], res['test']['map_snip'], res['test']['gmap_snip'],
+                                  res['test']['known_f1_snip'], res['test']['known_map_snip'],
+                                  res['test']['known_gmap_snip']))
                     devs.append((res['dev']['f1_snip'], res['dev']['map_snip'], res['dev']['gmap_snip'],
                                  res['dev']['known_f1_snip'], res['dev']['known_map_snip'],
                                  res['dev']['known_gmap_snip']))
