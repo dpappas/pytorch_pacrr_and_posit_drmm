@@ -146,18 +146,8 @@ for i in range(5):
                 res3['dev']['known_gmap_snip'],
                 res3['epoch'],
             )
-            tests.append(
-                '{}\t{}\t{}\t{}\t{}\t{}'.format(
-                    res3['test']['f1_snip'],        res3['test']['map_snip'],       res3['test']['gmap_snip'],
-                    res3['test']['known_f1_snip'],  res3['test']['known_map_snip'], res3['test']['known_gmap_snip']
-                )
-            )
-            devs.append(
-                '{}\t{}\t{}\t{}\t{}\t{}'.format(
-                    res3['dev']['f1_snip'],         res3['dev']['map_snip'],        res3['dev']['gmap_snip'],
-                    res3['dev']['known_f1_snip'],   res3['dev']['known_map_snip'],  res3['dev']['known_gmap_snip']
-                )
-            )
+            tests.append('{}\t{}\t{}\t{}\t{}\t{}'.format(res3['test']['f1_snip'], res3['test']['map_snip'], res3['test']['gmap_snip'], res3['test']['known_f1_snip'],  res3['test']['known_map_snip'], res3['test']['known_gmap_snip']))
+            devs.append('{}\t{}\t{}\t{}\t{}\t{}'.format( res3['dev']['f1_snip'], res3['dev']['map_snip'], res3['dev']['gmap_snip'], res3['dev']['known_f1_snip'],   res3['dev']['known_map_snip'],  res3['dev']['known_gmap_snip']))
 
 
 
