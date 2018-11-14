@@ -3,6 +3,7 @@ import gc
 gc.collect()
 
 import os
+import numpy as np
 from pprint import pprint
 
 def init_dic():
@@ -190,13 +191,13 @@ def do_one_loss():
                         #
                         #
                 overall.append(
-                    '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
+                    (
                         res1['test']['map_doc'], res1['test']['map_doc_bioasq'], res1['test']['f1_snip'],
                         res1['test']['map_snip'], res1['test']['gmap_snip'], res1['test']['known_f1_snip'],
                         res1['test']['known_map_snip'], res1['test']['known_gmap_snip'], res1['dev']['map_doc'],
                         res1['dev']['map_doc_bioasq'], res1['dev']['f1_snip'], res1['dev']['map_snip'],
                         res1['dev']['gmap_snip'], res1['dev']['known_f1_snip'], res1['dev']['known_map_snip'],
-                        res1['dev']['known_gmap_snip'], res1['epoch'],
+                        res1['dev']['known_gmap_snip'], res1['epoch']
                     )
                 )
                 tests.append('{}\t{}\t{}\t{}\t{}\t{}'.format(res1['test']['f1_snip'], res1['test']['map_snip'],
@@ -207,6 +208,13 @@ def do_one_loss():
                                                             res1['dev']['gmap_snip'], res1['dev']['known_f1_snip'],
                                                             res1['dev']['known_map_snip'],
                                                             res1['dev']['known_gmap_snip']))
+    print '\n'.join(
+        '\t'.join(str(e) for e in t)
+        for t in overall
+    )
+    print '\t'.join(str(e) for e in np.average(np.array(overall, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.max(np.array(overall, dtype='float'), axis=0).tolist())
+    print '\t'.join(str(e) for e in np.min(np.array(overall, dtype='float'), axis=0).tolist())
     print ''
     print diri
     print 'test'
