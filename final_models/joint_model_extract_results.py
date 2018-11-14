@@ -1042,7 +1042,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
-use_cuda            = False
+# use_cuda            = False
 
 # laptop
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
