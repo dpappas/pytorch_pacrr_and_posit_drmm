@@ -1059,6 +1059,7 @@ dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
 eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
+start_path          = '/home/dpappas/{}_run_{}/best_checkpoint.pth.tar'
 
 # # atlas
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1137,7 +1138,7 @@ for which_model in test_these_models:
     for run in range(5):
         logger.info('RUN: {}'.format(run))
         print('RUN: {}'.format(run))
-        resume_from     = '/home/dpappas/MODELS_OUTPUTS/{}_run_{}/best_checkpoint.pth.tar'.format(which_model, run)
+        resume_from     = start_path.format(which_model, run)
         load_model_from_checkpoint(resume_from)
         print('LOADED model')
         gc.collect()
