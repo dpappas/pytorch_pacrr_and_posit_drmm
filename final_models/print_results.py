@@ -75,8 +75,8 @@ for i in range(5):
                     res3['dev']['map_doc']          = float(lines[l+8].split('epoch_dev_map:')[1].split()[0].strip())
                     res3['epoch']                   = int(lines[l+8].split('epoch:')[1].split()[0])
                     data                            = [float(t.strip().split()[-1]) for t in data]
-                    pprint(data)
-                    print(len(data))
+                    # pprint(data)
+                    # print(len(data))
                     res1['dev']['known_map_doc_bioasq'] = data[0]
                     res1['dev']['known_f1_snip']        = data[1]
                     res1['dev']['known_map_snip']       = data[2]
