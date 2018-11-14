@@ -573,6 +573,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
         pprint(datum)
         pprint(datum.keys())
+        pprint(good_snips)
         exit()
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
