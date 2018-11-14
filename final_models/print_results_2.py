@@ -36,7 +36,6 @@ def print_version(version):
         with open(fpath) as f:
             lines = f.readlines()
             for l in range(len(lines)):
-                print(lines[l].strip())
                 if('{} dev known MAP documents'.format(version) in lines[l]):
                     data = lines[l:l+8]
                     data = [float(t.strip().split()[-1]) for t in data]
