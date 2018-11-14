@@ -40,7 +40,7 @@ def init_dic():
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_38_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_40_run_{}/model.log'
-diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_42_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
@@ -56,10 +56,12 @@ diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
-# diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
+diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
 def do_three_losses():
-    tests, devs = [], []
+    tests1, devs1 = [], []
+    tests2, devs2 = [], []
+    tests3, devs3 = [], []
     for i in range(5):
         fpath = diri.format(i)
         if(os.path.exists(fpath)):
@@ -140,15 +142,23 @@ def do_three_losses():
                     res3['dev']['gmap_snip'],       res3['dev']['known_f1_snip'],       res3['dev']['known_map_snip'],
                     res3['dev']['known_gmap_snip'], res3['epoch'],
                 )
-                tests.append('{}\t{}\t{}\t{}\t{}\t{}'.format(res3['test']['f1_snip'], res3['test']['map_snip'], res3['test']['gmap_snip'], res3['test']['known_f1_snip'],  res3['test']['known_map_snip'], res3['test']['known_gmap_snip']))
-                devs.append('{}\t{}\t{}\t{}\t{}\t{}'.format(res3['dev']['f1_snip'], res3['dev']['map_snip'], res3['dev']['gmap_snip'], res3['dev']['known_f1_snip'],   res3['dev']['known_map_snip'],  res3['dev']['known_gmap_snip']))
+                tests1.append((res1['test']['f1_snip'], res1['test']['map_snip'], res1['test']['gmap_snip'], res1['test']['known_f1_snip'],  res1['test']['known_map_snip'], res1['test']['known_gmap_snip']))
+                devs2.append((res1['dev']['f1_snip'], res1['dev']['map_snip'], res1['dev']['gmap_snip'], res1['dev']['known_f1_snip'],   res1['dev']['known_map_snip'],  res1['dev']['known_gmap_snip']))
+                tests2.append((res3['test']['f1_snip'], res3['test']['map_snip'], res3['test']['gmap_snip'],
+                               res3['test']['known_f1_snip'], res3['test']['known_map_snip'], res3['test']['known_gmap_snip']))
+                devs2.append((res3['dev']['f1_snip'], res3['dev']['map_snip'], res3['dev']['gmap_snip'],
+                              res3['dev']['known_f1_snip'], res3['dev']['known_map_snip'], res3['dev']['known_gmap_snip']))
+                tests3.append((res3['test']['f1_snip'], res3['test']['map_snip'], res3['test']['gmap_snip'],
+                               res3['test']['known_f1_snip'], res3['test']['known_map_snip'], res3['test']['known_gmap_snip']))
+                devs3.append((res3['dev']['f1_snip'], res3['dev']['map_snip'], res3['dev']['gmap_snip'],
+                              res3['dev']['known_f1_snip'], res3['dev']['known_map_snip'], res3['dev']['known_gmap_snip']))
     print ''
     print diri
     print 'test'
-    print '\n'.join(tests)
+    print '\n'.join(tests3)
     print ''
     print 'dev'
-    print '\n'.join(devs)
+    print '\n'.join(devs3)
 
 def do_one_loss():
     tests   = []
