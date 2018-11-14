@@ -515,6 +515,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
+        good_text                   = good_text.strip()
         good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         if (len(good_embeds) > 0):
@@ -571,6 +572,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         #
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
         pprint(datum)
+        pprint(datum.keys())
         exit()
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
