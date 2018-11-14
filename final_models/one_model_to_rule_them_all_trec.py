@@ -1344,7 +1344,6 @@ logger.info('random seed: {}'.format(my_seed))
     bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 #
-exit()
 print('Compiling model...')
 logger.info('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(
