@@ -160,7 +160,7 @@ def do_one_loss():
                 lines = f.readlines()
                 for l in range(len(lines)):
                     if ('test known MAP documents' in lines[l]):
-                        data = lines[l: l + 8]
+                        data = lines[l-8: l + 8]
                         # pprint(data)
                         res1['test']['map_doc'] = float(lines[l + 8].split(':')[-1].strip())
                         res1['dev']['map_doc'] = float(lines[l + 8].split('epoch_dev_map:')[1].split()[0].strip())
@@ -168,14 +168,24 @@ def do_one_loss():
                         data = [float(t.strip().split()[-1]) for t in data]
                         # pprint(data)
                         # print(len(data))
-                        res1['dev']['known_map_doc_bioasq'] = data[0]
-                        res1['dev']['known_f1_snip'] = data[1]
-                        res1['dev']['known_map_snip'] = data[2]
-                        res1['dev']['known_gmap_snip'] = data[3]
-                        res1['dev']['map_doc_bioasq'] = data[4]
-                        res1['dev']['f1_snip'] = data[5]
-                        res1['dev']['map_snip'] = data[6]
-                        res1['dev']['gmap_snip'] = data[7]
+                        res1['dev']['known_map_doc_bioasq']     = data[0]
+                        res1['dev']['known_f1_snip']            = data[1]
+                        res1['dev']['known_map_snip']           = data[2]
+                        res1['dev']['known_gmap_snip']          = data[3]
+                        res1['dev']['map_doc_bioasq']           = data[4]
+                        res1['dev']['f1_snip']                  = data[5]
+                        res1['dev']['map_snip']                 = data[6]
+                        res1['dev']['gmap_snip']                = data[7]
+                        #
+                        res1['test']['known_map_doc_bioasq']    = data[8]
+                        res1['test']['known_f1_snip']           = data[9]
+                        res1['test']['known_map_snip']          = data[10]
+                        res1['test']['known_gmap_snip']         = data[11]
+                        res1['test']['map_doc_bioasq']          = data[12]
+                        res1['test']['f1_snip']                 = data[13]
+                        res1['test']['map_snip']                = data[14]
+                        res1['test']['gmap_snip']               = data[15]
+                        #
                         #
                 print '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
                     res1['test']['map_doc'], res1['test']['map_doc_bioasq'], res1['test']['f1_snip'],
@@ -200,7 +210,6 @@ def do_one_loss():
     print ''
     print 'dev'
     print '\n'.join(devs)
-
 
 # do_three_losses()
 do_one_loss()
