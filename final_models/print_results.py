@@ -11,7 +11,7 @@ from pprint import pprint
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_36_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_37_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_38_run_{}/model.log'
-diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_40_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_42_run_{}/model.log'
@@ -29,6 +29,7 @@ diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
+diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
 tests, devs = [], []
 for i in range(5):
@@ -63,11 +64,11 @@ for i in range(5):
             for l in range(len(lines)):
                 if('test known MAP documents' in lines[l]):
                     data = lines[l:l+8]
-                    # pprint(data)
-                    res['test']['map_doc']          = float(lines[l+8].split(':')[-1].strip())
-                    res['dev']['map_doc']           = float(lines[l+8].split('epoch_dev_map:')[1].split()[0].strip())
-                    res['epoch']                    = int(lines[l+8].split('epoch:')[1].split()[0])
-                    data                            = [float(t.strip().split()[-1]) for t in data]
+                    # # pprint(data)
+                    # res['test']['map_doc']          = float(lines[l+8].split(':')[-1].strip())
+                    # res['dev']['map_doc']           = float(lines[l+8].split('epoch_dev_map:')[1].split()[0].strip())
+                    # res['epoch']                    = int(lines[l+8].split('epoch:')[1].split()[0])
+                    # data                            = [float(t.strip().split()[-1]) for t in data]
                     #
                     res['test']['map_doc_bioasq']   = data[0]
                     res['test']['known_f1_snip']    = data[1]
