@@ -151,7 +151,9 @@ def do_three_losses():
     print '\n'.join(devs)
 
 def do_one_loss():
-    tests, devs = [], []
+    tests   = []
+    devs    = []
+    overall = []
     for i in range(5):
         fpath = diri.format(i)
         if (os.path.exists(fpath)):
