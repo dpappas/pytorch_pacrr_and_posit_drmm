@@ -4,32 +4,6 @@ gc.collect()
 
 import os
 from pprint import pprint
-# diri = '/home/dpappas/Model_54_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_34_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_35_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_36_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_37_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_38_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_40_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_42_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_49_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_50_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_51_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_52_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
-diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
 def init_dic():
     return {
@@ -56,6 +30,33 @@ def init_dic():
             'epoch'                 : 0.,
             # 'time'                  : 0.,
         }
+
+# diri = '/home/dpappas/Model_54_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_34_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_35_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_36_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_37_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_38_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_39_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_40_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_41_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_42_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_49_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_50_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_51_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_52_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
+diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
 tests, devs = [], []
 for i in range(5):
