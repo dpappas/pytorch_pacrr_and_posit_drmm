@@ -99,7 +99,7 @@ for i in range(5):
                     res3['test']['map_snip']        = data[20]
                     res3['test']['gmap_snip']       = data[21]
                 elif('dev known MAP documents' in lines[l]):
-                    data = lines[l:l+8]
+                    data = lines[l-16:l+8]
                     data = [float(t.strip().split()[-1]) for t in data]
                     #
                     res3['dev']['map_doc_bioasq']    = data[0]
@@ -109,6 +109,22 @@ for i in range(5):
                     res3['dev']['f1_snip']           = data[5]
                     res3['dev']['map_snip']          = data[6]
                     res3['dev']['gmap_snip']         = data[7]
+                    #
+                    res3['dev']['map_doc_bioasq']   = data[8]
+                    res3['dev']['known_f1_snip']    = data[9]
+                    res3['dev']['known_map_snip']   = data[10]
+                    res3['dev']['known_gmap_snip']  = data[11]
+                    res3['dev']['f1_snip']          = data[12]
+                    res3['dev']['map_snip']         = data[13]
+                    res3['dev']['gmap_snip']        = data[14]
+                    #
+                    res3['dev']['map_doc_bioasq']   = data[15]
+                    res3['dev']['known_f1_snip']    = data[16]
+                    res3['dev']['known_map_snip']   = data[17]
+                    res3['dev']['known_gmap_snip']  = data[18]
+                    res3['dev']['f1_snip']          = data[19]
+                    res3['dev']['map_snip']         = data[20]
+                    res3['dev']['gmap_snip']        = data[21]
             # print(fpath)
             # pprint(res)
             print '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
