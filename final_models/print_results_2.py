@@ -4,13 +4,13 @@ gc.collect()
 
 import os
 from pprint import pprint
-# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_41/model.log'
+fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_41/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_42/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_43/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_44/model.log'
 
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_45/model.log'
-fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_46/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_46/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_47/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_48/model.log'
 
@@ -27,6 +27,7 @@ fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_46/model.log'
 
 # fpath = '/home/dpappas/this_is_me_testing_Doc4Snip2/model.log'
 
+version = 'v2'
 tests, devs = [], []
 if(os.path.exists(fpath)):
     res = {
@@ -56,7 +57,7 @@ if(os.path.exists(fpath)):
     with open(fpath) as f:
         lines = f.readlines()
         for l in range(len(lines)):
-            if('v2 test known MAP documents' in lines[l]):
+            if('{} test known MAP documents'.format(version) in lines[l]):
                 print lines[l]
                 data = lines[l:l+8]
                 # pprint(data)
@@ -70,13 +71,13 @@ if(os.path.exists(fpath)):
                 res['test']['map_snip']         = data[6]
                 res['test']['gmap_snip']        = data[7]
                 tests.append(
-                    '{}\t{}\t{}\t{}\t{}\t{}'.format(
+                    (
                         res['test']['f1_snip'],         res['test']['map_snip'],        res['test']['gmap_snip'],
                         res['test']['known_f1_snip'],   res['test']['known_map_snip'],  res['test']['known_gmap_snip']
                     )
                 )
                 devs.append(
-                    '{}\t{}\t{}\t{}\t{}\t{}'.format(
+                    (
                         res['dev']['f1_snip'], res['dev']['map_snip'], res['dev']['gmap_snip'],
                         res['dev']['known_f1_snip'], res['dev']['known_map_snip'], res['dev']['known_gmap_snip']
                     )
