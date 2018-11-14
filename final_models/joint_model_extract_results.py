@@ -1044,22 +1044,23 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 use_cuda = torch.cuda.is_available()
 use_cuda            = False
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-
-# cslab241
-w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
-start_path          = '/home/dpappas/{}_run_{}/best_checkpoint.pth.tar'
+start_path          = '/home/dpappas/MODELS_OUTPUTS/{}_run_{}/best_checkpoint.pth.tar'
+
+# # cslab241
+# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
+# start_path          = '/home/dpappas/{}_run_{}/best_checkpoint.pth.tar'
 
 # # atlas
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'

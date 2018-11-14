@@ -32,7 +32,6 @@ def init_dic():
             # 'time'                  : 0.,
         }
 
-# diri = '/home/dpappas/Model_54_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_34_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_35_run_{}/model.log'
@@ -46,7 +45,7 @@ def init_dic():
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
-diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_49_run_{}/model.log'
@@ -56,7 +55,7 @@ diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_53_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_54_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_55_run_{}/model.log'
-# diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
+diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
 # diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
 def do_three_losses():
