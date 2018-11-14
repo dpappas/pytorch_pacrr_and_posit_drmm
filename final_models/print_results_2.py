@@ -5,7 +5,7 @@ gc.collect()
 import os
 import numpy as np
 from pprint import pprint
-fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_41/model.log'
+# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_41/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_42/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_43/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_44/model.log'
@@ -23,7 +23,7 @@ fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_41/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_53/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_54/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_55/model.log'
-# fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_56/model.log'
+fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_56/model.log'
 
 
 # fpath = '/home/dpappas/this_is_me_testing_Doc4Snip2/model.log'
@@ -117,11 +117,11 @@ def print_version(version):
     print '\t'.join(str(e) for e in np.max(np.array(devs, dtype='float'), axis=0).tolist())
     print '\t'.join(str(e) for e in np.min(np.array(devs, dtype='float'), axis=0).tolist())
 
-print('V1')
+print('\nV1')
 print_version('v1')
-print('V2')
+print('\nV2')
 print_version('v2')
-print('V3')
+print('\nV3')
 print_version('v3')
 
 
