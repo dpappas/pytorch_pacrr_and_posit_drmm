@@ -877,9 +877,15 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
     #
-    with open(os.path.join(dataloc, 'BioASQ-trainingDataset6b.json'), 'r') as f:
+    with open(os.path.join(dataloc, 'rob04.train.s1.json'), 'r') as f:
         bioasq6_data = json.load(f)
         bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
+    with open(os.path.join(dataloc, 'rob04.dev.s1.json'), 'r') as f:
+        for q in json.load(f)['questions']:
+            bioasq6_data[q['id']] = q
+    with open(os.path.join(dataloc, 'rob04.test.s1.json'), 'r') as f:
+        for q in json.load(f)['questions']:
+            bioasq6_data[q['id']] = q
     #
     with open(os.path.join(dataloc, 'rob04_bm25_top100.test.s1.pkl'), 'rb') as f:
         test_data = pickle.load(f)
@@ -1338,6 +1344,7 @@ logger.info('random seed: {}'.format(my_seed))
     bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 #
+exit()
 print('Compiling model...')
 logger.info('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(
