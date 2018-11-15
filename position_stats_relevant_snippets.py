@@ -506,8 +506,8 @@ counts = []
 sents_lens = []
 doc_lens = []
 for datum in tqdm(train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, True), total=9684):
-    pprint(datum)
-    pprint(datum.keys())
+    # pprint(datum)
+    # pprint(datum.keys())
     doc_lens.append(len(datum['good_sents_embeds']))
     for s in datum['good_sents_embeds']:
         sents_lens.append(s.shape[0])
