@@ -979,7 +979,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_out_activ_1   = self.sent_out_activ_1.cuda()
             self.sent_out_layer_2   = self.sent_out_layer_2.cuda()
     def init_doc_out_layer(self):
-        self.final_layer_1      = nn.Linear(self.doc_add_feats + self.sent_add_feats + self.doc_add_feats, 8, bias=True)
+        self.final_layer_1      = nn.Linear(
+            self.doc_add_feats +
+            self.sent_add_feats + 1 +
+            self.sent_add_feats + 1,
+            8,
+            bias=True
+        )
         self.final_activ_1      = torch.nn.LeakyReLU(negative_slope=0.1)
         self.final_layer_2      = nn.Linear(8, 1, bias=True)
         if(use_cuda):
@@ -1058,13 +1064,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sent_emits  = torch.sigmoid(attent)
         attent      = F.softmax(attent)
         #
-        print(attent)
-        print(attent.size())
-        print(res.size())
-        exit()
-        #
-
-        return ret, sent_emits
+        sents_overall_rep = torch.mm(res.transpose(0, 1), attent.unsqueeze(1)).squeeze(1)
+        return sents_overall_rep, sent_emits
     def get_max(self, res):
         return torch.max(res)
     def get_kmax(self, res, k):
@@ -1123,9 +1124,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         if(self.context_method=='CNN'):
-            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         else:
-            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         #
         if(self.mesh_style=='BIGRU'):
             good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
@@ -1162,14 +1163,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits              = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         bad_out, bs_emits               = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
-        good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
-        bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights, 1)
+        good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
+        bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
         #
         good_out_pp                     = torch.cat([good_out,  doc_gaf, good_mesh_out], -1)
         bad_out_pp                      = torch.cat([bad_out,   doc_baf, bad_mesh_out], -1)
+        print(good_out_pp.size())
         #
-        final_good_output               = self.final_layer(good_out_pp)
-        final_bad_output                = self.final_layer(bad_out_pp)
+        final_good_output               = self.final_layer_1(good_out_pp)
+        final_good_output               = self.final_activ_1(final_good_output)
+        final_good_output               = self.final_layer_2(final_good_output)
+        #
+        final_bad_output                = self.final_layer_1(bad_out_pp)
+        final_bad_output                = self.final_activ_1(final_bad_output)
+        final_bad_output                = self.final_layer_2(final_bad_output)
         #
         loss1                           = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
