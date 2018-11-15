@@ -10,6 +10,6 @@ glove2word2vec(glove_file, tmp_file)
 
 model = KeyedVectors.load_word2vec_format(tmp_file)
 
-
+print model.wv['this is a test'.split()].shape
 
 
