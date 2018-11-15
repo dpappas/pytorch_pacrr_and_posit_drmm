@@ -1143,44 +1143,26 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc_gaf         = doc_gaf.cuda()
             doc_baf         = doc_baf.cuda()
         #
-        if(self.context_method=='CNN'):
-            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        else:
-            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
-        q_weights           = torch.cat([q_context, q_idfs], -1)
-        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights           = F.softmax(q_weights, dim=-1)
+        q_context                       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context                       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        if(self.context_method=='CNN'):
-            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-            bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        else:
-            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-            bad_out, bs_emits   = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        q_weights                       = torch.cat([q_context, q_idfs], -1)
+        q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        if(self.mesh_style=='BIGRU'):
-            good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
-            bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds, q_context)
-            good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-            bad_out_pp          = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
-        elif(self.mesh_style=='SENT'):
-            if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights, 1)
-            else:
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_bigru(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights, 1)
-            good_out_pp = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
-            bad_out_pp  = torch.cat([bad_out, doc_baf, bad_mesh_out], -1)
-        else:
-            good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-            bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
+        good_out, gs_emits              = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        bad_out, bs_emits               = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        final_good_output   = self.final_layer(good_out_pp)
-        final_bad_output    = self.final_layer(bad_out_pp)
+        good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
+        bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights, 1)
         #
-        loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
+        good_out_pp                     = torch.cat([good_out,  doc_gaf, good_mesh_out], -1)
+        bad_out_pp                      = torch.cat([bad_out,   doc_baf, bad_mesh_out], -1)
+        #
+        final_good_output               = self.final_layer(good_out_pp)
+        final_bad_output                = self.final_layer(bad_out_pp)
+        #
+        loss1                           = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
