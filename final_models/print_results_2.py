@@ -108,13 +108,6 @@ print_version('v2')
 print('\nV3')
 print_version('v3')
 
-# tar cf - "./The.World.At.War.1973.Complete.Series.720p.Bluray.x264.anoXmous" -P | pv -s $(du -sb "./The.World.At.War.1973.Complete.Series.720p.Bluray.x264.anoXmous" | awk '{print $1}') | gzip > "./The.World.At.War.1973.Complete.Series.720p.Bluray.x264.anoXmous.tar.gz"
-# tar cf - "Season 1" -P | pv -s $(du -sb "Season 1" | awk '{print $1}') | gzip > "Season 1.tar.gz"
-# tar cf - "Season 2" -P | pv -s $(du -sb "Season 2" | awk '{print $1}') | gzip > "Season 2.tar.gz"
-# tar cf - "Season 3" -P | pv -s $(du -sb "Season 3" | awk '{print $1}') | gzip > "Season 3.tar.gz"
-# tar cf - "Season 4" -P | pv -s $(du -sb "Season 4" | awk '{print $1}') | gzip > "Season 4.tar.gz"
-
-
 
 
 
