@@ -1426,6 +1426,19 @@ otidipote den exei identifier
 
 
 
+- add sentence len in tokens
+- add document len in sents
+- add the sigmoid outputs trying to predict the number of relevant sents (MSE loss)
+- self attention (softmax before sigmoid) 
+- add dense layer in fig 4 output (relu)
+- add dense layer in fig 6 output (relu)
+- entire document as sentence
+
+- tune weights of the losses
+- multi headed attention
+- use bigru last steps as input to sentence number prediction
+
+
 
 '''
 
