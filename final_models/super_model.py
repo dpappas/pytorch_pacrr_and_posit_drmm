@@ -926,7 +926,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
          ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
-        self.doc_add_feats                          = 4
+        self.doc_add_feats                          = 5
+        self.sent_add_feats                         = 4
         #
         self.embedding_dim                          = embedding_dim
         # to create q weights
@@ -968,15 +969,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.linear_per_q2  = self.linear_per_q2.cuda()
             self.my_relu1       = self.my_relu1.cuda()
     def init_sent_output_layer(self):
-        self.sent_out_layer = nn.Linear(4, 1, bias=False)
+        self.sent_out_layer_1   = nn.Linear(self.sent_add_feats+1, 8, bias=False)
+        self.sent_out_activ_1   = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.sent_out_layer_2   = nn.Linear(8, 1, bias=False)
         if(use_cuda):
-            self.sent_out_layer  = self.sent_out_layer.cuda()
+            self.sent_out_layer_1   = self.sent_out_layer_1.cuda()
+            self.sent_out_activ_1   = self.sent_out_activ_1.cuda()
+            self.sent_out_layer_2   = self.sent_out_layer_2.cuda()
     def init_doc_out_layer(self):
-        self.final_layer = nn.Linear(
-            self.doc_add_feats + self.k_sent_maxpool + 1,
-            1,
-            bias=True
-        )
+        self.final_layer_1          = nn.Linear(self.doc_add_feats + self.sent_add_feats + self.doc_add_feats, 8, bias=True)
+        self.final_layer_activ_1    = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.final_layer_2          = nn.Linear(8, 1, bias=True)
         if(use_cuda):
             self.final_layer    = self.final_layer.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
