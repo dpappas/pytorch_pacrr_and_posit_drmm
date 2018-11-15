@@ -523,7 +523,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         sent_toks                   = tokenize(good_text)
         good_tokens, good_embeds    = get_embeds(sent_toks, wv)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
-        good_escores.append(len(sent_toks))
+        good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
@@ -533,10 +533,12 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_meshes = get_the_mesh(the_doc)
     good_mesh_embeds, good_mesh_escores = [], []
     for good_mesh in good_meshes:
-        gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
+        mesh_toks                       = tokenize(good_mesh)
+        gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
         if (len(gm_tokens) > 0):
             good_mesh_embeds.append(gm_embeds)
             good_escores                = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
+            good_escores.append(len(mesh_toks)/ 10.)
             good_mesh_escores.append(good_escores)
     ####
     return {
