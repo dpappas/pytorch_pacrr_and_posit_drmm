@@ -29,7 +29,7 @@ def load_all_data(dataloc):
     print('loading w2v')
     w2v_txt_path    = os.path.join(dataloc, 'word2vec.6B.50d.txt')
     wv              = KeyedVectors.load_word2vec_format(w2v_txt_path, binary=False)
-    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
+    # wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     # return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 # -v1.1.json
