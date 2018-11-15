@@ -516,7 +516,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         good_sents = [the_doc['title'] + the_doc['abstractText']]
     ####
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
-    good_doc_af.append(len(good_sents))
+    good_doc_af.append(len(good_sents) / 60.)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
@@ -1025,7 +1025,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
@@ -1049,14 +1049,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_add_feats)
         res = torch.stack(res)
         #
-        res = self.sent_out_layer_1(res)
-        res = self.sent_out_activ_1(res)
-        res = self.sent_out_layer_2(res).squeeze(-1)
-        print(res)
-        print(res.size())
+        attent = self.sent_out_layer_1(res)
+        attent = self.sent_out_activ_1(attent)
+        attent = self.sent_out_layer_2(attent).squeeze(-1)
         #
-        res = torch.sigmoid(res)
-        return ret, res
+        sent_emits  = torch.sigmoid(attent)
+        attent      = F.softmax(attent)
+        #
+        print(attent)
+        print(attent.size())
+        print(res.size())
+        exit()
+        #
+
+        return ret, sent_emits
     def get_max(self, res):
         return torch.max(res)
     def get_kmax(self, res, k):
@@ -1151,8 +1157,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits              = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        bad_out, bs_emits               = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        good_out, gs_emits              = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        bad_out, bs_emits               = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
         good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
         bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights, 1)
@@ -1266,8 +1272,8 @@ DONE - add sentence len in tokens
 DONE - add document len in sents
 - add the sigmoid outputs trying to predict the number of relevant sents (MSE loss)
 - self attention (softmax before sigmoid) 
-- add dense layer in fig 4 output (relu)
-- add dense layer in fig 6 output (relu)
+DONE - add dense layer in fig 4 output (relu)
+DONE - add dense layer in fig 6 output (relu)
 - entire document as sentence
 
 - tune weights of the losses
