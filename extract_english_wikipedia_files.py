@@ -5,8 +5,7 @@
 # 7z x -so yourfile.tar.7z | tar xf - -C target_dir
 # 7z x -so wikipedia-en-html.tar.7z | tar xf - -C wikipedia-en-htmls
 #
-#
-#
+
 
 
 
