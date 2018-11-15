@@ -30,12 +30,13 @@ def load_all_data(dataloc, w2v_txt_path, idf_pickle_path):
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
     # mgmx
-    print('loading idfs')
-    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    # print('loading idfs')
+    # idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    wv              = KeyedVectors.load_word2vec_format(w2v_txt_path, binary=False)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    # return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, wv, bioasq6_data
 
 
 
