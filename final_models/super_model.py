@@ -977,11 +977,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_out_activ_1   = self.sent_out_activ_1.cuda()
             self.sent_out_layer_2   = self.sent_out_layer_2.cuda()
     def init_doc_out_layer(self):
-        self.final_layer_1          = nn.Linear(self.doc_add_feats + self.sent_add_feats + self.doc_add_feats, 8, bias=True)
-        self.final_layer_activ_1    = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.final_layer_2          = nn.Linear(8, 1, bias=True)
+        self.final_layer_1      = nn.Linear(self.doc_add_feats + self.sent_add_feats + self.doc_add_feats, 8, bias=True)
+        self.final_activ_1      = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.final_layer_2      = nn.Linear(8, 1, bias=True)
         if(use_cuda):
-            self.final_layer    = self.final_layer.cuda()
+            self.final_layer_1  = self.final_layer_1.cuda()
+            self.final_activ_1  = self.final_activ_1.cuda()
+            self.final_layer_2  = self.final_layer_2.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
