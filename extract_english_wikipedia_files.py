@@ -5,6 +5,16 @@ import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
+import libarchive.public
+
+fpath   = '/media/dpappas/dpappas_data/wikipedia-en-html.tar.7z'
+with libarchive.public.file_reader(fpath) as e:
+    for entry in e:
+        for block in entry.get_blocks():
+            print(block)
+
+exit()
+
 import os
 import bz2
 import gzip
