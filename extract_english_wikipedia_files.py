@@ -6,17 +6,12 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 import os
+import bz2
 import gzip
+import random
 import traceback
 from lxml import etree
 from pprint import pprint
-from dateutil import parser
-import elasticsearch
-from elasticsearch import Elasticsearch
-from elasticsearch.helpers import bulk
-from elasticsearch import helpers
-import random
-import bz2
 
 file_gz     = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
 bz_file     = bz2.BZ2File(file_gz)
