@@ -652,10 +652,12 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         if(two_losses):
             sn_d1_l, sn_d2_l, sn_d3_l, sn_d4_l  = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss_1                         = sn_d1_l + sn_d2_l
-            snip_loss_2                         = sn_d3_l + sn_d4_l
-            losses_weights                      = [0.33, 0.33, 0.33]
+            # snip_loss_2                         = sn_d3_l + sn_d4_l
+            # losses_weights                      = [0.33, 0.33, 0.33]
             # print(snip_loss_1, snip_loss_2, cost_)
-            cost_                               = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * snip_loss_2) + (losses_weights[2] * cost_)
+            # cost_                               = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * snip_loss_2) + (losses_weights[2] * cost_)
+            losses_weights                      = [0.5, 0.5]
+            cost_ = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
