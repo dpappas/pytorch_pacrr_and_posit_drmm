@@ -2,14 +2,10 @@
 from elasticsearch import Elasticsearch
 
 elastic_con = Elasticsearch(['localhost:9200'], verify_certs=True)
-
-index       = 'wikipedia_json_7z'
+index       = 'wikipedia_json_gz'
 doc_type    = "wiki_page"
 
-elastic_con.indices.delete(
-    index=index,
-    ignore=[400,404]
-)
+elastic_con.indices.delete(index=index, ignore=[400,404])
 
 mapping = {
      "mappings": {
@@ -137,8 +133,7 @@ mapping = {
 
 print elastic_con.indices.create(index = index, ignore=400, body=mapping)
 
-
-
+# zcat enwiki-20181112-cirrussearch-content.json.gz | parallel --pipe -L 2 -N 2000 -j3 'curl -s http://localhost:9200/enwiki/_bulk --data-binary @- > /dev/null'
 
 
 
