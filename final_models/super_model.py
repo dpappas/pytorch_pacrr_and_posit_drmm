@@ -264,19 +264,23 @@ def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     bs_emits_       = bs_emits_.squeeze(-1)
     gs_emits_       = gs_emits_.squeeze(-1)
-    print(bs_emits_)
-    print(gs_emits_)
-    exit()
-    # F.mse_loss()
+    #
+    #
     good_sent_tags  = torch.FloatTensor(good_sent_tags)
-    tags_2          = torch.zeros_like(bs_emits_)
+    bad_sent_tags   = torch.zeros_like(bs_emits_)
     if(use_cuda):
         good_sent_tags  = good_sent_tags.cuda()
-        tags_2          = tags_2.cuda()
+        bad_sent_tags   = bad_sent_tags.cuda()
     #
     sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
-    sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2,         size_average=False, reduce=True)
-    return sn_d1_l, sn_d2_l
+    sn_d2_l         = F.binary_cross_entropy(bs_emits_, bad_sent_tags,  size_average=False, reduce=True)
+    #
+    sn_d3_l         = F.mse_loss(torch.sum(bs_emits_), torch.sum(good_sent_tags))
+    sn_d4_l         = F.mse_loss(torch.sum(gs_emits_), torch.sum(bad_sent_tags))
+    #
+    print(sn_d3_l)
+    print(sn_d4_l)
+    return sn_d1_l, sn_d2_l, sn_d3_l, sn_d4_l
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
@@ -645,10 +649,11 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
         if(two_losses):
-            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss                       = sn_d1_l + sn_d2_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
+            sn_d1_l, sn_d2_l, sn_d3_l, sn_d4_l  = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            snip_loss_1                         = sn_d1_l + sn_d2_l
+            snip_loss_2                         = sn_d3_l + sn_d4_l
+            losses_weights                      = [0.33, 0.33, 0.33]
+            cost_                               = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * snip_loss_2) + (losses_weights[2] * cost_)
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1168,7 +1173,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         good_out_pp                     = torch.cat([good_out,  doc_gaf, good_mesh_out], -1)
         bad_out_pp                      = torch.cat([bad_out,   doc_baf, bad_mesh_out], -1)
-        print(good_out_pp.size())
         #
         final_good_output               = self.final_layer_1(good_out_pp)
         final_good_output               = self.final_activ_1(final_good_output)
