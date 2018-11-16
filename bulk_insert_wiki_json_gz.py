@@ -8,6 +8,23 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from elasticsearch import helpers
 
+def abs_found(pmid):
+    bod = {
+        "query" : {
+            'bool':{
+                "must" : [
+                    {
+                        "term": {
+                            "pmid": pmid
+                        }
+                    }
+                ]
+            }
+        }
+    }
+    res = es.search(index=index, doc_type=doc_type, body=bod)
+    return len(res['hits']['hits'])>0
+
 def create_an_action(tw):
     tw['_op_type']= 'index'
     tw['_index']= index
@@ -28,7 +45,7 @@ def send_to_elk(actions):
             else:
                 flag = False
 
-es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+es          = Elasticsearch(['harvester2.ilsp.gr:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 index       = 'wikipedia_json_gz'
 doc_type    = "wiki_page"
 b_size      = 200
@@ -39,7 +56,9 @@ proc        = subprocess.Popen(["zcat",fpath], stdout=subprocess.PIPE)
 for line in iter(proc.stdout.readline,''):
     line    = line.rstrip()
     dato    = json.loads(line)
-    # pprint(d)
+    pprint(dato)
+
+    break
     temp    = create_an_action(dato)
     actions.append(temp)
     if(len(actions) >= b_size):

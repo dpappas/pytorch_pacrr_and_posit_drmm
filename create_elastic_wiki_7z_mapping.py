@@ -14,8 +14,13 @@ mapping = {
                "auxiliary_text": {
                   "type": "text"
                },
-               "category": {
-                  "type": "text"
+               'category': {
+                  "type": "text",
+                  "fields": {
+                     "raw": {
+                        "type": "keyword"
+                     }
+                  }
                },
                "coordinates": {
                   "properties": {
@@ -52,9 +57,9 @@ mapping = {
                      }
                   }
                },
-               "defaultsort": {
-                  "type": "boolean"
-               },
+               # "defaultsort": {
+               #    "type": "boolean"
+               # },
                "external_link": {
                   "type": "text"
                },
@@ -111,8 +116,13 @@ mapping = {
                   "type": "date",
                   "format": "strict_date_optional_time||epoch_millis"
                },
-               "title": {
-                  "type": "text"
+               'title': {
+                  "type": "text",
+                  "fields": {
+                     "raw": {
+                        "type": "keyword"
+                     }
+                  }
                },
                "version": {
                   "type": "long"
