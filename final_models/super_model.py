@@ -278,8 +278,6 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d3_l         = F.mse_loss(torch.sum(bs_emits_), torch.sum(good_sent_tags))
     sn_d4_l         = F.mse_loss(torch.sum(gs_emits_), torch.sum(bad_sent_tags))
     #
-    print(sn_d3_l)
-    print(sn_d4_l)
     return sn_d1_l, sn_d2_l, sn_d3_l, sn_d4_l
 
 def init_the_logger(hdlr):
@@ -653,6 +651,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             snip_loss_1                         = sn_d1_l + sn_d2_l
             snip_loss_2                         = sn_d3_l + sn_d4_l
             losses_weights                      = [0.33, 0.33, 0.33]
+            print(snip_loss_1, snip_loss_1, cost_)
             cost_                               = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * snip_loss_2) + (losses_weights[2] * cost_)
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
