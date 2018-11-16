@@ -26,7 +26,7 @@ bz_file     = bz2.BZ2File(file_gz)
 
 for ch_tree in etree.fromstring(bz_file.read()).getchildren():
     print(etree.tostring(ch_tree))
-
+    break
 
 exit()
 
