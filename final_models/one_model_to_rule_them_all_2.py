@@ -484,7 +484,7 @@ def get_the_mesh(the_doc):
             t = t['NameOfSubstance'].strip().lower()
             good_meshes.append(t)
     good_mesh = sorted(good_meshes)
-    good_mesh = ['mgmx'] + good_mesh
+    good_mesh = ['mesh'] + good_mesh
     # good_mesh = ' # '.join(good_mesh)
     # good_mesh = good_mesh.split()
     # good_mesh = [gm.split() for gm in good_mesh]
@@ -512,11 +512,14 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         good_sents = [the_doc['title'] + the_doc['abstractText']]
     ####
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    # good_doc_af.append(len(good_sents) / 60.)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
-        good_tokens, good_embeds    = get_embeds(tokenize(good_text), wv)
+        sent_toks                   = tokenize(good_text)
+        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
@@ -526,10 +529,15 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_meshes = get_the_mesh(the_doc)
     good_mesh_embeds, good_mesh_escores = [], []
     for good_mesh in good_meshes:
-        gm_tokens, gm_embeds            = get_embeds(good_mesh, wv)
+        mesh_toks                       = tokenize(good_mesh)
+        gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
+        # print(good_mesh)
+        # print(mesh_toks)
+        # print(gm_tokens)
         if (len(gm_tokens) > 0):
             good_mesh_embeds.append(gm_embeds)
-            good_escores                = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
+            good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
+            # good_escores.append(len(mesh_toks)/ 10.)
             good_mesh_escores.append(good_escores)
     ####
     return {
@@ -904,7 +912,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
-    # mgmx
+    #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
