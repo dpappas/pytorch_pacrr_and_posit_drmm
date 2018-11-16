@@ -6,24 +6,48 @@
 # 7z x -so wikipedia-en-html.tar.7z | tar xf - -C wikipedia-en-htmls
 #
 
+'''
+sudo pip install pyunpack
+#optional
+sudo pip install patool
+sudo pip install entrypoint2
+sudo apt-get install unzip unrar p7zip-full
+'''
+
+from pyunpack import Archive
+filename    = '/media/dpappas/dpappas_data/wikipedia-en-html.tar.7z'
+Archive(filename)
+
 from bs4 import BeautifulSoup
 from pprint import pprint
 import tarfile
 
 filename    = '/media/dpappas/dpappas_data/wikipedia-en-html.tar'
 tar         = tarfile.open(filename)
+nonos       = ['Image', 'User', 'Talk', 'Category']
 for member_info in tar:
-    print member_info.name
-    f       = tar.extractfile(member_info)
-    content = f.read()
-    soup    = BeautifulSoup(content, "lxml")
-    # print   soup.prettify()
-    try:
-        pprint(soup.find('div', {'id': 'bodyContent'}).find_all('div', {'id': 'mw-content-text'}))
-    except:
-        None
+    if(
+        not any(
+            [
+                nono in member_info.name
+                for nono in nonos
+            ]
+        )
+    ):
+        print member_info.name
+        f       = tar.extractfile(member_info)
+        content = f.read()
+        soup    = BeautifulSoup(content, "lxml")
+        # print   soup.prettify()
+        try:
+            pprint(soup.find('div', {'id': 'bodyContent'}).find_all('div', {'id': 'mw-content-text'}))
+        except:
+            None
     # break
 
+f       = tar.extractfile('en/articles//H/i/n/Hinge_loss')
+content = f.read()
+soup    = BeautifulSoup(content, "lxml")
 
 
 
