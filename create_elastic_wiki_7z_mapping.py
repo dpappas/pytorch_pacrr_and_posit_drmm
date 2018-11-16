@@ -3,8 +3,8 @@ from elasticsearch import Elasticsearch
 
 elastic_con = Elasticsearch(['localhost:9200'],verify_certs=True)
 
-index       = 'pubmed_abstracts_index_0_1'
-doc_type    = "pubmed_abstracts_mapping_0_1"
+index       = 'wikipedia_json_7z'
+doc_type    = "wiki_page"
 
 elastic_con.indices.delete(
     index=index,
@@ -13,7 +13,7 @@ elastic_con.indices.delete(
 
 mapping = {
      "mappings": {
-         "page": {
+         doc_type: {
             "properties": {
                "auxiliary_text": {
                   "type": "text"
