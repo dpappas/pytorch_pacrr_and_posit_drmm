@@ -1,7 +1,7 @@
 
 from elasticsearch import Elasticsearch
 
-elastic_con = Elasticsearch(['localhost:9200'],verify_certs=True)
+elastic_con = Elasticsearch(['localhost:9200'], verify_certs=True)
 
 index       = 'wikipedia_json_7z'
 doc_type    = "wiki_page"
