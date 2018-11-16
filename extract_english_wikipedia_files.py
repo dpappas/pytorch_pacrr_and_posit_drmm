@@ -25,8 +25,10 @@ ch_counter = 0
 for ch_tree in children:
     ch_counter += 1
     for elem in ch_tree.iter(tag='MedlineCitation'):
-        print(etree.tostring(elem))
         # elem = etree.fromstring(etree.tostring(elem))
+        print(etree.tostring(elem))
+        break
+    break
 
 exit()
 
