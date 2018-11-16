@@ -12,6 +12,8 @@ sys.setdefaultencoding("utf-8")
 
 import subprocess
 from bs4 import BeautifulSoup
+from pprint import pprint
+import re
 from lxml import etree as et
 fpath   = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
 proc    = subprocess.Popen(["bzcat",fpath], stdout=subprocess.PIPE)
@@ -25,6 +27,10 @@ while True:
         print "test:", line
     elif ('</page>' in line):
         temp_text += '\n'+line
+        pprint(re.findall('\{\{.?\}\}', temp_text, flags=re.DOTALL))
+        temp_text = re.sub('\{\{.?\}\}', '', temp_text, flags=re.DOTALL)
+        # temp_text = temp_text.replace('&gt;', '>')
+        # temp_text = temp_text.replace('&lt;', '<')
         soup = BeautifulSoup(temp_text, 'lxml')
         print soup.prettify()
         print 20 * '='
