@@ -35,8 +35,8 @@ with libarchive.public.file_reader(fpath) as e:
 
 exit()
 
-
-infile  = gzip.open(file_gz)
+fpath   = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
+infile  = gzip.open(fpath)
 content = infile.read()
 children = etree.fromstring(content).getchildren()
 ch_counter = 0
