@@ -35,7 +35,8 @@ b_size      = 200
 actions     = []
 fpath       = '/media/dpappas/dpappas_data/enwiki-20181112-cirrussearch-content.json.gz'
 proc        = subprocess.Popen(["zcat",fpath], stdout=subprocess.PIPE)
-for line in  proc.stdout.readlines():
+
+for line in iter(proc.stdout.readline,''):
     line    = line.rstrip()
     dato    = json.loads(line)
     # pprint(d)
