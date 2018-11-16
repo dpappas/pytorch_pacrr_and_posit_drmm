@@ -56,9 +56,7 @@ proc        = subprocess.Popen(["zcat",fpath], stdout=subprocess.PIPE)
 for line in iter(proc.stdout.readline,''):
     line    = line.rstrip()
     dato    = json.loads(line)
-    pprint(dato)
-
-    break
+    # pprint(dato)
     temp    = create_an_action(dato)
     actions.append(temp)
     if(len(actions) >= b_size):

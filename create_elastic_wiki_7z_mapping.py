@@ -57,9 +57,9 @@ mapping = {
                      }
                   }
                },
-               # "defaultsort": {
-               #    "type": "boolean"
-               # },
+               "defaultsort": {
+                  "type": "keyword"
+               },
                "external_link": {
                   "type": "text"
                },
