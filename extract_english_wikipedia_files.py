@@ -16,8 +16,20 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from elasticsearch import helpers
 import random
+import bz2
 
-file_gz = ''
+file_gz     = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
+bz_file     = bz2.BZ2File(file_gz)
+content     = bz_file.read()
+children    = etree.fromstring(content).getchildren()
+
+for ch_tree in children:
+    print(etree.tostring(ch_tree))
+
+
+exit()
+
+
 infile  = gzip.open(file_gz)
 content = infile.read()
 children = etree.fromstring(content).getchildren()
