@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# zcat enwiki-20181112-cirrussearch-content.json.gz | head -5000 | tail -1 | python -m json.tool
+# https://stackoverflow.com/questions/47476122/loading-wikipedia-dump-into-elasticsearch
+
+# bzcat enwiki-latest-pages-articles.xml.bz2 | head -100
+
 import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -15,13 +20,31 @@ from pprint import pprint
 
 fpath   = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
 bz_file = bz2.BZ2File(fpath)
+
 # content     = bz_file.read()
 # children    = etree.fromstring(content).getchildren()
 # for ch_tree in children:
 
 for ch_tree in etree.fromstring(bz_file.read()).getchildren():
-    print(etree.tostring(ch_tree))
+    for elem in ch_tree.iter(tag='page'):
+        # elem = etree.fromstring(etree.tostring(elem))
+        print(etree.tostring(elem))
+        break
     break
+
+import subprocess
+from lxml import etree as et
+from bz2file import BZ2File
+fpath   = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
+p       = subprocess.Popen(["bzcat",fpath], stdout=subprocess.PIPE)
+
+# parser = et.iterparse(p.stdout, events=('end',))
+# for events, elem in parser:
+#     if('page' in elem.tag.lower()):
+#         print(elem.tag)
+#         print(et.tostring(elem))
+#     elem.clear()
+
 
 exit()
 
