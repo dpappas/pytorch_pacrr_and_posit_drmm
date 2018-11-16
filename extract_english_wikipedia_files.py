@@ -20,10 +20,11 @@ import bz2
 
 file_gz     = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
 bz_file     = bz2.BZ2File(file_gz)
-content     = bz_file.read()
-children    = etree.fromstring(content).getchildren()
+# content     = bz_file.read()
+# children    = etree.fromstring(content).getchildren()
+# for ch_tree in children:
 
-for ch_tree in children:
+for ch_tree in etree.fromstring(bz_file.read()).getchildren():
     print(etree.tostring(ch_tree))
 
 
