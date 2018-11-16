@@ -490,7 +490,7 @@ def get_the_mesh(the_doc):
             t = t['NameOfSubstance'].strip().lower()
             good_meshes.append(t)
     good_mesh = sorted(good_meshes)
-    good_mesh = ['mgmx'] + good_mesh
+    good_mesh = ['mesh'] + good_mesh
     # good_mesh = ' # '.join(good_mesh)
     # good_mesh = good_mesh.split()
     # good_mesh = [gm.split() for gm in good_mesh]
@@ -920,7 +920,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
-    # mgmx
+    #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
