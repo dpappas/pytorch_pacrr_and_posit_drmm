@@ -7,6 +7,16 @@
 #
 
 
+import tarfile
+filename    = '/media/dpappas/dpappas_data/wikipedia-en-html.tar'
+tar         = tarfile.open(filename)
+for member_info in tar:
+    print member_info.name
+    f = tar.extractfile(member_info)
+    print f.read()
+
+
+
 
 
 

@@ -1288,3 +1288,5 @@ DONE - add dense layer in fig 6 output (relu)
 - use bigru last steps as input to sentence number prediction
 
 '''
+
+
