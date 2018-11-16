@@ -1,7 +1,7 @@
 
 from elasticsearch import Elasticsearch
 
-elastic_con = Elasticsearch(['localhost:9200'], verify_certs=True)
+elastic_con = Elasticsearch(['harvester2.ilsp.gr:9200'], verify_certs=True)
 index       = 'wikipedia_json_gz'
 doc_type    = "wiki_page"
 
