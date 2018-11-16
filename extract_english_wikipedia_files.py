@@ -6,18 +6,6 @@
 # 7z x -so wikipedia-en-html.tar.7z | tar xf - -C wikipedia-en-htmls
 #
 
-'''
-sudo pip install pyunpack
-#optional
-sudo pip install patool
-sudo pip install entrypoint2
-sudo apt-get install unzip unrar p7zip-full
-'''
-
-from pyunpack import Archive
-filename    = '/media/dpappas/dpappas_data/wikipedia-en-html.tar.7z'
-Archive(filename)
-
 from bs4 import BeautifulSoup
 from pprint import pprint
 import tarfile
