@@ -1283,8 +1283,8 @@ for run in range(0, 5):
 
 DONE - add sentence len in tokens
 DONE - add document len in sents
-- add the sigmoid outputs trying to predict the number of relevant sents (MSE loss)
-- self attention (softmax before sigmoid) 
+DONE - add the sigmoid outputs trying to predict the number of relevant sents (MSE loss)
+DONE - self attention (softmax before sigmoid) 
 DONE - add dense layer in fig 4 output (relu)
 DONE - add dense layer in fig 6 output (relu)
 - entire document as sentence
