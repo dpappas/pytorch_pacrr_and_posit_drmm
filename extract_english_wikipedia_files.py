@@ -1,4 +1,34 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
+import os
+import gzip
+import traceback
+from lxml import etree
+from pprint import pprint
+from dateutil import parser
+import elasticsearch
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
+from elasticsearch import helpers
+import random
+
+file_gz = ''
+infile  = gzip.open(file_gz)
+content = infile.read()
+children = etree.fromstring(content).getchildren()
+ch_counter = 0
+for ch_tree in children:
+    ch_counter += 1
+    for elem in ch_tree.iter(tag='MedlineCitation'):
+        print(etree.tostring(elem))
+        # elem = etree.fromstring(etree.tostring(elem))
+
+exit()
 
 # wget https://dumps.wikimedia.org/other/static_html_dumps/current/en/wikipedia-en-html.tar.7z
 #
