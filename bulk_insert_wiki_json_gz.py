@@ -45,7 +45,7 @@ def send_to_elk(actions):
             else:
                 flag = False
 
-es          = Elasticsearch(['harvester2.ilsp.gr:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 index       = 'wikipedia_json_gz'
 doc_type    = "wiki_page"
 b_size      = 200
