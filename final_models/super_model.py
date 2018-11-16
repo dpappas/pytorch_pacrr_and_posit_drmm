@@ -535,11 +535,11 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_meshes = get_the_mesh(the_doc)
     good_mesh_embeds, good_mesh_escores = [], []
     for good_mesh in good_meshes:
-        print(good_mesh)
         mesh_toks                       = tokenize(good_mesh)
-        print(mesh_toks)
         gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
-        print(gm_tokens)
+        # print(good_mesh)
+        # print(mesh_toks)
+        # print(gm_tokens)
         if (len(gm_tokens) > 0):
             good_mesh_embeds.append(gm_embeds)
             good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
