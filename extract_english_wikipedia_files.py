@@ -14,14 +14,7 @@ filename    = '/media/dpappas/dpappas_data/wikipedia-en-html.tar'
 tar         = tarfile.open(filename)
 nonos       = ['Image', 'User', 'Talk', 'Category']
 for member_info in tar:
-    if(
-        not any(
-            [
-                nono in member_info.name
-                for nono in nonos
-            ]
-        )
-    ):
+    if(not any([nono in member_info.name for nono in nonos])):
         print member_info.name
         f       = tar.extractfile(member_info)
         content = f.read()
