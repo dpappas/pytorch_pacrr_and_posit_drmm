@@ -7,6 +7,7 @@
 #
 
 from bs4 import BeautifulSoup
+from pprint import pprint
 import tarfile
 
 filename    = '/media/dpappas/dpappas_data/wikipedia-en-html.tar'
@@ -16,8 +17,12 @@ for member_info in tar:
     f       = tar.extractfile(member_info)
     content = f.read()
     soup    = BeautifulSoup(content, "lxml")
-    print   soup.prettify()
-    break
+    # print   soup.prettify()
+    try:
+        pprint(soup.find('div', {'id': 'bodyContent'}).find_all('div', {'id': 'mw-content-text'}))
+    except:
+        None
+    # break
 
 
 
