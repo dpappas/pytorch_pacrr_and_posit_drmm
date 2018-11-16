@@ -6,15 +6,18 @@
 # 7z x -so wikipedia-en-html.tar.7z | tar xf - -C wikipedia-en-htmls
 #
 
-
+from bs4 import BeautifulSoup
 import tarfile
+
 filename    = '/media/dpappas/dpappas_data/wikipedia-en-html.tar'
 tar         = tarfile.open(filename)
 for member_info in tar:
     print member_info.name
-    f = tar.extractfile(member_info)
-    print f.read()
-
+    f       = tar.extractfile(member_info)
+    content = f.read()
+    soup    = BeautifulSoup(content, "lxml")
+    print   soup.prettify()
+    break
 
 
 
