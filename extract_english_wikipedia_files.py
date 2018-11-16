@@ -10,40 +10,46 @@ import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
-import os
-import bz2
-import gzip
-import random
-import traceback
-from lxml import etree
-from pprint import pprint
-
+import subprocess
+from bs4 import BeautifulSoup
+from lxml import etree as et
 fpath   = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
-bz_file = bz2.BZ2File(fpath)
+proc    = subprocess.Popen(["bzcat",fpath], stdout=subprocess.PIPE)
 
-# content     = bz_file.read()
-# children    = etree.fromstring(content).getchildren()
-# for ch_tree in children:
+temp_text = ''
+while True:
+    line = proc.stdout.readline().rstrip()
+    if('<page>' in line):
+        temp_text = ''
+        temp_text += '\n'+line
+        print "test:", line
+    elif ('</page>' in line):
+        temp_text += '\n'+line
+        soup = BeautifulSoup(temp_text, 'lxml')
+        print soup.prettify()
+        print 20 * '='
+        temp_text = ''
+    else:
+        temp_text += '\n'+line
 
-for ch_tree in etree.fromstring(bz_file.read()).getchildren():
-    for elem in ch_tree.iter(tag='page'):
-        # elem = etree.fromstring(etree.tostring(elem))
-        print(etree.tostring(elem))
-        break
-    break
+
+
+
+
+exit()
 
 import subprocess
 from lxml import etree as et
 from bz2file import BZ2File
 fpath   = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
 p       = subprocess.Popen(["bzcat",fpath], stdout=subprocess.PIPE)
+parser = et.iterparse(p.stdout, tag='page')
 
-# parser = et.iterparse(p.stdout, events=('end',))
-# for events, elem in parser:
-#     if('page' in elem.tag.lower()):
-#         print(elem.tag)
-#         print(et.tostring(elem))
-#     elem.clear()
+for events, elem in parser:
+    if('page' in elem.tag.lower()):
+        print(elem.tag)
+        print(et.tostring(elem))
+    elem.clear()
 
 
 exit()
