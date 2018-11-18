@@ -109,29 +109,6 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def dummy_test():
-    doc1_embeds         = np.random.rand(40, 200)
-    doc2_embeds         = np.random.rand(30, 200)
-    question_embeds     = np.random.rand(20, 200)
-    q_idfs              = np.random.rand(20, 1)
-    gaf                 = np.random.rand(4)
-    baf                 = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds     = doc1_embeds,
-            doc2_embeds     = doc2_embeds,
-            question_embeds = question_embeds,
-            q_idfs          = q_idfs,
-            gaf             = gaf,
-            baf             = baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
