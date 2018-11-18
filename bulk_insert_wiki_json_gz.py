@@ -67,3 +67,18 @@ if(len(actions) > 0):
     send_to_elk(actions)
     actions = []
 
+
+'''
+curl -X GET "harvester2.ilsp.gr:9200/_search" -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "match_phrase" : {
+            "text" : "Torque is the rotation equivalent"
+        }
+    },
+}
+'
+
+'''
+
+
