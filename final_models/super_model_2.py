@@ -610,7 +610,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     #
     start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_, sent_num = model(
             doc1_sents_embeds   = datum['good_sents_embeds'],
             doc2_sents_embeds   = datum['bad_sents_embeds'],
             question_embeds     = datum['quest_embeds'],
@@ -626,6 +626,16 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         )
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
+        sent_num_target = sum(good_sent_tags)
+        if(sent_num_target>6):
+            sent_num_target = 6
+        # sent_num_target = np.eye(6)[sent_num_target-1]
+        print(good_sent_tags)
+        print(sent_num_target)
+        print(sent_num)
+        print(F.cross_entropy(sent_num.unsqueeze(0), torch.FloatTensor([sent_num_target])))
+        exit()
+        #
         if(two_losses):
             sn_d1_l, sn_d2_l, sn_d3_l, sn_d4_l  = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss_1                         = sn_d1_l + sn_d2_l
@@ -740,7 +750,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
-        doc_emit_, gs_emits_    = model.emit_one(
+        doc_emit_, gs_emits_, sent_num    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
@@ -1052,7 +1062,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_add_feats)
         res                     = torch.stack(res)
         sent_num_emit, hn       = self.sent_res_bigru(res.unsqueeze(1), self.sent_res_h0)
-        sent_num_emit           = self.sent_res_mlp(sent_num_emit[-1])
+        sent_num_emit           = self.sent_res_mlp(sent_num_emit[-1].squeeze(0))
+        sent_num_emit           = F.softmax(sent_num_emit)
         #
         attent = self.sent_out_layer_1(res)
         attent = self.sent_out_activ_1(attent)
