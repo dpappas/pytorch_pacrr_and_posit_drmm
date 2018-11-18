@@ -259,8 +259,8 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
 
 def get_sent_num_loss(sent_num, good_sent_tags):
     sent_num_target = sum(good_sent_tags)
-    if (sent_num_target > 6):
-        sent_num_target = 6
+    if (sent_num_target > 5):
+        sent_num_target = 5
     sent_num_target = torch.LongTensor([sent_num_target])
     if (use_cuda):
         sent_num_target = sent_num_target.cuda()
@@ -1139,7 +1139,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits, sent_num_emit   = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        good_out, gs_emits, sent_num_good   = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         #
         good_mesh_out, gs_mesh_emits , _    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
         #
@@ -1149,7 +1149,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output               = self.final_activ_1(final_good_output)
         final_good_output               = self.final_layer_2(final_good_output)
         #
-        return final_good_output, gs_emits, sent_num_emit
+        return final_good_output, gs_emits, sent_num_good
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
