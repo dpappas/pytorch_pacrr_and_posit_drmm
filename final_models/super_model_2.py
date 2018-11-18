@@ -1003,9 +1003,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.final_activ_1  = self.final_activ_1.cuda()
             self.final_layer_2  = self.final_layer_2.cuda()
     def init_sent_nums(self):
-        self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
-        self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
-        self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
+        self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5)) # directions, layers, nodes
+        self.sent_res_bigru = nn.GRU(input_size=5, hidden_size=5, bidirectional=True, batch_first=False)
+        self.sent_res_mlp   = nn.Linear(10, 5, bias=False)
         if (use_cuda):
             self.sent_res_h0    = self.sent_res_h0.cuda()
             self.sent_res_bigru = self.sent_res_bigru.cuda()
@@ -1073,7 +1073,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
-        res = torch.stack(res)
+        res                     = torch.stack(res)
+        sent_num_emit, hn       = self.sent_res_bigru(res.unsqueeze(1), self.sent_res_h0)
+        sent_num_emit           = self.sent_res_mlp(sent_num_emit[-1])
         #
         attent = self.sent_out_layer_1(res)
         attent = self.sent_out_activ_1(attent)
@@ -1083,7 +1085,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         attent      = F.softmax(attent, dim=0)
         #
         sents_overall_rep = torch.mm(res.transpose(0, 1), attent.unsqueeze(1)).squeeze(1)
-        return sents_overall_rep, sent_emits
+        return sents_overall_rep, sent_emits, sent_num_emit
     def get_max(self, res):
         return torch.max(res)
     def get_kmax(self, res, k):
@@ -1168,11 +1170,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits              = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-        bad_out, bs_emits               = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+        good_out, gs_emits, sent_num_emit   = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        bad_out, bs_emits , _               = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
-        good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-        bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
+        good_mesh_out, gs_mesh_emits, _     = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
+        bad_mesh_out, bs_mesh_emits , _     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
         #
         good_out_pp                     = torch.cat([good_out,  doc_gaf, good_mesh_out], -1)
         bad_out_pp                      = torch.cat([bad_out,   doc_baf, bad_mesh_out], -1)
