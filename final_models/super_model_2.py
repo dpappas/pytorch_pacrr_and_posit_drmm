@@ -1235,7 +1235,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'GNTM_run_two_losses_{}/'.format(run)
+    odir    = 'GNTM_two_losses_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print odir
     if(not os.path.exists(odir)):
