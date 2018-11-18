@@ -264,7 +264,7 @@ def get_sent_num_loss(sent_num, good_sent_tags):
     sent_num_target = torch.LongTensor([sent_num_target])
     if (use_cuda):
         sent_num_target = sent_num_target.cuda()
-    sent_num_loss = F.cross_entropy(sent_num.unsqueeze(0), sent_num_target)
+    sent_num_loss = F.cross_entropy(sent_num.unsqueeze(0), sent_num_target+1)
     return sent_num_loss
 
 def init_the_logger(hdlr):
@@ -620,7 +620,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     #
     start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_, sent_num = model(
+        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_, sent_num_good, sent_num_bad = model(
             doc1_sents_embeds   = datum['good_sents_embeds'],
             doc2_sents_embeds   = datum['bad_sents_embeds'],
             question_embeds     = datum['quest_embeds'],
@@ -644,7 +644,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             # print(snip_loss_1, snip_loss_2, cost_)
             # cost_                               = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * snip_loss_2) + (losses_weights[2] * cost_)
             #
-            sent_num_loss                       = get_sent_num_loss(sent_num, good_sent_tags)
+            sent_num_loss                       = get_sent_num_loss(sent_num_good,  good_sent_tags)
+            sent_num_loss                       += get_sent_num_loss(sent_num_bad,   bad_sent_tags)
             #
             losses_weights                      = [0.33, 0.33, 0.33]
             cost_ = (
@@ -1167,8 +1168,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits, sent_num_emit   = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-        bad_out, bs_emits , _               = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+        good_out, gs_emits, sent_num_good   = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        bad_out, bs_emits , sent_num_bad    = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
         good_mesh_out, gs_mesh_emits, _     = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
         bad_mesh_out, bs_mesh_emits , _     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
@@ -1185,7 +1186,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_bad_output                = self.final_layer_2(final_bad_output)
         #
         loss1                           = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits, sent_num_emit
+        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits, sent_num_good, sent_num_bad
 
 use_cuda = torch.cuda.is_available()
 
