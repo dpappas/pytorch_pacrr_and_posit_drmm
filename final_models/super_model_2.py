@@ -257,6 +257,16 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     #
     return sn_d1_l, sn_d2_l, sn_d3_l, sn_d4_l
 
+def get_sent_num_loss(sent_num, good_sent_tags):
+    sent_num_target = sum(good_sent_tags)
+    if (sent_num_target > 6):
+        sent_num_target = 6
+    sent_num_target = torch.LongTensor([sent_num_target])
+    if (use_cuda):
+        sent_num_target = sent_num_target.cuda()
+    sent_num_loss = F.cross_entropy(sent_num.unsqueeze(0), sent_num_target)
+    return sent_num_loss
+
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
         os.makedirs(odir)
@@ -626,25 +636,24 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         )
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
-        sent_num_target = sum(good_sent_tags)
-        if(sent_num_target>6):
-            sent_num_target = 6
-        # sent_num_target = np.eye(6)[sent_num_target-1]
-        print(good_sent_tags)
-        print(sent_num_target)
-        print(sent_num)
-        print(F.cross_entropy(sent_num.unsqueeze(0), torch.FloatTensor([sent_num_target])))
-        exit()
         #
         if(two_losses):
             sn_d1_l, sn_d2_l, sn_d3_l, sn_d4_l  = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss_1                         = sn_d1_l + sn_d2_l
             # snip_loss_2                         = sn_d3_l + sn_d4_l
-            # losses_weights                      = [0.33, 0.33, 0.33]
             # print(snip_loss_1, snip_loss_2, cost_)
             # cost_                               = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * snip_loss_2) + (losses_weights[2] * cost_)
-            losses_weights                      = [0.5, 0.5]
-            cost_ = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
+            #
+            sent_num_loss                       = get_sent_num_loss(sent_num, good_sent_tags)
+            #
+            losses_weights                      = [0.33, 0.33, 0.33]
+            cost_ = (
+                losses_weights[0] * snip_loss_1
+            ) + (
+                losses_weights[1] * cost_
+            ) + (
+                losses_weights[2] * sent_num_loss
+            )
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
