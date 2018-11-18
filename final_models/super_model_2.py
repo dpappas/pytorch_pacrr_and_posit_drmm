@@ -947,6 +947,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_mlps_for_pooled_attention()
         self.init_sent_output_layer()
         self.init_doc_out_layer()
+        self.init_sent_nums()
         # doc loss func
         self.margin_loss        = nn.MarginRankingLoss(margin=1.0)
         if(use_cuda):
@@ -1001,6 +1002,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.final_layer_1  = self.final_layer_1.cuda()
             self.final_activ_1  = self.final_activ_1.cuda()
             self.final_layer_2  = self.final_layer_2.cuda()
+    def init_sent_nums(self):
+        self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
+        self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
+        self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
+        if (use_cuda):
+            self.sent_res_h0    = self.sent_res_h0.cuda()
+            self.sent_res_bigru = self.sent_res_bigru.cuda()
+            self.sent_res_mlp   = self.sent_res_mlp.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
