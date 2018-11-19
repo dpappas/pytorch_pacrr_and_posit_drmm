@@ -862,6 +862,8 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     all_bioasq_subm_data_known_v2   = {"questions": []}
     all_bioasq_subm_data_v3         = {"questions": []}
     all_bioasq_subm_data_known_v3   = {"questions": []}
+    all_bioasq_subm_data_v4         = {"questions": []}
+    all_bioasq_subm_data_known_v4   = {"questions": []}
     all_bioasq_gold_data            = {'questions': []}
     data_for_revision               = {}
     #
@@ -871,13 +873,16 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
+        all_bioasq_subm_data_v4['questions'].append(snips_res['v4'])
         all_bioasq_subm_data_known_v1['questions'].append(snips_res_known['v1'])
         all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
+        all_bioasq_subm_data_known_v4['questions'].append(snips_res_known['v4'])
     #
     print_the_results('v1 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1, data_for_revision)
     print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
     print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
+    print_the_results('v4 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v4, all_bioasq_subm_data_known_v4, data_for_revision)
     #
     if (prefix == 'dev'):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
@@ -1273,7 +1278,7 @@ for run in range(0, 5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        # train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
