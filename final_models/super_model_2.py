@@ -1294,7 +1294,7 @@ DONE - add dense layer in fig 6 output (relu)
 
 - tune weights of the losses
 - multi headed attention
-- use bigru last steps as input to sentence number prediction
+DONE - use bigru last steps as input to sentence number prediction
 
 '''
 
