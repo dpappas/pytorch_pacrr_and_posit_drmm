@@ -752,31 +752,20 @@ def select_snippets_v4(extracted_snippets, the_doc_scores):
     :return:    returns the top 10 snippets across all documents (0..n from each doc)
     '''
     norm_doc_scores     = get_norm_doc_scores(the_doc_scores)
-    pprint(norm_doc_scores)
-    pprint(extracted_snippets)
+    # pprint(norm_doc_scores)
+    # pprint(extracted_snippets)
     ret_snips = []
     for doc_link in norm_doc_scores:
         snips = [
-            (t[0], t[1] * norm_doc_scores[t[2]], t[2], t[3])
+            (t[0], t[1] * norm_doc_scores[t[2]], t[2], t[3], t[4])
             for t in extracted_snippets
             if(t[2] == doc_link)
         ]
-        snips = sorted(snips, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
-        pprint(snips)
-        print(snips[0][-1])
-        exit()
-
-    for es in extracted_snippets:
-        print es
-        # if(es[2] in ret):
-        #     if(es[1] > ret[es[2]][1]):
-        #         ret[es[2]] = es
-        # else:
-        #     ret[es[2]] = es
-    exit()
-    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
-    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
-    sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
+        snips = sorted(snips, key=lambda x: x[1], reverse=True)
+        if(how_many>0):
+            how_many = snips[0][-1]
+            ret_snips.extend(snips[:how_many])
+    sorted_snips = sorted(ret_snips, key=lambda x: x[1], reverse=True)
     return sorted_snips[:10]
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
@@ -846,6 +835,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_v4                = prep_extracted_snippets(extracted_snippets_v4, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     # pprint(snips_res_v1)
     # pprint(snips_res_v2)
     # pprint(snips_res_v3)
@@ -854,16 +844,19 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num_v4  = prep_extracted_snippets(extracted_snippets_known_rel_num_v4, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     #
     snips_res = {
         'v1' : snips_res_v1,
         'v2' : snips_res_v2,
         'v3' : snips_res_v3,
+        'v4' : snips_res_v4,
     }
     snips_res_known = {
         'v1' : snips_res_known_rel_num_v1,
         'v2' : snips_res_known_rel_num_v2,
         'v3' : snips_res_known_rel_num_v3,
+        'v4' : snips_res_known_rel_num_v4,
     }
     return data_for_revision, ret_data, snips_res, snips_res_known
 
