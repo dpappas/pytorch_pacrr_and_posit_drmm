@@ -752,8 +752,7 @@ def select_snippets_v4(extracted_snippets, the_doc_scores):
     :return:    returns the top 10 snippets across all documents (0..n from each doc)
     '''
     norm_doc_scores     = get_norm_doc_scores(the_doc_scores)
-    # pprint(norm_doc_scores)
-    # pprint(extracted_snippets)
+    #
     ret_snips = []
     for doc_link in norm_doc_scores:
         snips = [
@@ -766,9 +765,10 @@ def select_snippets_v4(extracted_snippets, the_doc_scores):
             how_many = snips[0][-1]
             if(how_many>0):
                 ret_snips.extend(snips[:how_many])
+    #
     sorted_snips = sorted(ret_snips, key=lambda x: x[1], reverse=True)
     sorted_snips = sorted_snips[:10]
-    pprint(sorted_snips)
+    # pprint(sorted_snips)
     return sorted_snips
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
