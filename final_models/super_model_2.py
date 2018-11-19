@@ -762,9 +762,10 @@ def select_snippets_v4(extracted_snippets, the_doc_scores):
             if(t[2] == doc_link)
         ]
         snips = sorted(snips, key=lambda x: x[1], reverse=True)
-        if(how_many>0):
+        if(len(snips)>0):
             how_many = snips[0][-1]
-            ret_snips.extend(snips[:how_many])
+            if(how_many>0):
+                ret_snips.extend(snips[:how_many])
     sorted_snips = sorted(ret_snips, key=lambda x: x[1], reverse=True)
     return sorted_snips[:10]
 
