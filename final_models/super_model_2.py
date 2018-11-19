@@ -1073,7 +1073,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res                     = torch.stack(res)
         sent_num_emit, hn       = self.sent_res_bigru(res.unsqueeze(1), self.sent_res_h0)
         sent_num_emit           = self.sent_res_mlp(sent_num_emit[-1].squeeze(0))
-        sent_num_emit           = F.softmax(sent_num_emit)
+        sent_num_emit           = F.softmax(sent_num_emit, dim=-1)
         #
         attent = self.sent_out_layer_1(res)
         attent = self.sent_out_activ_1(attent)
