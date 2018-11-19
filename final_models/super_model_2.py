@@ -767,7 +767,9 @@ def select_snippets_v4(extracted_snippets, the_doc_scores):
             if(how_many>0):
                 ret_snips.extend(snips[:how_many])
     sorted_snips = sorted(ret_snips, key=lambda x: x[1], reverse=True)
-    return sorted_snips[:10]
+    sorted_snips = sorted_snips[:10]
+    pprint(sorted_snips)
+    return sorted_snips
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions                    = {
