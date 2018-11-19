@@ -678,7 +678,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
-def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
+def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips, sent_num_to_keep):
     emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
     mmax                    = max(emitss)
@@ -688,7 +688,8 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
             snip_is_relevant(held_out_sents[ind], gold_snips),
             emitss[ind],
             "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind]
+            held_out_sents[ind],
+            sent_num_to_keep[0]
         )
         all_emits.append(t)
         if(emitss[ind] == mmax):
@@ -744,6 +745,18 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
 
+def select_snippets_v4(extracted_snippets, the_doc_scores):
+    '''
+    :param      extracted_snippets:
+    :param      doc_res:
+    :return:    returns the top 10 snippets across all documents (0..n from each doc)
+    '''
+    norm_doc_scores     = get_norm_doc_scores(the_doc_scores)
+    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
+    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
+    sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
+    return sorted_snips[:10]
+
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions                    = {
         'body': dato['query_text'],
@@ -769,7 +782,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             good_meshes_embeds  = datum['mesh_embeds'],
             mesh_gaf            = datum['mesh_escores']
         )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
+        values, indices         = sent_num.max(0)
+        sent_num_to_keep        = indices.cpu().tolist()
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips, sent_num_to_keep)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
