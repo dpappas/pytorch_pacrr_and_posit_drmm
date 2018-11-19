@@ -752,16 +752,28 @@ def select_snippets_v4(extracted_snippets, the_doc_scores):
     :return:    returns the top 10 snippets across all documents (0..n from each doc)
     '''
     norm_doc_scores     = get_norm_doc_scores(the_doc_scores)
-    print(norm_doc_scores)
-    exit()
-    ret = {}
-    for es in extracted_snippets:
-        if(es[2] in ret):
-            if(es[1] > ret[es[2]][1]):
-                ret[es[2]] = es
-        else:
-            ret[es[2]] = es
+    pprint(norm_doc_scores)
+    pprint(extracted_snippets)
+    ret_snips = []
+    for doc_link in norm_doc_scores:
+        snips = [
+            (t[0], t[1] * norm_doc_scores[t[2]], t[2], t[3])
+            for t in extracted_snippets
+            if(t[2] == doc_link)
+        ]
+        snips = sorted(snips, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
+        pprint(snips)
+        print(snips[0][-1])
+        exit()
 
+    for es in extracted_snippets:
+        print es
+        # if(es[2] in ret):
+        #     if(es[1] > ret[es[2]][1]):
+        #         ret[es[2]] = es
+        # else:
+        #     ret[es[2]] = es
+    exit()
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
     extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
