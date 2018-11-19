@@ -689,7 +689,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
             emitss[ind],
             "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
             held_out_sents[ind],
-            sent_num_to_keep[0]
+            sent_num_to_keep
         )
         all_emits.append(t)
         if(emitss[ind] == mmax):
@@ -752,6 +752,16 @@ def select_snippets_v4(extracted_snippets, the_doc_scores):
     :return:    returns the top 10 snippets across all documents (0..n from each doc)
     '''
     norm_doc_scores     = get_norm_doc_scores(the_doc_scores)
+    print(norm_doc_scores)
+    exit()
+    ret = {}
+    for es in extracted_snippets:
+        if(es[2] in ret):
+            if(es[1] > ret[es[2]][1]):
+                ret[es[2]] = es
+        else:
+            ret[es[2]] = es
+
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
     extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
@@ -808,12 +818,14 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         extracted_snippets_v1               = select_snippets_v1(extracted_snippets)
         extracted_snippets_v2               = select_snippets_v2(extracted_snippets)
         extracted_snippets_v3               = select_snippets_v3(extracted_snippets, the_doc_scores)
+        extracted_snippets_v4               = select_snippets_v4(extracted_snippets, the_doc_scores)
         extracted_snippets_known_rel_num_v1 = select_snippets_v1(extracted_snippets_known_rel_num)
         extracted_snippets_known_rel_num_v2 = select_snippets_v2(extracted_snippets_known_rel_num)
         extracted_snippets_known_rel_num_v3 = select_snippets_v3(extracted_snippets_known_rel_num, the_doc_scores)
+        extracted_snippets_known_rel_num_v4 = select_snippets_v4(extracted_snippets_known_rel_num, the_doc_scores)
     else:
-        extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3 = [], [], []
-        extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3 = [], [], []
+        extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3, extracted_snippets_v4 = [], [], [], []
+        extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3, extracted_snippets_known_rel_num_v4 = [], [], [], []
     #
     # pprint(extracted_snippets_v1)
     # pprint(extracted_snippets_v2)
