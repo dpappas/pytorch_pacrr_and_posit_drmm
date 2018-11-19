@@ -264,7 +264,7 @@ def get_sent_num_loss(sent_num, good_sent_tags):
     sent_num_target = torch.LongTensor([sent_num_target])
     if (use_cuda):
         sent_num_target = sent_num_target.cuda()
-    sent_num_loss = F.cross_entropy(sent_num.unsqueeze(0), sent_num_target+1)
+    sent_num_loss = F.cross_entropy(sent_num.unsqueeze(0), sent_num_target)
     return sent_num_loss
 
 def init_the_logger(hdlr):
