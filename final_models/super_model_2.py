@@ -1002,7 +1002,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def init_sent_nums(self):
         self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5)) # directions, layers, nodes
         self.sent_res_bigru = nn.GRU(input_size=5, hidden_size=5, bidirectional=True, batch_first=False)
-        self.sent_res_mlp   = nn.Linear(10, 5, bias=False)
+        self.sent_res_mlp   = nn.Linear(10, 6, bias=False)
         if (use_cuda):
             self.sent_res_h0    = self.sent_res_h0.cuda()
             self.sent_res_bigru = self.sent_res_bigru.cuda()
