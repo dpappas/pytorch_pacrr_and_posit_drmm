@@ -1044,7 +1044,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return sr
     def process_and_get_pooling(self, doc_emb, question_embeds, q_conv_res_trigram):
         doc_emb     = autograd.Variable(torch.FloatTensor(doc_emb), requires_grad=False)
-        print(doc_emb.size())
+        # print(doc_emb.size())
         if (use_cuda):
             doc_emb = doc_emb.cuda()
         conv_res            = self.apply_context_convolution(doc_emb, self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -1084,18 +1084,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_add_feats)
         res = torch.stack(res)
         #
-        attent = self.sent_out_layer_1(res)
-        attent = self.sent_out_activ_1(attent)
-        attent = self.sent_out_layer_2(attent).squeeze(-1)
+        attent                  = self.sent_out_layer_1(res)
+        attent                  = self.sent_out_activ_1(attent)
+        attent                  = self.sent_out_layer_2(attent).squeeze(-1)
         #
-        sent_emits  = torch.sigmoid(attent)
+        sent_emits              = torch.sigmoid(attent).unsqueeze(-1)
+        doc_emit                = doc_emit.unsqueeze(-1).unsqueeze(-1).expand_as(sent_emits)
+        sent_emits              = torch.cat([sent_emits, doc_emit], -1)
+        print(sent_emits)
         print(sent_emits.size())
-        print(doc_emit.size())
         exit()
         #
-        attent      = F.softmax(attent, dim=0)
-        #
-        sents_overall_rep = torch.mm(res.transpose(0, 1), attent.unsqueeze(1)).squeeze(1)
+        attent                  = F.softmax(attent, dim=0)
+        sents_overall_rep       = torch.mm(res.transpose(0, 1), attent.unsqueeze(1)).squeeze(1)
         return sents_overall_rep, sent_emits, doc_emit
     def get_max(self, res):
         return torch.max(res)
