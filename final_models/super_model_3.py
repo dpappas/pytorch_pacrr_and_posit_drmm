@@ -931,7 +931,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    flatten = lambda l: [item for sublist in l for item in sublist]
     def __init__(self,
              embedding_dim          = 30,
              k_for_maxpool          = 5,
@@ -1043,29 +1042,37 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
+    def process_and_get_pooling(self, doc_emb, question_embeds, q_conv_res_trigram):
+        doc_emb     = autograd.Variable(torch.FloatTensor(doc_emb), requires_grad=False)
+        print(doc_emb.size())
+        if (use_cuda):
+            doc_emb = doc_emb.cuda()
+        conv_res            = self.apply_context_convolution(doc_emb, self.trigram_conv_1, self.trigram_conv_activation_1)
+        conv_res            = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
+        sim_insens          = self.my_cosine_sim(question_embeds, doc_emb).squeeze(0)
+        sim_oh              = (sim_insens > (1 - (1e-3))).float()
+        sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+        insensitive_pooled  = self.pooling_method(sim_insens)
+        sensitive_pooled    = self.pooling_method(sim_sens)
+        oh_pooled           = self.pooling_method(sim_oh)
+        return doc_emb, insensitive_pooled, sensitive_pooled, oh_pooled
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
+        #
+        doc_emb                                                     = [item for sublist in doc_sents_embeds for item in sublist]
+        doc_emb, insensitive_pooled, sensitive_pooled, oh_pooled    = self.process_and_get_pooling(doc_emb, question_embeds, q_conv_res_trigram)
+        #
         for i in range(len(doc_sents_embeds)):
-            sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
+            sent_embeds, insensitive_pooled, sensitive_pooled, oh_pooled = self.process_and_get_pooling(doc_sents_embeds[i], question_embeds, q_conv_res_trigram)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if(use_cuda):
-                sent_embeds     = sent_embeds.cuda()
                 gaf             = gaf.cuda()
-            conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
-            #
-            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh              = (sim_insens > (1 - (1e-3))).float()
-            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled  = self.pooling_method(sim_insens)
-            sensitive_pooled    = self.pooling_method(sim_sens)
-            oh_pooled           = self.pooling_method(sim_oh)
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
+        exit()
         #
         attent = self.sent_out_layer_1(res)
         attent = self.sent_out_activ_1(attent)
