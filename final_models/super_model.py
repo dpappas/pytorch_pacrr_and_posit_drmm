@@ -1229,7 +1229,7 @@ b_size              = 32
 max_epoch           = 10
 
 hdlr = None
-for run in range(2, 5):
+for run in range(3, 5):
     #
     my_seed = random.randint(1, 2000000)
     random.seed(my_seed)
