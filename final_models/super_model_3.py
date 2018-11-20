@@ -1075,7 +1075,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             if(use_cuda):
                 gaf             = gaf.cuda()
             #
-            print(sim_insens.size())
             all_insensitive.append(sim_insens)
             all_sensitive.append(sim_sens)
             all_oh.append(sim_oh)
