@@ -1061,20 +1061,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return doc_emb, sim_insens, sim_sens, sim_oh
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
-        #
-        # doc_emb     = [item for sublist in doc_sents_embeds for item in sublist]
-        # (
-        #     doc_emb,
-        #     insensitive_pooled,
-        #     sensitive_pooled,
-        #     oh_pooled
-        # )           = self.process_and_get_pooling(doc_emb, question_embeds, q_conv_res_trigram)
-        # doc_emit    = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-        # doc_emit    = doc_emit.unsqueeze(-1)
-        #
-        all_insensitive_pooled  = []
-        all_sensitive_pooled    = []
-        all_oh_pooled           = []
+        all_insensitive = []
+        all_sensitive   = []
+        all_oh          = []
         for i in range(len(doc_sents_embeds)):
             (
                 sent_embeds,
@@ -1087,9 +1076,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 gaf             = gaf.cuda()
             #
             print(sim_insens.size())
-            all_insensitive_pooled.append(sim_insens)
-            all_sensitive_pooled.append(sim_sens)
-            all_oh_pooled.append(sim_oh)
+            all_insensitive.append(sim_insens)
+            all_sensitive.append(sim_sens)
+            all_oh.append(sim_oh)
             #
             insensitive_pooled  = self.pooling_method(sim_insens)
             sensitive_pooled    = self.pooling_method(sim_sens)
@@ -1097,7 +1086,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
-        res = torch.stack(res)
+        res                     = torch.stack(res)
+        #
+        all_insensitive         = torch.cat(all_insensitive,    dim=-1)
+        all_sensitive           = torch.cat(all_sensitive,      dim=-1)
+        all_oh                  = torch.cat(all_oh,             dim=-1)
+        all_insensitive_pooled  = self.pooling_method(all_insensitive)
+        all_sensitive_pooled    = self.pooling_method(all_sensitive)
+        all_oh_pooled           = self.pooling_method(all_oh)
+        doc_emit                = self.get_output([all_oh_pooled, all_insensitive_pooled, all_sensitive_pooled], q_weights)
+        doc_emit                = doc_emit.unsqueeze(-1)
         #
         attent                  = self.sent_out_layer_1(res)
         attent                  = self.sent_out_activ_1(attent)
