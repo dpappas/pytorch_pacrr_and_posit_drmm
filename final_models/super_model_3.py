@@ -1098,7 +1098,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         attent                  = F.softmax(attent.squeeze(-1), dim=0)
         sents_overall_rep       = torch.mm(res.transpose(0, 1), attent.unsqueeze(1)).squeeze(1)
-        return sents_overall_rep, sent_emits, doc_emit
+        return sents_overall_rep, sent_emits, doc_emit.unsqueeze(-1)
     def get_max(self, res):
         return torch.max(res)
     def get_kmax(self, res, k):
