@@ -980,13 +980,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.linear_per_q2  = self.linear_per_q2.cuda()
             self.my_relu1       = self.my_relu1.cuda()
     def init_sent_output_layer(self):
-        self.sent_out_layer_1   = nn.Linear(self.sent_add_feats+1, 8, bias=False)
-        self.sent_out_activ_1   = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.sent_out_layer_2   = nn.Linear(8, 1, bias=False)
+        self.sent_out_layer_1       = nn.Linear(self.sent_add_feats+1, 8, bias=False)
+        self.sent_out_activ_1       = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.sent_out_layer_2       = nn.Linear(8, 1, bias=False)
+        self.sent_out_combine_doc   = nn.Linear(2, 1, bias=False)
         if(use_cuda):
-            self.sent_out_layer_1   = self.sent_out_layer_1.cuda()
-            self.sent_out_activ_1   = self.sent_out_activ_1.cuda()
-            self.sent_out_layer_2   = self.sent_out_layer_2.cuda()
+            self.sent_out_combine_doc   = self.sent_out_combine_doc.cuda()
+            self.sent_out_layer_1       = self.sent_out_layer_1.cuda()
+            self.sent_out_activ_1       = self.sent_out_activ_1.cuda()
+            self.sent_out_layer_2       = self.sent_out_layer_2.cuda()
     def init_doc_out_layer(self):
         self.final_layer_1      = nn.Linear(
             self.doc_add_feats +
