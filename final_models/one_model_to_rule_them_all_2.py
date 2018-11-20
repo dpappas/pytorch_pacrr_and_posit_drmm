@@ -1099,7 +1099,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_add_feats)
         res = torch.stack(res)
         if(self.sentence_out_method == 'MLP'):
-            res = self.sent_out_layer(res).squeeze(-1)
+            res = self.sent_out_layer_1(res)
+            res = self.sent_out_activ_1(res)
+            res = self.sent_out_layer_2(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
@@ -1130,7 +1132,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_add_feats)
         res = torch.stack(res)
         if(self.sentence_out_method == 'MLP'):
-            res = self.sent_out_layer(res).squeeze(-1)
+            res = self.sent_out_layer_1(res)
+            res = self.sent_out_activ_1(res)
+            res = self.sent_out_layer_2(res).squeeze(-1)
         else:
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
