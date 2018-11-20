@@ -1211,7 +1211,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         else:
             good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         #
-        final_good_output   = self.final_layer(good_out_pp)
+        final_good_output   = self.final_layer_1(good_out_pp)
+        final_good_output   = self.final_activ_1(final_good_output)
+        final_good_output   = self.final_layer_2(final_good_output)
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
@@ -1258,8 +1260,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             good_out_pp         = torch.cat([good_out, doc_gaf], -1)
             bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
         #
-        final_good_output   = self.final_layer(good_out_pp)
-        final_bad_output    = self.final_layer(bad_out_pp)
+        final_good_output   = self.final_layer_1(good_out_pp)
+        final_good_output   = self.final_activ_1(final_good_output)
+        final_good_output   = self.final_layer_2(final_good_output)
+        final_bad_output    = self.final_layer_1(bad_out_pp)
+        final_bad_output    = self.final_activ_1(final_bad_output)
+        final_bad_output    = self.final_layer_2(final_bad_output)
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
