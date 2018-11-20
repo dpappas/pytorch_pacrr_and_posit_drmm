@@ -79,6 +79,29 @@ curl -X GET "harvester2.ilsp.gr:9200/_search" -H 'Content-Type: application/json
 }
 '
 
+
+GET wikipedia_json_gz/_search
+{
+  "_source": [ "title", "opening_text"],
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "multi_match" : {
+            "query":      "who is Will Smith",
+            "type":       "cross_fields",
+            "fields":     [ "text" ],
+            "minimum_should_match": "50%" ,
+            "slop"  : 5
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
 '''
 
 
