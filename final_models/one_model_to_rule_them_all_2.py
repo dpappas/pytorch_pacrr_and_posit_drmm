@@ -512,7 +512,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         good_sents = [the_doc['title'] + the_doc['abstractText']]
     ####
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
-    # good_doc_af.append(len(good_sents) / 60.)
+    good_doc_af.append(len(good_sents) / 60.)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
@@ -531,13 +531,10 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     for good_mesh in good_meshes:
         mesh_toks                       = tokenize(good_mesh)
         gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
-        # print(good_mesh)
-        # print(mesh_toks)
-        # print(gm_tokens)
         if (len(gm_tokens) > 0):
             good_mesh_embeds.append(gm_embeds)
             good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
-            # good_escores.append(len(mesh_toks)/ 10.)
+            good_escores.append(len(mesh_toks)/ 10.)
             good_mesh_escores.append(good_escores)
     ####
     return {
@@ -991,9 +988,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.my_relu1       = self.my_relu1.cuda()
     def init_sent_output_layer(self):
         if(self.sentence_out_method == 'MLP'):
-            self.sent_out_layer = nn.Linear(4, 1, bias=False)
+            self.sent_out_layer_1       = nn.Linear(5, 8, bias=False)
+            self.sent_out_activ_1       = torch.nn.LeakyReLU(negative_slope=0.1)
+            self.sent_out_layer_2       = nn.Linear(8, 1, bias=False)
             if(use_cuda):
-                self.sent_out_layer  = self.sent_out_layer.cuda()
+                self.sent_out_layer_1   = self.sent_out_layer_1.cuda()
+                self.sent_out_activ_1   = self.sent_out_activ_1.cuda()
+                self.sent_out_layer_2   = self.sent_out_layer_2.cuda()
         else:
             self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
             self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
@@ -1005,29 +1006,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def init_doc_out_layer(self):
         if(self.mesh_style=='BIGRU'):
             self.init_mesh_module()
-            self.final_layer = nn.Linear(
-                self.doc_add_feats+self.k_sent_maxpool + 30,
-                1,
-                bias=True
-            )
+            self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool + 30, 8, bias=True)
             if(use_cuda):
-                self.final_layer    = self.final_layer.cuda()
+                self.final_layer_1    = self.final_layer_1.cuda()
         elif(self.mesh_style=='SENT'):
-            self.final_layer = nn.Linear(
-                self.doc_add_feats + self.k_sent_maxpool + 1,
-                1,
-                bias=True
-            )
+            self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool + 1, 8, bias=True)
             if(use_cuda):
-                self.final_layer    = self.final_layer.cuda()
+                self.final_layer_1    = self.final_layer_1.cuda()
         else:
-            self.final_layer = nn.Linear(
-                self.doc_add_feats+self.k_sent_maxpool,
-                1,
-                bias=True
-            )
+            self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True)
             if(use_cuda):
-                self.final_layer    = self.final_layer.cuda()
+                self.final_layer_1    = self.final_layer_1.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
