@@ -1088,16 +1088,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         attent                  = self.sent_out_layer_1(res)
         attent                  = self.sent_out_activ_1(attent)
-        attent                  = self.sent_out_layer_2(attent).squeeze(-1)
+        attent                  = self.sent_out_layer_2(attent)
         #
-        sent_emits              = torch.sigmoid(attent).unsqueeze(-1)
+        sent_emits              = attent
         doc_emit                = doc_emit.unsqueeze(-1).unsqueeze(-1).expand_as(sent_emits)
         sent_emits              = torch.cat([sent_emits, doc_emit], -1)
-        print(sent_emits)
-        print(sent_emits.size())
-        exit()
+        sent_emits              = self.sent_out_combine_doc(sent_emits)
+        sent_emits              = torch.sigmoid(sent_emits).unsqueeze(-1)
         #
-        attent                  = F.softmax(attent, dim=0)
+        attent                  = F.softmax(attent.squeeze(-1), dim=0)
         sents_overall_rep       = torch.mm(res.transpose(0, 1), attent.unsqueeze(1)).squeeze(1)
         return sents_overall_rep, sent_emits, doc_emit
     def get_max(self, res):
