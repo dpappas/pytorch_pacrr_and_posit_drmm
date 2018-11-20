@@ -1087,7 +1087,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res                     = torch.stack(res)
-        #
+        # classic posit_drmm_score start
         all_insensitive         = torch.cat(all_insensitive,    dim=-1)
         all_sensitive           = torch.cat(all_sensitive,      dim=-1)
         all_oh                  = torch.cat(all_oh,             dim=-1)
@@ -1096,6 +1096,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         all_oh_pooled           = self.pooling_method(all_oh)
         doc_emit                = self.get_output([all_oh_pooled, all_insensitive_pooled, all_sensitive_pooled], q_weights)
         doc_emit                = doc_emit.unsqueeze(-1)
+        # classic posit_drmm_score end
         #
         attent                  = self.sent_out_layer_1(res)
         attent                  = self.sent_out_activ_1(attent)
