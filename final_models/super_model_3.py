@@ -1069,7 +1069,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_emit    = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
         #
         for i in range(len(doc_sents_embeds)):
-            sent_embeds, insensitive_pooled, sensitive_pooled, oh_pooled = self.process_and_get_pooling(doc_sents_embeds[i], question_embeds, q_conv_res_trigram)
+            (
+                sent_embeds,
+                insensitive_pooled,
+                sensitive_pooled,
+                oh_pooled
+            ) = self.process_and_get_pooling(doc_sents_embeds[i], question_embeds, q_conv_res_trigram)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if(use_cuda):
                 gaf             = gaf.cuda()
