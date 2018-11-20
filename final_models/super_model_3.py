@@ -991,9 +991,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_out_layer_2       = self.sent_out_layer_2.cuda()
     def init_doc_out_layer(self):
         self.final_layer_1      = nn.Linear(
-            self.doc_add_feats +
-            self.sent_add_feats + 1 +
-            self.sent_add_feats + 1,
+            self.doc_add_feats  +        # 5 external doc feats
+            self.sent_add_feats +        # 4 attended feats from sents
+            1                   +        # 1 feat the pdrmm score of the sentences attended
+            self.sent_add_feats +        # 4 attended feats from meshes
+            1                   +        # 1 feat the pdrmm score of the meshes attended
+            1                   +        # 1 feat the pdrmm score of the entire doc
+            1                            # 1 feat the pdrmm score of all the meshes
+            ,
             8,
             bias=True
         )
