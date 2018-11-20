@@ -1051,7 +1051,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return sr
     def process_and_get_pooling(self, doc_emb, question_embeds, q_conv_res_trigram):
         doc_emb     = autograd.Variable(torch.FloatTensor(doc_emb), requires_grad=False)
-        # print(doc_emb.size())
         if (use_cuda):
             doc_emb = doc_emb.cuda()
         conv_res            = self.apply_context_convolution(doc_emb, self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -1059,34 +1058,42 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_insens          = self.my_cosine_sim(question_embeds, doc_emb).squeeze(0)
         sim_oh              = (sim_insens > (1 - (1e-3))).float()
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-        insensitive_pooled  = self.pooling_method(sim_insens)
-        sensitive_pooled    = self.pooling_method(sim_sens)
-        oh_pooled           = self.pooling_method(sim_oh)
-        return doc_emb, insensitive_pooled, sensitive_pooled, oh_pooled
+        return doc_emb, sim_insens, sim_sens, sim_oh
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         #
-        doc_emb     = [item for sublist in doc_sents_embeds for item in sublist]
-        (
-            doc_emb,
-            insensitive_pooled,
-            sensitive_pooled,
-            oh_pooled
-        )           = self.process_and_get_pooling(doc_emb, question_embeds, q_conv_res_trigram)
-        doc_emit    = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-        doc_emit    = doc_emit.unsqueeze(-1)
+        # doc_emb     = [item for sublist in doc_sents_embeds for item in sublist]
+        # (
+        #     doc_emb,
+        #     insensitive_pooled,
+        #     sensitive_pooled,
+        #     oh_pooled
+        # )           = self.process_and_get_pooling(doc_emb, question_embeds, q_conv_res_trigram)
+        # doc_emit    = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+        # doc_emit    = doc_emit.unsqueeze(-1)
         #
+        all_insensitive_pooled  = []
+        all_sensitive_pooled    = []
+        all_oh_pooled           = []
         for i in range(len(doc_sents_embeds)):
             (
                 sent_embeds,
-                insensitive_pooled,
-                sensitive_pooled,
-                oh_pooled
+                sim_insens,
+                sim_sens,
+                sim_oh
             ) = self.process_and_get_pooling(doc_sents_embeds[i], question_embeds, q_conv_res_trigram)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if(use_cuda):
                 gaf             = gaf.cuda()
             #
+            print(sim_insens.size())
+            all_insensitive_pooled.append(sim_insens)
+            all_sensitive_pooled.append(sim_sens)
+            all_oh_pooled.append(sim_oh)
+            #
+            insensitive_pooled  = self.pooling_method(sim_insens)
+            sensitive_pooled    = self.pooling_method(sim_sens)
+            oh_pooled           = self.pooling_method(sim_oh)
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
@@ -1211,14 +1218,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# # use_cuda            = False
-# odd                 = '/home/dpappas/'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# use_cuda            = False
+odd                 = '/home/dpappas/'
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -1228,13 +1235,13 @@ use_cuda = torch.cuda.is_available()
 # retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/dpappas/'
 
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 
 # # gpu_server_1
 # w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
