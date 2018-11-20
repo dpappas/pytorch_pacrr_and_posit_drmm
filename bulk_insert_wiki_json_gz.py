@@ -101,7 +101,6 @@ GET wikipedia_json_gz/_search
 }
 
 
-
 '''
 
 

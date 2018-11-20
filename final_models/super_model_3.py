@@ -1323,8 +1323,10 @@ DONE - add the sigmoid outputs trying to predict the number of relevant sents (M
 DONE - use bigru last steps as input to sentence number prediction
 
 - MSE sentence loss only for relevant document  (Put it on ice for the time)
-- no third loss
+Ok Ok ... - no third loss
 - 
+
+grep 'test MAP snippets:' super_model_20_11_2018_two_losses_run_0/model.log 
 
 '''
 
