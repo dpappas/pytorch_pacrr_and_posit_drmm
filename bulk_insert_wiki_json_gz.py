@@ -90,9 +90,9 @@ GET wikipedia_json_gz/_search
           "multi_match" : {
             "query"                 : "who is Will Smith",
             "type"                  : "cross_fields",
-            "fields"                : [ "text" ],
+            "fields"                : [ "text", "opening_text"],
             "minimum_should_match"  : "50%" ,
-            "slop"                  : 5
+            "slop"                  : 2
           }
         }
       ]
