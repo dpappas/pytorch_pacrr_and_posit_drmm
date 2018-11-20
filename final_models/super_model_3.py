@@ -1316,7 +1316,7 @@ DONE - add dense layer in fig 4 output (relu)
 DONE - add dense layer in fig 6 output (relu)
 DONE - self attention (softmax before sigmoid) 
 DONE - add the sigmoid outputs trying to predict the number of relevant sents (MSE loss)
-- entire document as sentence
+DONE - entire document as sentence
 
 - tune weights of the losses
 - multi headed attention
