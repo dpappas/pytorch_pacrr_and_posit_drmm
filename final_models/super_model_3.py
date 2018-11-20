@@ -931,6 +931,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
+    flatten = lambda l: [item for sublist in l for item in sublist]
     def __init__(self,
              embedding_dim          = 30,
              k_for_maxpool          = 5,
@@ -1229,13 +1230,13 @@ b_size              = 32
 max_epoch           = 10
 
 hdlr = None
-for run in range(3, 5):
+for run in range(0, 5):
     #
     my_seed = random.randint(1, 2000000)
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'super_model_run_two_losses_{}/'.format(run)
+    odir    = 'super_model_20_11_2018_two_losses_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print odir
     if(not os.path.exists(odir)):
