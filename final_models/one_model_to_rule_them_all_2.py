@@ -929,7 +929,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         self.k_sent_maxpool                         = k_sent_maxpool
-        self.doc_add_feats                          = 4
+        self.doc_add_feats                          = 5
+        self.sent_add_feats                         = 4
         #
         self.embedding_dim                          = embedding_dim
         self.mesh_style                             = mesh_style
@@ -988,7 +989,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.my_relu1       = self.my_relu1.cuda()
     def init_sent_output_layer(self):
         if(self.sentence_out_method == 'MLP'):
-            self.sent_out_layer_1       = nn.Linear(5, 8, bias=False)
+            self.sent_out_layer_1       = nn.Linear(self.sent_add_feats+1, 8, bias=False)
             self.sent_out_activ_1       = torch.nn.LeakyReLU(negative_slope=0.1)
             self.sent_out_layer_2       = nn.Linear(8, 1, bias=False)
             if(use_cuda):
@@ -997,7 +998,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 self.sent_out_layer_2   = self.sent_out_layer_2.cuda()
         else:
             self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5))
-            self.sent_res_bigru = nn.GRU(input_size=4, hidden_size=5, bidirectional=True, batch_first=False)
+            self.sent_res_bigru = nn.GRU(input_size=self.sent_add_feats+1, hidden_size=5, bidirectional=True, batch_first=False)
             self.sent_res_mlp   = nn.Linear(10, 1, bias=False)
             if(use_cuda):
                 self.sent_res_h0    = self.sent_res_h0.cuda()
