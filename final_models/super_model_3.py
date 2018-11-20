@@ -1059,8 +1059,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         #
-        doc_emb                                                     = [item for sublist in doc_sents_embeds for item in sublist]
-        doc_emb, insensitive_pooled, sensitive_pooled, oh_pooled    = self.process_and_get_pooling(doc_emb, question_embeds, q_conv_res_trigram)
+        doc_emb     = [item for sublist in doc_sents_embeds for item in sublist]
+        (
+            doc_emb,
+            insensitive_pooled,
+            sensitive_pooled,
+            oh_pooled
+        )           = self.process_and_get_pooling(doc_emb, question_embeds, q_conv_res_trigram)
+        doc_emit    = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
         #
         for i in range(len(doc_sents_embeds)):
             sent_embeds, insensitive_pooled, sensitive_pooled, oh_pooled = self.process_and_get_pooling(doc_sents_embeds[i], question_embeds, q_conv_res_trigram)
@@ -1072,7 +1078,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
-        exit()
         #
         attent = self.sent_out_layer_1(res)
         attent = self.sent_out_activ_1(attent)
@@ -1082,7 +1087,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         attent      = F.softmax(attent, dim=0)
         #
         sents_overall_rep = torch.mm(res.transpose(0, 1), attent.unsqueeze(1)).squeeze(1)
-        return sents_overall_rep, sent_emits
+        return sents_overall_rep, sent_emits, doc_emit
     def get_max(self, res):
         return torch.max(res)
     def get_kmax(self, res, k):
@@ -1138,9 +1143,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits              = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        good_out, gs_emits, good_doc_out    = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         #
-        good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
+        good_mesh_out, gs_mesh_emits        = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
         #
         good_out_pp                     = torch.cat([good_out,  doc_gaf, good_mesh_out], -1)
         #
@@ -1167,8 +1172,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits              = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-        bad_out, bs_emits               = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+        good_out, gs_emits, gdoc_out    = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        bad_out, bs_emits,  bdoc_out    = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
         good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
         bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
