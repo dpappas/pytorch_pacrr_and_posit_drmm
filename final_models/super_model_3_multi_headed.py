@@ -932,13 +932,16 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
-             embedding_dim          = 30,
-             k_for_maxpool          = 5,
-         ):
+
+         embedding_dim      = 30,
+         k_for_maxpool      = 5,
+         number_of_heads    = 4
+    ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         self.doc_add_feats                          = 5
         self.sent_add_feats                         = 4
+        self.number_of_heads                        = number_of_heads
         #
         self.embedding_dim                          = embedding_dim
         # to create q weights
@@ -982,7 +985,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def init_sent_output_layer(self):
         self.sent_out_layer_1       = nn.Linear(self.sent_add_feats+1, 8, bias=False)
         self.sent_out_activ_1       = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.sent_out_layer_2       = nn.Linear(8, 1, bias=False)
+        self.sent_out_layer_2       = nn.Linear(8, self.number_of_heads, bias=False)
         self.sent_out_combine_doc   = nn.Linear(2, 1, bias=False)
         if(use_cuda):
             self.sent_out_combine_doc   = self.sent_out_combine_doc.cuda()
@@ -991,13 +994,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_out_layer_2       = self.sent_out_layer_2.cuda()
     def init_doc_out_layer(self):
         self.final_layer_1      = nn.Linear(
-            self.doc_add_feats  +        # 5 external doc feats
-            self.sent_add_feats +        # 4 attended feats from sents
-            1                   +        # 1 feat the pdrmm score of the sentences attended
-            self.sent_add_feats +        # 4 attended feats from meshes
-            1                   +        # 1 feat the pdrmm score of the meshes attended
-            1                   +        # 1 feat the pdrmm score of the entire doc
-            1                            # 1 feat the pdrmm score of all the meshes
+            self.doc_add_feats                                  +   # 5 external doc feats
+            (self.sent_add_feats + 1) * self.number_of_heads    +   # (4+1) attended feats from sents   * nof heads
+            (self.sent_add_feats + 1) * self.number_of_heads    +   # (4+1) attended feats from meshes  * nof heads
+            1                                                   +   # 1 feat the pdrmm score of the entire doc (all doc as sent)
+            1                                                       # 1 feat the pdrmm score of all the meshes (all meshes as sent)
             ,
             8,
             bias=True
@@ -1097,18 +1098,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_emit                = doc_emit.unsqueeze(-1)
         # classic posit_drmm_score end
         #
-        attent                  = self.sent_out_layer_1(res)
-        attent                  = self.sent_out_activ_1(attent)
-        attent                  = self.sent_out_layer_2(attent)
+        sent_multihead_out      = self.sent_out_layer_1(res)
+        sent_multihead_out      = self.sent_out_activ_1(sent_multihead_out)
+        sent_multihead_out      = self.sent_out_layer_2(sent_multihead_out)
         #
-        sent_emits              = attent
+        sent_emits              = sent_multihead_out[:,0].unsqueeze(-1)
         doc_emit_expanded       = doc_emit.unsqueeze(-1).expand_as(sent_emits)
         sent_emits              = torch.cat([sent_emits, doc_emit_expanded], -1)
         sent_emits              = self.sent_out_combine_doc(sent_emits).squeeze(-1)
         sent_emits              = torch.sigmoid(sent_emits)
         #
-        attent                  = F.softmax(attent.squeeze(-1), dim=0)
-        sents_overall_rep       = torch.mm(res.transpose(0, 1), attent.unsqueeze(1)).squeeze(1)
+        attent                  = F.softmax(sent_multihead_out, dim=0)
+        sents_overall_rep       = torch.mm(res.transpose(0, 1), attent)
+        sents_overall_rep       = sents_overall_rep.view(-1)
         return sents_overall_rep, sent_emits, doc_emit
     def get_max(self, res):
         return torch.max(res)
@@ -1270,7 +1272,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'super_model_20_11_2018_two_losses_run_{}/'.format(run)
+    odir    = 'super_model_3_2L_multihead_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print odir
     if(not os.path.exists(odir)):
