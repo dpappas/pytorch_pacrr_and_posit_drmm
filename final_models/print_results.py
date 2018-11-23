@@ -134,12 +134,10 @@ def do_three_losses():
             with open(fpath) as f:
                 lines = f.readlines()
                 for l in range(len(lines)):
-                    if('v3 test known MAP documents' in lines[l]):
-                        data = lines[l-40:l+8]
-                        data                            = [float(t.strip().split()[-1]) for t in data]
-                        #
-                        # pprint(data)
-                        res1, res2, res3                = assign_data(data, res1, res2, res3, lines[l+8])
+                    if('v3 test GMAP snippets' in lines[l]):
+                        data                = lines[l-47:l+1]
+                        data                = [float(t.strip().split()[-1]) for t in data]
+                        res1, res2, res3    = assign_data(data, res1, res2, res3, lines[l+2])
                         #
                 all1.append(
                     (
@@ -291,7 +289,7 @@ def do_one_loss():
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_43_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_44_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_45_run_{}/model.log'
-diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
+# diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_47_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_48_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_49_run_{}/model.log'
@@ -304,8 +302,10 @@ diri = '/home/dpappas/MODELS_OUTPUTS/Model_46_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
 # diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
-# do_three_losses()
-do_one_loss()
+diri = '/home/dpappas/super_model_20_11_2018_two_losses_run_{}/model.log'
+
+do_three_losses()
+# do_one_loss()
 
 
 
