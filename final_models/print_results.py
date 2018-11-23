@@ -137,7 +137,7 @@ def do_three_losses():
                     if('v3 test GMAP snippets' in lines[l]):
                         data                = lines[l-47:l+1]
                         data                = [float(t.strip().split()[-1]) for t in data]
-                        res1, res2, res3    = assign_data(data, res1, res2, res3, lines[l+2])
+                        res1, res2, res3    = assign_data(data, res1, res2, res3, lines[l+1])
                         #
                 all1.append(
                     (
@@ -303,6 +303,8 @@ def do_one_loss():
 # diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
 diri = '/home/dpappas/super_model_20_11_2018_two_losses_run_{}/model.log'
+diri = '/home/dpappas/super_model_20_11_2018_two_losses_0p001_run_{}/model.log'
+diri = '/home/dpappas/super_model_3_2L_multihead_0p001_run_{}/model.log'
 
 do_three_losses()
 # do_one_loss()
