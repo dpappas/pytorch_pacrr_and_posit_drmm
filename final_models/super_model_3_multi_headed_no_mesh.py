@@ -641,11 +641,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             sents_gaf           = datum['good_sents_escores'],
             sents_baf           = datum['bad_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
-            doc_baf             = datum['bad_doc_af'],
-            good_meshes_embeds  = datum['good_mesh_embeds'],
-            bad_meshes_embeds   = datum['bad_mesh_embeds'],
-            mesh_gaf            = datum['good_mesh_escores'],
-            mesh_baf            = datum['bad_mesh_escores']
+            doc_baf             = datum['bad_doc_af']
         )
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
@@ -768,9 +764,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
             sents_gaf           = datum['sents_escores'],
-            doc_gaf             = datum['doc_af'],
-            good_meshes_embeds  = datum['mesh_embeds'],
-            mesh_gaf            = datum['mesh_escores']
+            doc_gaf             = datum['doc_af']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
