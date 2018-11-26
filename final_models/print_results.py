@@ -302,8 +302,8 @@ def do_one_loss():
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_56_run_{}/model.log'
 # diri = '/home/dpappas/Model_50_run_5max_{}/model.log'
 
-diri = '/home/dpappas/super_model_20_11_2018_two_losses_run_{}/model.log'
-diri = '/home/dpappas/super_model_20_11_2018_two_losses_0p001_run_{}/model.log'
+# diri = '/home/dpappas/super_model_20_11_2018_two_losses_run_{}/model.log'
+# diri = '/home/dpappas/super_model_20_11_2018_two_losses_0p001_run_{}/model.log'
 diri = '/home/dpappas/super_model_3_2L_multihead_0p001_run_{}/model.log'
 
 do_three_losses()
