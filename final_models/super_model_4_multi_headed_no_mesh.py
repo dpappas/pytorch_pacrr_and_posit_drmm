@@ -1172,6 +1172,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output               = self.final_layer_1(good_out_pp)
         final_good_output               = self.final_activ_1(final_good_output)
         final_good_output               = self.final_layer_2(final_good_output)
+        gs_emits                        = self.the_final_combination(final_good_output, gs_emits)
         #
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
