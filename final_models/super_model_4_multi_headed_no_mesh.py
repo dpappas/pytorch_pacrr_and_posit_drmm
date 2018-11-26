@@ -1143,6 +1143,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
+    def the_final_combination(self, final_good_output, gs_emits):
+        doc_emit_expanded               = final_good_output.unsqueeze(-1).expand_as(gs_emits)
+        gs_emits                        = torch.cat([gs_emits, doc_emit_expanded], -1)
+        gs_emits                        = self.sent_out_combine_doc(gs_emits).squeeze(-1)
+        gs_emits                        = torch.sigmoid(gs_emits)
+        return gs_emits
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -1195,18 +1201,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output               = self.final_layer_1(good_out_pp)
         final_good_output               = self.final_activ_1(final_good_output)
         final_good_output               = self.final_layer_2(final_good_output)
-        doc_emit_expanded               = final_good_output.unsqueeze(-1).expand_as(gs_emits)
-        gs_emits                        = torch.cat([gs_emits, doc_emit_expanded], -1)
-        gs_emits                        = self.sent_out_combine_doc(gs_emits).squeeze(-1)
-        gs_emits                        = torch.sigmoid(gs_emits)
+        gs_emits                        = self.the_final_combination(final_good_output, gs_emits)
         #
         final_bad_output                = self.final_layer_1(bad_out_pp)
         final_bad_output                = self.final_activ_1(final_bad_output)
         final_bad_output                = self.final_layer_2(final_bad_output)
-        doc_emit_expanded               = final_bad_output.unsqueeze(-1).expand_as(bs_emits)
-        bs_emits                        = torch.cat([bs_emits, doc_emit_expanded], -1)
-        bs_emits                        = self.sent_out_combine_doc(bs_emits).squeeze(-1)
-        bs_emits                        = torch.sigmoid(bs_emits)
+        bs_emits                        = self.the_final_combination(final_bad_output, bs_emits)
         #
         loss1                           = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
