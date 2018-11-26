@@ -990,9 +990,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.final_layer_1      = nn.Linear(
             self.doc_add_feats                                  +   # 5 external doc feats
             (self.sent_add_feats + 1) * self.number_of_heads    +   # (4+1) attended feats from sents   * nof heads
-            (self.sent_add_feats + 1) * self.number_of_heads    +   # (4+1) attended feats from meshes  * nof heads
-            1                                                   +   # 1 feat the pdrmm score of the entire doc (all doc as sent)
-            1                                                       # 1 feat the pdrmm score of all the meshes (all meshes as sent)
+            1                                                       # 1 feat the pdrmm score of the entire doc (all doc as sent)
             ,
             8,
             bias=True
