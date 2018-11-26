@@ -1268,7 +1268,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'super_model_3_2L_multihead_no_mesh_0p001_run_{}/'.format(run)
+    odir    = 'super_model_4_2L_multihead_no_mesh_0p001_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print odir
     if(not os.path.exists(odir)):
