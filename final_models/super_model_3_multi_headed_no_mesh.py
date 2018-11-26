@@ -1310,7 +1310,7 @@ DONE - add the sigmoid outputs trying to predict the number of relevant sents (M
 DONE - entire document as sentence
 
 - tune weights of the losses
-- multi headed attention
+DONE - multi headed attention
 DONE - use bigru last steps as input to sentence number prediction
 
 - MSE sentence loss only for relevant document  (Put it on ice for the time)
