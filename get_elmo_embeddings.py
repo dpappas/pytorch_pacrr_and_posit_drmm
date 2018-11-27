@@ -5,7 +5,7 @@
 # wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1ccTfSBNofHIBCsZpHR2YU_7l86UMR460' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1ccTfSBNofHIBCsZpHR2YU_7l86UMR460" -O weights.hdf5 && rm -rf /tmp/cookies.txt
 # wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1W8ZXsMNxdq4s-KdgoL42ivSG49VOKRze' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1W8ZXsMNxdq4s-KdgoL42ivSG49VOKRze" -O options.json && rm -rf /tmp/cookies.txt
 
-
+from pprint import pprint
 from allennlp.modules.elmo import Elmo, batch_to_ids
 # options_file    = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_options.json"
 # weight_file     = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5"
@@ -47,9 +47,13 @@ sudo pip3.6 install boto3
 sudo apt-get install lzma
 sudo apt-get install liblzma-dev
 sudo apt-get install python-lzma
-sudo pip3.6 install pyliblzma
 sudo pip3.6 install gensim
-
+sudo pip3.6 install python3-utils
+sudo pip3.6 install pylzma
+sudo pip3.6 install backports.lzma
+sudo pip3.6 install patool
+sudo apt-get install liblzma-doc
+sudo pip3.6 install pyliblzma
 
 '''
 
