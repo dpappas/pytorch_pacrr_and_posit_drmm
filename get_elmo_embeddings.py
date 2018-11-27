@@ -46,6 +46,7 @@ sudo pip3.6 install keras
 sudo pip3.6 install boto3
 sudo apt-get install python-lzma
 sudo pip3.6 install pyliblzma
+sudo pip3.6 install gensim
 
 '''
 
