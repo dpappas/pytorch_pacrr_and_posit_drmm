@@ -1312,7 +1312,7 @@ for run in range(0, 5):
             patience = 0
         else:
             patience += 1
-            if(patience == early_stop_after):
+            if(patience >= early_stop_after):
                 break
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
