@@ -1259,7 +1259,7 @@ k_for_maxpool       = 5
 embedding_dim       = 30 #200
 lr                  = 0.01
 b_size              = 32
-max_epoch           = 20
+max_epoch           = 30
 early_stop_after    = 4
 
 hdlr = None
