@@ -1257,7 +1257,7 @@ odd                 = '/home/dpappas/'
 
 k_for_maxpool       = 5
 embedding_dim       = 30 #200
-lr                  = 0.001
+lr                  = 0.01
 b_size              = 32
 max_epoch           = 10
 
@@ -1268,7 +1268,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'super_model_4_2L_multihead_no_mesh_0p001_run_{}/'.format(run)
+    odir    = 'super_model_4_2L_multihead_no_mesh_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print odir
     if(not os.path.exists(odir)):
