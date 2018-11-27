@@ -44,9 +44,12 @@ sudo pip3.6 install nltk
 sudo pip3.6 install tensorflow
 sudo pip3.6 install keras
 sudo pip3.6 install boto3
+sudo apt-get install lzma
+sudo apt-get install liblzma-dev
 sudo apt-get install python-lzma
 sudo pip3.6 install pyliblzma
 sudo pip3.6 install gensim
+
 
 '''
 
