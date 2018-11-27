@@ -19,6 +19,36 @@ character_ids   = batch_to_ids(sentences)
 embeddings      = elmo(character_ids)
 
 
+'''
+wget https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip
+
+pytorch_pretrained_bert convert_tf_checkpoint_to_pytorch \
+  /home/dpappas/for_ryan/uncased_L-12_H-768_A-12/bert_model.ckpt \
+  /home/dpappas/for_ryan/uncased_L-12_H-768_A-12/bert_config.json \
+  /home/dpappas/for_ryan/uncased_L-12_H-768_A-12/pytorch_model.bin
+
+
+
+sudo wget https://www.python.org/ftp/python/3.6.7/Python-3.6.7.tgz
+tar -zxvf Python-3.6.7.tgz
+cd Python-3.6.7
+sudo ./configure --enable-optimizations 
+sudo make altinstall
+
+sudo pip3.6 install --upgrade pip
+sudo pip3.6 install torch 
+sudo pip3.6 install tqdm 
+sudo pip3.6 install requests
+sudo pip3.6 install allennlp
+sudo pip3.6 install nltk
+sudo pip3.6 install tensorflow
+sudo pip3.6 install keras
+sudo pip3.6 install boto3
+sudo apt-get install python-lzma
+sudo pip3.6 install pyliblzma
+
+'''
+
 
 
 
