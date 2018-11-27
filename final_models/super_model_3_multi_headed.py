@@ -1330,6 +1330,13 @@ Ok Ok ... - no third loss
 
 grep 'test MAP snippets:' super_model_20_11_2018_two_losses_run_0/model.log 
 
+- more epochs in current model
+- only one head
+- try elmo from manolis
+- try pretrained bert embeddings
+- hyper param tuning
+- Skype call in Thursday ?
+
 '''
 
 
