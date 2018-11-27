@@ -18,8 +18,9 @@ elmo            = Elmo(options_file, weight_file, 1, dropout=0)
 # use batch_to_ids to convert sentences to character ids
 sentences       = [['First', 'sentence', '.'], ['Another', '.']]
 character_ids   = batch_to_ids(sentences)
+pprint(character_ids.size())
 embeddings      = elmo(character_ids)
-pprint(embeddings)
+pprint(embeddings['elmo_representations'][0].size())
 
 '''
 wget https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip
