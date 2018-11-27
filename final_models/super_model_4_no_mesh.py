@@ -1286,9 +1286,10 @@ for run in range(0, 5):
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model       = Sent_Posit_Drmm_Modeler(
+    model                   = Sent_Posit_Drmm_Modeler(
         embedding_dim       = embedding_dim,
         k_for_maxpool       = k_for_maxpool,
+        number_of_heads     = 1
     )
     if(use_cuda):
         model = model.cuda()
