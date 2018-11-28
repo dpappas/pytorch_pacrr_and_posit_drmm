@@ -305,14 +305,6 @@ def idf_val(w, idf, max_idf):
         return idf[w]
     return max_idf
 
-def get_embeds(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        if(tok in wv):
-            ret1.append(tok)
-            ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
-
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
     #
@@ -754,7 +746,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text                  = dato['query_text']
-    quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+    quest_tokens                = tokenize(quest_text)
+    quest_embeds                = get_elmo_embeds([quest_text])[0]
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips                  = get_gold_snips(dato['query_id'], bioasq6_data)
     #
