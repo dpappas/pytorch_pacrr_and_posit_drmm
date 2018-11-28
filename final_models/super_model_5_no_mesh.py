@@ -663,7 +663,6 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             doc1_sents_embeds   = datum['good_sents_embeds'],
             doc2_sents_embeds   = datum['bad_sents_embeds'],
             question_embeds     = datum['quest_embeds'],
-            q_idfs              = datum['q_idfs'],
             sents_gaf           = datum['good_sents_escores'],
             sents_baf           = datum['bad_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
@@ -1286,7 +1285,7 @@ weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
 # odd                 = '/home/cave/dpappas/'
 
 k_for_maxpool       = 5
-embedding_dim       = 30 #200
+embedding_dim       = 1024 #30 #200
 lr                  = 0.001
 b_size              = 32
 max_epoch           = 30
