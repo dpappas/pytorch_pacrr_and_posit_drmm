@@ -578,9 +578,10 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         good_sent_lens              = datum['sent_lens']
-        # pprint([gse.shape for gse in good_sents_embeds])
-        # print(good_sent_lens)
-        # exit()
+        pprint([gse.shape for gse in good_sents_embeds])
+        print(np.stack(good_sents_embeds,axis=0).shape)
+        print(good_sent_lens)
+        exit()
         #
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
         bad_sents_embeds            = datum['sents_embeds']
