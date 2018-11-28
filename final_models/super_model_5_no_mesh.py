@@ -1043,6 +1043,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_emb     = autograd.Variable(torch.FloatTensor(doc_emb), requires_grad=False)
         if (use_cuda):
             doc_emb = doc_emb.cuda()
+        doc_emb             = self.projection(doc_emb)
         conv_res            = self.apply_context_convolution(doc_emb, self.trigram_conv_1, self.trigram_conv_activation_1)
         conv_res            = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
         sim_insens          = self.my_cosine_sim(question_embeds, doc_emb).squeeze(0)
@@ -1055,13 +1056,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         all_sensitive   = []
         all_oh          = []
         for i in range(len(doc_sents_embeds)):
-            dse         = self.projection(doc_sents_embeds[i])
             (
                 sent_embeds,
                 sim_insens,
                 sim_sens,
                 sim_oh
-            ) = self.process_and_get_pooling(dse, question_embeds, q_conv_res_trigram)
+            ) = self.process_and_get_pooling(doc_sents_embeds[i], question_embeds, q_conv_res_trigram)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if(use_cuda):
                 gaf             = gaf.cuda()
