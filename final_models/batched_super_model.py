@@ -525,6 +525,7 @@ def prep_data(quest, the_doc, the_bm25, wv, snips, idf, max_idf):
     sents_escores   = []
     held_out_sents  = []
     sent_tags       = []
+    sent_lens       = [0]
     for sent in sents:
         sent_toks       = tokenize(sent)
         tokens, embeds  = get_embeds(sent_toks, wv)
@@ -535,13 +536,15 @@ def prep_data(quest, the_doc, the_bm25, wv, snips, idf, max_idf):
             sents_escores.append(escores)
             held_out_sents.append(sent)
             sent_tags.append(snip_is_relevant(' '.join(bioclean(sent)), snips))
+            sent_lens.append(len(tokens) + sent_lens[-1])
     ####
     return {
-        'sents_embeds'     : sents_embeds,
-        'sents_escores'    : sents_escores,
-        'doc_af'           : doc_af,
-        'sent_tags'        : sent_tags,
-        'held_out_sents'   : held_out_sents,
+        'sents_embeds'      : sents_embeds,
+        'sents_escores'     : sents_escores,
+        'doc_af'            : doc_af,
+        'sent_tags'         : sent_tags,
+        'held_out_sents'    : held_out_sents,
+        'sent_lens'         : sent_lens[1:],
     }
 
 def train_data_step1(train_data):
@@ -576,6 +579,15 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
+        good_sent_lens              = datum['sent_lens']
+        print(
+            [
+                gse.shape
+                for gse in good_sents_embeds
+            ]
+        )
+        print(good_sent_lens)
+        exit()
         #
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
         bad_sents_embeds            = datum['sents_embeds']
@@ -585,6 +597,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_doc_af                  = datum['doc_af']
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
+        bad_sent_lens               = datum['sent_lens']
         #
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
