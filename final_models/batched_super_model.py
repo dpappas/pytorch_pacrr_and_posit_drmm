@@ -653,6 +653,8 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
             batch_good_doc_af           = pad_sequences(batch_good_doc_af,dtype='float32',padding='post',value=0.0)
             batch_bad_doc_af            = pad_sequences(batch_bad_doc_af,dtype='float32',padding='post',value=0.0)
             ######
+            # print(batch_good_sents_escores.shape)
+            # print(batch_bad_sents_escores.shape)
             yield (
                 batch_good_sents_embeds,
                 batch_bad_sents_embeds,
@@ -1307,6 +1309,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc2_sents_embeds   = autograd.Variable(torch.FloatTensor(doc2_sents_embeds),   requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
+        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),             requires_grad=False)
+        sents_baf           = autograd.Variable(torch.FloatTensor(sents_baf),             requires_grad=False)
         if(use_cuda):
             q_idfs              = q_idfs.cuda()
             question_embeds     = question_embeds.cuda()
@@ -1314,6 +1318,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc_baf             = doc_baf.cuda()
             doc1_sents_embeds   = doc1_sents_embeds.cuda()
             doc2_sents_embeds   = doc2_sents_embeds.cuda()
+            sents_gaf           = sents_gaf.cuda()
+            sents_baf           = sents_baf.cuda()
         #
         q_context                       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context                       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1330,9 +1336,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         print(doc1_context.size())
         print(doc2_context.size())
         print(q_weights.size())
-        print(20*'-')
         print(sents_gaf.size())
         print(sents_baf.size())
+        print(20*'-')
         #
         self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens, q_weights, sents_gaf)
         self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context, bad_sents_lens,  quest_lens, q_weights, sents_baf)
