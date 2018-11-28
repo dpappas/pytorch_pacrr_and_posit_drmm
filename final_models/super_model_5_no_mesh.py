@@ -532,8 +532,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     ####
-    good_elmo_embeds    = get_elmo_embeds(good_sents)
-    good_elmo_held_out_sents = good_sents
+    good_elmo_embeds = get_elmo_embeds(good_sents)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
@@ -570,7 +569,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         'mesh_escores'              : good_mesh_escores,
         'held_out_sents'            : held_out_sents,
         'good_elmo_embeds'          : good_elmo_embeds,
-        'good_elmo_held_out_sents'  : good_elmo_held_out_sents,
     }
 
 def train_data_step1(train_data):
