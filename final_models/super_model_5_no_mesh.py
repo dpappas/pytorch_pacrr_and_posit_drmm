@@ -532,15 +532,21 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     ####
-    good_elmo_embeds = get_elmo_embeds(good_sents)
+    elmo_embeds = get_elmo_embeds(good_sents)
     ####
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
-    for good_text in good_sents:
+    good_elmo_embeds    = []
+    good_sents_embeds   = []
+    good_sents_escores  = []
+    held_out_sents      = []
+    good_sent_tags      = []
+    for i in range(len(good_sents)):
+        good_text                   = good_sents[i]
         sent_toks                   = tokenize(good_text)
         good_tokens, good_embeds    = get_embeds(sent_toks, wv)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
+            good_elmo_embeds.append(elmo_embeds[i])
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
@@ -551,9 +557,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     for good_mesh in good_meshes:
         mesh_toks                       = tokenize(good_mesh)
         gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
-        # print(good_mesh)
-        # print(mesh_toks)
-        # print(gm_tokens)
         if (len(gm_tokens) > 0):
             good_mesh_embeds.append(gm_embeds)
             good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
