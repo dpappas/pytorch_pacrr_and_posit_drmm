@@ -883,7 +883,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         res_map = get_map_res(dataloc+'bioasq.test.json', os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'))
     return res_map
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+def load_all_data(dataloc, idf_pickle_path):
     print('loading pickle data')
     #
     with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
@@ -916,10 +916,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
-    print('loading w2v')
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1281,8 +1278,8 @@ for run in range(0, 5):
     #
     (
         test_data, test_docs, dev_data, dev_docs, train_data,
-        train_docs, idf, max_idf, wv, bioasq6_data
-    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+        train_docs, idf, max_idf, bioasq6_data
+    ) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
