@@ -508,7 +508,18 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
+def get_elmo_embeds(sentences):
+    sentences       = [tokenize(s) for s in sentences if(len(s)>0)]
+    character_ids   = batch_to_ids(sentences)
+    embeddings      = elmo(character_ids)
+    the_embeds      = embeddings['elmo_representations'][0]
+    ret             = [
+        the_embeds[i, :len(sentences[i]), :]
+        for i in range(len(sentences))
+    ]
+    return ret
+
+def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if(use_sent_tokenizer):
         good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     else:
@@ -517,31 +528,25 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     ####
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    good_sents_embeds   = get_elmo_embeds(good_sents)
+    held_out_sents      = good_sents
+    ####
+    good_sents_escores  = []
+    good_sent_tags      = []
     for good_text in good_sents:
         sent_toks                   = tokenize(good_text)
-        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
-        if (len(good_embeds) > 0):
-            good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores)
-            held_out_sents.append(good_text)
-            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+        good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
-    good_meshes = get_the_mesh(the_doc)
-    good_mesh_embeds, good_mesh_escores = [], []
+    good_meshes         = get_the_mesh(the_doc)
+    good_mesh_embeds    = get_elmo_embeds(good_meshes)
+    good_mesh_escores   = []
     for good_mesh in good_meshes:
-        mesh_toks                       = tokenize(good_mesh)
-        gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
-        # print(good_mesh)
-        # print(mesh_toks)
-        # print(gm_tokens)
-        if (len(gm_tokens) > 0):
-            good_mesh_embeds.append(gm_embeds)
-            good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
-            good_escores.append(len(mesh_toks)/ 10.)
-            good_mesh_escores.append(good_escores)
+        mesh_toks       = tokenize(good_mesh)
+        good_escores    = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
+        good_escores.append(len(mesh_toks)/ 10.)
+        good_mesh_escores.append(good_escores)
     ####
     return {
         'sents_embeds'     : good_sents_embeds,
@@ -569,7 +574,7 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         if(use_sent_tokenizer):
             good_snips              = get_snips(quest_id, gid, bioasq6_data)
@@ -577,7 +582,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         else:
             good_snips              = []
         #
-        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
+        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
         good_mesh_escores           = datum['mesh_escores']
@@ -586,7 +591,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         #
-        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
+        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
         bad_mesh_escores            = datum['mesh_escores']
@@ -629,7 +634,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     random.shuffle(train_instances)
     #
     start_time      = time.time()
-    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+    for datum in train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = datum['good_sents_embeds'],
             doc2_sents_embeds   = datum['bad_sents_embeds'],
