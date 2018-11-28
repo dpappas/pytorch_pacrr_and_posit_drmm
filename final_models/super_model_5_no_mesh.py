@@ -911,7 +911,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         res_map = get_map_res(dataloc+'bioasq.test.json', os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'))
     return res_map
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+def load_all_data(dataloc):
     print('loading pickle data')
     #
     with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
@@ -942,12 +942,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
     #
-    print('loading idfs')
-    idf, max_idf    = load_idfs(idf_pickle_path, words)
-    print('loading w2v')
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1240,12 +1235,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 use_cuda = torch.cuda.is_available()
 
 # laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/'
 eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# use_cuda            = False
 odd                 = '/home/dpappas/'
 options_file        = "/home/dpappas/for_ryan/elmo_weights/options.json"
 weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
@@ -1311,9 +1303,8 @@ for run in range(0, 5):
     logger.info('random seed: {}'.format(my_seed))
     #
     (
-        test_data, test_docs, dev_data, dev_docs, train_data,
-        train_docs, idf, max_idf, wv, bioasq6_data
-    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
+    ) = load_all_data(dataloc=dataloc)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
