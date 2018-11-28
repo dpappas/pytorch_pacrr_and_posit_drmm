@@ -506,7 +506,7 @@ def get_elmo_embeds(sentences):
     embeddings      = elmo(character_ids)
     the_embeds      = embeddings['elmo_representations'][0]
     ret             = [
-        the_embeds[i, :len(sentences[i]), :].numpy()
+        the_embeds[i, :len(sentences[i]), :].data.numpy()
         for i in range(len(sentences))
     ]
     return ret
