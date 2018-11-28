@@ -575,7 +575,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         'mesh_embeds'               : good_mesh_embeds,
         'mesh_escores'              : good_mesh_escores,
         'held_out_sents'            : held_out_sents,
-        'good_elmo_embeds'          : good_elmo_embeds,
+        'elmo_embeds'               : good_elmo_embeds,
     }
 
 def train_data_step1(train_data):
@@ -610,6 +610,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
+        good_elmo_embeds            = datum['elmo_embeds']
         #
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds            = datum['sents_embeds']
@@ -619,6 +620,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_doc_af                  = datum['doc_af']
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
+        bad_elmo_embeds             = datum['elmo_embeds']
         #
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
@@ -632,6 +634,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'good_mesh_embeds'      : good_mesh_embeds,
                 'good_mesh_escores'     : good_mesh_escores,
                 'good_held_out_sents'   : good_held_out_sents,
+                'good_elmo_embeds'      : good_elmo_embeds,
                 #
                 'bad_sents_embeds'      : bad_sents_embeds,
                 'bad_sents_escores'     : bad_sents_escores,
@@ -640,6 +643,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'bad_mesh_embeds'       : bad_mesh_embeds,
                 'bad_mesh_escores'      : bad_mesh_escores,
                 'bad_held_out_sents'    : bad_held_out_sents,
+                'bad_elmo_embeds'       : bad_elmo_embeds,
                 #
                 'quest_embeds'          : quest_embeds,
                 'q_idfs'                : q_idfs,
@@ -663,7 +667,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             sents_gaf           = datum['good_sents_escores'],
             sents_baf           = datum['bad_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
-            doc_baf             = datum['bad_doc_af']
+            doc_baf             = datum['bad_doc_af'],
         )
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
