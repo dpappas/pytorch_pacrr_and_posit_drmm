@@ -934,7 +934,6 @@ def load_all_data(dataloc, idf_pickle_path):
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
-
          embedding_dim      = 30,
          k_for_maxpool      = 5,
          number_of_heads    = 4
@@ -946,6 +945,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.number_of_heads                        = number_of_heads
         #
         self.embedding_dim                          = embedding_dim
+        self.projection                             = nn.Linear(self.embedding_dim, 30, bias=False)
         # to create q weights
         self.init_context_module()
         self.init_question_weight_module()
@@ -1066,12 +1066,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         all_sensitive   = []
         all_oh          = []
         for i in range(len(doc_sents_embeds)):
+            dse         = self.projection(doc_sents_embeds[i])
             (
                 sent_embeds,
                 sim_insens,
                 sim_sens,
                 sim_oh
-            ) = self.process_and_get_pooling(doc_sents_embeds[i], question_embeds, q_conv_res_trigram)
+            ) = self.process_and_get_pooling(dse, question_embeds, q_conv_res_trigram)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if(use_cuda):
                 gaf             = gaf.cuda()
@@ -1166,6 +1167,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             question_embeds = question_embeds.cuda()
             doc_gaf         = doc_gaf.cuda()
         #
+        question_embeds                 = self.projection(question_embeds)
         q_context                       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context                       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
@@ -1194,6 +1196,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc_gaf         = doc_gaf.cuda()
             doc_baf         = doc_baf.cuda()
         #
+        question_embeds                 = self.projection(question_embeds)
         q_context                       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context                       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
