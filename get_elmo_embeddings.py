@@ -58,6 +58,9 @@ sudo pip3.6 install patool
 sudo apt-get install liblzma-doc
 sudo pip3.6 install pyliblzma
 
+sudo vim /usr/local/lib/python3.6/site-packages/allennlp/modules/token_embedders/embedding.py 
+
+
 '''
 
 '''
