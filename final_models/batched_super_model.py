@@ -579,9 +579,9 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_held_out_sents         = datum['held_out_sents']
         good_sent_lens              = datum['sent_lens']
         pprint([gse.shape for gse in good_sents_embeds])
-        print(np.stack(good_sents_embeds,axis=0).shape)
-        print(good_sent_lens)
-        exit()
+        # print(np.concatenate(good_sents_embeds, axis=0).shape)
+        # print(good_sent_lens)
+        # exit()
         #
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
         bad_sents_embeds            = datum['sents_embeds']
@@ -600,17 +600,44 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'good_sents_escores'    : good_sents_escores,
                 'good_doc_af'           : good_doc_af,
                 'good_sent_tags'        : good_sent_tags,
+                'good_sent_lens'        : good_sent_lens,
                 'good_held_out_sents'   : good_held_out_sents,
                 #
                 'bad_sents_embeds'      : bad_sents_embeds,
                 'bad_sents_escores'     : bad_sents_escores,
                 'bad_doc_af'            : bad_doc_af,
                 'bad_sent_tags'         : bad_sent_tags,
+                'bad_sent_lens'         : bad_sent_lens,
                 'bad_held_out_sents'    : bad_held_out_sents,
                 #
                 'quest_embeds'          : quest_embeds,
                 'q_idfs'                : q_idfs,
             }
+
+def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+    batch_good_sents_embeds     = []
+    batch_bad_sents_embeds      = []
+    batch_good_sents_lens       = []
+    batch_bad_sents_lens        = []
+    batch_quest_embeds          = []
+    batch_q_idfs                = []
+    batch_good_sents_escores    = []
+    batch_bad_sents_escores     = []
+    batch_good_doc_af           = []
+    batch_bad_doc_af            = []
+    for datum in train_data_step2(
+        train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer
+    ):
+        batch_good_sents_embeds.append(np.concatenate(datum['good_sents_embeds'],axis=0))
+        batch_bad_sents_embeds.append( np.concatenate(datum['bad_sents_embeds'], axis=0))
+        batch_quest_embeds.append(datum['quest_embeds'])
+        batch_q_idfs.append(datum['q_idfs'])
+        batch_good_sents_escores.append(datum['good_sents_escores'])
+        batch_bad_sents_escores.append(datum['bad_sents_escores'])
+        batch_good_doc_af.append(datum['good_doc_af'])
+        batch_bad_doc_af.append(datum['bad_doc_af'])
+        batch_good_sents_lens.append(datum['good_sent_lens'])
+        batch_bad_sents_lens.append(datum['bad_sent_lens'])
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
@@ -620,8 +647,9 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
     #
-    start_time      = time.time()
+    start_time                  = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = datum['good_sents_embeds'],
             doc2_sents_embeds   = datum['bad_sents_embeds'],
