@@ -506,11 +506,9 @@ def get_elmo_embeds(sentences):
     embeddings      = elmo(character_ids)
     the_embeds      = embeddings['elmo_representations'][0]
     ret             = [
-        the_embeds[i, :len(sentences[i]), :]
+        the_embeds[i, :len(sentences[i]), :].numpy()
         for i in range(len(sentences))
     ]
-    if (use_cuda):
-        ret = [t.cuda() for t in ret]
     return ret
 
 def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
