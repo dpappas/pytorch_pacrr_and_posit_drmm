@@ -1293,7 +1293,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         # q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens, q_weights, sents_gaf)
+        (
+            good_all_sents_overall_rep,
+            good_all_sent_emits,
+            good_all_doc_emits
+        ) = self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens, q_weights, sents_gaf)
+        (
+            bad_all_sents_overall_rep,
+            bad_all_sent_emits,
+            bad_all_doc_emits
+        ) =
         self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context, bad_sents_lens,  quest_lens, q_weights, sents_baf)
         #
         exit()
