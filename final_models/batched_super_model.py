@@ -1106,6 +1106,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return the_concatenation     # return the concatenation
     def get_output(self, input_list, weights):
         temp    = torch.cat(input_list, -1)
+        print(temp.size())
+        print(weights.size())
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
         lo      = self.linear_per_q2(lo)
@@ -1123,47 +1125,38 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_oh              = (sim_insens > (1 - (1e-3))).float()
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
         return doc_emb, sim_insens, sim_sens, sim_oh
-    def do_for_doc(self, question_embeds, q_context, doc_sents_embeds, doc_context, sents_lens, quest_lens):
+    def do_for_doc(
+        self,
+        question_embeds,
+        q_context,
+        doc_sents_embeds,
+        doc_context,
+        sents_lens,
+        quest_lens,
+        q_weights
+    ):
         sim_insens                      = self.my_cosine_sim(question_embeds,   doc_sents_embeds)
         sim_sens                        = self.my_cosine_sim(q_context,         doc_context)
         sim_oh                          = (sim_insens > (1 - (1e-3))).float()
-        print(sim_insens.size())
-        print(sim_sens.size())
-        print(sim_oh.size())
         #
         for b in range(len(sents_lens)):
             for i in range(len(sents_lens[b]) - 1):
-                fromm           = sents_lens[b][i]
-                too             = sents_lens[b][i+1]
-                sent_sim_insens = sim_insens[b, :quest_lens[b], fromm:too]
-                sent_sim_sens   = sim_sens[b, :quest_lens[b], fromm:too]
-                sent_sim_oh     = (sent_sim_sens > (1 - (1e-3))).float()
-                print(20 * '-')
-                print(sent_sim_insens.size())
-                print(sent_sim_sens.size())
-                print(sent_sim_oh.size())
-            exit()
-            # for i in range(len(sents_lens[b])-1):
-
-        insensitive_pooled              = torch.stack([self.pooling_method(t) for t in sim_insens])
-        sensitive_pooled                = torch.stack([self.pooling_method(t) for t in sim_sens])
-        oh_pooled                       = torch.stack([self.pooling_method(t) for t in sim_oh])
-        print(insensitive_pooled.size())
-        print(sensitive_pooled.size())
-        print(oh_pooled.size())
-        #
-        for b in range(len(sents_lens)):
-            for i in range(len(sents_lens[b])-1):
-                fromm   = sents_lens[b][i]
-                too     = sents_lens[b][i+1]
+                fromm                   = sents_lens[b][i]
+                too                     = sents_lens[b][i+1]
                 #
-                insensitive_pooled  = torch.stack([self.pooling_method(t) for t in sim_insens])
-                sensitive_pooled    = torch.stack([self.pooling_method(t) for t in sim_sens])
-                oh_pooled           = torch.stack([self.pooling_method(t) for t in sim_oh])
-                print(insensitive_pooled.size())
-                print(sensitive_pooled.size())
-                print(oh_pooled.size())
-
+                sent_sim_insens         = sim_insens[b, :quest_lens[b], fromm:too]
+                sent_sim_sens           = sim_sens[b,   :quest_lens[b], fromm:too]
+                sent_sim_oh             = (sent_sim_sens > (1 - (1e-3))).float()
+                #
+                sent_sim_ins_pooled     = self.pooling_method(sent_sim_insens)
+                sent_sim_sens_pooled    = self.pooling_method(sent_sim_sens)
+                sent_oh_pooled          = self.pooling_method(sent_sim_oh)
+                #
+                sent_emit               = self.get_output(
+                    [sent_oh_pooled, sent_sim_ins_pooled, sent_sim_sens_pooled],
+                    F.softmax(q_weights[b][:quest_lens[b]], -1)
+                )
+                print(sent_emit)
         #
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
@@ -1325,14 +1318,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         q_weights                       = torch.cat([q_context, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights                       = F.softmax(q_weights, dim=-1)
+        # q_weights                       = F.softmax(q_weights, dim=-1)
         #
         print(q_context.size())
         print(doc1_context.size())
         print(doc2_context.size())
+        print(q_weights.size())
+        print(20*'-')
         #
-        self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens)
-        self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context, bad_sents_lens,  quest_lens)
+        self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens, q_weights)
+        self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context, bad_sents_lens,  quest_lens, q_weights)
         #
         exit()
         #
