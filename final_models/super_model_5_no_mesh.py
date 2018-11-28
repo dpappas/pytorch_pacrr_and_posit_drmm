@@ -600,8 +600,8 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
         #
-        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        quest_embeds                = get_elmo_embeds([quest_text])[0]
+        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in tokenize(quest_text)], 'float')
         #
         if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
             yield {
