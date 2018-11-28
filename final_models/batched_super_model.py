@@ -1136,10 +1136,25 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights,
         sents_af
     ):
-        sim_insens                      = self.my_cosine_sim(question_embeds,   doc_sents_embeds)
-        sim_sens                        = self.my_cosine_sim(q_context,         doc_context)
+        sim_insens              = self.my_cosine_sim(question_embeds,   doc_sents_embeds)
+        sim_sens                = self.my_cosine_sim(q_context,         doc_context)
         #
+        all_sent_emits          = []
+        all_sents_overall_rep   = []
+        all_doc_emits           = []
         for b in range(len(sents_lens)):
+            doc_sim_insens          = sim_insens[b, :quest_lens[b], :sents_lens[b][-1]]
+            doc_sim_sens            = sim_sens[b,   :quest_lens[b], :sents_lens[b][-1]]
+            doc_sim_oh              = (doc_sim_sens > (1 - (1e-3))).float()
+            doc_sim_ins_pooled      = self.pooling_method(doc_sim_insens)
+            doc_sim_sens_pooled     = self.pooling_method(doc_sim_sens)
+            doc_oh_pooled           = self.pooling_method(doc_sim_oh)
+            doc_emit                = self.get_output(
+                [doc_oh_pooled, doc_sim_ins_pooled, doc_sim_sens_pooled],
+                F.softmax(q_weights[b][:quest_lens[b]], -1)
+            )
+            all_doc_emits.append(doc_emit)
+            #
             res = []
             for i in range(len(sents_lens[b]) - 1):
                 fromm                   = sents_lens[b][i]
@@ -1158,12 +1173,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                     F.softmax(q_weights[b][:quest_lens[b]], -1)
                 )
                 gaf                     = sents_af[b][i]
-                print(gaf.size())
-                print(sent_emit.size())
                 sent_add_feats          = torch.cat([gaf, sent_emit.unsqueeze(-1)])
                 res.append(sent_add_feats)
-            res     = torch.stack(res)
-            print(res.size())
+            res                         = torch.stack(res)
+            sent_multihead_out          = self.sent_out_layer_1(res)
+            sent_multihead_out          = self.sent_out_activ_1(sent_multihead_out)
+            sent_multihead_out          = self.sent_out_layer_2(sent_multihead_out)
+            sent_emits                  = sent_multihead_out[:, 0].unsqueeze(-1)
+            all_sent_emits.append(sent_emits)
+            attent                      = F.softmax(sent_multihead_out, dim=0)
+            sents_overall_rep           = torch.mm(res.transpose(0, 1), attent)
+            sents_overall_rep           = sents_overall_rep.view(-1)
+            all_sents_overall_rep.append(sents_overall_rep)
         #
         exit()
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
@@ -1331,14 +1352,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights                       = torch.cat([q_context, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         # q_weights                       = F.softmax(q_weights, dim=-1)
-        #
-        print(q_context.size())
-        print(doc1_context.size())
-        print(doc2_context.size())
-        print(q_weights.size())
-        print(sents_gaf.size())
-        print(sents_baf.size())
-        print(20*'-')
         #
         self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens, q_weights, sents_gaf)
         self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context, bad_sents_lens,  quest_lens, q_weights, sents_baf)
