@@ -24,6 +24,8 @@ from    gensim.models.keyedvectors  import KeyedVectors
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
 import  re
+from keras.preprocessing.sequence   import pad_sequences
+
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
@@ -625,6 +627,7 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
     batch_bad_sents_escores     = []
     batch_good_doc_af           = []
     batch_bad_doc_af            = []
+    m                           = 0
     for datum in train_data_step2(
         train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer
     ):
@@ -638,6 +641,40 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
         batch_bad_doc_af.append(datum['bad_doc_af'])
         batch_good_sents_lens.append(datum['good_sent_lens'])
         batch_bad_sents_lens.append(datum['bad_sent_lens'])
+        m += 1
+        if(m == b_size):
+            batch_good_sents_embeds     = pad_sequences(batch_good_sents_embeds,dtype='float32',padding='post',value=0.0)
+            batch_bad_sents_embeds      = pad_sequences(batch_bad_sents_embeds,dtype='float32',padding='post',value=0.0)
+            batch_quest_embeds          = pad_sequences(batch_quest_embeds,dtype='float32',padding='post',value=0.0)
+            batch_q_idfs                = pad_sequences(batch_q_idfs,dtype='float32',padding='post',value=0.0)
+            batch_good_sents_escores    = pad_sequences(batch_good_sents_escores,dtype='float32',padding='post',value=0.0)
+            batch_bad_sents_escores     = pad_sequences(batch_bad_sents_escores,dtype='float32',padding='post',value=0.0)
+            batch_good_doc_af           = pad_sequences(batch_good_doc_af,dtype='float32',padding='post',value=0.0)
+            batch_bad_doc_af            = pad_sequences(batch_bad_doc_af,dtype='float32',padding='post',value=0.0)
+            ######
+            print(batch_good_sents_embeds.shape)
+            print(batch_bad_sents_embeds.shape)
+            print(batch_quest_embeds.shape)
+            print(batch_q_idfs.shape)
+            print(batch_good_sents_escores.shape)
+            print(batch_bad_sents_escores.shape)
+            print(batch_good_doc_af.shape)
+            print(batch_bad_doc_af.shape)
+            print(batch_good_sents_lens)
+            print(batch_bad_sents_lens)
+            ######
+            batch_good_sents_embeds     = []
+            batch_bad_sents_embeds      = []
+            batch_good_sents_lens       = []
+            batch_bad_sents_lens        = []
+            batch_quest_embeds          = []
+            batch_q_idfs                = []
+            batch_good_sents_escores    = []
+            batch_bad_sents_escores     = []
+            batch_good_doc_af           = []
+            batch_bad_doc_af            = []
+            m = 0
+            exit()
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
@@ -648,6 +685,10 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     random.shuffle(train_instances)
     #
     start_time                  = time.time()
+    for batch_data in create_batches(
+            train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer
+    ):
+        pass
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
 
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
