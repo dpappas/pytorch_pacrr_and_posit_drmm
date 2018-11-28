@@ -1186,7 +1186,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sents_overall_rep           = sents_overall_rep.view(-1)
             all_sents_overall_rep.append(sents_overall_rep)
         #
-        exit()
+        return all_sents_overall_rep, all_sent_emits, all_doc_emits
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         all_insensitive = []
