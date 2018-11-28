@@ -643,6 +643,7 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
         batch_bad_sents_lens.append(datum['bad_sent_lens'])
         m += 1
         if(m == b_size):
+            batch_quest_lens            = [t.shape[0] for t in batch_quest_embeds]
             batch_good_sents_embeds     = pad_sequences(batch_good_sents_embeds,dtype='float32',padding='post',value=0.0)
             batch_bad_sents_embeds      = pad_sequences(batch_bad_sents_embeds,dtype='float32',padding='post',value=0.0)
             batch_quest_embeds          = pad_sequences(batch_quest_embeds,dtype='float32',padding='post',value=0.0)
@@ -662,7 +663,8 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
                 batch_good_doc_af,
                 batch_bad_doc_af,
                 batch_good_sents_lens,
-                batch_bad_sents_lens
+                batch_bad_sents_lens,
+                batch_quest_lens
             )
             ######
             batch_good_sents_embeds     = []
@@ -697,7 +699,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         batch_good_doc_af,
         batch_bad_doc_af,
         batch_good_sents_lens,
-        batch_bad_sents_lens
+        batch_bad_sents_lens,
+        batch_quest_lens
     ) in create_batches(
             train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer
     ):
@@ -711,7 +714,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             doc_gaf             = batch_good_doc_af,
             doc_baf             = batch_bad_doc_af,
             good_sents_lens     = batch_good_sents_lens,
-            bad_sents_lens      = batch_bad_sents_lens
+            bad_sents_lens      = batch_bad_sents_lens,
+            quest_lens          = batch_quest_lens
         )
         exit()
         #
@@ -1119,7 +1123,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_oh              = (sim_insens > (1 - (1e-3))).float()
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
         return doc_emb, sim_insens, sim_sens, sim_oh
-    def do_for_doc(self, question_embeds, q_context, doc_sents_embeds, doc_context):
+    def do_for_doc(self, question_embeds, q_context, doc_sents_embeds, doc_context, sents_lens, quest_lens):
         sim_insens                      = self.my_cosine_sim(question_embeds,   doc_sents_embeds)
         sim_sens                        = self.my_cosine_sim(q_context,         doc_context)
         sim_oh                          = (sim_insens > (1 - (1e-3))).float()
@@ -1127,12 +1131,42 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         print(sim_sens.size())
         print(sim_oh.size())
         #
+        for b in range(len(sents_lens)):
+            qe = question_embeds[b][:quest_lens[b]]
+            qc = q_context[b][:quest_lens[b]]
+            for i in range(len(sents_lens[b]) - 1):
+                fromm   = sents_lens[b][i]
+                too     = sents_lens[b][i+1]
+                se      = doc_sents_embeds[b][fromm:too]
+                sc      = doc_context[b][fromm:too]
+                print(20 * '-')
+                print(qe.size())
+                print(qc.size())
+                print(se.size())
+                print(sc.size())
+            exit()
+            # for i in range(len(sents_lens[b])-1):
+
         insensitive_pooled              = torch.stack([self.pooling_method(t) for t in sim_insens])
         sensitive_pooled                = torch.stack([self.pooling_method(t) for t in sim_sens])
         oh_pooled                       = torch.stack([self.pooling_method(t) for t in sim_oh])
         print(insensitive_pooled.size())
         print(sensitive_pooled.size())
         print(oh_pooled.size())
+        #
+        for b in range(len(sents_lens)):
+            for i in range(len(sents_lens[b])-1):
+                fromm   = sents_lens[b][i]
+                too     = sents_lens[b][i+1]
+                #
+                insensitive_pooled  = torch.stack([self.pooling_method(t) for t in sim_insens])
+                sensitive_pooled    = torch.stack([self.pooling_method(t) for t in sim_sens])
+                oh_pooled           = torch.stack([self.pooling_method(t) for t in sim_oh])
+                print(insensitive_pooled.size())
+                print(sensitive_pooled.size())
+                print(oh_pooled.size())
+
+        #
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         all_insensitive = []
@@ -1268,6 +1302,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc_baf,
             good_sents_lens,
             bad_sents_lens,
+            quest_lens
     ):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -1298,8 +1333,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         print(doc1_context.size())
         print(doc2_context.size())
         #
-        self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context)
-        self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context)
+        self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens)
+        self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context, bad_sents_lens,  quest_lens)
         #
         exit()
         #
