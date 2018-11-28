@@ -544,7 +544,7 @@ def prep_data(quest, the_doc, the_bm25, wv, snips, idf, max_idf):
         'doc_af'            : doc_af,
         'sent_tags'         : sent_tags,
         'held_out_sents'    : held_out_sents,
-        'sent_lens'         : sent_lens[1:],
+        'sent_lens'         : sent_lens,
     }
 
 def train_data_step1(train_data):
@@ -574,13 +574,11 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf)
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
-        good_mesh_escores           = datum['mesh_escores']
-        good_mesh_embeds            = datum['mesh_embeds']
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         good_sent_lens              = datum['sent_lens']
-        print(
+        pprint(
             [
                 gse.shape
                 for gse in good_sents_embeds
@@ -592,8 +590,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
-        bad_mesh_escores            = datum['mesh_escores']
-        bad_mesh_embeds             = datum['mesh_embeds']
         bad_doc_af                  = datum['doc_af']
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
@@ -608,16 +604,12 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'good_sents_escores'    : good_sents_escores,
                 'good_doc_af'           : good_doc_af,
                 'good_sent_tags'        : good_sent_tags,
-                'good_mesh_embeds'      : good_mesh_embeds,
-                'good_mesh_escores'     : good_mesh_escores,
                 'good_held_out_sents'   : good_held_out_sents,
                 #
                 'bad_sents_embeds'      : bad_sents_embeds,
                 'bad_sents_escores'     : bad_sents_escores,
                 'bad_doc_af'            : bad_doc_af,
                 'bad_sent_tags'         : bad_sent_tags,
-                'bad_mesh_embeds'       : bad_mesh_embeds,
-                'bad_mesh_escores'      : bad_mesh_escores,
                 'bad_held_out_sents'    : bad_held_out_sents,
                 #
                 'quest_embeds'          : quest_embeds,
