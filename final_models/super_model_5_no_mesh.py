@@ -1253,7 +1253,7 @@ weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
 # odd                 = '/home/cave/dpappas/'
 
 k_for_maxpool       = 5
-embedding_dim       = 30 #200
+embedding_dim       = 1024 #30 #200
 lr                  = 0.001
 b_size              = 32
 max_epoch           = 30
