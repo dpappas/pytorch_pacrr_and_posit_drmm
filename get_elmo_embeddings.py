@@ -60,6 +60,19 @@ sudo pip3.6 install pyliblzma
 
 '''
 
+'''
 
+def get_elmo_embeds(sentences):
+    sentences       = [tokenize(s) for s in sentences if(len(s)>0)]
+    character_ids   = batch_to_ids(sentences)
+    embeddings      = elmo(character_ids)
+    the_embeds      = embeddings['elmo_representations'][0]
+    ret             = [
+        the_embeds[i, :len(sentences[i]), :]
+        for i in range(len(sentences))
+    ]
+    return ret
+
+'''
 
 

@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# import sys
-# reload(sys)
-# sys.setdefaultencoding("utf-8")
-
 import  os
 import  json
 import  time
 import  random
 import  logging
 import  subprocess
-import  torch
 import  pickle
+import  torch
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  numpy                       as np
@@ -512,17 +508,6 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-def get_elmo_embeds(sentences):
-    sentences       = [tokenize(s) for s in sentences if(len(s)>0)]
-    character_ids   = batch_to_ids(sentences)
-    embeddings      = elmo(character_ids)
-    the_embeds      = embeddings['elmo_representations'][0]
-    ret             = [
-        the_embeds[i, :len(sentences[i]), :]
-        for i in range(len(sentences))
-    ]
-    return ret
-
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     if(use_sent_tokenizer):
         good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
@@ -532,21 +517,13 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     ####
-    elmo_embeds = get_elmo_embeds(good_sents)
-    ####
-    good_elmo_embeds    = []
-    good_sents_embeds   = []
-    good_sents_escores  = []
-    held_out_sents      = []
-    good_sent_tags      = []
-    for i in range(len(good_sents)):
-        good_text                   = good_sents[i]
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    for good_text in good_sents:
         sent_toks                   = tokenize(good_text)
         good_tokens, good_embeds    = get_embeds(sent_toks, wv)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
-            good_elmo_embeds.append(elmo_embeds[i])
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
@@ -557,25 +534,23 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     for good_mesh in good_meshes:
         mesh_toks                       = tokenize(good_mesh)
         gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
+        # print(good_mesh)
+        # print(mesh_toks)
+        # print(gm_tokens)
         if (len(gm_tokens) > 0):
             good_mesh_embeds.append(gm_embeds)
             good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
             good_escores.append(len(mesh_toks)/ 10.)
             good_mesh_escores.append(good_escores)
     ####
-    # for i in range(len(held_out_sents)):
-    #     print(good_sents_embeds[i].shape)
-    #     print(good_elmo_embeds[i].shape)
-    # exit()
     return {
-        'sents_embeds'              : good_sents_embeds,
-        'sents_escores'             : good_sents_escores,
-        'doc_af'                    : good_doc_af,
-        'sent_tags'                 : good_sent_tags,
-        'mesh_embeds'               : good_mesh_embeds,
-        'mesh_escores'              : good_mesh_escores,
-        'held_out_sents'            : held_out_sents,
-        'elmo_embeds'               : good_elmo_embeds,
+        'sents_embeds'     : good_sents_embeds,
+        'sents_escores'    : good_sents_escores,
+        'doc_af'           : good_doc_af,
+        'sent_tags'        : good_sent_tags,
+        'mesh_embeds'      : good_mesh_embeds,
+        'mesh_escores'     : good_mesh_escores,
+        'held_out_sents'   : held_out_sents,
     }
 
 def train_data_step1(train_data):
@@ -610,7 +585,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
-        good_elmo_embeds            = datum['elmo_embeds']
         #
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds            = datum['sents_embeds']
@@ -620,7 +594,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_doc_af                  = datum['doc_af']
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
-        bad_elmo_embeds             = datum['elmo_embeds']
         #
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
@@ -634,7 +607,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'good_mesh_embeds'      : good_mesh_embeds,
                 'good_mesh_escores'     : good_mesh_escores,
                 'good_held_out_sents'   : good_held_out_sents,
-                'good_elmo_embeds'      : good_elmo_embeds,
                 #
                 'bad_sents_embeds'      : bad_sents_embeds,
                 'bad_sents_escores'     : bad_sents_escores,
@@ -643,7 +615,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'bad_mesh_embeds'       : bad_mesh_embeds,
                 'bad_mesh_escores'      : bad_mesh_escores,
                 'bad_held_out_sents'    : bad_held_out_sents,
-                'bad_elmo_embeds'       : bad_elmo_embeds,
                 #
                 'quest_embeds'          : quest_embeds,
                 'q_idfs'                : q_idfs,
@@ -663,10 +634,11 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             doc1_sents_embeds   = datum['good_sents_embeds'],
             doc2_sents_embeds   = datum['bad_sents_embeds'],
             question_embeds     = datum['quest_embeds'],
+            q_idfs              = datum['q_idfs'],
             sents_gaf           = datum['good_sents_escores'],
             sents_baf           = datum['bad_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
-            doc_baf             = datum['bad_doc_af'],
+            doc_baf             = datum['bad_doc_af']
         )
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
@@ -911,7 +883,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         res_map = get_map_res(dataloc+'bioasq.test.json', os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'))
     return res_map
 
-def load_all_data(dataloc):
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
     #
     with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
@@ -942,7 +914,12 @@ def load_all_data(dataloc):
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
     #
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
+    print('loading idfs')
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    print('loading w2v')
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1234,13 +1211,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
-# laptop
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
-options_file        = "/home/dpappas/for_ryan/elmo_weights/options.json"
-weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# # use_cuda            = False
+# odd                 = '/home/dpappas/'
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -1250,15 +1228,14 @@ weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
 # retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/dpappas/'
 
-# # atlas , cslab243
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-# options_file        = "/home/dpappas/bioasq_all/elmo_weights/options.json"
-# weight_file         = "/home/dpappas/bioasq_all/elmo_weights/weights.hdf5"
+# atlas , cslab243
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
+options_file        = "/home/dpappas/for_ryan/elmo_weights/options.json"
+weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
 
 # # gpu_server_1
 # w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1277,7 +1254,7 @@ weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
 # odd                 = '/home/cave/dpappas/'
 
 k_for_maxpool       = 5
-embedding_dim       = 1024 #30 #200
+embedding_dim       = 30 #200
 lr                  = 0.001
 b_size              = 32
 max_epoch           = 30
@@ -1303,8 +1280,9 @@ for run in range(0, 5):
     logger.info('random seed: {}'.format(my_seed))
     #
     (
-        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
-    ) = load_all_data(dataloc=dataloc)
+        test_data, test_docs, dev_data, dev_docs, train_data,
+        train_docs, idf, max_idf, wv, bioasq6_data
+    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
