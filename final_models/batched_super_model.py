@@ -652,16 +652,18 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
             batch_good_doc_af           = pad_sequences(batch_good_doc_af,dtype='float32',padding='post',value=0.0)
             batch_bad_doc_af            = pad_sequences(batch_bad_doc_af,dtype='float32',padding='post',value=0.0)
             ######
-            print(batch_good_sents_embeds.shape)
-            print(batch_bad_sents_embeds.shape)
-            print(batch_quest_embeds.shape)
-            print(batch_q_idfs.shape)
-            print(batch_good_sents_escores.shape)
-            print(batch_bad_sents_escores.shape)
-            print(batch_good_doc_af.shape)
-            print(batch_bad_doc_af.shape)
-            print(batch_good_sents_lens)
-            print(batch_bad_sents_lens)
+            yield (
+                batch_good_sents_embeds,
+                batch_bad_sents_embeds,
+                batch_quest_embeds,
+                batch_q_idfs,
+                batch_good_sents_escores,
+                batch_bad_sents_escores,
+                batch_good_doc_af,
+                batch_bad_doc_af,
+                batch_good_sents_lens,
+                batch_bad_sents_lens
+            )
             ######
             batch_good_sents_embeds     = []
             batch_bad_sents_embeds      = []
@@ -674,7 +676,6 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
             batch_good_doc_af           = []
             batch_bad_doc_af            = []
             m = 0
-            exit()
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
@@ -685,22 +686,34 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     random.shuffle(train_instances)
     #
     start_time                  = time.time()
-    for batch_data in create_batches(
+
+    for (
+        batch_good_sents_embeds,
+        batch_bad_sents_embeds,
+        batch_quest_embeds,
+        batch_q_idfs,
+        batch_good_sents_escores,
+        batch_bad_sents_escores,
+        batch_good_doc_af,
+        batch_bad_doc_af,
+        batch_good_sents_lens,
+        batch_bad_sents_lens
+    ) in create_batches(
             train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer
     ):
-        pass
-    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
-
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = datum['good_sents_embeds'],
-            doc2_sents_embeds   = datum['bad_sents_embeds'],
-            question_embeds     = datum['quest_embeds'],
-            q_idfs              = datum['q_idfs'],
-            sents_gaf           = datum['good_sents_escores'],
-            sents_baf           = datum['bad_sents_escores'],
-            doc_gaf             = datum['good_doc_af'],
-            doc_baf             = datum['bad_doc_af']
+            doc1_sents_embeds   = batch_good_sents_embeds,
+            doc2_sents_embeds   = batch_bad_sents_embeds,
+            question_embeds     = batch_quest_embeds,
+            q_idfs              = batch_q_idfs,
+            sents_gaf           = batch_good_sents_escores,
+            sents_baf           = batch_bad_sents_escores,
+            doc_gaf             = batch_good_doc_af,
+            doc_baf             = batch_bad_sents_lens,
+            good_sents_lens     = batch_good_sents_lens,
+            bad_sents_lens      = batch_bad_sents_lens
         )
+        exit()
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
         if(two_losses):
@@ -1229,19 +1242,38 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         gs_emits                        = self.the_final_combination(final_good_output, gs_emits)
         #
         return final_good_output, gs_emits
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
+    def forward(
+            self,
+            doc1_sents_embeds,
+            doc2_sents_embeds,
+            question_embeds,
+            q_idfs,
+            sents_gaf,
+            sents_baf,
+            doc_gaf,
+            doc_baf,
+            good_sents_lens,
+            bad_sents_lens,
+    ):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
+        doc1_sents_embeds   = autograd.Variable(torch.FloatTensor(doc1_sents_embeds),   requires_grad=False)
+        doc2_sents_embeds   = autograd.Variable(torch.FloatTensor(doc2_sents_embeds),   requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         if(use_cuda):
-            q_idfs          = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
-            doc_gaf         = doc_gaf.cuda()
-            doc_baf         = doc_baf.cuda()
+            q_idfs              = q_idfs.cuda()
+            question_embeds     = question_embeds.cuda()
+            doc_gaf             = doc_gaf.cuda()
+            doc_baf             = doc_baf.cuda()
+            doc1_sents_embeds   = doc1_sents_embeds.cuda()
+            doc2_sents_embeds   = doc2_sents_embeds.cuda()
         #
+        print(question_embeds.size())
         q_context                       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context                       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        print(q_context.size())
+        exit()
         #
         q_weights                       = torch.cat([q_context, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
