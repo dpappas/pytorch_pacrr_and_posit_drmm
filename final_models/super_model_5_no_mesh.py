@@ -938,7 +938,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.number_of_heads                        = number_of_heads
         #
         self.embedding_dim                          = embedding_dim
-        self.projection                             = nn.Linear(self.embedding_dim, 30, bias=False)
+        self.projection_size                        = 30
+        self.projection                             = nn.Linear(self.embedding_dim, self.projection_size, bias=False)
         # to create q weights
         self.init_context_module()
         self.init_question_weight_module()
@@ -949,16 +950,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.margin_loss        = nn.MarginRankingLoss(margin=1.0)
         if(use_cuda):
             self.margin_loss    = self.margin_loss.cuda()
-    def init_mesh_module(self):
-        self.mesh_h0    = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
-        self.mesh_gru   = nn.GRU(self.embedding_dim, self.embedding_dim)
-        if(use_cuda):
-            self.mesh_h0    = self.mesh_h0.cuda()
-            self.mesh_gru   = self.mesh_gru.cuda()
     def init_context_module(self):
-        self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv_1             = nn.Conv1d(self.projection_size, self.projection_size, 3, padding=2, bias=True)
         self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv_2             = nn.Conv1d(self.projection_size, self.projection_size, 3, padding=2, bias=True)
         self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
         if(use_cuda):
             self.trigram_conv_1             = self.trigram_conv_1.cuda()
@@ -966,7 +961,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
             self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
     def init_question_weight_module(self):
-        self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
+        self.q_weights_mlp      = nn.Linear(self.projection_size+1, 1, bias=True)
         if(use_cuda):
             self.q_weights_mlp  = self.q_weights_mlp.cuda()
     def init_mlps_for_pooled_attention(self):
