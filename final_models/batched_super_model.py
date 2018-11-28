@@ -1106,8 +1106,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return the_concatenation     # return the concatenation
     def get_output(self, input_list, weights):
         temp    = torch.cat(input_list, -1)
-        print(temp.size())
-        print(weights.size())
         lo      = self.linear_per_q1(temp)
         lo      = self.my_relu1(lo)
         lo      = self.linear_per_q2(lo)
@@ -1133,13 +1131,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_context,
         sents_lens,
         quest_lens,
-        q_weights
+        q_weights,
+        sents_af
     ):
         sim_insens                      = self.my_cosine_sim(question_embeds,   doc_sents_embeds)
         sim_sens                        = self.my_cosine_sim(q_context,         doc_context)
-        sim_oh                          = (sim_insens > (1 - (1e-3))).float()
         #
         for b in range(len(sents_lens)):
+            res = []
             for i in range(len(sents_lens[b]) - 1):
                 fromm                   = sents_lens[b][i]
                 too                     = sents_lens[b][i+1]
@@ -1156,8 +1155,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                     [sent_oh_pooled, sent_sim_ins_pooled, sent_sim_sens_pooled],
                     F.softmax(q_weights[b][:quest_lens[b]], -1)
                 )
-                print(sent_emit)
+                gaf                     = sents_af[b][i]
+                print(gaf.size())
+                print(sent_emit.size())
+                sent_add_feats          = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+                res.append(sent_add_feats)
+            res     = torch.stack(res)
+            print(res.size())
         #
+        exit()
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         all_insensitive = []
@@ -1325,9 +1331,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         print(doc2_context.size())
         print(q_weights.size())
         print(20*'-')
+        print(sents_gaf.size())
+        print(sents_baf.size())
         #
-        self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens, q_weights)
-        self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context, bad_sents_lens,  quest_lens, q_weights)
+        self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens, q_weights, sents_gaf)
+        self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context, bad_sents_lens,  quest_lens, q_weights, sents_baf)
         #
         exit()
         #
