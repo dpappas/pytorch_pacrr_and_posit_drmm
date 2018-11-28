@@ -1301,7 +1301,7 @@ for run in range(0, 5):
     patience    = 0
     for epoch in range(max_epoch):
         train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
-        # epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
+        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map    = epoch_dev_map
             test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
