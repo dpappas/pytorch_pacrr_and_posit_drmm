@@ -509,6 +509,8 @@ def get_elmo_embeds(sentences):
         the_embeds[i, :len(sentences[i]), :]
         for i in range(len(sentences))
     ]
+    if (use_cuda):
+        ret = [t.cuda() for t in ret]
     return ret
 
 def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
