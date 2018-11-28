@@ -563,6 +563,10 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             good_escores.append(len(mesh_toks)/ 10.)
             good_mesh_escores.append(good_escores)
     ####
+    # for i in range(len(held_out_sents)):
+    #     print(good_sents_embeds[i].shape)
+    #     print(good_elmo_embeds[i].shape)
+    # exit()
     return {
         'sents_embeds'              : good_sents_embeds,
         'sents_escores'             : good_sents_escores,
