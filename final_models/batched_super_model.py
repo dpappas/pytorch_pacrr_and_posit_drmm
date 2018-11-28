@@ -1132,18 +1132,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         print(sim_oh.size())
         #
         for b in range(len(sents_lens)):
-            qe = question_embeds[b][:quest_lens[b]]
-            qc = q_context[b][:quest_lens[b]]
             for i in range(len(sents_lens[b]) - 1):
-                fromm   = sents_lens[b][i]
-                too     = sents_lens[b][i+1]
-                se      = doc_sents_embeds[b][fromm:too]
-                sc      = doc_context[b][fromm:too]
+                fromm           = sents_lens[b][i]
+                too             = sents_lens[b][i+1]
+                sent_sim_insens = sim_insens[b, :quest_lens[b], fromm:too]
+                sent_sim_sens   = sim_sens[b, :quest_lens[b], fromm:too]
+                sent_sim_oh     = (sent_sim_sens > (1 - (1e-3))).float()
                 print(20 * '-')
-                print(qe.size())
-                print(qc.size())
-                print(se.size())
-                print(sc.size())
+                print(sent_sim_insens.size())
+                print(sent_sim_sens.size())
+                print(sent_sim_oh.size())
             exit()
             # for i in range(len(sents_lens[b])-1):
 
