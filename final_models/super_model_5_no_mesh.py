@@ -950,6 +950,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.margin_loss        = nn.MarginRankingLoss(margin=1.0)
         if(use_cuda):
             self.margin_loss    = self.margin_loss.cuda()
+            self.projection     = self.projection.cuda()
     def init_context_module(self):
         self.trigram_conv_1             = nn.Conv1d(self.projection_size, self.projection_size, 3, padding=2, bias=True)
         self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
