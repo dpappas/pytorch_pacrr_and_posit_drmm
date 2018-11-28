@@ -521,11 +521,11 @@ def get_elmo_embeds(sentences):
 
 def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if(use_sent_tokenizer):
-        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+        good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     else:
-        good_sents = [the_doc['title'] + the_doc['abstractText']]
+        good_sents      = [the_doc['title'] + the_doc['abstractText']]
     ####
-    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    good_doc_af         = GetScores(quest, the_doc['title'] +' '+ the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     ####
     good_sents_embeds   = get_elmo_embeds(good_sents)
@@ -537,6 +537,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, use_sent_token
         sent_toks                   = tokenize(good_text)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
+        good_sents_escores.append(good_escores)
         good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
     good_meshes         = get_the_mesh(the_doc)
@@ -760,7 +761,15 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
+        datum                   = prep_data(
+            quest_text,
+            docs[retr['doc_id']],
+            retr['norm_bm25_score'],
+            gold_snips,
+            idf,
+            max_idf,
+            use_sent_tokenizer=use_sent_tokenizer
+        )
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
