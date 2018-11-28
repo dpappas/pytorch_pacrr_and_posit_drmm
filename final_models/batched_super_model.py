@@ -315,7 +315,7 @@ def get_embeds(tokens, wv):
             ret1.append(tok)
             ret2.append(wv[tok])
         else:
-            wv[tok] = np.random.rand(embedding_dim)
+            wv[tok] = np.random.randn(embedding_dim)
             ret1.append(tok)
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
