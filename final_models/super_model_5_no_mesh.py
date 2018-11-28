@@ -514,7 +514,7 @@ def get_elmo_embeds(sentences):
 def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if(use_sent_tokenizer):
         good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-        good_sents = [s for s in good_sents if(len(s.strip())>0)]
+        good_sents = [s for s in good_sents if(len(' '.join(bioclean(s)))>0)]
     else:
         good_sents      = [the_doc['title'] + the_doc['abstractText']]
     ####
