@@ -1187,58 +1187,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             all_sents_overall_rep.append(sents_overall_rep)
         #
         return all_sents_overall_rep, all_sent_emits, all_doc_emits
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
-        res = []
-        all_insensitive = []
-        all_sensitive   = []
-        all_oh          = []
-        for i in range(len(doc_sents_embeds)):
-            (
-                sent_embeds,
-                sim_insens,
-                sim_sens,
-                sim_oh
-            ) = self.process_and_get_pooling(doc_sents_embeds[i], question_embeds, q_conv_res_trigram)
-            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            if(use_cuda):
-                gaf             = gaf.cuda()
-            #
-            all_insensitive.append(sim_insens)
-            all_sensitive.append(sim_sens)
-            all_oh.append(sim_oh)
-            #
-            insensitive_pooled  = self.pooling_method(sim_insens)
-            sensitive_pooled    = self.pooling_method(sim_sens)
-            oh_pooled           = self.pooling_method(sim_oh)
-            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
-            res.append(sent_add_feats)
-        res                     = torch.stack(res)
-        # classic posit_drmm_score start
-        all_insensitive         = torch.cat(all_insensitive,    dim=-1)
-        all_sensitive           = torch.cat(all_sensitive,      dim=-1)
-        all_oh                  = torch.cat(all_oh,             dim=-1)
-        all_insensitive_pooled  = self.pooling_method(all_insensitive)
-        all_sensitive_pooled    = self.pooling_method(all_sensitive)
-        all_oh_pooled           = self.pooling_method(all_oh)
-        doc_emit                = self.get_output([all_oh_pooled, all_insensitive_pooled, all_sensitive_pooled], q_weights)
-        doc_emit                = doc_emit.unsqueeze(-1)
-        # classic posit_drmm_score end
-        #
-        sent_multihead_out      = self.sent_out_layer_1(res)
-        sent_multihead_out      = self.sent_out_activ_1(sent_multihead_out)
-        sent_multihead_out      = self.sent_out_layer_2(sent_multihead_out)
-        #
-        sent_emits              = sent_multihead_out[:,0].unsqueeze(-1)
-        # doc_emit_expanded       = doc_emit.unsqueeze(-1).expand_as(sent_emits)
-        # sent_emits              = torch.cat([sent_emits, doc_emit_expanded], -1)
-        # sent_emits              = self.sent_out_combine_doc(sent_emits).squeeze(-1)
-        # sent_emits              = torch.sigmoid(sent_emits)
-        #
-        attent                  = F.softmax(sent_multihead_out, dim=0)
-        sents_overall_rep       = torch.mm(res.transpose(0, 1), attent)
-        sents_overall_rep       = sents_overall_rep.view(-1)
-        return sents_overall_rep, sent_emits, doc_emit
     def get_max(self, res):
         return torch.max(res)
     def get_kmax(self, res, k):
@@ -1312,17 +1260,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return final_good_output, gs_emits
     def forward(
             self,
-            doc1_sents_embeds,
-            doc2_sents_embeds,
-            question_embeds,
-            q_idfs,
-            sents_gaf,
-            sents_baf,
-            doc_gaf,
-            doc_baf,
-            good_sents_lens,
-            bad_sents_lens,
-            quest_lens
+            doc1_sents_embeds,  doc2_sents_embeds,  question_embeds,    q_idfs,
+            sents_gaf,          sents_baf,          doc_gaf,            doc_baf,
+            good_sents_lens,    bad_sents_lens,     quest_lens
     ):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
