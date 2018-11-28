@@ -515,37 +515,32 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
-    good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+def prep_data(quest, the_doc, the_bm25, wv, snips, idf, max_idf):
+    sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    good_doc_af = GetScores(quest, the_doc['title'] +' '+ the_doc['abstractText'], the_bm25, idf, max_idf)
-    good_doc_af.append(len(good_sents) / 60.)
+    doc_af = GetScores(quest, the_doc['title'] +' '+ the_doc['abstractText'], the_bm25, idf, max_idf)
+    doc_af.append(len(sents) / 60.)
     ####
-    good_tokens, good_embeds = get_embeds(' '.join(good_sents), wv)
-    print(len(good_tokens))
-    print(good_embeds.shape)
-    exit()
-    ####
-    good_sents_embeds   = []
-    good_sents_escores  = []
-    held_out_sents      = []
-    good_sent_tags      = []
-    for good_text in good_sents:
-        sent_toks                   = tokenize(good_text)
-        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
-        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
-        good_escores.append(len(sent_toks)/ 342.)
-        if (len(good_embeds) > 0):
-            good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores)
-            held_out_sents.append(good_text)
-            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    sents_embeds    = []
+    sents_escores   = []
+    held_out_sents  = []
+    sent_tags       = []
+    for sent in sents:
+        sent_toks       = tokenize(sent)
+        tokens, embeds  = get_embeds(sent_toks, wv)
+        escores         = GetScores(quest, sent, the_bm25, idf, max_idf)[:-1]
+        escores.append(len(sent_toks)/ 342.)
+        if(len(embeds) > 0):
+            sents_embeds.append(embeds)
+            sents_escores.append(escores)
+            held_out_sents.append(sent)
+            sent_tags.append(snip_is_relevant(' '.join(bioclean(sent)), snips))
     ####
     return {
-        'sents_embeds'     : good_sents_embeds,
-        'sents_escores'    : good_sents_escores,
-        'doc_af'           : good_doc_af,
-        'sent_tags'        : good_sent_tags,
+        'sents_embeds'     : sents_embeds,
+        'sents_escores'    : sents_escores,
+        'doc_af'           : doc_af,
+        'sent_tags'        : sent_tags,
         'held_out_sents'   : held_out_sents,
     }
 
