@@ -542,10 +542,10 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, use_sent_token
         good_escores.append(len(mesh_toks)/ 10.)
         good_mesh_escores.append(good_escores)
     ####
-    print(len(good_sents))
-    for gse, sent in zip(good_sents_embeds, held_out_sents):
-        print(sent)
-        print(gse.shape)
+    # print(len(good_sents))
+    # for gse, sent in zip(good_sents_embeds, held_out_sents):
+    #     print(sent)
+    #     print(gse.shape)
     ####
     return {
         'sents_embeds'     : good_sents_embeds,
