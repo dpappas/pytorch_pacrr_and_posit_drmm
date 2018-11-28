@@ -709,7 +709,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             sents_gaf           = batch_good_sents_escores,
             sents_baf           = batch_bad_sents_escores,
             doc_gaf             = batch_good_doc_af,
-            doc_baf             = batch_bad_sents_lens,
+            doc_baf             = batch_bad_doc_af,
             good_sents_lens     = batch_good_sents_lens,
             bad_sents_lens      = batch_bad_sents_lens
         )
@@ -1073,19 +1073,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
     def apply_context_convolution(self, the_input, the_filters, activation):
-        conv_res        = the_filters(the_input.transpose(0,1).unsqueeze(0))
+        conv_res        = the_filters(the_input.transpose(-2,-1))
         if(activation is not None):
             conv_res    = activation(conv_res)
         pad             = the_filters.padding[0]
         ind_from        = int(np.floor(pad/2.0))
-        ind_to          = ind_from + the_input.size(0)
+        ind_to          = 1 + the_input.size(1)
         conv_res        = conv_res[:, :, ind_from:ind_to]
         conv_res        = conv_res.transpose(1, 2)
         conv_res        = conv_res + the_input
-        return conv_res.squeeze(0)
+        return conv_res
     def my_cosine_sim(self, A, B):
-        A           = A.unsqueeze(0)
-        B           = B.unsqueeze(0)
+        # A           = A.unsqueeze(0)
+        # B           = B.unsqueeze(0)
         A_mag       = torch.norm(A, 2, dim=2)
         B_mag       = torch.norm(B, 2, dim=2)
         num         = torch.bmm(A, B.transpose(-1,-2))
@@ -1119,6 +1119,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_oh              = (sim_insens > (1 - (1e-3))).float()
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
         return doc_emb, sim_insens, sim_sens, sim_oh
+    def do_for_doc(self, question_embeds, q_context, doc_sents_embeds, doc_context):
+        sim_insens                      = self.my_cosine_sim(question_embeds,   doc_sents_embeds)
+        sim_sens                        = self.my_cosine_sim(q_context,         doc_context)
+        sim_oh                          = (sim_insens > (1 - (1e-3))).float()
+        print(sim_insens.size())
+        print(sim_sens.size())
+        print(sim_oh.size())
+        #
+        insensitive_pooled              = torch.stack([self.pooling_method(t) for t in sim_insens])
+        sensitive_pooled                = torch.stack([self.pooling_method(t) for t in sim_sens])
+        oh_pooled                       = torch.stack([self.pooling_method(t) for t in sim_oh])
+        print(insensitive_pooled.size())
+        print(sensitive_pooled.size())
+        print(oh_pooled.size())
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
         res = []
         all_insensitive = []
@@ -1269,15 +1283,25 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc1_sents_embeds   = doc1_sents_embeds.cuda()
             doc2_sents_embeds   = doc2_sents_embeds.cuda()
         #
-        print(question_embeds.size())
         q_context                       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context                       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        print(q_context.size())
-        exit()
+        doc1_context                    = self.apply_context_convolution(doc1_sents_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
+        doc1_context                    = self.apply_context_convolution(doc1_context,      self.trigram_conv_2, self.trigram_conv_activation_2)
+        doc2_context                    = self.apply_context_convolution(doc2_sents_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
+        doc2_context                    = self.apply_context_convolution(doc2_context,      self.trigram_conv_2, self.trigram_conv_activation_2)
         #
         q_weights                       = torch.cat([q_context, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights                       = F.softmax(q_weights, dim=-1)
+        #
+        print(q_context.size())
+        print(doc1_context.size())
+        print(doc2_context.size())
+        #
+        self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context)
+        self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context)
+        #
+        exit()
         #
         good_out, gs_emits, gdoc_out    = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         bad_out,  bs_emits, bdoc_out    = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
