@@ -822,11 +822,13 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf
         )
         doc_emit_, gs_emits_    = model.emit_one(
-            doc1_sents_embeds   = datum['sents_embeds'],
-            question_embeds     = quest_embeds,
-            q_idfs              = q_idfs,
-            sents_gaf           = datum['sents_escores'],
-            doc_gaf             = datum['doc_af']
+            doc1_sents_embeds   = [datum['sents_embeds']],
+            question_embeds     = [quest_embeds],
+            q_idfs              = [q_idfs],
+            sents_gaf           = [datum['sents_escores']],
+            doc_gaf             = [datum['doc_af']],
+            good_sents_lens     = [datum['sent_lens']],
+            quest_lens          =
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
@@ -1200,37 +1202,46 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = self.min_max_norm(res)
         res = torch.max(res)
         return res
-    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
+    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_sents_lens, quest_lens):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
+        doc1_sents_embeds   = autograd.Variable(torch.FloatTensor(doc1_sents_embeds),   requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
+        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),           requires_grad=False)
         if(use_cuda):
-            q_idfs          = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
-            doc_gaf         = doc_gaf.cuda()
+            q_idfs              = q_idfs.cuda()
+            question_embeds     = question_embeds.cuda()
+            doc_gaf             = doc_gaf.cuda()
+            doc1_sents_embeds   = doc1_sents_embeds.cuda()
+            sents_gaf           = sents_gaf.cuda()
         #
         q_context                       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context                       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        doc1_context                    = self.apply_context_convolution(doc1_sents_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
+        doc1_context                    = self.apply_context_convolution(doc1_context,      self.trigram_conv_2, self.trigram_conv_activation_2)
         #
         q_weights                       = torch.cat([q_context, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights                       = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits, gdoc_out    = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        (
+            good_all_sents_overall_rep,
+            good_all_sent_emits,
+            good_all_doc_emits
+        ) = self.do_for_doc(question_embeds, q_context, doc1_sents_embeds, doc1_context, good_sents_lens, quest_lens, q_weights, sents_gaf)
         #
-        good_out_pp                     = torch.cat([good_out,  doc_gaf, gdoc_out], -1)
+        good_out_pp                     = torch.cat([doc_gaf, good_all_doc_emits, good_all_sents_overall_rep], -1)
         #
         final_good_output               = self.final_layer_1(good_out_pp)
         final_good_output               = self.final_activ_1(final_good_output)
         final_good_output               = self.final_layer_2(final_good_output)
-        gs_emits                        = self.the_final_combination(final_good_output, gs_emits)
+        #
+        gs_emits                        = torch.stack([good_all_sent_emits, final_good_output.expand_as(good_all_sent_emits)], -1)
+        gs_emits                        = self.sent_out_combine_doc(gs_emits)
+        gs_emits                        = torch.sigmoid(gs_emits).squeeze(-1)
         #
         return final_good_output, gs_emits
-    def forward(
-            self,
-            doc1_sents_embeds,  doc2_sents_embeds,  question_embeds,    q_idfs,
-            sents_gaf,          sents_baf,          doc_gaf,            doc_baf,
-            good_sents_lens,    bad_sents_lens,     quest_lens
+    def forward( self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs,
+            sents_gaf, sents_baf, doc_gaf, doc_baf, good_sents_lens, bad_sents_lens, quest_lens
     ):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
