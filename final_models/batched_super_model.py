@@ -1458,6 +1458,11 @@ grep 'test MAP snippets:' super_model_20_11_2018_two_losses_run_0/model.log
 - seed documents ? 
 - scopus gia citation graphs
 - two weeks same hour
-- Review to flow process kai eidame afto to doc kai ta 
+- Review to flow process kai eidame afto to doc kai ta leme pali se 2 vdomades idia wra
+- kelly -> pico template gia na kanoume querries 
+- 
+- 
+- 
+
 
 '''
