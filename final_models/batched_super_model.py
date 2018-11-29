@@ -819,16 +819,32 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(
-            quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf
+            quest_text,
+            docs[retr['doc_id']],
+            retr['norm_bm25_score'],
+            wv,
+            gold_snips,
+            idf,
+            max_idf
         )
+        doc1_sents_embeds       = [datum['sents_embeds']]
+        question_embeds         = np.stack([quest_embeds])
+        q_idfs                  = np.stack([q_idfs])
+        sents_gaf               = np.stack([datum['sents_escores']])
+        doc_gaf                 = np.stack([datum['doc_af']])
+        print(doc1_sents_embeds.shape)
+        print(question_embeds.shape)
+        print(q_idfs.shape)
+        print(sents_gaf.shape)
+        print(doc_gaf.shape)
         doc_emit_, gs_emits_    = model.emit_one(
-            doc1_sents_embeds   = [datum['sents_embeds']],
-            question_embeds     = [quest_embeds],
-            q_idfs              = [q_idfs],
-            sents_gaf           = [datum['sents_escores']],
-            doc_gaf             = [datum['doc_af']],
+            doc1_sents_embeds   = doc1_sents_embeds,
+            question_embeds     = question_embeds,
+            q_idfs              = q_idfs,
+            sents_gaf           = sents_gaf,
+            doc_gaf             = doc_gaf,
             good_sents_lens     = [datum['sent_lens']],
-            quest_lens          =
+            quest_lens          = [quest_embeds.shape[0]]
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
@@ -1394,7 +1410,7 @@ for run in range(0, 5):
     best_dev_map, test_map = None, None
     patience    = 0
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        # train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map    = epoch_dev_map
