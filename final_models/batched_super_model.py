@@ -827,7 +827,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             idf,
             max_idf
         )
-        q_idfs                  = np.expand_dims(q_idfs,                                axis=0)
         doc1_sents_embeds       = np.expand_dims(np.concatenate(datum['sents_embeds']), axis=0)
         question_embeds         = np.expand_dims(quest_embeds,                          axis=0)
         sents_gaf               = np.expand_dims(datum['sents_escores'],                axis=0)
@@ -835,12 +834,13 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = doc1_sents_embeds,
             question_embeds     = question_embeds,
-            q_idfs              = q_idfs,
+            q_idfs              = np.expand_dims(q_idfs, axis=0),
             sents_gaf           = sents_gaf,
             doc_gaf             = doc_gaf,
             good_sents_lens     = [datum['sent_lens']],
             quest_lens          = [quest_embeds.shape[0]]
         )
+        doc_emit_, gs_emits_    = doc_emit_[0], gs_emits_[0]
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
@@ -1231,8 +1231,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_context                    = self.apply_context_convolution(doc1_sents_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         doc1_context                    = self.apply_context_convolution(doc1_context,      self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        print(q_context.size())
-        print(q_idfs.size())
         q_weights                       = torch.cat([q_context, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         #
