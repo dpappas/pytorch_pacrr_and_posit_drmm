@@ -724,6 +724,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         for e in zip(doc1_emit_.tolist(), doc2_emit_.tolist()):
             batch_acc.append(float(e[0] > e[1]))
             epoch_acc.append(float(e[0] > e[1]))
+        #
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         batch_counter += 1
