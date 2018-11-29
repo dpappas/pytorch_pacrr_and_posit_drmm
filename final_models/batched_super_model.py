@@ -756,29 +756,18 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         # print(snip_loss_1, cost_)
         cost_                   = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
         #
-        for e in zip(doc1_emit_.data.list(), doc2_emit_.data.list()):
-            print(float(e[0] > e[1]))
-        exit()
-        #
-        batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
+        for e in zip(doc1_emit_.tolist(), doc2_emit_.tolist()):
+            batch_acc.append(float(e[0] > e[1]))
+            epoch_acc.append(float(e[0] > e[1]))
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
-        if (len(batch_costs) == b_size):
-            batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-            elapsed_time    = time.time() - start_time
-            start_time      = time.time()
-            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            batch_costs, batch_acc = [], []
-    if (len(batch_costs) > 0):
         batch_counter += 1
         batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-        elapsed_time = time.time() - start_time
-        start_time = time.time()
+        elapsed_time    = time.time() - start_time
+        start_time      = time.time()
         print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-        logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+        logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+        batch_costs, batch_acc = [], []
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
@@ -1467,4 +1456,7 @@ grep 'test MAP snippets:' super_model_20_11_2018_two_losses_run_0/model.log
 - Na ftiaksoume ena drive
 - Na ftiaksoume to corpus sto pubmed database pou exoume emeis
 - seed documents ? 
+- scopus gia citation graphs
+- 
+
 '''
