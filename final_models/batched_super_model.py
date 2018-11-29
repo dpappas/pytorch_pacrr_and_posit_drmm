@@ -827,16 +827,10 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             idf,
             max_idf
         )
-        doc1_sents_embeds       = [datum['sents_embeds']]
+        doc1_sents_embeds       = np.stack([np.concatenate(datum['sents_embeds'])])
         question_embeds         = np.stack([quest_embeds])
-        q_idfs                  = np.stack([q_idfs])
         sents_gaf               = np.stack([datum['sents_escores']])
         doc_gaf                 = np.stack([datum['doc_af']])
-        print(doc1_sents_embeds.shape)
-        print(question_embeds.shape)
-        print(q_idfs.shape)
-        print(sents_gaf.shape)
-        print(doc_gaf.shape)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = doc1_sents_embeds,
             question_embeds     = question_embeds,
