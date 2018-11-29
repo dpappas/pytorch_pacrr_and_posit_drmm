@@ -1291,8 +1291,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output               = self.final_layer_2(final_good_output)
         final_good_output               = final_good_output.expand_as(good_all_sent_emits)
         #
-        gs_emits                        = torch.cat([good_all_sent_emits, final_good_output], -1)
+        gs_emits                        = torch.stack([good_all_sent_emits, final_good_output], -1)
+        print(gs_emits.size())
         gs_emits                        = self.sent_out_combine_doc(gs_emits)
+        print(gs_emits.size())
         gs_emits                        = torch.sigmoid(gs_emits)
         #
         final_bad_output                = self.final_layer_1(bad_out_pp)
@@ -1300,7 +1302,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_bad_output                = self.final_layer_2(final_bad_output)
         final_bad_output                = final_bad_output.expand_as(bad_all_sent_emits)
         #
-        bs_emits                        = torch.cat([bad_all_sent_emits, final_bad_output], -1)
+        bs_emits                        = torch.stack([bad_all_sent_emits, final_bad_output], -1)
         bs_emits                        = self.sent_out_combine_doc(bs_emits)
         bs_emits                        = torch.sigmoid(bs_emits)
         #
