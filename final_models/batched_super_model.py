@@ -819,13 +819,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(
-            quest_text,
-            docs[retr['doc_id']],
-            retr['norm_bm25_score'],
-            wv,
-            gold_snips,
-            idf,
-            max_idf
+            quest_text, docs[retr['doc_id']], retr['norm_bm25_score'],
+            wv, gold_snips, idf, max_idf
         )
         doc1_sents_embeds       = np.expand_dims(np.concatenate(datum['sents_embeds']), axis=0)
         question_embeds         = np.expand_dims(quest_embeds,                          axis=0)
@@ -1412,7 +1407,7 @@ for run in range(0, 5):
     best_dev_map, test_map = None, None
     patience    = 0
     for epoch in range(max_epoch):
-        # train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map    = epoch_dev_map
