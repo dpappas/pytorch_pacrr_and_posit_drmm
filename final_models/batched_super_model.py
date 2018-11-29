@@ -628,6 +628,8 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
     batch_bad_sents_escores     = []
     batch_good_doc_af           = []
     batch_bad_doc_af            = []
+    batch_good_sent_tags        = []
+    batch_bad_sent_tags         = []
     m                           = 0
     for datum in train_data_step2(
         train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer
@@ -642,6 +644,8 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
         batch_bad_doc_af.append(datum['bad_doc_af'])
         batch_good_sents_lens.append(datum['good_sent_lens'])
         batch_bad_sents_lens.append(datum['bad_sent_lens'])
+        batch_good_sent_tags.append(datum['good_sent_tags'])
+        batch_bad_sent_tags.append(datum['bad_sent_tags'])
         m += 1
         if(m == b_size):
             batch_quest_lens            = [t.shape[0] for t in batch_quest_embeds]
@@ -667,7 +671,9 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
                 batch_bad_doc_af,
                 batch_good_sents_lens,
                 batch_bad_sents_lens,
-                batch_quest_lens
+                batch_quest_lens,
+                batch_good_sent_tags,
+                batch_bad_sent_tags
             )
             ######
             batch_good_sents_embeds     = []
@@ -681,6 +687,12 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
             batch_good_doc_af           = []
             batch_bad_doc_af            = []
             m = 0
+
+def fix_float_torch_data(some_data):
+    if(use_cuda):
+        return torch.FloatTensor(some_data).cuda()
+    else:
+        return torch.FloatTensor(some_data)
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
@@ -703,7 +715,9 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         batch_bad_doc_af,
         batch_good_sents_lens,
         batch_bad_sents_lens,
-        batch_quest_lens
+        batch_quest_lens,
+        batch_good_sent_tags,
+        batch_bad_sent_tags
     ) in create_batches(
             train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer
     ):
@@ -720,11 +734,28 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             bad_sents_lens      = batch_bad_sents_lens,
             quest_lens          = batch_quest_lens
         )
-        print(cost_.size())
-        print(doc1_emit_.size())
-        print(doc2_emit_.size())
-        print(gs_emits_.size())
-        print(bs_emits_.size())
+        # print(cost_)
+        # print(cost_.size())
+        # print(doc1_emit_.size())
+        # print(doc2_emit_.size())
+        # print(gs_emits_.size())
+        # print(bs_emits_.size())
+        # #
+        batch_good_sent_tags    = fix_float_torch_data(pad_sequences(batch_good_sent_tags))
+        batch_bad_sent_tags     = fix_float_torch_data(pad_sequences(batch_bad_sent_tags))
+        # print(batch_good_sent_tags.size())
+        # print(batch_bad_sent_tags.size())
+        sn_d1_l                 = F.binary_cross_entropy(gs_emits_, batch_good_sent_tags, size_average=True, reduce=True)
+        sn_d2_l                 = F.binary_cross_entropy(bs_emits_, batch_bad_sent_tags,  size_average=True, reduce=True)
+        # print(sn_d1_l)
+        # print(sn_d2_l)
+        snip_loss_1             = (sn_d1_l + sn_d2_l)/2.0
+        # print(snip_loss_1)
+        losses_weights          = [0.5, 0.5]
+        cost_ = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
+        # print(cost_)
+        #
+        cost_ = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
         exit()
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
