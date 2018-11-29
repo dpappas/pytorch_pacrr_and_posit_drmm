@@ -1289,28 +1289,22 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output               = self.final_layer_1(good_out_pp)
         final_good_output               = self.final_activ_1(final_good_output)
         final_good_output               = self.final_layer_2(final_good_output)
-        final_good_output               = final_good_output.expand_as(good_all_sent_emits)
         #
-        gs_emits                        = torch.stack([good_all_sent_emits, final_good_output], -1)
-        print(gs_emits.size())
+        gs_emits                        = torch.stack([good_all_sent_emits, final_good_output.expand_as(good_all_sent_emits)], -1)
         gs_emits                        = self.sent_out_combine_doc(gs_emits)
-        print(gs_emits.size())
-        gs_emits                        = torch.sigmoid(gs_emits)
+        gs_emits                        = torch.sigmoid(gs_emits).squeeze(-1)
         #
         final_bad_output                = self.final_layer_1(bad_out_pp)
         final_bad_output                = self.final_activ_1(final_bad_output)
         final_bad_output                = self.final_layer_2(final_bad_output)
-        final_bad_output                = final_bad_output.expand_as(bad_all_sent_emits)
         #
-        bs_emits                        = torch.stack([bad_all_sent_emits, final_bad_output], -1)
+        bs_emits                        = torch.stack([bad_all_sent_emits, final_bad_output.expand_as(bad_all_sent_emits)], -1)
         bs_emits                        = self.sent_out_combine_doc(bs_emits)
-        bs_emits                        = torch.sigmoid(bs_emits)
-        #
-        print(gs_emits.size())
-        print(bs_emits.size())
-        exit()
+        bs_emits                        = torch.sigmoid(bs_emits).squeeze(-1)
         #
         loss1                           = self.my_hinge_loss(final_good_output, final_bad_output)
+        print(loss1)
+        exit()
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
