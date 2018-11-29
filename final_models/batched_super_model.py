@@ -753,10 +753,10 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         # print(snip_loss_1)
         losses_weights          = [0.5, 0.5]
         print(snip_loss_1, cost_)
-        cost_ = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
+        cost_                   = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
         # print(cost_)
         #
-        cost_ = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
+        cost_                   = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
         exit()
         #
         #
