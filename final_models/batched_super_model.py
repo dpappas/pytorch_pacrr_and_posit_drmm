@@ -1309,8 +1309,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         bs_emits                        = torch.sigmoid(bs_emits).squeeze(-1)
         #
         loss1                           = self.my_hinge_loss(final_good_output, final_bad_output)
-        loss1                           = torch.sum(loss1, dim=-1)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        loss1                           = torch.sum(loss1)
+        return loss1, final_good_output.squeeze(-1), final_bad_output.squeeze(-1), gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
 
