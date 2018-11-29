@@ -827,10 +827,11 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             idf,
             max_idf
         )
-        doc1_sents_embeds       = np.stack([np.concatenate(datum['sents_embeds'])])
-        question_embeds         = np.stack([quest_embeds])
-        sents_gaf               = np.stack([datum['sents_escores']])
-        doc_gaf                 = np.stack([datum['doc_af']])
+        q_idfs                  = np.expand_dims(q_idfs,                                axis=0)
+        doc1_sents_embeds       = np.expand_dims(np.concatenate(datum['sents_embeds']), axis=0)
+        question_embeds         = np.expand_dims(quest_embeds,                          axis=0)
+        sents_gaf               = np.expand_dims(datum['sents_escores'],                axis=0)
+        doc_gaf                 = np.expand_dims(datum['doc_af'],                       axis=0)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = doc1_sents_embeds,
             question_embeds     = question_embeds,
@@ -1230,6 +1231,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_context                    = self.apply_context_convolution(doc1_sents_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         doc1_context                    = self.apply_context_convolution(doc1_context,      self.trigram_conv_2, self.trigram_conv_activation_2)
         #
+        print(q_context.size())
+        print(q_idfs.size())
         q_weights                       = torch.cat([q_context, q_idfs], -1)
         q_weights                       = self.q_weights_mlp(q_weights).squeeze(-1)
         #
