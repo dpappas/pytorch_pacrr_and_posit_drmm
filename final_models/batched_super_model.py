@@ -720,6 +720,11 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             bad_sents_lens      = batch_bad_sents_lens,
             quest_lens          = batch_quest_lens
         )
+        print(cost_.size())
+        print(doc1_emit_.size())
+        print(doc2_emit_.size())
+        print(gs_emits_.size())
+        print(bs_emits_.size())
         exit()
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
@@ -1075,8 +1080,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.final_activ_1  = self.final_activ_1.cuda()
             self.final_layer_2  = self.final_layer_2.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
-        delta      = negatives - positives
-        loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
+        delta       = negatives - positives
+        loss_q_pos  = F.relu(margin + delta)
+        # loss_q_pos = torch.sum(delta, dim=-1)
         return loss_q_pos
     def apply_context_convolution(self, the_input, the_filters, activation):
         conv_res        = the_filters(the_input.transpose(-2,-1))
@@ -1303,8 +1309,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         bs_emits                        = torch.sigmoid(bs_emits).squeeze(-1)
         #
         loss1                           = self.my_hinge_loss(final_good_output, final_bad_output)
-        print(loss1)
-        exit()
+        loss1                           = torch.sum(loss1, dim=-1)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
