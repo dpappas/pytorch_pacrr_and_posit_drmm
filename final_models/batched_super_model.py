@@ -619,18 +619,9 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
             }
 
 def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
-    batch_good_sents_embeds     = []
-    batch_bad_sents_embeds      = []
-    batch_good_sents_lens       = []
-    batch_bad_sents_lens        = []
-    batch_quest_embeds          = []
-    batch_q_idfs                = []
-    batch_good_sents_escores    = []
-    batch_bad_sents_escores     = []
-    batch_good_doc_af           = []
-    batch_bad_doc_af            = []
-    batch_good_sent_tags        = []
-    batch_bad_sent_tags         = []
+    batch_good_sents_embeds, batch_bad_sents_embeds, batch_good_sents_lens, batch_bad_sents_lens = [], [], [], []
+    batch_quest_embeds, batch_q_idfs, batch_good_sents_escores, batch_bad_sents_escores = [], [], [], []
+    batch_good_doc_af, batch_bad_doc_af, batch_good_sent_tags, batch_bad_sent_tags = [], [], [], []
     m                           = 0
     for datum in train_data_step2(
         train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer
@@ -662,33 +653,15 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
             # print(batch_good_sents_escores.shape)
             # print(batch_bad_sents_escores.shape)
             yield (
-                batch_good_sents_embeds,
-                batch_bad_sents_embeds,
-                batch_quest_embeds,
-                batch_q_idfs,
-                batch_good_sents_escores,
-                batch_bad_sents_escores,
-                batch_good_doc_af,
-                batch_bad_doc_af,
-                batch_good_sents_lens,
-                batch_bad_sents_lens,
-                batch_quest_lens,
-                batch_good_sent_tags,
+                batch_good_sents_embeds, batch_bad_sents_embeds, batch_quest_embeds, batch_q_idfs,
+                batch_good_sents_escores, batch_bad_sents_escores, batch_good_doc_af, batch_bad_doc_af,
+                batch_good_sents_lens, batch_bad_sents_lens, batch_quest_lens, batch_good_sent_tags,
                 batch_bad_sent_tags
             )
             ######
-            batch_good_sents_embeds     = []
-            batch_bad_sents_embeds      = []
-            batch_good_sents_lens       = []
-            batch_bad_sents_lens        = []
-            batch_quest_embeds          = []
-            batch_q_idfs                = []
-            batch_good_sents_escores    = []
-            batch_bad_sents_escores     = []
-            batch_good_doc_af           = []
-            batch_bad_doc_af            = []
-            batch_good_sent_tags        = []
-            batch_bad_sent_tags         = []
+            batch_good_sents_embeds, batch_bad_sents_embeds, batch_good_sents_lens, batch_bad_sents_lens = [], [], [], []
+            batch_quest_embeds, batch_q_idfs, batch_good_sents_escores, batch_bad_sents_escores = [], [], [], []
+            batch_good_doc_af, batch_bad_doc_af, batch_good_sent_tags, batch_bad_sent_tags = [], [], [], []
             m                           = 0
 
 def fix_float_torch_data(some_data):
