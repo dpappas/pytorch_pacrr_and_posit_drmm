@@ -25,7 +25,8 @@ from    gensim.models.keyedvectors  import KeyedVectors
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
 import  re
-from keras.preprocessing.sequence   import pad_sequences
+from    keras.preprocessing.sequence   import pad_sequences
+from    sklearn.metrics                import accuracy_score
 
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
@@ -754,8 +755,10 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         losses_weights          = [0.5, 0.5]
         # print(snip_loss_1, cost_)
         cost_                   = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
-        exit()
         #
+        for e in zip(doc1_emit_.data.list(), doc2_emit_.data.list()):
+            print(float(e[0] > e[1]))
+        exit()
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1457,4 +1460,11 @@ Ok Ok ... - no third loss
 
 grep 'test MAP snippets:' super_model_20_11_2018_two_losses_run_0/model.log 
 
+'''
+
+
+'''
+- Na ftiaksoume ena drive
+- Na ftiaksoume to corpus sto pubmed database pou exoume emeis
+- seed documents ? 
 '''
