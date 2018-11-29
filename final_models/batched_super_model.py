@@ -1457,6 +1457,6 @@ grep 'test MAP snippets:' super_model_20_11_2018_two_losses_run_0/model.log
 - Na ftiaksoume to corpus sto pubmed database pou exoume emeis
 - seed documents ? 
 - scopus gia citation graphs
-- 
+- two weeks same hour
 
 '''
