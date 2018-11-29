@@ -752,10 +752,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         snip_loss_1             = (sn_d1_l + sn_d2_l)/2.0
         # print(snip_loss_1)
         losses_weights          = [0.5, 0.5]
-        print(snip_loss_1, cost_)
-        cost_                   = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
-        # print(cost_)
-        #
+        # print(snip_loss_1, cost_)
         cost_                   = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
         exit()
         #
@@ -1335,7 +1332,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         bs_emits                        = torch.sigmoid(bs_emits).squeeze(-1)
         #
         loss1                           = self.my_hinge_loss(final_good_output, final_bad_output)
-        loss1                           = torch.sum(loss1)
+        loss1                           = torch.sum(loss1) / loss1.numel()
         return loss1, final_good_output.squeeze(-1), final_bad_output.squeeze(-1), gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
