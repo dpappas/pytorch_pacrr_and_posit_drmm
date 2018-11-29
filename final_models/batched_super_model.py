@@ -710,26 +710,15 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             bad_sents_lens      = batch_bad_sents_lens,
             quest_lens          = batch_quest_lens
         )
-        # print(cost_)
-        # print(cost_.size())
-        # print(doc1_emit_.size())
-        # print(doc2_emit_.size())
-        # print(gs_emits_.size())
-        # print(bs_emits_.size())
         #
         batch_good_sent_tags    = fix_float_torch_data(pad_sequences(batch_good_sent_tags))
         batch_bad_sent_tags     = fix_float_torch_data(pad_sequences(batch_bad_sent_tags))
-        # print(batch_good_sent_tags.size())
-        # print(batch_bad_sent_tags.size())
         #
         sn_d1_l                 = F.binary_cross_entropy(gs_emits_, batch_good_sent_tags, size_average=True, reduce=True)
         sn_d2_l                 = F.binary_cross_entropy(bs_emits_, batch_bad_sent_tags,  size_average=True, reduce=True)
-        # print(sn_d1_l)
-        # print(sn_d2_l)
+        #
         snip_loss_1             = (sn_d1_l + sn_d2_l)/2.0
-        # print(snip_loss_1)
         losses_weights          = [0.5, 0.5]
-        # print(snip_loss_1, cost_)
         cost_                   = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
         #
         for e in zip(doc1_emit_.tolist(), doc2_emit_.tolist()):
@@ -1427,6 +1416,20 @@ grep 'test MAP snippets:' super_model_20_11_2018_two_losses_run_0/model.log
 
 '''
 
+'''
+# print(cost_)
+# print(cost_.size())
+# print(doc1_emit_.size())
+# print(doc2_emit_.size())
+# print(gs_emits_.size())
+# print(bs_emits_.size())
+# print(batch_good_sent_tags.size())
+# print(batch_bad_sent_tags.size())
+# print(sn_d1_l)
+# print(sn_d2_l)
+# print(snip_loss_1)
+# print(snip_loss_1, cost_)
+'''
 
 '''
 - Na ftiaksoume ena drive
