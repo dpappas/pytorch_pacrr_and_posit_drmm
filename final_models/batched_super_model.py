@@ -18,6 +18,7 @@ import  torch.nn                    as nn
 import  numpy                       as np
 import  torch.optim                 as optim
 import  torch.autograd              as autograd
+from    torch.nn.utils.rnn          import pad_sequence
 from    tqdm                        import tqdm
 from    pprint                      import pprint
 from    gensim.models.keyedvectors  import KeyedVectors
@@ -999,7 +1000,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
-
          embedding_dim      = 30,
          k_for_maxpool      = 5,
          number_of_heads    = 4
@@ -1050,10 +1050,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.linear_per_q2  = self.linear_per_q2.cuda()
             self.my_relu1       = self.my_relu1.cuda()
     def init_sent_output_layer(self):
-        self.sent_out_layer_1       = nn.Linear(self.sent_add_feats+1, 8, bias=False)
+        self.sent_out_layer_1       = nn.Linear(self.sent_add_feats+1, 8,   bias=True)
         self.sent_out_activ_1       = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.sent_out_layer_2       = nn.Linear(8, self.number_of_heads, bias=False)
-        self.sent_out_combine_doc   = nn.Linear(2, 1, bias=False)
+        self.sent_out_layer_2       = nn.Linear(8, self.number_of_heads,    bias=True)
+        self.sent_out_combine_doc   = nn.Linear(2, 1,                       bias=True)
         if(use_cuda):
             self.sent_out_combine_doc   = self.sent_out_combine_doc.cuda()
             self.sent_out_layer_1       = self.sent_out_layer_1.cuda()
@@ -1126,15 +1126,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
         return doc_emb, sim_insens, sim_sens, sim_oh
     def do_for_doc(
-        self,
-        question_embeds,
-        q_context,
-        doc_sents_embeds,
-        doc_context,
-        sents_lens,
-        quest_lens,
-        q_weights,
-        sents_af
+        self, question_embeds, q_context, doc_sents_embeds, doc_context, sents_lens, quest_lens,
+        q_weights, sents_af
     ):
         sim_insens              = self.my_cosine_sim(question_embeds,   doc_sents_embeds)
         sim_sens                = self.my_cosine_sim(q_context,         doc_context)
@@ -1153,7 +1146,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 [doc_oh_pooled, doc_sim_ins_pooled, doc_sim_sens_pooled],
                 F.softmax(q_weights[b][:quest_lens[b]], -1)
             )
-            all_doc_emits.append(doc_emit)
             #
             res = []
             for i in range(len(sents_lens[b]) - 1):
@@ -1179,13 +1171,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_multihead_out          = self.sent_out_layer_1(res)
             sent_multihead_out          = self.sent_out_activ_1(sent_multihead_out)
             sent_multihead_out          = self.sent_out_layer_2(sent_multihead_out)
-            sent_emits                  = sent_multihead_out[:, 0].unsqueeze(-1)
-            all_sent_emits.append(sent_emits)
+            sent_emits                  = sent_multihead_out[:, 0]
+            # attended representation of sents
             attent                      = F.softmax(sent_multihead_out, dim=0)
             sents_overall_rep           = torch.mm(res.transpose(0, 1), attent)
             sents_overall_rep           = sents_overall_rep.view(-1)
+            #
+            all_doc_emits.append(doc_emit)
+            all_sent_emits.append(sent_emits)
             all_sents_overall_rep.append(sents_overall_rep)
         #
+        all_sent_emits                  = pad_sequence(all_sent_emits).transpose(0,1)
+        all_doc_emits                   = torch.stack(all_doc_emits).unsqueeze(-1)
+        all_sents_overall_rep           = torch.stack(all_sents_overall_rep)
         return all_sents_overall_rep, all_sent_emits, all_doc_emits
     def get_max(self, res):
         return torch.max(res)
@@ -1213,25 +1211,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = self.min_max_norm(res)
         res = torch.max(res)
         return res
-    def apply_mesh_gru(self, mesh_embeds):
-        mesh_embeds             = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-        if(use_cuda):
-            mesh_embeds         = mesh_embeds.cuda()
-        output, hn              = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
-        return output[-1,0,:]
-    def get_mesh_rep(self, meshes_embeds, q_context):
-        meshes_embeds   = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
-        meshes_embeds   = torch.stack(meshes_embeds)
-        sim_matrix      = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
-        max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
-        output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
-        return output
-    def the_final_combination(self, final_good_output, gs_emits):
-        doc_emit_expanded               = final_good_output.unsqueeze(-1).expand_as(gs_emits)
-        gs_emits                        = torch.cat([gs_emits, doc_emit_expanded], -1)
-        gs_emits                        = self.sent_out_combine_doc(gs_emits).squeeze(-1)
-        gs_emits                        = torch.sigmoid(gs_emits)
-        return gs_emits
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -1270,8 +1249,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc2_sents_embeds   = autograd.Variable(torch.FloatTensor(doc2_sents_embeds),   requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
-        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),             requires_grad=False)
-        sents_baf           = autograd.Variable(torch.FloatTensor(sents_baf),             requires_grad=False)
+        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),           requires_grad=False)
+        sents_baf           = autograd.Variable(torch.FloatTensor(sents_baf),           requires_grad=False)
         if(use_cuda):
             q_idfs              = q_idfs.cuda()
             question_embeds     = question_embeds.cuda()
@@ -1304,13 +1283,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             bad_all_doc_emits
         ) = self.do_for_doc(question_embeds, q_context, doc2_sents_embeds, doc2_context, bad_sents_lens,  quest_lens, q_weights, sents_baf)
         #
+        good_out_pp = torch.cat([doc_gaf, good_all_doc_emits, good_all_sents_overall_rep], -1)
+        bad_out_pp  = torch.cat([doc_baf, bad_all_doc_emits,  bad_all_sents_overall_rep],  -1)
+        #
+        final_good_output               = self.final_layer_1(good_out_pp)
+        final_good_output               = self.final_activ_1(final_good_output)
+        final_good_output               = self.final_layer_2(final_good_output)
+        final_good_output               = final_good_output.unsqueeze(-1).expand_as(good_all_sent_emits)
+        #
+        gs_emits                        = torch.cat([good_all_sent_emits, final_good_output], -1)
+        gs_emits                        = self.sent_out_combine_doc(gs_emits)
+        gs_emits                        = torch.sigmoid(gs_emits)
+        #
+        print(gs_emits.size())
         exit()
-        #
-        good_out, gs_emits, gdoc_out    = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-        bad_out,  bs_emits, bdoc_out    = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
-        #
-        good_out_pp                     = torch.cat([good_out,  doc_gaf, gdoc_out], -1)
-        bad_out_pp                      = torch.cat([bad_out,   doc_baf, bdoc_out], -1)
         #
         final_good_output               = self.final_layer_1(good_out_pp)
         final_good_output               = self.final_activ_1(final_good_output)
