@@ -687,7 +687,9 @@ def create_batches(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, 
             batch_bad_sents_escores     = []
             batch_good_doc_af           = []
             batch_bad_doc_af            = []
-            m = 0
+            batch_good_sent_tags        = []
+            batch_bad_sent_tags         = []
+            m                           = 0
 
 def fix_float_torch_data(some_data):
     if(use_cuda):
