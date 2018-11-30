@@ -1316,7 +1316,6 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 get_embeds          = get_embeds_use_unk
 
-
 # # gpu_server_1
 # w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/media/large_space_1/DATA/bioasq_all/idf.pkl'
