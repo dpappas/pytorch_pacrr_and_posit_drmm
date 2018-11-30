@@ -668,8 +668,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+            print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+            logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
         batch_counter += 1
@@ -1418,8 +1418,8 @@ for run in range(0, 5):
             best_dev_map    = epoch_dev_map
             test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=models[which_model][4])
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir,'best_checkpoint.pth.tar'))
-        print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
-        logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
 '''
 grep "test GMAP" -B 7 -A 1 Model_36_run_*/model.log
