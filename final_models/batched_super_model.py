@@ -284,6 +284,7 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     #
     return sn_d1_l, sn_d2_l, sn_d3_l, sn_d4_l
 
+
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
         os.makedirs(odir)
@@ -714,8 +715,13 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         batch_good_sent_tags    = fix_float_torch_data(pad_sequences(batch_good_sent_tags))
         batch_bad_sent_tags     = fix_float_torch_data(pad_sequences(batch_bad_sent_tags))
         #
-        sn_d1_l                 = F.binary_cross_entropy(gs_emits_, batch_good_sent_tags, size_average=True, reduce=True)
-        sn_d2_l                 = F.binary_cross_entropy(bs_emits_, batch_bad_sent_tags,  size_average=True, reduce=True)
+        # sn_d1_l                 = F.binary_cross_entropy(gs_emits_, batch_good_sent_tags, size_average=True, reduce=True)
+        # sn_d2_l                 = F.binary_cross_entropy(bs_emits_, batch_bad_sent_tags,  size_average=True, reduce=True)
+        # print(sn_d1_l, sn_d2_l)
+        #
+        sn_d1_l                 = F.binary_cross_entropy(gs_emits_, batch_good_sent_tags, size_average=False, reduce=True)
+        sn_d2_l                 = F.binary_cross_entropy(bs_emits_, batch_bad_sent_tags,  size_average=False, reduce=True)
+        print(sn_d1_l, sn_d2_l)
         #
         snip_loss_1             = (sn_d1_l + sn_d2_l)/2.0
         losses_weights          = [0.5, 0.5]
