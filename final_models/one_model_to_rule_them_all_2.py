@@ -311,6 +311,18 @@ def get_embeds(tokens, wv):
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
+def get_embeds_use_unk(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        if(tok in wv):
+            ret1.append(tok)
+            ret2.append(wv[tok])
+        else:
+            wv[tok] = np.random.randn(embedding_dim)
+            ret1.append(tok)
+            ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
     #

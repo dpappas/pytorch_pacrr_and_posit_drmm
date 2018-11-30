@@ -284,7 +284,6 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     #
     return sn_d1_l, sn_d2_l, sn_d3_l, sn_d4_l
 
-
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
         os.makedirs(odir)
