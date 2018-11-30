@@ -715,16 +715,16 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         batch_good_sent_tags    = fix_float_torch_data(pad_sequences(batch_good_sent_tags))
         batch_bad_sent_tags     = fix_float_torch_data(pad_sequences(batch_bad_sent_tags))
         #
-        # sn_d1_l                 = F.binary_cross_entropy(gs_emits_, batch_good_sent_tags, size_average=True, reduce=True)
-        # sn_d2_l                 = F.binary_cross_entropy(bs_emits_, batch_bad_sent_tags,  size_average=True, reduce=True)
+        sn_d1_l                 = F.binary_cross_entropy(gs_emits_, batch_good_sent_tags, size_average=True, reduce=True)
+        sn_d2_l                 = F.binary_cross_entropy(bs_emits_, batch_bad_sent_tags,  size_average=True, reduce=True)
         # print(sn_d1_l, sn_d2_l)
         #
-        sn_d1_l                 = F.binary_cross_entropy(gs_emits_, batch_good_sent_tags, size_average=False, reduce=True)
-        sn_d2_l                 = F.binary_cross_entropy(bs_emits_, batch_bad_sent_tags,  size_average=False, reduce=True)
-        print(sn_d1_l, sn_d2_l)
+        # sn_d1_l                 = F.binary_cross_entropy(gs_emits_, batch_good_sent_tags, size_average=False, reduce=True)
+        # sn_d2_l                 = F.binary_cross_entropy(bs_emits_, batch_bad_sent_tags,  size_average=False, reduce=True)
+        # print(sn_d1_l, sn_d2_l)
         #
         snip_loss_1             = (sn_d1_l + sn_d2_l)/2.0
-        losses_weights          = [0.5, 0.5]
+        losses_weights          = [10, 1]
         cost_                   = (losses_weights[0] * snip_loss_1) + (losses_weights[1] * cost_)
         #
         for e in zip(doc1_emit_.tolist(), doc2_emit_.tolist()):
