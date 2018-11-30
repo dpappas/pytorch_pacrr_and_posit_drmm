@@ -701,7 +701,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     return doc_res, extracted_from_one, all_emits
 
 def get_norm_doc_scores(the_doc_scores):
-    ks = the_doc_scores.keys()
+    ks = list(the_doc_scores.keys())
     vs = [the_doc_scores[k] for k in ks]
     vs = softmax(vs)
     norm_doc_scores = {}
