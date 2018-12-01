@@ -323,6 +323,14 @@ def get_embeds_use_unk(tokens, wv):
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
+def get_embeds_use_only_unk(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        wv[tok] = np.random.randn(embedding_dim)
+        ret1.append(tok)
+        ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
     #
@@ -1290,14 +1298,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 # use_cuda            = False
-# odd                 = '/home/dpappas/'
+odd                 = '/home/dpappas/'
+# get_embeds          = get_embeds_use_unk
+get_embeds          = get_embeds_use_only_unk
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -1307,14 +1317,15 @@ use_cuda = torch.cuda.is_available()
 # retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/dpappas/'
 
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
-get_embeds          = get_embeds_use_unk
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
+# # get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
 
 # # gpu_server_1
 # w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1380,7 +1391,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = '{}_run_5max_{}/'.format(which_model, run)
+    odir    = '{}_run_5max_only_unk_{}/'.format(which_model, run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
