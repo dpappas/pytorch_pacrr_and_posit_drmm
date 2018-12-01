@@ -1306,8 +1306,8 @@ eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 # use_cuda            = False
 odd                 = '/home/dpappas/'
-# get_embeds          = get_embeds_use_unk
-get_embeds          = get_embeds_use_only_unk
+get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
