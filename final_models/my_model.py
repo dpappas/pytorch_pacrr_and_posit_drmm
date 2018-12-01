@@ -1039,11 +1039,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True)
             if(use_cuda):
                 self.final_layer_1    = self.final_layer_1.cuda()
-        self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.final_layer_2 = nn.Linear(8, 1, bias=True)
+        self.final_activ_1  = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.final_layer_2  = nn.Linear(8, 1, bias=True)
+        self.oo_layer       = nn.Linear(2, 1, bias=True)
         if(use_cuda):
             self.final_activ_1  = self.final_activ_1.cuda()
             self.final_layer_2  = self.final_layer_2.cuda()
+            self.oo_layer       = self.oo_layer.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
@@ -1128,8 +1130,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
         ret = self.get_kmax(res, k2)
-        # print(ret.size())
-        res = torch.sigmoid(res)
         return ret, res
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
@@ -1241,6 +1241,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
+        #
+        gs_emits            = gs_emits.unsqueeze(-1)
+        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
+        gs_emits            = torch.sigmoid(gs_emits)
+        #
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
@@ -1290,9 +1296,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
+        #
+        gs_emits            = gs_emits.unsqueeze(-1)
+        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
+        gs_emits            = torch.sigmoid(gs_emits)
+        #
         final_bad_output    = self.final_layer_1(bad_out_pp)
         final_bad_output    = self.final_activ_1(final_bad_output)
         final_bad_output    = self.final_layer_2(final_bad_output)
+        #
+        bs_emits            = bs_emits.unsqueeze(-1)
+        bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
+        bs_emits            = torch.sigmoid(bs_emits)
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
