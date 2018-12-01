@@ -1391,7 +1391,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = '{}_run_5max_only_unk_{}/'.format(which_model, run)
+    odir    = '{}_run_5max_{}/'.format(which_model, run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
