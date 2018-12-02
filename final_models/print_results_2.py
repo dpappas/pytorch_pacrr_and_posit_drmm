@@ -66,18 +66,18 @@ def print_version(version):
                     devs.append((res['dev']['f1_snip'], res['dev']['map_snip'], res['dev']['gmap_snip'],
                                  res['dev']['known_f1_snip'], res['dev']['known_map_snip'],
                                  res['dev']['known_gmap_snip']))
-    print fpath
-    print 'test'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in tests)
-    print '\t'.join(str(e) for e in np.average(np.array(tests, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(tests, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(tests, dtype='float'), axis=0).tolist())
-    print ''
-    print 'dev'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in devs)
-    print '\t'.join(str(e) for e in np.average(np.array(devs, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(devs, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(devs, dtype='float'), axis=0).tolist())
+    print(fpath)
+    print('test')
+    print('\n'.join('\t'.join(str(e) for e in t) for t in tests))
+    print('\t'.join(str(e) for e in np.average(np.array(tests, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.max(np.array(tests, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.min(np.array(tests, dtype='float'), axis=0).tolist()))
+    print('')
+    print('dev')
+    print('\n'.join('\t'.join(str(e) for e in t) for t in devs))
+    print('\t'.join(str(e) for e in np.average(np.array(devs, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.max(np.array(devs, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.min(np.array(devs, dtype='float'), axis=0).tolist()))
 
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_41/model.log'
 # fpath = '/home/dpappas/MODELS_OUTPUTS/this_is_me_testing_Model_42/model.log'
