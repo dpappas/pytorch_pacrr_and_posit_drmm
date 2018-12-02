@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-reload(sys)
-sys.setdefaultencoding("utf-8")
+# import sys
+# reload(sys)
+# sys.setdefaultencoding("utf-8")
 
 import  os
 import  json
@@ -16,7 +16,8 @@ import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  numpy                       as np
 import  torch.optim                 as optim
-import  cPickle                     as pickle
+# import  cPickle                     as pickle
+import  pickle
 import  torch.autograd              as autograd
 from    tqdm                        import tqdm
 from    pprint                      import pprint
@@ -1330,9 +1331,9 @@ Ok Ok ... - no third loss
 
 grep 'test MAP snippets:' super_model_20_11_2018_two_losses_run_0/model.log 
 
-- more epochs in current model
-- only one head
-- try elmo from manolis
+Done, Nothing changed   - more epochs in current model
+DONE, worst resutlts    - only one head
+TOOOOO SLOWWW           - try elmo from manolis
 - try pretrained bert embeddings
 - hyper param tuning
 - Skype call in Thursday ?
