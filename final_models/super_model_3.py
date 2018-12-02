@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-reload(sys)
-sys.setdefaultencoding("utf-8")
+# import sys
+# reload(sys)
+# sys.setdefaultencoding("utf-8")
 
 import  os
 import  json
@@ -16,7 +16,8 @@ import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  numpy                       as np
 import  torch.optim                 as optim
-import  cPickle                     as pickle
+# import  cPickle                     as pickle
+import  pickle
 import  torch.autograd              as autograd
 from    tqdm                        import tqdm
 from    pprint                      import pprint
@@ -1272,7 +1273,7 @@ for run in range(0, 5):
     #
     odir    = 'super_model_20_11_2018_two_losses_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
-    print odir
+    print(odir)
     if(not os.path.exists(odir)):
         os.makedirs(odir)
     #
