@@ -1346,7 +1346,7 @@ get_embeds          = get_embeds_use_unk
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
 embedding_dim       = 30 #200
-lr                  = 0.01
+lr                  = 0.001
 b_size              = 32
 max_epoch           = 10
 
@@ -1382,7 +1382,7 @@ models = [
 ]
 models = dict([(item[0], item[1:]) for item in models])
 
-which_model = 'Model_50'
+which_model = 'Model_56'
 
 hdlr = None
 for run in range(0, 5):
@@ -1391,7 +1391,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = '{}_run_5max_{}/'.format(which_model, run)
+    odir    = '{}_run_5max_{}_run_{}/'.format(which_model, str(lr).replace('.', '_'), run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
