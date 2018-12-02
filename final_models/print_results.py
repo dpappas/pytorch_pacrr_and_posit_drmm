@@ -99,27 +99,27 @@ def assign_data(data, res1, res2, res3, the_line):
     return res1, res2, res3
 
 def print_the_results(all1, all2, all3):
-    print ''
-    print diri
-    print ''
-    print 'V1'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in all1)
-    print '\t'.join(str(e) for e in np.average(np.array(all1, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(all1, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(all1, dtype='float'), axis=0).tolist())
-    print ''
-    print 'V2'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in all2)
-    print '\t'.join(str(e) for e in np.average(np.array(all2, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(all2, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(all2, dtype='float'), axis=0).tolist())
-    print ''
-    print 'V3'
-    print '\n'.join('\t'.join(str(e) for e in t) for t in all3)
-    print '\t'.join(str(e) for e in np.average(np.array(all3, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(all3, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(all3, dtype='float'), axis=0).tolist())
-    print ''
+    print('')
+    print(diri)
+    print('')
+    print('V1')
+    print('\n'.join('\t'.join(str(e) for e in t) for t in all1))
+    print('\t'.join(str(e) for e in np.average(np.array(all1, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.max(np.array(all1, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.min(np.array(all1, dtype='float'), axis=0).tolist()))
+    print('')
+    print('V2')
+    print('\n'.join('\t'.join(str(e) for e in t) for t in all2))
+    print('\t'.join(str(e) for e in np.average(np.array(all2, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.max(np.array(all2, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.min(np.array(all2, dtype='float'), axis=0).tolist()))
+    print('')
+    print('V3')
+    print('\n'.join('\t'.join(str(e) for e in t) for t in all3))
+    print('\t'.join(str(e) for e in np.average(np.array(all3, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.max(np.array(all3, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.min(np.array(all3, dtype='float'), axis=0).tolist()))
+    print('')
 
 def do_three_losses():
     all1 = []
@@ -261,20 +261,20 @@ def do_one_loss():
                                                             res1['dev']['gmap_snip'], res1['dev']['known_f1_snip'],
                                                             res1['dev']['known_map_snip'],
                                                             res1['dev']['known_gmap_snip']))
-    print '\n'.join(
+    print('\n'.join(
         '\t'.join(str(e) for e in t)
         for t in overall
-    )
-    print '\t'.join(str(e) for e in np.average(np.array(overall, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.max(np.array(overall, dtype='float'), axis=0).tolist())
-    print '\t'.join(str(e) for e in np.min(np.array(overall, dtype='float'), axis=0).tolist())
-    print ''
-    print diri
-    print 'test'
-    print '\n'.join(tests)
-    print ''
-    print 'dev'
-    print '\n'.join(devs)
+    ))
+    print('\t'.join(str(e) for e in np.average(np.array(overall, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.max(np.array(overall, dtype='float'), axis=0).tolist()))
+    print('\t'.join(str(e) for e in np.min(np.array(overall, dtype='float'), axis=0).tolist()))
+    print('')
+    print(diri)
+    print('test')
+    print('\n'.join(tests))
+    print('')
+    print('dev')
+    print('\n'.join(devs))
 
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_33_run_{}/model.log'
 # diri = '/home/dpappas/MODELS_OUTPUTS/Model_34_run_{}/model.log'
