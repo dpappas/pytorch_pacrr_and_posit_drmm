@@ -1275,7 +1275,7 @@ for run in range(0, 5):
     #
     odir    = 'super_model_3_2L_multihead_0p001_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
-    print odir
+    print(odir)
     if(not os.path.exists(odir)):
         os.makedirs(odir)
     #
