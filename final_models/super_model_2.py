@@ -1286,7 +1286,7 @@ for run in range(0, 5):
     #
     odir    = 'GNTM_two_losses_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
-    print odir
+    print(odir)
     if(not os.path.exists(odir)):
         os.makedirs(odir)
     #
