@@ -148,18 +148,10 @@ def get_embeds_use_only_unk(tokens, wv):
         ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
     good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    self.features.append(
-        [
-            word_cnt,
-            BM25score,
-            unigram_overlap,
-            bigram_overlap,
-            idf_uni_overlap
-        ]
-    )
+    BM25score  = BM25.similarity_score(s1, s2, 1.2, 0.75, idf_scores, avgdl, True, mean, deviation, rare_word_value)
     ####
     quest_toks  = tokenize(quest)
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -172,16 +164,21 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
-            good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores)
-            held_out_sents.append(good_text)
-            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
-            tomi        = (set(sent_toks) & set(quest_toks)) - set(stopwords)
+            tomi            = (set(sent_toks) & set(quest_toks))
+            tomi_no_stop    =  tomi - set(stopwords)
             features    = [
                 len(quest),
                 len(good_text),
-                len(tomi),
+                len(tomi_no_stop),
+                sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
+                sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
             ]
+            #
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores+features)
+            held_out_sents.append(good_text)
+            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+            #
     ####
     return {
         'sents_embeds'     : good_sents_embeds,
