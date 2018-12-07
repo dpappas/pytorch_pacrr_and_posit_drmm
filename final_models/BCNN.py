@@ -472,7 +472,6 @@ class BCNN(nn.Module):
         #
         return cost
 
-
 # laptop
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
@@ -482,7 +481,6 @@ retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_b
 use_cuda            = False
 odd                 = '/home/dpappas/'
 get_embeds          = get_embeds_use_unk
-
 
 embedding_dim       = 30
 additional_feats    = 9
