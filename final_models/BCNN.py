@@ -462,12 +462,12 @@ class BCNN(nn.Module):
         mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), features], dim=-1)
         mlp_out             = self.linear_out(mlp_in)
         #
-        mlp_out             = F.softmax(mlp_out, dim=-1)
-        cost                = F.cross_entropy(mlp_out, label, weight=None, reduction='elementwise_mean')
-        # print(label, mlp_out)
+        # mlp_out             = F.softmax(mlp_out, dim=-1)
+        # cost                = F.cross_entropy(mlp_out, label, weight=None, reduction='elementwise_mean')
+        # # print(label, mlp_out)
         #
-        # mlp_out             = F.log_softmax(mlp_out, dim=-1)
-        # cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
+        mlp_out             = F.log_softmax(mlp_out, dim=-1)
+        cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
         # print(label, mlp_out)
         #
         return cost
@@ -495,8 +495,9 @@ model = BCNN(
 )
 
 params      = model.parameters()
-# optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0004, amsgrad=True)
-optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
+# optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0004)
+optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+# optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
 
 (
     test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
@@ -504,35 +505,35 @@ optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004
 
 train_instances = train_data_step1(train_data)
 
-epoch_costs = []
-for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-    all_costs = []
-    for i in range(len(datum['good_sents_embeds'])):
-        cost_ = model(
-            quest       = datum['quest_embeds'],
-            sent        = datum['good_sents_embeds'][i],
-            label       = [datum['good_sent_tags'][i]],
-            features    = datum['good_sents_escores'][i]
-        )
-        all_costs.append(cost_)
-        epoch_costs.append(cost_)
-    # for i in range(len(datum['bad_sents_embeds'])):
-    #     cost_ = model(
-    #         quest       = datum['quest_embeds'],
-    #         sent        = datum['bad_sents_embeds'][i],
-    #         label       = [datum['bad_sent_tags'][i]],
-    #         features    = datum['bad_sents_escores'][i]
-    #     )
-    #     all_costs.append(cost_)
-    #     epoch_costs.append(cost_)
-    aver_cost = sum(all_costs) / float(len(all_costs))
-    aver_cost.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-    # print(aver_cost)
-
-epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-print(epoch_aver_cost)
+for epoch in range(10):
+    epoch_costs = []
+    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
+        all_costs = []
+        for i in range(len(datum['good_sents_embeds'])):
+            cost_ = model(
+                quest       = datum['quest_embeds'],
+                sent        = datum['good_sents_embeds'][i],
+                label       = [datum['good_sent_tags'][i]],
+                features    = datum['good_sents_escores'][i]
+            )
+            all_costs.append(cost_)
+            epoch_costs.append(cost_)
+        # for i in range(len(datum['bad_sents_embeds'])):
+        #     cost_ = model(
+        #         quest       = datum['quest_embeds'],
+        #         sent        = datum['bad_sents_embeds'][i],
+        #         label       = [datum['bad_sent_tags'][i]],
+        #         features    = datum['bad_sents_escores'][i]
+        #     )
+        #     all_costs.append(cost_)
+        #     epoch_costs.append(cost_)
+        aver_cost = sum(all_costs) / float(len(all_costs))
+        aver_cost.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        print(aver_cost)
+    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
+    print(epoch_aver_cost)
 
 
 
