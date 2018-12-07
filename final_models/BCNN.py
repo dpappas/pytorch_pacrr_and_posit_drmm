@@ -13,6 +13,7 @@ from    nltk.tokenize                   import sent_tokenize
 from    difflib                         import SequenceMatcher
 from    keras.preprocessing.sequence    import pad_sequences
 from    keras.utils                     import to_categorical
+from    sklearn.metrics                 import roc_auc_score
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
@@ -499,7 +500,8 @@ class BCNN(nn.Module):
         cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
         # print(label, mlp_out)
         #
-        return cost
+        emit                = F.softmax(mlp_out, dim=-1)[:,1]
+        return cost, emit
 
 # laptop
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
@@ -536,23 +538,39 @@ train_instances = train_data_step1(train_data)
 
 for epoch in range(10):
     epoch_costs     = []
+    epoch_auc       = []
+    epoch_labels    = []
+    epoch_emits     = []
     batch_counter   = 0
     start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
         batch_costs         = []
+        batch_emits         = []
+        batch_labels        = []
         batch_counter       += 1
         for i in range(len(datum['good_sents_embeds'])):
-            cost_           = model(quest=datum['quest_embeds'], sent=datum['good_sents_embeds'][i], label=[datum['good_sent_tags'][i]], features=datum['good_sents_escores'][i])
+            cost_, emit     = model(quest=datum['quest_embeds'], sent=datum['good_sents_embeds'][i], label=[datum['good_sent_tags'][i]], features=datum['good_sents_escores'][i])
             epoch_costs.append(cost_.cpu().item())
             batch_costs.append(cost_)
+            batch_labels.append(datum['good_sent_tags'][i])
+            batch_emits.append(emit.cpu().item())
         for i in range(len(datum['bad_sents_embeds'])):
-            cost_           = model(quest=datum['quest_embeds'], sent=datum['bad_sents_embeds'][i], label=[datum['bad_sent_tags'][i]], features=datum['bad_sents_escores'][i])
+            cost_, emit     = model(quest=datum['quest_embeds'], sent=datum['bad_sents_embeds'][i], label=[datum['bad_sent_tags'][i]], features=datum['bad_sents_escores'][i])
             epoch_costs.append(cost_.cpu().item())
             batch_costs.append(cost_)
+            batch_labels.append(datum['bad_sent_tags'][i])
+            batch_emits.append(emit.cpu().item())
+        batch_auc = roc_auc_score(batch_labels, batch_emits)
+        epoch_auc = roc_auc_score(epoch_labels, epoch_emits)
         batch_aver_cost, epoch_aver_cost    = back_prop(batch_costs, epoch_costs)
         elapsed_time                        = time.time() - start_time
         start_time                          = time.time()
-        print('BC:{:03d} BAC:{:.4f} EAC:{:.4f} ET:{:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, elapsed_time))
+        print(
+            'BC:{:03d} BAC:{:.4f} EAC:{:.4f} BAUC:{:.4f} EAUC:{:.4f} ET:{:.4f}'.format(
+                batch_counter, batch_aver_cost, epoch_aver_cost,
+                batch_auc, epoch_auc, elapsed_time
+            )
+        )
 
 
 
