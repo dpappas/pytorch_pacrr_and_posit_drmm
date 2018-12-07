@@ -444,25 +444,22 @@ class BCNN(nn.Module):
         sim                 = sim.squeeze(-1).squeeze(-1)
         return x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim
     def forward(self, quest, sent, label, features):
-        quest       = autograd.Variable(torch.FloatTensor(quest),   requires_grad=False)
-        sent        = autograd.Variable(torch.FloatTensor(sent),    requires_grad=False)
-        label       = autograd.Variable(torch.LongTensor(label),    requires_grad=False)
-        features    = autograd.Variable(torch.FloatTensor(features),  requires_grad=False)
+        quest       = autograd.Variable(torch.FloatTensor(quest),   requires_grad=False).unsqueeze(0)
+        sent        = autograd.Variable(torch.FloatTensor(sent),    requires_grad=False).unsqueeze(0)
+        label       = autograd.Variable(torch.LongTensor(label),    requires_grad=False).unsqueeze(0)
+        features    = autograd.Variable(torch.FloatTensor(features),  requires_grad=False).unsqueeze(0)
         #
-        quest               = quest.transpose(-1, -2).unsqueeze(0)
-        sent                = sent.transpose(-1, -2).unsqueeze(0)
+        quest               = quest.transpose(-1, -2)
+        sent                = sent.transpose(-1, -2)
         quest_global_pool   = F.avg_pool1d(quest, quest.size(-1), stride=None)
         sent_global_pool    = F.avg_pool1d(sent, sent.size(-1), stride=None)
-        print(quest_global_pool.size())
-        print(sent_global_pool.size())
         sim1                = self.my_cosine_sim(quest_global_pool.transpose(1,2), sent_global_pool.transpose(1,2))
         sim1                = sim1.squeeze(-1).squeeze(-1)
-        print(sim1.size())
         #
-        (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim2) = self.apply_one_conv(batch_x1.transpose(1,2), batch_x2.transpose(1,2), self.conv1)
-        (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim3) = self.apply_one_conv(x1_window_pool, x2_window_pool, self.conv2)
+        (quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2) = self.apply_one_conv(quest.transpose(1,2), sent.transpose(1,2), self.conv1)
+        (quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
         #
-        mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), batch_features], dim=-1)
+        mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), features], dim=-1)
         mlp_out             = self.linear_out(mlp_in)
         #
         # # mlp_out             = F.log_softmax(mlp_out+1, dim=-1)
@@ -470,7 +467,7 @@ class BCNN(nn.Module):
         # cost                = F.cross_entropy(mlp_out, batch_y, weight=None, reduction='elementwise_mean')
         #
         mlp_out             = F.log_softmax(mlp_out, dim=-1)
-        cost                = F.nll_loss(mlp_out, batch_y, weight=None, reduction='elementwise_mean')
+        cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
         #
         return cost
 
