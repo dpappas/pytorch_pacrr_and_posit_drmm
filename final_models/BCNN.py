@@ -458,6 +458,8 @@ class BCNN(nn.Module):
         mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), batch_features], dim=-1)
         mlp_out             = self.linear_out(mlp_in)
         mlp_out             = F.softmax(mlp_out, dim=-1)
+        print(mlp_out[:,0])
+        print(batch_y)
         #
         cost                = F.cross_entropy(mlp_out, batch_y, weight=None, reduction='elementwise_mean')
         #
@@ -514,6 +516,9 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
         batch_y         = all_sent_tags,
         batch_features  = all_sent_escores
     )
+    cost_.backward()
+    optimizer.step()
+    optimizer.zero_grad()
     print(cost_)
     print(20 * '-')
 
