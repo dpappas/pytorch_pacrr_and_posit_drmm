@@ -19,6 +19,7 @@ from    gensim.models.keyedvectors  import KeyedVectors
 import  nltk
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
+from    keras.preprocessing.sequence import pad_sequences
 import  re
 # import  BM25
 
@@ -505,37 +506,16 @@ optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004
 
 train_instances = train_data_step1(train_data)
 
-for datum in train_data_step2(
-        train_instances, train_docs, wv, bioasq6_data, idf, max_idf
-    ):
-    # {
-    #     'good_sents_embeds': good_sents_embeds,
-    #     'good_sents_escores': good_sents_escores,
-    #     'good_sent_tags': good_sent_tags,
-    #     'good_held_out_sents': good_held_out_sents,
-    #     #
-    #     'bad_sents_embeds': bad_sents_embeds,
-    #     'bad_sents_escores': bad_sents_escores,
-    #     'bad_sent_tags': bad_sent_tags,
-    #     'bad_held_out_sents': bad_held_out_sents,
-    #     #
-    #     'quest_embeds': quest_embeds,
-    #     'q_idfs': q_idfs,
-    # }
-    cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-        doc1_sents_embeds=datum['good_sents_embeds'],
-        doc2_sents_embeds=datum['bad_sents_embeds'],
-        question_embeds=datum['quest_embeds'],
-        q_idfs=datum['q_idfs'],
-        sents_gaf=datum['good_sents_escores'],
-        sents_baf=datum['bad_sents_escores'],
-        doc_gaf=datum['good_doc_af'],
-        doc_baf=datum['bad_doc_af'],
-        good_meshes_embeds=datum['good_mesh_embeds'],
-        bad_meshes_embeds=datum['bad_mesh_embeds'],
-        mesh_gaf=datum['good_mesh_escores'],
-        mesh_baf=datum['bad_mesh_escores']
-    )
+for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
+    all_sent_embeds     = pad_sequences(datum['good_sents_embeds']+datum['bad_sents_embeds'])
+    all_sent_escores    = np.array(datum['good_sents_escores']+datum['bad_sents_escores'])
+    all_sent_tags       = np.array(datum['good_sent_tags']+datum['bad_sent_tags'])
+    all_quest_embeds    = np.stack(all_sent_embeds.shape[0]*[datum['quest_embeds']])
+    print(all_quest_embeds.shape)
+    print(all_sent_embeds.shape)
+    print(all_sent_escores.shape)
+    print(all_sent_tags.shape)
+    print(20 *'-')
 
 
 
