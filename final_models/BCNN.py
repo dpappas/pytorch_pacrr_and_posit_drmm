@@ -510,7 +510,7 @@ train_instances = train_data_step1(train_data)
 for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
     all_sent_escores    = np.array(datum['good_sents_escores']  + datum['bad_sents_escores'])
     all_sent_tags       = np.array(datum['good_sent_tags']      + datum['bad_sent_tags'])
-    # all_sent_tags       = to_categorical(all_sent_tags)
+    #
     all_sent_embeds     = pad_sequences(
         datum['good_sents_embeds']
         + datum['bad_sents_embeds']
