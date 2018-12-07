@@ -470,16 +470,28 @@ class BCNN(nn.Module):
         sim                 = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
         sim                 = sim.squeeze(-1).squeeze(-1)
         return x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim
-    def forward(self, quest, sent, label, features):
-        quest       = autograd.Variable(torch.FloatTensor(quest),   requires_grad=False).unsqueeze(0).transpose(-1, -2)
-        sent        = autograd.Variable(torch.FloatTensor(sent),    requires_grad=False).unsqueeze(0).transpose(-1, -2)
-        label       = autograd.Variable(torch.LongTensor(label),    requires_grad=False)
-        features    = autograd.Variable(torch.FloatTensor(features),  requires_grad=False).unsqueeze(0)
+    def forward(
+        self,
+        doc1_sents_embeds,
+        doc2_sents_embeds,
+        question_embeds,
+        sents_gaf
+    ):
+        doc1_sents_embeds   = autograd.Variable(torch.FloatTensor(doc1_sents_embeds),   requires_grad=False)
+        doc2_sents_embeds   = autograd.Variable(torch.FloatTensor(doc2_sents_embeds),   requires_grad=False)
+        question_embeds     = autograd.Variable(torch.LongTensor(question_embeds),      requires_grad=False)
+        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),           requires_grad=False).unsqueeze(0)
         if(use_cuda):
-            quest       = quest.cuda()
-            sent        = sent.cuda()
-            label       = label.cuda()
-            features    = features.cuda()
+            doc1_sents_embeds   = doc1_sents_embeds.cuda()
+            doc2_sents_embeds   = doc2_sents_embeds.cuda()
+            question_embeds     = question_embeds.cuda()
+            sents_gaf           = sents_gaf.cuda()
+        #
+        print(doc1_sents_embeds.size())
+        print(doc2_sents_embeds.size())
+        print(question_embeds.size())
+        print(sents_gaf.size())
+        exit()
         #
         quest_global_pool   = F.avg_pool1d(quest, quest.size(-1), stride=None)
         sent_global_pool    = F.avg_pool1d(sent, sent.size(-1), stride=None)
