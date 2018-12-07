@@ -456,7 +456,7 @@ class BCNN(nn.Module):
         sim1                = self.my_cosine_sim(quest_global_pool.transpose(1,2), sent_global_pool.transpose(1,2))
         sim1                = sim1.squeeze(-1).squeeze(-1)
         #
-        (quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2) = self.apply_one_conv(quest.transpose(1,2), sent.transpose(1,2), self.conv1)
+        (quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2) = self.apply_one_conv(quest, sent, self.conv1)
         (quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
         #
         mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), features], dim=-1)
