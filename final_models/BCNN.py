@@ -464,7 +464,7 @@ class BCNN(nn.Module):
         #
         mlp_out             = F.softmax(mlp_out, dim=-1)
         cost                = F.cross_entropy(mlp_out, label, weight=None, reduction='elementwise_mean')
-        print(label, mlp_out)
+        # print(label, mlp_out)
         #
         # mlp_out             = F.log_softmax(mlp_out, dim=-1)
         # cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
@@ -525,7 +525,7 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
         )
         all_costs.append(cost_)
     aver_cost = sum(all_costs) / float(len(all_costs))
-    sum(aver_cost).backward()
+    aver_cost.backward()
     optimizer.step()
     optimizer.zero_grad()
     print(aver_cost)
