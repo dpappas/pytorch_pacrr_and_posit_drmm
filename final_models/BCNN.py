@@ -447,12 +447,8 @@ class BCNN(nn.Module):
             batch_y         = batch_y.cuda()
             batch_features  = batch_features.cuda()
         #
-        print(batch_x1.size())
-        print(batch_x2.size())
         x1_global_pool      = F.avg_pool1d(batch_x1.transpose(-1,-2), batch_x1.size(-1), stride=None)
         x2_global_pool      = F.avg_pool1d(batch_x2.transpose(-1,-2), batch_x1.size(-1), stride=None)
-        print(x1_global_pool.size())
-        print(x2_global_pool.size())
         sim1                = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
         sim1                = sim1.squeeze(-1).squeeze(-1)
         #
@@ -480,7 +476,7 @@ get_embeds          = get_embeds_use_unk
 
 
 embedding_dim       = 30
-additional_feats    = 8
+additional_feats    = 9
 b_size              = 200
 max_len             = 40
 lr                  = 0.08
@@ -506,7 +502,7 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
     all_sent_tags       = np.array(datum['good_sent_tags']+datum['bad_sent_tags'])
     all_sent_tags       = to_categorical(all_sent_tags)
     all_sent_embeds     = pad_sequences(datum['good_sents_embeds'] + datum['bad_sents_embeds'] + [datum['quest_embeds']])
-    all_quest_embeds    = np.stack(all_sent_embeds.shape[0]-1 * [all_sent_embeds[-1]])
+    all_quest_embeds    = np.stack((all_sent_embeds.shape[0]-1) * [all_sent_embeds[-1]])
     all_sent_embeds     = all_sent_embeds[:-1]
     print(all_quest_embeds.shape)
     print(all_sent_embeds.shape)
