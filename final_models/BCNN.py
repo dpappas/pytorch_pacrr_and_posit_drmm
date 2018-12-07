@@ -564,19 +564,28 @@ for epoch in range(10):
             batch_emits.append(emit.cpu().item())
             epoch_labels.extend(batch_labels)
             epoch_emits.extend(batch_emits)
-        batch_auc = roc_auc_score(batch_labels, batch_emits)
-        epoch_auc = roc_auc_score(epoch_labels, epoch_emits)
+        batch_auc                           = roc_auc_score(batch_labels, batch_emits)
+        epoch_auc                           = roc_auc_score(epoch_labels, epoch_emits)
         batch_aver_cost, epoch_aver_cost    = back_prop(batch_costs, epoch_costs)
         elapsed_time                        = time.time() - start_time
         start_time                          = time.time()
         if(batch_counter % 100 == 0):
             print(
-                'BatchCost:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
+                'BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
                     batch_counter, batch_aver_cost, epoch_aver_cost,
                     batch_auc, epoch_auc, elapsed_time
                 )
             )
-
+    #
+    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
+    epoch_auc       = roc_auc_score(epoch_labels, epoch_emits)
+    elapsed_time    = time.time() - start_time
+    start_time      = time.time()
+    print(
+        'EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
+            epoch_aver_cost, epoch_auc, elapsed_time
+        )
+    )
 
 
 
