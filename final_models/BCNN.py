@@ -412,6 +412,13 @@ class BCNN(nn.Module):
             padding             = self.convolution_size-1,
             bias                = True
         )
+        self.conv2              = nn.Conv1d(
+            in_channels         = self.embedding_dim,
+            out_channels        = self.embedding_dim,
+            kernel_size         = self.convolution_size,
+            padding             = self.convolution_size-1,
+            bias                = True
+        )
         self.linear_out         = nn.Linear(self.additional_feats+3, 2, bias=True)
         self.conv1_activ        = torch.nn.Tanh()
     def my_cosine_sim(self, A, B):
@@ -423,9 +430,9 @@ class BCNN(nn.Module):
         den = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1, -2))
         dist_mat = num / den
         return dist_mat
-    def apply_one_conv(self, batch_x1, batch_x2):
-        batch_x1_conv       = self.conv1(batch_x1)
-        batch_x2_conv       = self.conv1(batch_x2)
+    def apply_one_conv(self, batch_x1, batch_x2, the_conv):
+        batch_x1_conv       = the_conv(batch_x1)
+        batch_x2_conv       = the_conv(batch_x2)
         #
         x1_window_pool      = F.avg_pool1d(batch_x1_conv, self.convolution_size, stride=1)
         x2_window_pool      = F.avg_pool1d(batch_x2_conv, self.convolution_size, stride=1)
@@ -441,19 +448,14 @@ class BCNN(nn.Module):
         batch_x2        = autograd.Variable(torch.FloatTensor(batch_x2),        requires_grad=False)
         batch_y         = autograd.Variable(torch.LongTensor(batch_y),          requires_grad=False)
         batch_features  = autograd.Variable(torch.FloatTensor(batch_features),  requires_grad=False)
-        if(use_cuda):
-            batch_x1        = batch_x1.cuda()
-            batch_x2        = batch_x2.cuda()
-            batch_y         = batch_y.cuda()
-            batch_features  = batch_features.cuda()
         #
         x1_global_pool      = F.avg_pool1d(batch_x1.transpose(-1,-2), batch_x1.size(-1), stride=None)
         x2_global_pool      = F.avg_pool1d(batch_x2.transpose(-1,-2), batch_x1.size(-1), stride=None)
         sim1                = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
         sim1                = sim1.squeeze(-1).squeeze(-1)
         #
-        (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim2) = self.apply_one_conv(batch_x1.transpose(1,2), batch_x2.transpose(1,2))
-        (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim3) = self.apply_one_conv(x1_window_pool, x2_window_pool)
+        (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim2) = self.apply_one_conv(batch_x1.transpose(1,2), batch_x2.transpose(1,2), self.conv1)
+        (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim3) = self.apply_one_conv(x1_window_pool, x2_window_pool, self.conv2)
         #
         print(sim1)
         print(sim2)
