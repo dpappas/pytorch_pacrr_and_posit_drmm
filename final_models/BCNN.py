@@ -512,7 +512,7 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
         cost_ = model(
             quest       = datum['quest_embeds'],
             sent        = datum['good_sents_embeds'][i],
-            label       = datum['good_sent_tags'][i],
+            label       = [datum['good_sent_tags'][i]],
             features    = datum['good_sents_escores'][i]
         )
         all_costs.append(cost_)
@@ -520,7 +520,7 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
         cost_ = model(
             quest       = datum['quest_embeds'],
             sent        = datum['bad_sents_embeds'][i],
-            label       = datum['bad_sent_tags'][i],
+            label       = [datum['bad_sent_tags'][i]],
             features    = datum['bad_sents_escores'][i]
         )
         all_costs.append(cost_)
