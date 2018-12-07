@@ -516,15 +516,15 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
         )
         all_costs.append(cost_)
         epoch_costs.append(cost_)
-    for i in range(len(datum['bad_sents_embeds'])):
-        cost_ = model(
-            quest       = datum['quest_embeds'],
-            sent        = datum['bad_sents_embeds'][i],
-            label       = [datum['bad_sent_tags'][i]],
-            features    = datum['bad_sents_escores'][i]
-        )
-        all_costs.append(cost_)
-        epoch_costs.append(cost_)
+    # for i in range(len(datum['bad_sents_embeds'])):
+    #     cost_ = model(
+    #         quest       = datum['quest_embeds'],
+    #         sent        = datum['bad_sents_embeds'][i],
+    #         label       = [datum['bad_sent_tags'][i]],
+    #         features    = datum['bad_sents_escores'][i]
+    #     )
+    #     all_costs.append(cost_)
+    #     epoch_costs.append(cost_)
     aver_cost = sum(all_costs) / float(len(all_costs))
     aver_cost.backward()
     optimizer.step()
