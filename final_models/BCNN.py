@@ -455,6 +455,10 @@ class BCNN(nn.Module):
         (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim2) = self.apply_one_conv(batch_x1.transpose(1,2), batch_x2.transpose(1,2))
         (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim3) = self.apply_one_conv(x1_window_pool, x2_window_pool)
         #
+        print(sim1)
+        print(sim2)
+        print(sim3)
+        #
         mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), batch_features], dim=-1)
         mlp_out             = self.linear_out(mlp_in)
         mlp_out             = F.softmax(mlp_out, dim=-1)
