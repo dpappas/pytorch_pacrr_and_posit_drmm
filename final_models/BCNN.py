@@ -152,14 +152,17 @@ def get_embeds_use_only_unk(tokens, wv):
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, rand_10_docs):
     good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    documents   = []
-    for d in rand_10_docs:
-        good_sents = [
-            tokenize(sent)
-            for sent in (sent_tokenize(d['title']) + sent_tokenize(d['abstractText']))
-        ]
-        documents.extend(good_sents)
-    avgdl       = BM25.compute_avgdl(documents)
+    # documents   = []
+    # for d in rand_10_docs:
+    #     good_sents = [
+    #         tokenize(sent)
+    #         for sent in (sent_tokenize(d['title']) + sent_tokenize(d['abstractText']))
+    #     ]
+    #     documents.extend(good_sents)
+    # avgdl           = BM25.compute_avgdl(documents)
+    # mean, deviation = BM25.compute_Zscore_values(
+    #     train_path, idf_scores, avgdl, 1.2, 0.75, max_idf
+    # )
     ####
     quest_toks  = tokenize(quest)
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -174,9 +177,9 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, rand_10_do
         if (len(good_embeds) > 0):
             tomi            = (set(sent_toks) & set(quest_toks))
             tomi_no_stop    = tomi - set(stopwords)
-            BM25score       = BM25.similarity_score(
-                good_text, quest, 1.2, 0.75, idf_scores, avgdl, True, mean, deviation, max_idf
-            )
+            # BM25score       = BM25.similarity_score(
+            #     good_text, quest, 1.2, 0.75, idf_scores, avgdl, True, mean, deviation, max_idf
+            # )
             features    = [
                 len(quest),
                 len(good_text),
