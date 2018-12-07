@@ -467,6 +467,7 @@ class BCNN(nn.Module):
         # cost                = F.cross_entropy(mlp_out, batch_y, weight=None, reduction='elementwise_mean')
         #
         mlp_out             = F.log_softmax(mlp_out, dim=-1)
+        print(label, mlp_out)
         cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
         #
         return cost
@@ -517,10 +518,10 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
         all_costs.append(cost_)
     for i in range(len(datum['bad_sents_embeds'])):
         cost_ = model(
-            batch_x1        = datum['quest_embeds'],
-            batch_x2        = datum['bad_sents_embeds'][i],
-            batch_y         = datum['bad_sent_tags'][i],
-            batch_features  = datum['bad_sents_escores'][i]
+            quest       = datum['quest_embeds'],
+            sent        = datum['bad_sents_embeds'][i],
+            label       = datum['bad_sent_tags'][i],
+            features    = datum['bad_sents_escores'][i]
         )
         all_costs.append(cost_)
     aver_cost = sum(all_costs) / float(len(all_costs))
