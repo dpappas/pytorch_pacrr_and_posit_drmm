@@ -512,11 +512,12 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
     all_sent_tags       = np.array(datum['good_sent_tags']+datum['bad_sent_tags'])
     # all_sent_tags       = to_categorical(all_sent_tags)
     all_sent_embeds     = pad_sequences(
-        datum['good_sents_embeds'] +
-        datum['bad_sents_embeds'] +
-        [datum['quest_embeds']]
+        datum['good_sents_embeds']
+        + datum['bad_sents_embeds']
+        # + [datum['quest_embeds']]
     )
-    all_quest_embeds    = np.stack((all_sent_embeds.shape[0]-1) * [all_sent_embeds[-1]])
+    quest_embeds        = datum['quest_embeds']
+    all_quest_embeds    = np.stack((all_sent_embeds.shape[0]) * [quest_embeds])
     all_sent_embeds     = all_sent_embeds[:-1]
     #
     # pprint(datum['good_held_out_sents'])
