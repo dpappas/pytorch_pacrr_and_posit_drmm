@@ -447,6 +447,8 @@ class BCNN(nn.Module):
             batch_y         = batch_y.cuda()
             batch_features  = batch_features.cuda()
         #
+        print(batch_x1.size())
+        print(batch_x2.size())
         x1_global_pool      = F.avg_pool1d(batch_x1.transpose(-1,-2), batch_x1.size(-1), stride=None)
         x2_global_pool      = F.avg_pool1d(batch_x2.transpose(-1,-2), batch_x1.size(-1), stride=None)
         print(x1_global_pool.size())
