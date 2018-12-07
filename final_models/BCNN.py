@@ -168,24 +168,11 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
-    good_meshes = get_the_mesh(the_doc)
-    good_mesh_embeds, good_mesh_escores = [], []
-    for good_mesh in good_meshes:
-        mesh_toks                       = tokenize(good_mesh)
-        gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
-        if (len(gm_tokens) > 0):
-            good_mesh_embeds.append(gm_embeds)
-            good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
-            good_escores.append(len(mesh_toks)/ 10.)
-            good_mesh_escores.append(good_escores)
-    ####
     return {
         'sents_embeds'     : good_sents_embeds,
         'sents_escores'    : good_sents_escores,
         'doc_af'           : good_doc_af,
         'sent_tags'        : good_sent_tags,
-        'mesh_embeds'      : good_mesh_embeds,
-        'mesh_escores'     : good_mesh_escores,
         'held_out_sents'   : held_out_sents,
     }
 
@@ -196,6 +183,111 @@ def get_snips(quest_id, gid, bioasq6_data):
             if(sn['document'].endswith(gid)):
                 good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
+
+def load_idfs(idf_path, words):
+    print('Loading IDF tables')
+    #
+    # with open(dataloc + 'idf.pkl', 'rb') as f:
+    with open(idf_path, 'rb') as f:
+        idf = pickle.load(f)
+    ret = {}
+    for w in words:
+        if w in idf:
+            ret[w] = idf[w]
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    idf = None
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    #
+    return ret, max_idf
+
+def RemoveTrainLargeYears(data, doc_text):
+  for i in range(len(data['queries'])):
+    hyear = 1900
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
+        doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+        year = doc_text[doc_id]['publicationDate'].split('-')[0]
+        if year[:1] == '1' or year[:1] == '2':
+          if int(year) > hyear:
+            hyear = int(year)
+    j = 0
+    while True:
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year = doc_text[doc_id]['publicationDate'].split('-')[0]
+      if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
+
+def RemoveBadYears(data, doc_text, train):
+  for i in range(len(data['queries'])):
+    j = 0
+    while True:
+      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
+      ##########################
+      # Skip 2017/2018 docs always. Skip 2016 docs for training.
+      # Need to change for final model - 2017 should be a train year only.
+      # Use only for testing.
+      if year == '2017' or year == '2018' or (train and year == '2016'):
+      #if year == '2018' or (train and year == '2017'):
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      ##########################
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
+
+def get_the_mesh(the_doc):
+    good_meshes = []
+    if('meshHeadingsList' in the_doc):
+        for t in the_doc['meshHeadingsList']:
+            t = t.split(':', 1)
+            t = t[1].strip()
+            t = t.lower()
+            good_meshes.append(t)
+    elif('MeshHeadings' in the_doc):
+        for mesh_head_set in the_doc['MeshHeadings']:
+            for item in mesh_head_set:
+                good_meshes.append(item['text'].strip().lower())
+    if('Chemicals' in the_doc):
+        for t in the_doc['Chemicals']:
+            t = t['NameOfSubstance'].strip().lower()
+            good_meshes.append(t)
+    good_mesh = sorted(good_meshes)
+    good_mesh = ['mesh'] + good_mesh
+    # good_mesh = ' # '.join(good_mesh)
+    # good_mesh = good_mesh.split()
+    # good_mesh = [gm.split() for gm in good_mesh]
+    good_mesh = [gm for gm in good_mesh]
+    return good_mesh
+
+def GetWords(data, doc_text, words):
+  for i in range(len(data['queries'])):
+    qwds = tokenize(data['queries'][i]['query_text'])
+    for w in qwds:
+      words[w] = 1
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      dtext = (
+              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
+              ' '.join(
+                  [
+                      ' '.join(mm) for mm in
+                      get_the_mesh(doc_text[doc_id])
+                  ]
+              )
+      )
+      dwds = tokenize(dtext)
+      for w in dwds:
+        words[w] = 1
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
