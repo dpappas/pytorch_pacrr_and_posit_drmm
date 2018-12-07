@@ -472,23 +472,20 @@ class BCNN(nn.Module):
         return x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim
     def forward(
         self,
-        doc1_sents_embeds,
-        doc2_sents_embeds,
+        sents_embeds,
         question_embeds,
-        sents_gaf
+        sents_gaf,
+        sents_labels
     ):
-        doc1_sents_embeds   = autograd.Variable(torch.FloatTensor(doc1_sents_embeds),   requires_grad=False)
-        doc2_sents_embeds   = autograd.Variable(torch.FloatTensor(doc2_sents_embeds),   requires_grad=False)
-        question_embeds     = autograd.Variable(torch.LongTensor(question_embeds),      requires_grad=False)
-        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),           requires_grad=False).unsqueeze(0)
+        sents_embeds            = autograd.Variable(torch.FloatTensor(sents_embeds),    requires_grad=False)
+        question_embeds         = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
+        sents_gaf               = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False).unsqueeze(0)
         if(use_cuda):
-            doc1_sents_embeds   = doc1_sents_embeds.cuda()
-            doc2_sents_embeds   = doc2_sents_embeds.cuda()
+            sents_embeds        = sents_embeds.cuda()
             question_embeds     = question_embeds.cuda()
             sents_gaf           = sents_gaf.cuda()
         #
-        print(doc1_sents_embeds.size())
-        print(doc2_sents_embeds.size())
+        print(sents_embeds.size())
         print(question_embeds.size())
         print(sents_gaf.size())
         exit()
@@ -503,10 +500,6 @@ class BCNN(nn.Module):
         #
         mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), features], dim=-1)
         mlp_out             = self.linear_out(mlp_in)
-        #
-        # mlp_out             = F.softmax(mlp_out, dim=-1)
-        # cost                = F.cross_entropy(mlp_out, label, weight=None, reduction='elementwise_mean')
-        # # print(label, mlp_out)
         #
         mlp_out             = F.log_softmax(mlp_out, dim=-1)
         cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
@@ -556,6 +549,14 @@ for epoch in range(10):
     batch_counter   = 0
     start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
+        emit = model(
+            sent        = datum['good_sents_embeds'],
+            sent        = datum['bad_sents_embeds'],
+            quest       = datum['quest_embeds'],
+            label       = datum['good_sent_tags'],
+            features    = datum['good_sents_escores']
+        )
+
         batch_costs         = []
         batch_emits         = []
         batch_labels        = []
