@@ -446,7 +446,7 @@ class BCNN(nn.Module):
     def forward(self, quest, sent, label, features):
         quest       = autograd.Variable(torch.FloatTensor(quest),   requires_grad=False).unsqueeze(0)
         sent        = autograd.Variable(torch.FloatTensor(sent),    requires_grad=False).unsqueeze(0)
-        label       = autograd.Variable(torch.LongTensor(label),    requires_grad=False).unsqueeze(0)
+        label       = autograd.Variable(torch.LongTensor(label),    requires_grad=False)
         features    = autograd.Variable(torch.FloatTensor(features),  requires_grad=False).unsqueeze(0)
         #
         quest               = quest.transpose(-1, -2)
@@ -462,13 +462,13 @@ class BCNN(nn.Module):
         mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), features], dim=-1)
         mlp_out             = self.linear_out(mlp_in)
         #
-        # # mlp_out             = F.log_softmax(mlp_out+1, dim=-1)
-        # mlp_out             = F.softmax(mlp_out+1, dim=-1)
-        # cost                = F.cross_entropy(mlp_out, batch_y, weight=None, reduction='elementwise_mean')
-        #
-        mlp_out             = F.log_softmax(mlp_out, dim=-1)
+        mlp_out             = F.softmax(mlp_out, dim=-1)
+        cost                = F.cross_entropy(mlp_out, label, weight=None, reduction='elementwise_mean')
         print(label, mlp_out)
-        cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
+        #
+        # mlp_out             = F.log_softmax(mlp_out, dim=-1)
+        # cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
+        # print(label, mlp_out)
         #
         return cost
 
