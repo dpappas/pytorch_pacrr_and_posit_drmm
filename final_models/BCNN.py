@@ -182,7 +182,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
     return {
         'sents_embeds'     : good_sents_embeds,
         'sents_escores'    : good_sents_escores,
-        'doc_af'           : good_doc_af,
         'sent_tags'        : good_sent_tags,
         'held_out_sents'   : held_out_sents,
     }
@@ -362,14 +361,12 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf)
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
-        good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         #
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
-        bad_doc_af                  = datum['doc_af']
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
         #
@@ -380,19 +377,35 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
             yield {
                 'good_sents_embeds'     : good_sents_embeds,
                 'good_sents_escores'    : good_sents_escores,
-                'good_doc_af'           : good_doc_af,
                 'good_sent_tags'        : good_sent_tags,
                 'good_held_out_sents'   : good_held_out_sents,
                 #
                 'bad_sents_embeds'      : bad_sents_embeds,
                 'bad_sents_escores'     : bad_sents_escores,
-                'bad_doc_af'            : bad_doc_af,
                 'bad_sent_tags'         : bad_sent_tags,
                 'bad_held_out_sents'    : bad_held_out_sents,
                 #
                 'quest_embeds'          : quest_embeds,
                 'q_idfs'                : q_idfs,
             }
+
+def dummy_test():
+    model.train()
+    bx1         = np.random.randn(b_size, max_len, embedding_dim)
+    bx2         = np.random.randn(b_size, max_len, embedding_dim)
+    by          = np.random.randint(2, size=b_size)
+    bf          = np.random.randn(b_size, 8)
+    for i in range(500):
+        cost_ = model(
+            batch_x1        = bx1,
+            batch_x2        = bx2,
+            batch_y         = by,
+            batch_features  = bf
+        )
+        cost_.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        print(cost_)
 
 class BCNN(nn.Module):
     def __init__(self, embedding_dim=30, additional_feats=8, convolution_size=4):
@@ -481,16 +494,11 @@ model = BCNN(
     additional_feats    = additional_feats,
     convolution_size    = 4
 )
-model.train()
 
 params      = model.parameters()
 # optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0004, amsgrad=True)
 optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
 
-bx1         = np.random.randn(b_size, max_len, embedding_dim)
-bx2         = np.random.randn(b_size, max_len, embedding_dim)
-by          = np.random.randint(2, size=b_size)
-bf          = np.random.randn(b_size, 8)
 
 (
     test_data, test_docs, dev_data, dev_docs, train_data,
@@ -502,6 +510,20 @@ train_instances = train_data_step1(train_data)
 for datum in train_data_step2(
         train_instances, train_docs, wv, bioasq6_data, idf, max_idf
     ):
+    # {
+    #     'good_sents_embeds': good_sents_embeds,
+    #     'good_sents_escores': good_sents_escores,
+    #     'good_sent_tags': good_sent_tags,
+    #     'good_held_out_sents': good_held_out_sents,
+    #     #
+    #     'bad_sents_embeds': bad_sents_embeds,
+    #     'bad_sents_escores': bad_sents_escores,
+    #     'bad_sent_tags': bad_sent_tags,
+    #     'bad_held_out_sents': bad_held_out_sents,
+    #     #
+    #     'quest_embeds': quest_embeds,
+    #     'q_idfs': q_idfs,
+    # }
     cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
         doc1_sents_embeds=datum['good_sents_embeds'],
         doc2_sents_embeds=datum['bad_sents_embeds'],
@@ -516,18 +538,6 @@ for datum in train_data_step2(
         mesh_gaf=datum['good_mesh_escores'],
         mesh_baf=datum['bad_mesh_escores']
     )
-
-# for i in range(500):
-#     cost_ = model(
-#         batch_x1        = bx1,
-#         batch_x2        = bx2,
-#         batch_y         = by,
-#         batch_features  = bf
-#     )
-#     cost_.backward()
-#     optimizer.step()
-#     optimizer.zero_grad()
-#     print(cost_)
 
 
 
