@@ -570,7 +570,7 @@ for epoch in range(10):
         elapsed_time                        = time.time() - start_time
         start_time                          = time.time()
         print(
-            'BC:{:03d} BAC:{:.4f} EAC:{:.4f} BAUC:{:.4f} EAUC:{:.4f} ET:{:.4f}'.format(
+            'BatchCost:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
                 batch_counter, batch_aver_cost, epoch_aver_cost,
                 batch_auc, epoch_auc, elapsed_time
             )
