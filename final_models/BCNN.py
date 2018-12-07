@@ -548,9 +548,9 @@ for epoch in range(10):
             cost_           = model(quest=datum['quest_embeds'], sent=datum['bad_sents_embeds'][i], label=[datum['bad_sent_tags'][i]], features=datum['bad_sents_escores'][i])
             epoch_costs.append(cost_.cpu().item())
             batch_costs.append(cost_)
-        batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
-        elapsed_time        = time.time() - start_time
-        start_time          = time.time()
+        batch_aver_cost, epoch_aver_cost    = back_prop(batch_costs, epoch_costs)
+        elapsed_time                        = time.time() - start_time
+        start_time                          = time.time()
         print('{:03d} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, elapsed_time))
 
 
