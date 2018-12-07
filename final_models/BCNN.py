@@ -572,8 +572,7 @@ for epoch in range(10):
         if(batch_counter % 200 == 0):
             print(
                 'BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
-                    batch_counter, batch_aver_cost, epoch_aver_cost,
-                    batch_auc, epoch_auc, elapsed_time
+                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_auc, epoch_auc, elapsed_time
                 )
             )
     #
