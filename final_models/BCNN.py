@@ -454,7 +454,9 @@ class BCNN(nn.Module):
         sim1                = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
         sim1                = sim1.squeeze(-1).squeeze(-1)
         #
+        print(batch_x1)
         (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim2) = self.apply_one_conv(batch_x1.transpose(1,2), batch_x2.transpose(1,2), self.conv1)
+        print(x1_window_pool)
         (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim3) = self.apply_one_conv(x1_window_pool, x2_window_pool, self.conv2)
         #
         print(sim1)
@@ -509,13 +511,21 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
     all_sent_escores    = np.array(datum['good_sents_escores']+datum['bad_sents_escores'])
     all_sent_tags       = np.array(datum['good_sent_tags']+datum['bad_sent_tags'])
     # all_sent_tags       = to_categorical(all_sent_tags)
-    all_sent_embeds     = pad_sequences(datum['good_sents_embeds'] + datum['bad_sents_embeds'] + [datum['quest_embeds']])
+    all_sent_embeds     = pad_sequences(
+        datum['good_sents_embeds'] +
+        datum['bad_sents_embeds'] +
+        [datum['quest_embeds']]
+    )
     all_quest_embeds    = np.stack((all_sent_embeds.shape[0]-1) * [all_sent_embeds[-1]])
     all_sent_embeds     = all_sent_embeds[:-1]
+    #
+    # pprint(datum['good_held_out_sents'])
+    # pprint(datum['bad_held_out_sents'])
     print(all_quest_embeds.shape)
     print(all_sent_embeds.shape)
     print(all_sent_escores.shape)
     print(all_sent_tags.shape)
+    print([t.sum() for t in all_sent_embeds])
     cost_ = model(
         batch_x1        = all_sent_embeds,
         batch_x2        = all_quest_embeds,
