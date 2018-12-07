@@ -186,7 +186,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, rand_10_do
                 len(tomi_no_stop),
                 sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
                 sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
-                BM25score
+                # BM25score
             ]
             #
             good_sents_embeds.append(good_embeds)
