@@ -552,7 +552,7 @@ for epoch in range(10):
         batch_aver_cost, epoch_aver_cost    = back_prop(batch_costs, epoch_costs)
         elapsed_time                        = time.time() - start_time
         start_time                          = time.time()
-        print('{:03d} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, elapsed_time))
+        print('BC:{:03d} BAC:{:.4f} EAC:{:.4f} ET:{:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, elapsed_time))
 
 
 
