@@ -421,6 +421,12 @@ class BCNN(nn.Module):
         )
         self.linear_out         = nn.Linear(self.additional_feats+3, 2, bias=True)
         self.conv1_activ        = torch.nn.Tanh()
+        if(use_cuda):
+            self.linear_out     = self.linear_out.cuda()
+            self.conv1_activ    = self.conv1_activ.cuda()
+            self.conv1          = self.conv1.cuda()
+            self.conv2          = self.conv2.cuda()
+            self.conv1_activ    = self.conv1_activ.cuda()
     def my_cosine_sim(self, A, B):
         # A     = A.unsqueeze(0)
         # B     = B.unsqueeze(0)
@@ -448,6 +454,11 @@ class BCNN(nn.Module):
         sent        = autograd.Variable(torch.FloatTensor(sent),    requires_grad=False).unsqueeze(0).transpose(-1, -2)
         label       = autograd.Variable(torch.LongTensor(label),    requires_grad=False)
         features    = autograd.Variable(torch.FloatTensor(features),  requires_grad=False).unsqueeze(0)
+        if(use_cuda):
+            quest       = quest.cuda()
+            sent        = sent.cuda()
+            label       = label.cuda()
+            features    = features.cuda()
         #
         quest_global_pool   = F.avg_pool1d(quest, quest.size(-1), stride=None)
         sent_global_pool    = F.avg_pool1d(sent, sent.size(-1), stride=None)
@@ -476,7 +487,7 @@ idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/'
 eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-use_cuda            = False
+use_cuda            = True
 odd                 = '/home/dpappas/'
 get_embeds          = get_embeds_use_unk
 
