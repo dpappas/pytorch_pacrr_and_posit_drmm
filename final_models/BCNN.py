@@ -569,12 +569,13 @@ for epoch in range(10):
         batch_aver_cost, epoch_aver_cost    = back_prop(batch_costs, epoch_costs)
         elapsed_time                        = time.time() - start_time
         start_time                          = time.time()
-        print(
-            'BatchCost:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
-                batch_counter, batch_aver_cost, epoch_aver_cost,
-                batch_auc, epoch_auc, elapsed_time
+        if(batch_counter % 100 == 0):
+            print(
+                'BatchCost:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
+                    batch_counter, batch_aver_cost, epoch_aver_cost,
+                    batch_auc, epoch_auc, elapsed_time
+                )
             )
-        )
 
 
 
