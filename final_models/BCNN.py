@@ -444,13 +444,11 @@ class BCNN(nn.Module):
         sim                 = sim.squeeze(-1).squeeze(-1)
         return x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim
     def forward(self, quest, sent, label, features):
-        quest       = autograd.Variable(torch.FloatTensor(quest),   requires_grad=False).unsqueeze(0)
-        sent        = autograd.Variable(torch.FloatTensor(sent),    requires_grad=False).unsqueeze(0)
+        quest       = autograd.Variable(torch.FloatTensor(quest),   requires_grad=False).unsqueeze(0).transpose(-1, -2)
+        sent        = autograd.Variable(torch.FloatTensor(sent),    requires_grad=False).unsqueeze(0).transpose(-1, -2)
         label       = autograd.Variable(torch.LongTensor(label),    requires_grad=False)
         features    = autograd.Variable(torch.FloatTensor(features),  requires_grad=False).unsqueeze(0)
         #
-        quest               = quest.transpose(-1, -2)
-        sent                = sent.transpose(-1, -2)
         quest_global_pool   = F.avg_pool1d(quest, quest.size(-1), stride=None)
         sent_global_pool    = F.avg_pool1d(sent, sent.size(-1), stride=None)
         sim1                = self.my_cosine_sim(quest_global_pool.transpose(1,2), sent_global_pool.transpose(1,2))
