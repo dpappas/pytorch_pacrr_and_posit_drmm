@@ -1,27 +1,22 @@
 
-import  os
-import  json
-import  time
-import  random
+import  os, json, time, random, re
 import  logging
 import  subprocess
 import  torch
-import  torch.nn.functional         as F
-import  torch.nn                    as nn
-import  numpy                       as np
-import  torch.optim                 as optim
+import  torch.nn.functional             as F
+import  torch.nn                        as nn
+import  numpy                           as np
+import  torch.optim                     as optim
+import  torch.autograd                  as autograd
+from    tqdm                            import tqdm
+from    pprint                          import pprint
+from    gensim.models.keyedvectors      import KeyedVectors
+from    nltk.tokenize                   import sent_tokenize
+from    difflib                         import SequenceMatcher
+from    keras.preprocessing.sequence    import pad_sequences
 # import  cPickle                     as pickle
 import  pickle
-import  torch.autograd              as autograd
-from    tqdm                        import tqdm
-from    pprint                      import pprint
-from    gensim.models.keyedvectors  import KeyedVectors
 import  nltk
-from    nltk.tokenize               import sent_tokenize
-from    difflib                     import SequenceMatcher
-from    keras.preprocessing.sequence import pad_sequences
-import  re
-# import  BM25
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
