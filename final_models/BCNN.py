@@ -16,11 +16,13 @@ import  torch.autograd              as autograd
 from    tqdm                        import tqdm
 from    pprint                      import pprint
 from    gensim.models.keyedvectors  import KeyedVectors
+import  nltk
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
 import  re
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+stopwords   = nltk.corpus.stopwords.words("english")
 
 def uwords(words):
   uw = {}
@@ -148,10 +150,17 @@ def get_embeds_use_only_unk(tokens, wv):
     return ret1, np.array(ret2, 'float64')
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
-    if(use_sent_tokenizer):
-        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-    else:
-        good_sents = [the_doc['title'] + the_doc['abstractText']]
+    good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    ####
+    self.features.append(
+        [
+            word_cnt,
+            BM25score,
+            unigram_overlap,
+            bigram_overlap,
+            idf_uni_overlap
+        ]
+    )
     ####
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
@@ -167,6 +176,10 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+            features = [
+                len(quest),
+                len(good_text),
+            ]
     ####
     return {
         'sents_embeds'     : good_sents_embeds,
@@ -345,17 +358,12 @@ def train_data_step1(train_data):
 
 def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        if(use_sent_tokenizer):
-            good_snips              = get_snips(quest_id, gid, bioasq6_data)
-            good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
-        else:
-            good_snips              = []
+        good_snips                  = get_snips(quest_id, gid, bioasq6_data)
+        good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
         #
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
-        good_mesh_escores           = datum['mesh_escores']
-        good_mesh_embeds            = datum['mesh_embeds']
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
@@ -363,8 +371,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
-        bad_mesh_escores            = datum['mesh_escores']
-        bad_mesh_embeds             = datum['mesh_embeds']
         bad_doc_af                  = datum['doc_af']
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
@@ -378,16 +384,12 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'good_sents_escores'    : good_sents_escores,
                 'good_doc_af'           : good_doc_af,
                 'good_sent_tags'        : good_sent_tags,
-                'good_mesh_embeds'      : good_mesh_embeds,
-                'good_mesh_escores'     : good_mesh_escores,
                 'good_held_out_sents'   : good_held_out_sents,
                 #
                 'bad_sents_embeds'      : bad_sents_embeds,
                 'bad_sents_escores'     : bad_sents_escores,
                 'bad_doc_af'            : bad_doc_af,
                 'bad_sent_tags'         : bad_sent_tags,
-                'bad_mesh_embeds'       : bad_mesh_embeds,
-                'bad_mesh_escores'      : bad_mesh_escores,
                 'bad_held_out_sents'    : bad_held_out_sents,
                 #
                 'quest_embeds'          : quest_embeds,
@@ -499,18 +501,35 @@ bf          = np.random.randn(b_size, 8)
 
 train_instances = train_data_step1(train_data)
 
-
-for i in range(500):
-    cost_ = model(
-        batch_x1        = bx1,
-        batch_x2        = bx2,
-        batch_y         = by,
-        batch_features  = bf
+for datum in train_data_step2(
+        train_instances, train_docs, wv, bioasq6_data, idf, max_idf
+    ):
+    cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+        doc1_sents_embeds=datum['good_sents_embeds'],
+        doc2_sents_embeds=datum['bad_sents_embeds'],
+        question_embeds=datum['quest_embeds'],
+        q_idfs=datum['q_idfs'],
+        sents_gaf=datum['good_sents_escores'],
+        sents_baf=datum['bad_sents_escores'],
+        doc_gaf=datum['good_doc_af'],
+        doc_baf=datum['bad_doc_af'],
+        good_meshes_embeds=datum['good_mesh_embeds'],
+        bad_meshes_embeds=datum['bad_mesh_embeds'],
+        mesh_gaf=datum['good_mesh_escores'],
+        mesh_baf=datum['bad_mesh_escores']
     )
-    cost_.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-    print(cost_)
+
+# for i in range(500):
+#     cost_ = model(
+#         batch_x1        = bx1,
+#         batch_x2        = bx2,
+#         batch_y         = by,
+#         batch_features  = bf
+#     )
+#     cost_.backward()
+#     optimizer.step()
+#     optimizer.zero_grad()
+#     print(cost_)
 
 
 
