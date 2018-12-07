@@ -549,14 +549,19 @@ for epoch in range(10):
     batch_counter   = 0
     start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-        emit = model(
-            sent        = datum['good_sents_embeds'],
-            sent        = datum['bad_sents_embeds'],
-            quest       = datum['quest_embeds'],
-            label       = datum['good_sent_tags'],
-            features    = datum['good_sents_escores']
+        cost_, emits_       = model(
+            sents_embeds    = datum['good_sents_embeds'],
+            question_embeds = datum['quest_embeds'],
+            sents_gaf       = datum['good_sents_escores'],
+            sents_labels    = datum['good_sent_tags']
         )
-
+        cost_, emits_       = model(
+            sents_embeds    = datum['bad_sents_embeds'],
+            question_embeds = datum['quest_embeds'],
+            sents_gaf       = datum['bad_sents_escores'],
+            sents_labels    = datum['bad_sent_tags']
+        )
+        #
         batch_costs         = []
         batch_emits         = []
         batch_labels        = []
