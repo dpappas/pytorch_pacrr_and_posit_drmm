@@ -346,7 +346,7 @@ def train_data_step1(train_data):
     return ret
 
 def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
-    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(instances):
         good_snips                  = get_snips(quest_id, gid, bioasq6_data)
         good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
         #
@@ -506,6 +506,7 @@ optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004
 
 train_instances = train_data_step1(train_data)
 
+epoch_costs = []
 for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
     all_costs = []
     for i in range(len(datum['good_sents_embeds'])):
@@ -516,6 +517,7 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
             features    = datum['good_sents_escores'][i]
         )
         all_costs.append(cost_)
+        epoch_costs.append(cost_)
     for i in range(len(datum['bad_sents_embeds'])):
         cost_ = model(
             quest       = datum['quest_embeds'],
@@ -524,12 +526,15 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
             features    = datum['bad_sents_escores'][i]
         )
         all_costs.append(cost_)
+        epoch_costs.append(cost_)
     aver_cost = sum(all_costs) / float(len(all_costs))
     aver_cost.backward()
     optimizer.step()
     optimizer.zero_grad()
-    print(aver_cost)
+    # print(aver_cost)
 
+epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
+print(epoch_aver_cost)
 
 
 
