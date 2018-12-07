@@ -443,21 +443,19 @@ class BCNN(nn.Module):
         sim                 = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
         sim                 = sim.squeeze(-1).squeeze(-1)
         return x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim
-    def forward(self, batch_x1, batch_x2, batch_y, batch_features):
-        batch_x1        = autograd.Variable(torch.FloatTensor(batch_x1),        requires_grad=False)
-        batch_x2        = autograd.Variable(torch.FloatTensor(batch_x2),        requires_grad=False)
-        batch_y         = autograd.Variable(torch.LongTensor(batch_y),          requires_grad=False)
-        batch_features  = autograd.Variable(torch.FloatTensor(batch_features),  requires_grad=False)
+    def forward(self, quest, sent, label, features):
+        quest       = autograd.Variable(torch.FloatTensor(quest),   requires_grad=False)
+        sent        = autograd.Variable(torch.FloatTensor(sent),    requires_grad=False)
+        label       = autograd.Variable(torch.LongTensor(label),    requires_grad=False)
+        features    = autograd.Variable(torch.FloatTensor(features),  requires_grad=False)
         #
-        batch_x1_tr     = batch_x1.transpose(-1, -2)
-        batch_x2_tr     = batch_x2.transpose(-1, -2)
-        print(batch_x1_tr.size())
-        print(batch_x2_tr.size())
-        x1_global_pool      = F.avg_pool1d(batch_x1_tr, batch_x1_tr.size(-1), stride=None)
-        print(x1_global_pool.size())
-        x2_global_pool      = F.avg_pool1d(batch_x2_tr, batch_x2_tr.size(-1), stride=None)
-        print(x2_global_pool.size())
-        sim1                = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
+        quest               = quest.transpose(-1, -2).unsqueeze(0)
+        sent                = sent.transpose(-1, -2).unsqueeze(0)
+        quest_global_pool   = F.avg_pool1d(quest, quest.size(-1), stride=None)
+        sent_global_pool    = F.avg_pool1d(sent, sent.size(-1), stride=None)
+        print(quest_global_pool.size())
+        print(sent_global_pool.size())
+        sim1                = self.my_cosine_sim(quest_global_pool.transpose(1,2), sent_global_pool.transpose(1,2))
         sim1                = sim1.squeeze(-1).squeeze(-1)
         print(sim1.size())
         #
@@ -466,9 +464,13 @@ class BCNN(nn.Module):
         #
         mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), batch_features], dim=-1)
         mlp_out             = self.linear_out(mlp_in)
-        mlp_out             = F.softmax(mlp_out, dim=-1)
         #
-        cost                = F.cross_entropy(mlp_out, batch_y, weight=None, reduction='elementwise_mean')
+        # # mlp_out             = F.log_softmax(mlp_out+1, dim=-1)
+        # mlp_out             = F.softmax(mlp_out+1, dim=-1)
+        # cost                = F.cross_entropy(mlp_out, batch_y, weight=None, reduction='elementwise_mean')
+        #
+        mlp_out             = F.log_softmax(mlp_out, dim=-1)
+        cost                = F.nll_loss(mlp_out, batch_y, weight=None, reduction='elementwise_mean')
         #
         return cost
 
@@ -507,28 +509,28 @@ optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004
 train_instances = train_data_step1(train_data)
 
 for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-    all_sent_escores    = np.array(datum['good_sents_escores']  + datum['bad_sents_escores'])
-    all_sent_tags       = np.array(datum['good_sent_tags']      + datum['bad_sent_tags'])
-    #
-    all_sent_embeds     = pad_sequences(datum['good_sents_embeds'] + datum['bad_sents_embeds'])
-    all_quest_embeds    = np.stack((all_sent_embeds.shape[0]) * [datum['quest_embeds']])
-    #
-    print(all_quest_embeds.shape)
-    print(all_sent_embeds.shape)
-    print(all_sent_escores.shape)
-    print(all_sent_tags.shape)
-    #
-    cost_ = model(
-        batch_x1        = all_quest_embeds,
-        batch_x2        = all_sent_embeds,
-        batch_y         = all_sent_tags,
-        batch_features  = all_sent_escores
-    )
-    cost_.backward()
+    all_costs = []
+    for i in range(len(datum['good_sents_embeds'])):
+        cost_ = model(
+            quest       = datum['quest_embeds'],
+            sent        = datum['good_sents_embeds'][i],
+            label       = datum['good_sent_tags'][i],
+            features    = datum['good_sents_escores'][i]
+        )
+        all_costs.append(cost_)
+    for i in range(len(datum['bad_sents_embeds'])):
+        cost_ = model(
+            batch_x1        = datum['quest_embeds'],
+            batch_x2        = datum['bad_sents_embeds'][i],
+            batch_y         = datum['bad_sent_tags'][i],
+            batch_features  = datum['bad_sents_escores'][i]
+        )
+        all_costs.append(cost_)
+    aver_cost = sum(all_costs) / float(len(all_costs))
+    sum(aver_cost).backward()
     optimizer.step()
     optimizer.zero_grad()
-    print(cost_)
-    print(20 * '-')
+    print(aver_cost)
 
 
 
