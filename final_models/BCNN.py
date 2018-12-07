@@ -508,8 +508,8 @@ optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004
 train_instances = train_data_step1(train_data)
 
 for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-    all_sent_escores    = np.array(datum['good_sents_escores']+datum['bad_sents_escores'])
-    all_sent_tags       = np.array(datum['good_sent_tags']+datum['bad_sent_tags'])
+    all_sent_escores    = np.array(datum['good_sents_escores']  + datum['bad_sents_escores'])
+    all_sent_tags       = np.array(datum['good_sent_tags']      + datum['bad_sent_tags'])
     # all_sent_tags       = to_categorical(all_sent_tags)
     all_sent_embeds     = pad_sequences(
         datum['good_sents_embeds']
@@ -520,13 +520,12 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
     all_quest_embeds    = np.stack((all_sent_embeds.shape[0]) * [quest_embeds])
     all_sent_embeds     = all_sent_embeds[:-1]
     #
-    # pprint(datum['good_held_out_sents'])
-    # pprint(datum['bad_held_out_sents'])
     print(all_quest_embeds.shape)
     print(all_sent_embeds.shape)
     print(all_sent_escores.shape)
     print(all_sent_tags.shape)
     print([t.sum() for t in all_sent_embeds])
+    #
     cost_ = model(
         batch_x1        = all_sent_embeds,
         batch_x2        = all_quest_embeds,
