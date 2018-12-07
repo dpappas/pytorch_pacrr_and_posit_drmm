@@ -399,6 +399,25 @@ def dummy_test():
         optimizer.zero_grad()
         print(cost_)
 
+def compute_the_cost(costs, back_prop=True):
+    cost_ = torch.stack(costs)
+    cost_ = cost_.sum() / (1.0 * cost_.size(0))
+    if(back_prop):
+        cost_.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+    the_cost = cost_.cpu().item()
+    return the_cost
+
+def back_prop(batch_costs, epoch_costs):
+    batch_cost = sum(batch_costs) / float(len(batch_costs))
+    batch_cost.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+    batch_aver_cost = batch_cost.cpu().item()
+    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
+    return batch_aver_cost, epoch_aver_cost
+
 class BCNN(nn.Module):
     def __init__(self, embedding_dim=30, additional_feats=8, convolution_size=4):
         super(BCNN, self).__init__()
@@ -515,40 +534,24 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 train_instances = train_data_step1(train_data)
 
 for epoch in range(10):
-    epoch_costs = []
+    epoch_costs     = []
+    batch_counter   = 0
+    start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-        all_costs = []
+        batch_costs         = []
+        batch_counter       += 1
         for i in range(len(datum['good_sents_embeds'])):
-            cost_ = model(
-                quest       = datum['quest_embeds'],
-                sent        = datum['good_sents_embeds'][i],
-                label       = [datum['good_sent_tags'][i]],
-                features    = datum['good_sents_escores'][i]
-            )
-            all_costs.append(cost_)
-            epoch_costs.append(cost_)
+            cost_           = model(quest=datum['quest_embeds'], sent=datum['good_sents_embeds'][i], label=[datum['good_sent_tags'][i]], features=datum['good_sents_escores'][i])
+            epoch_costs.append(cost_.cpu().item())
+            batch_costs.append(cost_)
         for i in range(len(datum['bad_sents_embeds'])):
-            cost_ = model(
-                quest       = datum['quest_embeds'],
-                sent        = datum['bad_sents_embeds'][i],
-                label       = [datum['bad_sent_tags'][i]],
-                features    = datum['bad_sents_escores'][i]
-            )
-            all_costs.append(cost_)
-            epoch_costs.append(cost_)
-        aver_cost = sum(all_costs) / float(len(all_costs))
-        aver_cost.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-        # if(aver_cost != aver_cost):
-        #     print(aver_cost)
-    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    print(epoch_aver_cost)
-
-
-
-
-
+            cost_           = model(quest=datum['quest_embeds'], sent=datum['bad_sents_embeds'][i], label=[datum['bad_sent_tags'][i]], features=datum['bad_sents_escores'][i])
+            epoch_costs.append(cost_.cpu().item())
+            batch_costs.append(cost_)
+        batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
+        elapsed_time        = time.time() - start_time
+        start_time          = time.time()
+        print('{:03d} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, elapsed_time))
 
 
 
