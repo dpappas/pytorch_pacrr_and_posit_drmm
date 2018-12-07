@@ -502,11 +502,12 @@ optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004
 train_instances = train_data_step1(train_data)
 
 for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-    all_sent_embeds     = pad_sequences(datum['good_sents_embeds']+datum['bad_sents_embeds'])
     all_sent_escores    = np.array(datum['good_sents_escores']+datum['bad_sents_escores'])
     all_sent_tags       = np.array(datum['good_sent_tags']+datum['bad_sent_tags'])
     all_sent_tags       = to_categorical(all_sent_tags)
-    all_quest_embeds    = np.stack(all_sent_embeds.shape[0]*[datum['quest_embeds']])
+    all_sent_embeds     = pad_sequences(datum['good_sents_embeds'] + datum['bad_sents_embeds'] + [datum['quest_embeds']])
+    all_quest_embeds    = np.stack(all_sent_embeds.shape[0]-1 * [all_sent_embeds[-1]])
+    all_sent_embeds     = all_sent_embeds[:-1]
     print(all_quest_embeds.shape)
     print(all_sent_embeds.shape)
     print(all_sent_escores.shape)
