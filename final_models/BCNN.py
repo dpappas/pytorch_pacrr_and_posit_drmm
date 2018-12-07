@@ -449,29 +449,24 @@ class BCNN(nn.Module):
         batch_y         = autograd.Variable(torch.LongTensor(batch_y),          requires_grad=False)
         batch_features  = autograd.Variable(torch.FloatTensor(batch_features),  requires_grad=False)
         #
-        print(batch_x1.size())
-        print(batch_x2.size())
-        x1_global_pool      = F.avg_pool1d(batch_x1.transpose(-1,-2), batch_x1.size(-1), stride=None)
+        batch_x1_tr     = batch_x1.transpose(-1,-2)
+        batch_x2_tr     = batch_x2.transpose(-1,-2)
+        print(batch_x1_tr.size())
+        print(batch_x2_tr.size())
+        x1_global_pool      = F.avg_pool1d(batch_x1_tr, batch_x1_tr.size(-1), stride=None)
         print(x1_global_pool.size())
-        x2_global_pool      = F.avg_pool1d(batch_x2.transpose(-1,-2), batch_x2.size(-1), stride=None)
+        x2_global_pool      = F.avg_pool1d(batch_x2_tr, batch_x2_tr.size(-1), stride=None)
         print(x2_global_pool.size())
         sim1                = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
         sim1                = sim1.squeeze(-1).squeeze(-1)
+        print(sim1.size())
         #
-        print(batch_x1)
         (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim2) = self.apply_one_conv(batch_x1.transpose(1,2), batch_x2.transpose(1,2), self.conv1)
-        print(x1_window_pool)
         (x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim3) = self.apply_one_conv(x1_window_pool, x2_window_pool, self.conv2)
-        #
-        print(sim1)
-        print(sim2)
-        print(sim3)
         #
         mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), batch_features], dim=-1)
         mlp_out             = self.linear_out(mlp_in)
         mlp_out             = F.softmax(mlp_out, dim=-1)
-        print(mlp_out[:,0])
-        print(batch_y)
         #
         cost                = F.cross_entropy(mlp_out, batch_y, weight=None, reduction='elementwise_mean')
         #
