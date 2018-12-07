@@ -149,7 +149,7 @@ def get_embeds_use_only_unk(tokens, wv):
         ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, rand_10_docs):
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
     good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     # documents   = []
@@ -375,20 +375,14 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
         good_snips                  = get_snips(quest_id, gid, bioasq6_data)
         good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
         #
-        rand_10_docs                = random.sample(docs.items(), 10)
-        #
-        datum                       = prep_data(
-            quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, rand_10_docs
-        )
+        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf)
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         #
-        datum                       = prep_data(
-            quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, rand_10_docs
-        )
+        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
         bad_doc_af                  = datum['doc_af']
