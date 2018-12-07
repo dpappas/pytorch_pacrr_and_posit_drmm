@@ -20,11 +20,287 @@ from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
 import  re
 
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
+def uwords(words):
+  uw = {}
+  for w in words:
+    uw[w] = 1
+  return [w for w in uw]
 
+def ubigrams(words):
+  uw = {}
+  prevw = "<pw>"
+  for w in words:
+    uw[prevw + '_' + w] = 1
+    prevw = w
+  return [w for w in uw]
 
+def idf_val(w, idf, max_idf):
+    if w in idf:
+        return idf[w]
+    return max_idf
 
+def query_doc_overlap(qwords, dwords, idf, max_idf):
+    # % Query words in doc.
+    qwords_in_doc = 0
+    idf_qwords_in_doc = 0.0
+    idf_qwords = 0.0
+    for qword in uwords(qwords):
+      idf_qwords += idf_val(qword, idf, max_idf)
+      for dword in uwords(dwords):
+        if qword == dword:
+          idf_qwords_in_doc += idf_val(qword, idf, max_idf)
+          qwords_in_doc     += 1
+          break
+    if len(qwords) <= 0:
+      qwords_in_doc_val = 0.0
+    else:
+      qwords_in_doc_val = (float(qwords_in_doc) /
+                           float(len(uwords(qwords))))
+    if idf_qwords <= 0.0:
+      idf_qwords_in_doc_val = 0.0
+    else:
+      idf_qwords_in_doc_val = float(idf_qwords_in_doc) / float(idf_qwords)
+    # % Query bigrams  in doc.
+    qwords_bigrams_in_doc = 0
+    idf_qwords_bigrams_in_doc = 0.0
+    idf_bigrams = 0.0
+    for qword in ubigrams(qwords):
+      wrds = qword.split('_')
+      idf_bigrams += idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf)
+      for dword in ubigrams(dwords):
+        if qword == dword:
+          qwords_bigrams_in_doc += 1
+          idf_qwords_bigrams_in_doc += (idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf))
+          break
+    if len(qwords) <= 0:
+      qwords_bigrams_in_doc_val = 0.0
+    else:
+      qwords_bigrams_in_doc_val = (float(qwords_bigrams_in_doc) / float(len(ubigrams(qwords))))
+    if idf_bigrams <= 0.0:
+      idf_qwords_bigrams_in_doc_val = 0.0
+    else:
+      idf_qwords_bigrams_in_doc_val = (float(idf_qwords_bigrams_in_doc) / float(idf_bigrams))
+    return [
+        qwords_in_doc_val,
+        qwords_bigrams_in_doc_val,
+        idf_qwords_in_doc_val,
+        idf_qwords_bigrams_in_doc_val
+    ]
 
+def snip_is_relevant(one_sent, gold_snips):
+    # print one_sent
+    # pprint(gold_snips)
+    return int(
+        any(
+            [
+                (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
+                or
+                (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
+                for gold_snip in gold_snips
+            ]
+        )
+    )
+
+def tokenize(x):
+  return bioclean(x)
+
+def get_words(s, idf, max_idf):
+    sl  = tokenize(s)
+    sl  = [s for s in sl]
+    sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
+    return sl, sl2
+
+def GetScores(qtext, dtext, bm25, idf, max_idf):
+    qwords, qw2 = get_words(qtext, idf, max_idf)
+    dwords, dw2 = get_words(dtext, idf, max_idf)
+    qd1         = query_doc_overlap(qwords, dwords, idf, max_idf)
+    bm25        = [bm25]
+    return qd1[0:3] + bm25
+
+def get_embeds(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        if(tok in wv):
+            ret1.append(tok)
+            ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
+def get_embeds_use_unk(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        if(tok in wv):
+            ret1.append(tok)
+            ret2.append(wv[tok])
+        else:
+            wv[tok] = np.random.randn(embedding_dim)
+            ret1.append(tok)
+            ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
+def get_embeds_use_only_unk(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        wv[tok] = np.random.randn(embedding_dim)
+        ret1.append(tok)
+        ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
+    if(use_sent_tokenizer):
+        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    else:
+        good_sents = [the_doc['title'] + the_doc['abstractText']]
+    ####
+    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    good_doc_af.append(len(good_sents) / 60.)
+    ####
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    for good_text in good_sents:
+        sent_toks                   = tokenize(good_text)
+        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
+        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores.append(len(sent_toks)/ 342.)
+        if (len(good_embeds) > 0):
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores)
+            held_out_sents.append(good_text)
+            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    ####
+    good_meshes = get_the_mesh(the_doc)
+    good_mesh_embeds, good_mesh_escores = [], []
+    for good_mesh in good_meshes:
+        mesh_toks                       = tokenize(good_mesh)
+        gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
+        if (len(gm_tokens) > 0):
+            good_mesh_embeds.append(gm_embeds)
+            good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
+            good_escores.append(len(mesh_toks)/ 10.)
+            good_mesh_escores.append(good_escores)
+    ####
+    return {
+        'sents_embeds'     : good_sents_embeds,
+        'sents_escores'    : good_sents_escores,
+        'doc_af'           : good_doc_af,
+        'sent_tags'        : good_sent_tags,
+        'mesh_embeds'      : good_mesh_embeds,
+        'mesh_escores'     : good_mesh_escores,
+        'held_out_sents'   : held_out_sents,
+    }
+
+def get_snips(quest_id, gid, bioasq6_data):
+    good_snips = []
+    if('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            if(sn['document'].endswith(gid)):
+                good_snips.extend(sent_tokenize(sn['text']))
+    return good_snips
+
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+    print('loading pickle data')
+    #
+    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
+        bioasq6_data = json.load(f)
+        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
+    #
+    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
+        test_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
+        test_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+        dev_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+        dev_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+        train_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+        train_docs = pickle.load(f)
+    print('loading words')
+    #
+    train_data  = RemoveBadYears(train_data, train_docs, True)
+    train_data  = RemoveTrainLargeYears(train_data, train_docs)
+    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
+    test_data   = RemoveBadYears(test_data, test_docs, False)
+    #
+    words           = {}
+    GetWords(train_data, train_docs, words)
+    GetWords(dev_data,   dev_docs,   words)
+    GetWords(test_data,  test_docs,  words)
+    #
+    print('loading idfs')
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    print('loading w2v')
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+
+def train_data_step1(train_data):
+    ret = []
+    for dato in tqdm(train_data['queries']):
+        quest       = dato['query_text']
+        quest_id    = dato['query_id']
+        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        if(len(bad_pmids)>0):
+            for gid in good_pmids:
+                bid = random.choice(bad_pmids)
+                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
+    print('')
+    return ret
+
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
+        if(use_sent_tokenizer):
+            good_snips              = get_snips(quest_id, gid, bioasq6_data)
+            good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
+        else:
+            good_snips              = []
+        #
+        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
+        good_sents_embeds           = datum['sents_embeds']
+        good_sents_escores          = datum['sents_escores']
+        good_mesh_escores           = datum['mesh_escores']
+        good_mesh_embeds            = datum['mesh_embeds']
+        good_doc_af                 = datum['doc_af']
+        good_sent_tags              = datum['sent_tags']
+        good_held_out_sents         = datum['held_out_sents']
+        #
+        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
+        bad_sents_embeds            = datum['sents_embeds']
+        bad_sents_escores           = datum['sents_escores']
+        bad_mesh_escores            = datum['mesh_escores']
+        bad_mesh_embeds             = datum['mesh_embeds']
+        bad_doc_af                  = datum['doc_af']
+        bad_sent_tags               = [0] * len(datum['sent_tags'])
+        bad_held_out_sents          = datum['held_out_sents']
+        #
+        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        #
+        if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
+            yield {
+                'good_sents_embeds'     : good_sents_embeds,
+                'good_sents_escores'    : good_sents_escores,
+                'good_doc_af'           : good_doc_af,
+                'good_sent_tags'        : good_sent_tags,
+                'good_mesh_embeds'      : good_mesh_embeds,
+                'good_mesh_escores'     : good_mesh_escores,
+                'good_held_out_sents'   : good_held_out_sents,
+                #
+                'bad_sents_embeds'      : bad_sents_embeds,
+                'bad_sents_escores'     : bad_sents_escores,
+                'bad_doc_af'            : bad_doc_af,
+                'bad_sent_tags'         : bad_sent_tags,
+                'bad_mesh_embeds'       : bad_mesh_embeds,
+                'bad_mesh_escores'      : bad_mesh_escores,
+                'bad_held_out_sents'    : bad_held_out_sents,
+                #
+                'quest_embeds'          : quest_embeds,
+                'q_idfs'                : q_idfs,
+            }
 
 class BCNN(nn.Module):
     def __init__(self, embedding_dim=30, additional_feats=8, convolution_size=4):
@@ -91,8 +367,16 @@ class BCNN(nn.Module):
         return cost
 
 
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+use_cuda            = False
+odd                 = '/home/dpappas/'
+get_embeds          = get_embeds_use_unk
 
-use_cuda = False
 
 embedding_dim       = 30
 additional_feats    = 8
@@ -115,6 +399,14 @@ bx1         = np.random.randn(b_size, max_len, embedding_dim)
 bx2         = np.random.randn(b_size, max_len, embedding_dim)
 by          = np.random.randint(2, size=b_size)
 bf          = np.random.randn(b_size, 8)
+
+(
+    test_data, test_docs, dev_data, dev_docs, train_data,
+    train_docs, idf, max_idf, wv, bioasq6_data
+) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+
+train_instances = train_data_step1(train_data)
+
 
 for i in range(500):
     cost_ = model(
