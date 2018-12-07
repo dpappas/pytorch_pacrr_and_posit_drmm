@@ -109,14 +109,14 @@ model.train()
 
 params      = model.parameters()
 # optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0004)
-optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0, weight_decay=0.0004, initial_accumulator_value=0)
+optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
 
 bx1         = np.random.randn(b_size, max_len, embedding_dim)
 bx2         = np.random.randn(b_size, max_len, embedding_dim)
 by          = np.random.randint(2, size=b_size)
 bf          = np.random.randn(b_size, 8)
 
-for i in range(100):
+for i in range(500):
     cost_ = model(
         batch_x1        = bx1,
         batch_x2        = bx2,
