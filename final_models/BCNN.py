@@ -477,21 +477,28 @@ class BCNN(nn.Module):
         sents_gaf,
         sents_labels
     ):
-        sents_embeds            = autograd.Variable(torch.FloatTensor(sents_embeds),    requires_grad=False)
-        question_embeds         = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
+        sents_embeds            = [
+            autograd.Variable(torch.FloatTensor(se), requires_grad=False).unsqueeze(0).transpose(-1,-2)
+            for se in sents_embeds
+        ]
+        question_embeds         = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1,-2)
         sents_gaf               = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False).unsqueeze(0)
         if(use_cuda):
-            sents_embeds        = sents_embeds.cuda()
+            sents_embeds        = [se.cuda() for se in sents_embeds]
             question_embeds     = question_embeds.cuda()
             sents_gaf           = sents_gaf.cuda()
         #
-        print(sents_embeds.size())
+        pprint([se.size() for se in sents_embeds])
         print(question_embeds.size())
         print(sents_gaf.size())
+        #
+        quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
+        sent_global_pool    = [F.avg_pool1d(se, se.size(-1), stride=None) for se in sents_embeds]
+        #
+        print(quest_global_pool.size())
+        pprint([se.size() for se in sent_global_pool])
         exit()
         #
-        quest_global_pool   = F.avg_pool1d(quest, quest.size(-1), stride=None)
-        sent_global_pool    = F.avg_pool1d(sent, sent.size(-1), stride=None)
         sim1                = self.my_cosine_sim(quest_global_pool.transpose(1,2), sent_global_pool.transpose(1,2))
         sim1                = sim1.squeeze(-1).squeeze(-1)
         #
