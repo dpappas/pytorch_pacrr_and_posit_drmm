@@ -524,8 +524,8 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
     print(all_sent_tags.shape)
     #
     cost_ = model(
-        batch_x1        = all_sent_embeds,
-        batch_x2        = all_quest_embeds,
+        batch_x1        = all_quest_embeds,
+        batch_x2        = all_sent_embeds,
         batch_y         = all_sent_tags,
         batch_features  = all_sent_escores
     )
