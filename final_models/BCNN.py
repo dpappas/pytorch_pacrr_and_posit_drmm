@@ -20,6 +20,7 @@ import  nltk
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
 import  re
+import  BM25
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
@@ -148,10 +149,17 @@ def get_embeds_use_only_unk(tokens, wv):
         ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
-    good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, rand_10_docs):
+    good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    BM25score  = BM25.similarity_score(s1, s2, 1.2, 0.75, idf_scores, avgdl, True, mean, deviation, rare_word_value)
+    documents   = []
+    for d in rand_10_docs:
+        good_sents = [
+            tokenize(sent)
+            for sent in (sent_tokenize(d['title']) + sent_tokenize(d['abstractText']))
+        ]
+        documents.extend(good_sents)
+    avgdl       = BM25.compute_avgdl(documents)
     ####
     quest_toks  = tokenize(quest)
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -165,13 +173,17 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
         good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
             tomi            = (set(sent_toks) & set(quest_toks))
-            tomi_no_stop    =  tomi - set(stopwords)
+            tomi_no_stop    = tomi - set(stopwords)
+            BM25score       = BM25.similarity_score(
+                good_text, quest, 1.2, 0.75, idf_scores, avgdl, True, mean, deviation, max_idf
+            )
             features    = [
                 len(quest),
                 len(good_text),
                 len(tomi_no_stop),
                 sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
                 sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
+                BM25score
             ]
             #
             good_sents_embeds.append(good_embeds)
@@ -355,19 +367,25 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         good_snips                  = get_snips(quest_id, gid, bioasq6_data)
         good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
         #
-        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
+        rand_10_docs                = random.sample(docs.items(), 10)
+        #
+        datum                       = prep_data(
+            quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, rand_10_docs
+        )
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         #
-        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
+        datum                       = prep_data(
+            quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, rand_10_docs
+        )
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
         bad_doc_af                  = datum['doc_af']
