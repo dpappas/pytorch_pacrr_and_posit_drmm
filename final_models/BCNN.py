@@ -499,10 +499,8 @@ params      = model.parameters()
 # optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0004, amsgrad=True)
 optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
 
-
 (
-    test_data, test_docs, dev_data, dev_docs, train_data,
-    train_docs, idf, max_idf, wv, bioasq6_data
+    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 train_instances = train_data_step1(train_data)
