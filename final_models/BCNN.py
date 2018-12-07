@@ -1,7 +1,5 @@
 
-import  os, json, time, random, re
-import  logging
-import  subprocess
+import  os, json, time, random, re, nltk, pickle, logging, subprocess
 import  torch
 import  torch.nn.functional             as F
 import  torch.nn                        as nn
@@ -14,9 +12,6 @@ from    gensim.models.keyedvectors      import KeyedVectors
 from    nltk.tokenize                   import sent_tokenize
 from    difflib                         import SequenceMatcher
 from    keras.preprocessing.sequence    import pad_sequences
-# import  cPickle                     as pickle
-import  pickle
-import  nltk
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
