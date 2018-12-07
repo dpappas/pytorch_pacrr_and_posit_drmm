@@ -452,7 +452,9 @@ class BCNN(nn.Module):
         print(batch_x1.size())
         print(batch_x2.size())
         x1_global_pool      = F.avg_pool1d(batch_x1.transpose(-1,-2), batch_x1.size(-1), stride=None)
+        print(x1_global_pool.size())
         x2_global_pool      = F.avg_pool1d(batch_x2.transpose(-1,-2), batch_x2.size(-1), stride=None)
+        print(x2_global_pool.size())
         sim1                = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
         sim1                = sim1.squeeze(-1).squeeze(-1)
         #
