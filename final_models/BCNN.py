@@ -20,7 +20,7 @@ import  nltk
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
 import  re
-import  BM25
+# import  BM25
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
