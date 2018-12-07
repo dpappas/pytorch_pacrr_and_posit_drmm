@@ -449,6 +449,8 @@ class BCNN(nn.Module):
         batch_y         = autograd.Variable(torch.LongTensor(batch_y),          requires_grad=False)
         batch_features  = autograd.Variable(torch.FloatTensor(batch_features),  requires_grad=False)
         #
+        print(batch_x1.size())
+        print(batch_x2.size())
         x1_global_pool      = F.avg_pool1d(batch_x1.transpose(-1,-2), batch_x1.size(-1), stride=None)
         x2_global_pool      = F.avg_pool1d(batch_x2.transpose(-1,-2), batch_x1.size(-1), stride=None)
         sim1                = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
@@ -518,13 +520,11 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
     )
     quest_embeds        = datum['quest_embeds']
     all_quest_embeds    = np.stack((all_sent_embeds.shape[0]) * [quest_embeds])
-    all_sent_embeds     = all_sent_embeds[:-1]
     #
     print(all_quest_embeds.shape)
     print(all_sent_embeds.shape)
     print(all_sent_escores.shape)
     print(all_sent_tags.shape)
-    print([t.sum() for t in all_sent_embeds])
     #
     cost_ = model(
         batch_x1        = all_sent_embeds,
