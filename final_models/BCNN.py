@@ -449,8 +449,8 @@ class BCNN(nn.Module):
         batch_y         = autograd.Variable(torch.LongTensor(batch_y),          requires_grad=False)
         batch_features  = autograd.Variable(torch.FloatTensor(batch_features),  requires_grad=False)
         #
-        batch_x1_tr     = batch_x1.transpose(-1,-2)
-        batch_x2_tr     = batch_x2.transpose(-1,-2)
+        batch_x1_tr     = batch_x1.transpose(-1, -2)
+        batch_x2_tr     = batch_x2.transpose(-1, -2)
         print(batch_x1_tr.size())
         print(batch_x2_tr.size())
         x1_global_pool      = F.avg_pool1d(batch_x1_tr, batch_x1_tr.size(-1), stride=None)
