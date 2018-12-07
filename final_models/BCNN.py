@@ -12,6 +12,7 @@ from    gensim.models.keyedvectors      import KeyedVectors
 from    nltk.tokenize                   import sent_tokenize
 from    difflib                         import SequenceMatcher
 from    keras.preprocessing.sequence    import pad_sequences
+from    keras.utils                     import to_categorical
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
@@ -500,12 +501,20 @@ for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf
     all_sent_embeds     = pad_sequences(datum['good_sents_embeds']+datum['bad_sents_embeds'])
     all_sent_escores    = np.array(datum['good_sents_escores']+datum['bad_sents_escores'])
     all_sent_tags       = np.array(datum['good_sent_tags']+datum['bad_sent_tags'])
+    all_sent_tags       = to_categorical(all_sent_tags)
     all_quest_embeds    = np.stack(all_sent_embeds.shape[0]*[datum['quest_embeds']])
     print(all_quest_embeds.shape)
     print(all_sent_embeds.shape)
     print(all_sent_escores.shape)
     print(all_sent_tags.shape)
-    print(20 *'-')
+    cost_ = model(
+        batch_x1        = all_sent_embeds,
+        batch_x2        = all_quest_embeds,
+        batch_y         = all_sent_tags,
+        batch_features  = all_sent_escores
+    )
+    print(cost_)
+    print(20 * '-')
 
 
 
