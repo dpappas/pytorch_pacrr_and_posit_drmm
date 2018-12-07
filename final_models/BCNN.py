@@ -58,8 +58,7 @@ def query_doc_overlap(qwords, dwords, idf, max_idf):
     if len(qwords) <= 0:
       qwords_in_doc_val = 0.0
     else:
-      qwords_in_doc_val = (float(qwords_in_doc) /
-                           float(len(uwords(qwords))))
+      qwords_in_doc_val = (float(qwords_in_doc) / float(len(uwords(qwords))))
     if idf_qwords <= 0.0:
       idf_qwords_in_doc_val = 0.0
     else:
@@ -162,6 +161,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         ]
     )
     ####
+    quest_toks  = tokenize(quest)
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     ####
@@ -176,9 +176,11 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             good_sents_escores.append(good_escores)
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
-            features = [
+            tomi        = (set(sent_toks) & set(quest_toks)) - set(stopwords)
+            features    = [
                 len(quest),
                 len(good_text),
+                len(tomi),
             ]
     ####
     return {
