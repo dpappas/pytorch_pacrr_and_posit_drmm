@@ -504,8 +504,6 @@ class BCNN(nn.Module):
         mlp_in              = torch.stack(mlp_in, dim=0)
         mlp_out             = self.linear_out(mlp_in)
         #
-        print(mlp_out.size())
-        print(sents_labels.size())
         mlp_out             = F.log_softmax(mlp_out, dim=-1)
         cost                = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
         # print(label, mlp_out)
