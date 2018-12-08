@@ -348,8 +348,8 @@ def train_data_step1(train_data):
     return ret
 
 def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
-    # for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(instances):
-    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(instances):
+    # for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         good_snips                  = get_snips(quest_id, gid, bioasq6_data)
         good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
         #
