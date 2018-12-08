@@ -478,14 +478,19 @@ class BCNN(nn.Module):
         sents_labels        = autograd.Variable(torch.FloatTensor(sents_labels),    requires_grad=False).unsqueeze(0)
         sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False).unsqueeze(0)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1, -2)
+        if(use_cuda):
+            sents_labels    = sents_labels.cuda()
+            sents_gaf       = sents_gaf.cuda()
+            question_embeds = question_embeds.cuda()
         quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
         #
         for i in range(len(sents_embeds)):
             sent_embed          = autograd.Variable(torch.FloatTensor(sents_embeds[i]), requires_grad=False).unsqueeze(0).transpose(-1,-2)
+            if (use_cuda):
+                sent_embed      = sent_embed.cuda()
             sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
             sim1                = self.my_cosine_sim(
-                quest_global_pool.transpose(-1, -2),
-                sent_global_pool.transpose(-1, -2)
+                quest_global_pool.transpose(-1, -2), sent_global_pool.transpose(-1, -2)
             ).squeeze(-1).squeeze(-1)
             (
                 quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2
