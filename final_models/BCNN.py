@@ -554,39 +554,29 @@ for epoch in range(10):
     batch_counter   = 0
     start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-        cost_, emits_       = model(
+        gcost_, gemits_     = model(
             sents_embeds    = datum['good_sents_embeds'],
             question_embeds = datum['quest_embeds'],
             sents_gaf       = datum['good_sents_escores'],
             sents_labels    = datum['good_sent_tags']
         )
-        cost_, emits_       = model(
+        bcost_, bemits_     = model(
             sents_embeds    = datum['bad_sents_embeds'],
             question_embeds = datum['quest_embeds'],
             sents_gaf       = datum['bad_sents_escores'],
             sents_labels    = datum['bad_sent_tags']
         )
+        batch_cost          = (gcost_ + bcost_) / 2.
+        print(gemits_)
+        print(bemits_)
+        print(gemits_.size())
+        print(bemits_.size())
         #
-        batch_costs         = []
-        batch_emits         = []
-        batch_labels        = []
-        batch_counter       += 1
-        for i in range(len(datum['good_sents_embeds'])):
-            cost_, emit     = model(quest=datum['quest_embeds'], sent=datum['good_sents_embeds'][i], label=[datum['good_sent_tags'][i]], features=datum['good_sents_escores'][i])
-            epoch_costs.append(cost_.cpu().item())
-            batch_costs.append(cost_)
-            batch_labels.append(datum['good_sent_tags'][i])
-            batch_emits.append(emit.cpu().item())
-            epoch_labels.extend(batch_labels)
-            epoch_emits.extend(batch_emits)
-        for i in range(len(datum['bad_sents_embeds'])):
-            cost_, emit     = model(quest=datum['quest_embeds'], sent=datum['bad_sents_embeds'][i], label=[datum['bad_sent_tags'][i]], features=datum['bad_sents_escores'][i])
-            epoch_costs.append(cost_.cpu().item())
-            batch_costs.append(cost_)
-            batch_labels.append(datum['bad_sent_tags'][i])
-            batch_emits.append(emit.cpu().item())
-            epoch_labels.extend(batch_labels)
-            epoch_emits.extend(batch_emits)
+        batch_counter += 1
+        epoch_costs.append(batch_cost.cpu().item())
+        #
+        batch_emits                         = []
+        batch_labels                        = []
         batch_auc                           = roc_auc_score(batch_labels, batch_emits)
         epoch_auc                           = roc_auc_score(epoch_labels, epoch_emits)
         batch_aver_cost, epoch_aver_cost    = back_prop(batch_costs, epoch_costs)
