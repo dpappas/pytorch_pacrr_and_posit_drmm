@@ -475,8 +475,8 @@ class BCNN(nn.Module):
         sents_gaf,
         sents_labels
     ):
-        sents_labels        = autograd.Variable(torch.FloatTensor(sents_labels),    requires_grad=False).unsqueeze(0)
-        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False).unsqueeze(0)
+        sents_labels        = autograd.Variable(torch.LongTensor(sents_labels),     requires_grad=False)
+        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1, -2)
         if(use_cuda):
             sents_labels    = sents_labels.cuda()
@@ -484,6 +484,7 @@ class BCNN(nn.Module):
             question_embeds = question_embeds.cuda()
         quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
         #
+        mlp_in = []
         for i in range(len(sents_embeds)):
             sent_embed          = autograd.Variable(torch.FloatTensor(sents_embeds[i]), requires_grad=False).unsqueeze(0).transpose(-1,-2)
             if (use_cuda):
@@ -498,27 +499,15 @@ class BCNN(nn.Module):
             (
                 quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3
             ) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
-            print(sim1.size())
-            print(sim2.size())
-            print(sim3.size())
-            mlp_in              = torch.cat(
-                [
-                    sim1.unsqueeze(-1),
-                    sim2.unsqueeze(-1),
-                    sim3.unsqueeze(-1),
-                    sents_gaf[i]
-                ],
-                dim=-1
-            )
-            print(mlp_in.size())
+            mlp_in.append(torch.cat([sim1, sim2, sim3, sents_gaf[i]], dim=-1))
         #
-        exit()
-        #
-
+        mlp_in              = torch.stack(mlp_in, dim=0)
         mlp_out             = self.linear_out(mlp_in)
         #
+        print(mlp_out.size())
+        print(sents_labels.size())
         mlp_out             = F.log_softmax(mlp_out, dim=-1)
-        cost                = F.nll_loss(mlp_out, label, weight=None, reduction='elementwise_mean')
+        cost                = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
         # print(label, mlp_out)
         #
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
