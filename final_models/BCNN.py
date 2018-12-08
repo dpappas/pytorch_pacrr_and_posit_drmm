@@ -480,21 +480,36 @@ class BCNN(nn.Module):
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1, -2)
         quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
         #
-        for sent_embed in sents_embeds:
-            sent_embed          = autograd.Variable(torch.FloatTensor(sent_embed), requires_grad=False).unsqueeze(0).transpose(-1,-2)
+        for i in range(len(sents_embeds)):
+            sent_embed          = autograd.Variable(torch.FloatTensor(sents_embeds[i]), requires_grad=False).unsqueeze(0).transpose(-1,-2)
             sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
             sim1                = self.my_cosine_sim(
-                quest_global_pool.expand_as(sent_global_pool).transpose(1, 2),
-                sent_global_pool.transpose(1, 2)
+                quest_global_pool.transpose(-1, -2),
+                sent_global_pool.transpose(-1, -2)
             ).squeeze(-1).squeeze(-1)
-        print(sim1.size())
+            (
+                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2
+            ) = self.apply_one_conv(question_embeds, sent_embed, self.conv1)
+            (
+                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3
+            ) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
+            print(sim1.size())
+            print(sim2.size())
+            print(sim3.size())
+            mlp_in              = torch.cat(
+                [
+                    sim1.unsqueeze(-1),
+                    sim2.unsqueeze(-1),
+                    sim3.unsqueeze(-1),
+                    sents_gaf[i]
+                ],
+                dim=-1
+            )
+            print(mlp_in.size())
         #
         exit()
         #
-        (quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2) = self.apply_one_conv(quest, sent, self.conv1)
-        (quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
-        #
-        mlp_in              = torch.cat([sim1.unsqueeze(-1), sim2.unsqueeze(-1), sim3.unsqueeze(-1), features], dim=-1)
+
         mlp_out             = self.linear_out(mlp_in)
         #
         mlp_out             = F.log_softmax(mlp_out, dim=-1)
