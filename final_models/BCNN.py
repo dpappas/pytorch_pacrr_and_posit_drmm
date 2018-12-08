@@ -449,8 +449,6 @@ class BCNN(nn.Module):
             self.conv2          = self.conv2.cuda()
             self.conv1_activ    = self.conv1_activ.cuda()
     def my_cosine_sim(self, A, B):
-        # A     = A.unsqueeze(0)
-        # B     = B.unsqueeze(0)
         A_mag = torch.norm(A, 2, dim=2)
         B_mag = torch.norm(B, 2, dim=2)
         num = torch.bmm(A, B.transpose(-1, -2))
@@ -477,30 +475,21 @@ class BCNN(nn.Module):
         sents_gaf,
         sents_labels
     ):
-        sents_embeds            = [
-            autograd.Variable(torch.FloatTensor(se), requires_grad=False).unsqueeze(0).transpose(-1,-2)
-            for se in sents_embeds
-        ]
-        question_embeds         = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1,-2)
-        sents_gaf               = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False).unsqueeze(0)
-        if(use_cuda):
-            sents_embeds        = [se.cuda() for se in sents_embeds]
-            question_embeds     = question_embeds.cuda()
-            sents_gaf           = sents_gaf.cuda()
-        #
-        pprint([se.size() for se in sents_embeds])
-        print(question_embeds.size())
-        print(sents_gaf.size())
-        #
+        sents_labels        = autograd.Variable(torch.FloatTensor(sents_labels),    requires_grad=False).unsqueeze(0)
+        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False).unsqueeze(0)
+        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1, -2)
         quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
-        sent_global_pool    = [F.avg_pool1d(se, se.size(-1), stride=None) for se in sents_embeds]
         #
-        print(quest_global_pool.size())
-        pprint([se.size() for se in sent_global_pool])
+        for sent_embed in sents_embeds:
+            sent_embed          = autograd.Variable(torch.FloatTensor(sent_embed), requires_grad=False).unsqueeze(0).transpose(-1,-2)
+            sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
+            sim1                = self.my_cosine_sim(
+                quest_global_pool.expand_as(sent_global_pool).transpose(1, 2),
+                sent_global_pool.transpose(1, 2)
+            ).squeeze(-1).squeeze(-1)
+        print(sim1.size())
+        #
         exit()
-        #
-        sim1                = self.my_cosine_sim(quest_global_pool.transpose(1,2), sent_global_pool.transpose(1,2))
-        sim1                = sim1.squeeze(-1).squeeze(-1)
         #
         (quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2) = self.apply_one_conv(quest, sent, self.conv1)
         (quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
