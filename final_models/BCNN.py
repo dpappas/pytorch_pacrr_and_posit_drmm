@@ -547,10 +547,8 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 train_instances = train_data_step1(train_data)
 
 for epoch in range(10):
-    epoch_costs     = []
-    epoch_auc       = []
-    epoch_labels    = []
-    epoch_emits     = []
+    epoch_labels, epoch_emits, epoch_costs = [], [], []
+    batch_labels, batch_emits, batch_costs = [], [], []
     batch_counter   = 0
     start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
@@ -566,7 +564,19 @@ for epoch in range(10):
             sents_gaf       = datum['bad_sents_escores'],
             sents_labels    = datum['bad_sent_tags']
         )
-        batch_cost          = (gcost_ + bcost_) / 2.
+        cost_               = (gcost_ + bcost_) / 2.
+        gemits_             = gemits_.cpu().numpy().to_list()
+        bemits_             = bemits_.cpu().numpy().to_list()
+        #
+        batch_costs.append(cost_)
+        epoch_costs.append(cost_)
+        batch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
+        epoch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
+        batch_emits.extend(gemits_+bemits_)
+        epoch_emits.extend(gemits_+bemits_)
+
+        #
+
         print(gemits_)
         print(bemits_)
         print(gemits_.size())
@@ -575,8 +585,6 @@ for epoch in range(10):
         batch_counter += 1
         epoch_costs.append(batch_cost.cpu().item())
         #
-        batch_emits                         = []
-        batch_labels                        = []
         batch_auc                           = roc_auc_score(batch_labels, batch_emits)
         epoch_auc                           = roc_auc_score(epoch_labels, epoch_emits)
         batch_aver_cost, epoch_aver_cost    = back_prop(batch_costs, epoch_costs)
