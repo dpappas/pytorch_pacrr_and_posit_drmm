@@ -412,7 +412,7 @@ def compute_the_cost(costs, back_prop=True):
     return the_cost
 
 def back_prop(batch_costs, epoch_costs):
-    batch_cost = sum(batch_costs) / float(len(batch_costs))
+    batch_cost      = sum(batch_costs) / float(len(batch_costs))
     batch_cost.backward()
     optimizer.step()
     optimizer.zero_grad()
@@ -574,17 +574,8 @@ for epoch in range(10):
         epoch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
         batch_emits.extend(gemits_+bemits_)
         epoch_emits.extend(gemits_+bemits_)
-
         #
-
-        print(gemits_)
-        print(bemits_)
-        print(gemits_.size())
-        print(bemits_.size())
-        #
-        batch_counter += 1
-        epoch_costs.append(batch_cost.cpu().item())
-        #
+        batch_counter                       += 1
         batch_auc                           = roc_auc_score(batch_labels, batch_emits)
         epoch_auc                           = roc_auc_score(epoch_labels, epoch_emits)
         batch_aver_cost, epoch_aver_cost    = back_prop(batch_costs, epoch_costs)
