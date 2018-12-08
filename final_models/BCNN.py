@@ -565,8 +565,8 @@ for epoch in range(10):
             sents_labels    = datum['bad_sent_tags']
         )
         cost_               = (gcost_ + bcost_) / 2.
-        gemits_             = gemits_.cpu().numpy().to_list()
-        bemits_             = bemits_.cpu().numpy().to_list()
+        gemits_             = gemits_.data.cpu().numpy().tolist()
+        bemits_             = bemits_.data.cpu().numpy().tolist()
         #
         batch_costs.append(cost_)
         epoch_costs.append(cost_)
