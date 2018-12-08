@@ -576,7 +576,8 @@ for epoch in range(10):
             elapsed_time                            = time.time() - start_time
             start_time                              = time.time()
             print(
-                'BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
+                'Epoch:{:02d} BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
+                    epoch,
                     batch_counter,
                     batch_aver_cost,    epoch_aver_cost,
                     batch_auc,          epoch_auc,
@@ -589,11 +590,10 @@ for epoch in range(10):
     elapsed_time    = time.time() - start_time
     start_time      = time.time()
     print(
-        'EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
-            epoch_aver_cost, epoch_auc, elapsed_time
+        'Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
+            epoch, epoch_aver_cost, epoch_auc, elapsed_time
         )
     )
-
 
 
 
