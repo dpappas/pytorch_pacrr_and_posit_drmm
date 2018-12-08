@@ -568,8 +568,8 @@ for epoch in range(10):
         batch_emits.extend(gemits_+bemits_)
         epoch_emits.extend(gemits_+bemits_)
         #
-        batch_counter                       += 1
         if(batch_counter % b_size == 0):
+            batch_counter                           += 1
             batch_auc                               = roc_auc_score(batch_labels, batch_emits)
             epoch_auc                               = roc_auc_score(epoch_labels, epoch_emits)
             batch_aver_cost, epoch_aver_cost        = back_prop(batch_costs, epoch_costs)
