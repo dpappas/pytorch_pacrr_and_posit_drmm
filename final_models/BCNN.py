@@ -525,7 +525,7 @@ get_embeds          = get_embeds_use_unk
 
 embedding_dim       = 30
 additional_feats    = 9
-b_size              = 200
+b_size              = 32
 max_len             = 40
 lr                  = 0.08
 
@@ -576,17 +576,22 @@ for epoch in range(10):
         epoch_emits.extend(gemits_+bemits_)
         #
         batch_counter                       += 1
-        batch_auc                           = roc_auc_score(batch_labels, batch_emits)
-        epoch_auc                           = roc_auc_score(epoch_labels, epoch_emits)
-        batch_aver_cost, epoch_aver_cost    = back_prop(batch_costs, epoch_costs)
-        elapsed_time                        = time.time() - start_time
-        start_time                          = time.time()
-        if(batch_counter % 200 == 0):
-            print(
-                'BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
-                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_auc, epoch_auc, elapsed_time
+        if(batch_counter % b_size ==0):
+            batch_auc                               = roc_auc_score(batch_labels, batch_emits)
+            epoch_auc                               = roc_auc_score(epoch_labels, epoch_emits)
+            batch_aver_cost, epoch_aver_cost        = back_prop(batch_costs, epoch_costs)
+            batch_labels, batch_emits, batch_costs  = [], [], []
+            elapsed_time                            = time.time() - start_time
+            start_time                              = time.time()
+            if(batch_counter % 200 == 0):
+                print(
+                    'BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(
+                        batch_counter,
+                        batch_aver_cost,    epoch_aver_cost,
+                        batch_auc,          epoch_auc,
+                        elapsed_time
+                    )
                 )
-            )
     #
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
     epoch_auc       = roc_auc_score(epoch_labels, epoch_emits)
