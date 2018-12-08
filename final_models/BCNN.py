@@ -33,9 +33,10 @@ def ubigrams(words):
   return [w for w in uw]
 
 def idf_val(w, idf, max_idf):
-    if w in idf:
+    try:
         return idf[w]
-    return max_idf
+    except:
+        return max_idf
 
 def query_doc_overlap(qwords, dwords, idf, max_idf):
     # % Query words in doc.
