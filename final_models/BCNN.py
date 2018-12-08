@@ -542,6 +542,7 @@ for epoch in range(10):
     epoch_labels, epoch_emits, epoch_costs = [], [], []
     batch_labels, batch_emits, batch_costs = [], [], []
     batch_counter   = 0
+    epoch           += 1
     start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
         gcost_, gemits_     = model(
