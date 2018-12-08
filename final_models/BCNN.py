@@ -468,13 +468,7 @@ class BCNN(nn.Module):
         sim                 = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
         sim                 = sim.squeeze(-1).squeeze(-1)
         return x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim
-    def forward(
-        self,
-        sents_embeds,
-        question_embeds,
-        sents_gaf,
-        sents_labels
-    ):
+    def forward(self, sents_embeds, question_embeds, sents_gaf, sents_labels):
         sents_labels        = autograd.Variable(torch.LongTensor(sents_labels),     requires_grad=False)
         sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1, -2)
