@@ -86,8 +86,6 @@ def query_doc_overlap(qwords, dwords, idf, max_idf):
     ]
 
 def snip_is_relevant(one_sent, gold_snips):
-    # print one_sent
-    # pprint(gold_snips)
     return int(
         any(
             [
@@ -190,6 +188,7 @@ def get_snips(quest_id, gid, bioasq6_data):
 
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
+    logger.info('Loading IDF tables')
     #
     # with open(dataloc + 'idf.pkl', 'rb') as f:
     with open(idf_path, 'rb') as f:
@@ -204,6 +203,7 @@ def load_idfs(idf_path, words):
             max_idf = idf[w]
     idf = None
     print('Loaded idf tables with max idf {}'.format(max_idf))
+    logger.info('Loaded idf tables with max idf {}'.format(max_idf))
     #
     return ret, max_idf
 
@@ -295,6 +295,7 @@ def GetWords(data, doc_text, words):
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
+    logger.info('loading pickle data')
     #
     with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
         bioasq6_data = json.load(f)
@@ -313,6 +314,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs = pickle.load(f)
     print('loading words')
+    logger.info('loading words')
     #
     train_data  = RemoveBadYears(train_data, train_docs, True)
     train_data  = RemoveTrainLargeYears(train_data, train_docs)
@@ -325,8 +327,10 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(test_data,  test_docs,  words)
     #
     print('loading idfs')
+    logger.info('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
+    logger.info('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
@@ -543,6 +547,7 @@ def train_one():
     elapsed_time                            = time.time() - start_time
     # start_time                              = time.time()
     print('Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, epoch_aver_cost, epoch_auc, elapsed_time))
+    logger.info('Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, epoch_aver_cost, epoch_auc, elapsed_time))
 
 def train_one_only_positive():
     model.train()
@@ -579,6 +584,7 @@ def train_one_only_positive():
     epoch_auc                               = roc_auc_score(epoch_labels, epoch_emits)
     elapsed_time                            = time.time() - start_time
     print('Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, epoch_aver_cost, epoch_auc, elapsed_time))
+    logger.info('Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, epoch_aver_cost, epoch_auc, elapsed_time))
 
 def get_one_auc(prefix, data, docs):
     model.eval()
@@ -614,7 +620,26 @@ def get_one_auc(prefix, data, docs):
             prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1
         )
     )
+    logger.info(
+        '{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {} epoch_aver_f1: {}'.format(
+            prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1
+        )
+    )
     return epoch_aver_auc
+
+def init_the_logger(hdlr):
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
+    logger      = logging.getLogger(od)
+    if(hdlr is not None):
+        logger.removeHandler(hdlr)
+    hdlr        = logging.FileHandler(os.path.join(odir,'model.log'))
+    formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+    return logger, hdlr
 
 class BCNN(nn.Module):
     def __init__(self, embedding_dim=30, additional_feats=8, convolution_size=4):
@@ -696,7 +721,6 @@ class BCNN(nn.Module):
         #
         mlp_out             = F.log_softmax(mlp_out, dim=-1)
         cost                = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
-        # print(label, mlp_out)
         #
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
@@ -743,22 +767,34 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
     test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
+hdlr = None
 for run in range(5):
+    #
+    random.seed(run)
+    torch.manual_seed(run)
     #
     odir = '/home/dpappas/BCNN_run_{}/'.format(run)
     print(odir)
+    logger.info(odir)
     if (not os.path.exists(odir)):
         os.makedirs(odir)
     #
+    logger, hdlr = init_the_logger(hdlr)
+    #
     best_dev_auc, test_auc = None, None
     for epoch in range(10):
+        logger.info('Training...')
         train_one_only_positive()
+        logger.info('Validating...')
         epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
         if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
             best_dev_auc    = epoch_dev_auc
+            logger.info('Testing...')
             test_auc        = get_one_auc('test', test_data, test_docs)
             save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
         print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
+        logger.info('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
+
 
 
 
