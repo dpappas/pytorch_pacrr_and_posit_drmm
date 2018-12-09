@@ -421,6 +421,98 @@ def back_prop(batch_costs, epoch_costs):
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
     return batch_aver_cost, epoch_aver_cost
 
+def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
+    '''
+    :param state:       the stete of the pytorch mode
+    :param filename:    the name of the file in which we will store the model.
+    :return:            Nothing. It just saves the model.
+    '''
+    state = {
+        'epoch':            epoch,
+        'state_dict':       model.state_dict(),
+        'best_valid_score': max_dev_map,
+        'optimizer':        optimizer.state_dict(),
+    }
+    torch.save(state, filename)
+
+def data_step1(data):
+    ret = []
+    for dato in tqdm(data['queries']):
+        quest       = dato['query_text']
+        quest_id    = dato['query_id']
+        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        if(len(bad_pmids)>0):
+            for gid in good_pmids:
+                bid = random.choice(bad_pmids)
+                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
+    print('')
+    return ret
+
+def data_step2(instances, docs):
+    for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
+        quest_toks                              = tokenize(quest)
+        quest_tokens, quest_embeds              = get_embeds(quest_toks, wv)
+        q_idfs                                  = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        #
+        good_sents_title                        = sent_tokenize(docs[gid]['title'])
+        good_sents_abs                          = sent_tokenize(docs[gid]['abstractText'])
+        good_sents                              = good_sents_title + good_sents_abs
+        good_snips                              = get_snips(quest_id, gid, bioasq6_data)
+        good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
+        #
+        good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
+        for good_text in good_sents:
+            sent_toks                           = tokenize(good_text)
+            good_tokens, good_embeds            = get_embeds(sent_toks, wv)
+            good_escores                        = GetScores(quest, good_text, bm25s_gid)[:-1]
+            good_escores.append(len(sent_toks) / 342.)
+            if(len(good_embeds)>0):
+                tomi            = (set(sent_toks) & set(quest_toks))
+                tomi_no_stop    = tomi - set(stopwords)
+                features        = [
+                    len(quest),
+                    len(good_text),
+                    len(tomi_no_stop),
+                    sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
+                    sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
+                ]
+                good_sents_embeds.append(good_embeds)
+                good_sents_escores.append(good_escores+features)
+                tt          = ' '.join(bioclean(good_text))
+                good_sent_tags.append(snip_is_relevant(tt, good_snips))
+        #
+        if(sum(good_sent_tags)>0):
+            yield (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags)
+
+def get_one_auc(prefix, data, docs):
+    model.eval()
+    #
+    epoch_costs, epoch_auc = [], []
+    instances = data_step1(data)
+    random.shuffle(instances)
+    for (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags) in data_step2(instances, docs):
+        _, gs_emits_       = model(
+            sents_embeds        = good_sents_embeds,
+            question_embeds     = quest_embeds,
+            sents_gaf           = good_sents_escores,
+            sents_labels        = good_sent_tags
+        )
+        #
+        cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
+        gs_emits_               = gs_emits_.data.cpu().numpy().tolist()
+        good_sent_tags          = good_sent_tags + [0, 1]
+        gs_emits_               = gs_emits_ + [0, 1]
+        #
+        epoch_auc.append(roc_auc_score(good_sent_tags, gs_emits_))
+        epoch_costs.append(cost_.cpu().item())
+    epoch_aver_auc          = sum(epoch_auc) / float(len(epoch_auc))
+    epoch_aver_cost         = sum(epoch_costs) / float(len(epoch_costs))
+    print('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {}'.format(prefix, epoch+1, epoch_aver_cost, epoch_aver_auc))
+    return epoch_aver_auc
+
 class BCNN(nn.Module):
     def __init__(self, embedding_dim=30, additional_feats=8, convolution_size=4):
         super(BCNN, self).__init__()
@@ -539,57 +631,63 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 
 def train_one():
     model.train()
-    for epoch in range(10):
-        epoch_labels, epoch_emits, epoch_costs = [], [], []
-        batch_labels, batch_emits, batch_costs = [], [], []
-        batch_counter = 0
-        instance_counter = 0
-        epoch += 1
-        start_time = time.time()
-        train_instances = train_data_step1(train_data)
-        random.shuffle(train_instances)
-        for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-            gcost_, gemits_ = model(
-                sents_embeds=datum['good_sents_embeds'],
-                question_embeds=datum['quest_embeds'],
-                sents_gaf=datum['good_sents_escores'],
-                sents_labels=datum['good_sent_tags']
-            )
-            bcost_, bemits_ = model(
-                sents_embeds=datum['bad_sents_embeds'],
-                question_embeds=datum['quest_embeds'],
-                sents_gaf=datum['bad_sents_escores'],
-                sents_labels=datum['bad_sent_tags']
-            )
-            cost_ = (gcost_ + bcost_) / 2.
-            gemits_ = gemits_.data.cpu().numpy().tolist()
-            bemits_ = bemits_.data.cpu().numpy().tolist()
-            #
-            batch_costs.append(cost_)
-            epoch_costs.append(cost_)
-            batch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
-            epoch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
-            batch_emits.extend(gemits_ + bemits_)
-            epoch_emits.extend(gemits_ + bemits_)
-            #
-            # instance_counter += 1
-            # if (instance_counter % b_size == 0):
-            #     batch_counter += 1
-            #     batch_auc = roc_auc_score(batch_labels, batch_emits)
-            #     epoch_auc = roc_auc_score(epoch_labels, epoch_emits)
-            #     batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
-            #     batch_labels, batch_emits, batch_costs = [], [], []
-            #     elapsed_time = time.time() - start_time
-            #     start_time                              = time.time()
-            #     print('Epoch:{:02d} BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch, batch_counter, batch_aver_cost, epoch_aver_cost, batch_auc, epoch_auc, elapsed_time))
+    epoch_labels, epoch_emits, epoch_costs  = [], [], []
+    batch_labels, batch_emits, batch_costs  = [], [], []
+    batch_counter                           = 0
+    instance_counter                        = 0
+    start_time                              = time.time()
+    train_instances                         = train_data_step1(train_data)
+    random.shuffle(train_instances)
+    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
+        gcost_, gemits_                     = model(
+            sents_embeds                    = datum['good_sents_embeds'],
+            question_embeds                 = datum['quest_embeds'],
+            sents_gaf                       = datum['good_sents_escores'],
+            sents_labels                    = datum['good_sent_tags']
+        )
+        bcost_, bemits_                     = model(
+            sents_embeds                    = datum['bad_sents_embeds'],
+            question_embeds                 = datum['quest_embeds'],
+            sents_gaf                       = datum['bad_sents_escores'],
+            sents_labels                    = datum['bad_sent_tags']
+        )
+        cost_                               = (gcost_ + bcost_) / 2.
+        gemits_                             = gemits_.data.cpu().numpy().tolist()
+        bemits_                             = bemits_.data.cpu().numpy().tolist()
         #
-        epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-        epoch_auc = roc_auc_score(epoch_labels, epoch_emits)
-        elapsed_time = time.time() - start_time
-        # start_time      = time.time()
-        print('Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch, epoch_aver_cost, epoch_auc, elapsed_time))
+        batch_costs.append(cost_)
+        epoch_costs.append(cost_)
+        batch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
+        epoch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
+        batch_emits.extend(gemits_ + bemits_)
+        epoch_emits.extend(gemits_ + bemits_)
+        #
+        # instance_counter += 1
+        # if (instance_counter % b_size == 0):
+        #     batch_counter += 1
+        #     batch_auc = roc_auc_score(batch_labels, batch_emits)
+        #     epoch_auc = roc_auc_score(epoch_labels, epoch_emits)
+        #     batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
+        #     batch_labels, batch_emits, batch_costs = [], [], []
+        #     elapsed_time = time.time() - start_time
+        #     start_time                              = time.time()
+        #     print('Epoch:{:02d} BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, batch_counter, batch_aver_cost, epoch_aver_cost, batch_auc, epoch_auc, elapsed_time))
+    #
+    epoch_aver_cost                         = sum(epoch_costs) / float(len(epoch_costs))
+    epoch_auc                               = roc_auc_score(epoch_labels, epoch_emits)
+    elapsed_time                            = time.time() - start_time
+    # start_time                              = time.time()
+    print('Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, epoch_aver_cost, epoch_auc, elapsed_time))
 
-
+best_dev_auc, test_auc = None, None
+for epoch in range(10):
+    train_one()
+    epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
+    if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
+        best_dev_auc    = epoch_dev_auc
+        test_auc        = get_one_auc('test', test_data, test_docs)
+        save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
+    print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
 
 
 
