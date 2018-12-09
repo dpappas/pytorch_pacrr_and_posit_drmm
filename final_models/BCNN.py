@@ -487,6 +487,12 @@ def data_step2(instances, docs):
         if(sum(good_sent_tags)>0):
             yield (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags)
 
+def get_two_snip_losses(good_sent_tags, gs_emits_):
+    gs_emits_       = gs_emits_.squeeze(-1)
+    good_sent_tags  = torch.FloatTensor(good_sent_tags)
+    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
+    return sn_d1_l
+
 def get_one_auc(prefix, data, docs):
     model.eval()
     #
