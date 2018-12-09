@@ -13,7 +13,7 @@ from    nltk.tokenize                   import sent_tokenize
 from    difflib                         import SequenceMatcher
 from    keras.preprocessing.sequence    import pad_sequences
 from    keras.utils                     import to_categorical
-from    sklearn.metrics                 import roc_auc_score
+from    sklearn.metrics                 import roc_auc_score, f1_score
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
@@ -471,15 +471,16 @@ def data_step2(instances, docs):
             good_escores                        = GetScores(quest, good_text, bm25s_gid, idf, max_idf)[:-1]
             good_escores.append(len(sent_toks) / 342.)
             if(len(good_embeds)>0):
-                tomi            = (set(sent_toks) & set(quest_toks))
-                tomi_no_stop    = tomi - set(stopwords)
-                features        = [len(quest), len(good_text), len(tomi_no_stop),
+                tomi                            = (set(sent_toks) & set(quest_toks))
+                tomi_no_stop                    = tomi - set(stopwords)
+                features                        = [
+                    len(quest), len(good_text), len(tomi_no_stop),
                     sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
                     sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
                 ]
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores+features)
-                tt          = ' '.join(bioclean(good_text))
+                tt                              = ' '.join(bioclean(good_text))
                 good_sent_tags.append(snip_is_relevant(tt, good_snips))
         #
         if(sum(good_sent_tags)>0):
@@ -582,9 +583,11 @@ def train_one_only_positive():
 def get_one_auc(prefix, data, docs):
     model.eval()
     #
-    epoch_costs, epoch_auc = [], []
-    instances = data_step1(data)
-    random.shuffle(instances)
+    epoch_labels    = []
+    epoch_emits     = []
+    epoch_costs     = []
+    instances       = data_step1(data)
+    # random.shuffle(instances)
     for (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags) in data_step2(instances, docs):
         _, gs_emits_       = model(
             sents_embeds        = good_sents_embeds,
@@ -598,11 +601,18 @@ def get_one_auc(prefix, data, docs):
         good_sent_tags          = good_sent_tags + [0, 1]
         gs_emits_               = gs_emits_ + [0, 1]
         #
-        epoch_auc.append(roc_auc_score(good_sent_tags, gs_emits_))
-        epoch_costs.append(cost_.cpu().item())
-    epoch_aver_auc          = sum(epoch_auc) / float(len(epoch_auc))
-    epoch_aver_cost         = sum(epoch_costs) / float(len(epoch_costs))
-    print('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {}'.format(prefix, epoch+1, epoch_aver_cost, epoch_aver_auc))
+        epoch_costs.append(cost_)
+        epoch_labels.extend(good_sent_tags)
+        epoch_emits.extend(gs_emits_)
+    #
+    epoch_aver_cost             = sum(epoch_costs) / float(len(epoch_costs))
+    epoch_aver_auc              = roc_auc_score(epoch_labels, epoch_emits)
+    epoch_aver_f1               = f1_score(epoch_labels, epoch_emits)
+    print(
+        '{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {} epoch_aver_f1: {}'.format(
+            prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1
+        )
+    )
     return epoch_aver_auc
 
 class BCNN(nn.Module):
@@ -723,7 +733,8 @@ model = BCNN(
 )
 
 params      = model.parameters()
-optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
+# optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
+optimizer   = optim.SGD(params, lr=lr, momentum=0.9)
 # optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 # optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
 
