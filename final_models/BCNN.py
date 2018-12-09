@@ -295,7 +295,6 @@ def GetWords(data, doc_text, words):
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
-    logger.info('loading pickle data')
     #
     with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
         bioasq6_data = json.load(f)
@@ -314,7 +313,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs = pickle.load(f)
     print('loading words')
-    logger.info('loading words')
     #
     train_data  = RemoveBadYears(train_data, train_docs, True)
     train_data  = RemoveTrainLargeYears(train_data, train_docs)
@@ -327,10 +325,8 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(test_data,  test_docs,  words)
     #
     print('loading idfs')
-    logger.info('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
-    logger.info('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
@@ -773,13 +769,12 @@ for run in range(5):
     random.seed(run)
     torch.manual_seed(run)
     #
-    odir = '/home/dpappas/BCNN_run_{}/'.format(run)
-    print(odir)
-    logger.info(odir)
+    odir            = '/home/dpappas/BCNN_run_{}/'.format(run)
+    logger, hdlr    = init_the_logger(hdlr)
     if (not os.path.exists(odir)):
         os.makedirs(odir)
-    #
-    logger, hdlr = init_the_logger(hdlr)
+    print(odir)
+    logger.info(odir)
     #
     best_dev_auc, test_auc = None, None
     for epoch in range(10):
