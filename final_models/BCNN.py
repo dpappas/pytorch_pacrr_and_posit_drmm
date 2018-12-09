@@ -546,6 +546,7 @@ def train_one_only_positive():
     model.train()
     epoch_labels, epoch_emits, epoch_costs  = [], [], []
     batch_labels, batch_emits, batch_costs  = [], [], []
+    instance_counter, batch_counter         = 0, 0
     start_time                              = time.time()
     train_instances                         = train_data_step1(train_data)
     random.shuffle(train_instances)
@@ -565,6 +566,12 @@ def train_one_only_positive():
         epoch_labels.extend(datum['good_sent_tags'])
         batch_emits.extend(gemits_)
         epoch_emits.extend(gemits_)
+        #
+        instance_counter                            += 1
+        if (instance_counter % b_size == 0):
+            batch_counter                           += 1
+            batch_aver_cost, epoch_aver_cost        = back_prop(batch_costs, epoch_costs)
+            batch_labels, batch_emits, batch_costs  = [], [], []
     #
     epoch_aver_cost                         = sum(epoch_costs) / float(len(epoch_costs))
     epoch_auc                               = roc_auc_score(epoch_labels, epoch_emits)
