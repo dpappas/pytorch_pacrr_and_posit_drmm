@@ -467,7 +467,7 @@ def data_step2(instances, docs):
         for good_text in good_sents:
             sent_toks                           = tokenize(good_text)
             good_tokens, good_embeds            = get_embeds(sent_toks, wv)
-            good_escores                        = GetScores(quest, good_text, bm25s_gid)[:-1]
+            good_escores                        = GetScores(quest, good_text, bm25s_gid, idf, max_idf)[:-1]
             good_escores.append(len(sent_toks) / 342.)
             if(len(good_embeds)>0):
                 tomi            = (set(sent_toks) & set(quest_toks))
@@ -490,8 +490,60 @@ def data_step2(instances, docs):
 def get_two_snip_losses(good_sent_tags, gs_emits_):
     gs_emits_       = gs_emits_.squeeze(-1)
     good_sent_tags  = torch.FloatTensor(good_sent_tags)
-    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
+    if(use_cuda):
+        good_sent_tags = good_sent_tags.cuda()
+    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, reduction='elementwise_mean')
     return sn_d1_l
+
+def train_one():
+    model.train()
+    epoch_labels, epoch_emits, epoch_costs  = [], [], []
+    batch_labels, batch_emits, batch_costs  = [], [], []
+    batch_counter                           = 0
+    instance_counter                        = 0
+    start_time                              = time.time()
+    train_instances                         = train_data_step1(train_data)
+    random.shuffle(train_instances)
+    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
+        gcost_, gemits_                     = model(
+            sents_embeds                    = datum['good_sents_embeds'],
+            question_embeds                 = datum['quest_embeds'],
+            sents_gaf                       = datum['good_sents_escores'],
+            sents_labels                    = datum['good_sent_tags']
+        )
+        bcost_, bemits_                     = model(
+            sents_embeds                    = datum['bad_sents_embeds'],
+            question_embeds                 = datum['quest_embeds'],
+            sents_gaf                       = datum['bad_sents_escores'],
+            sents_labels                    = datum['bad_sent_tags']
+        )
+        cost_                               = (gcost_ + bcost_) / 2.
+        gemits_                             = gemits_.data.cpu().numpy().tolist()
+        bemits_                             = bemits_.data.cpu().numpy().tolist()
+        #
+        batch_costs.append(cost_)
+        epoch_costs.append(cost_)
+        batch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
+        epoch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
+        batch_emits.extend(gemits_ + bemits_)
+        epoch_emits.extend(gemits_ + bemits_)
+        #
+        # instance_counter += 1
+        # if (instance_counter % b_size == 0):
+        #     batch_counter += 1
+        #     batch_auc = roc_auc_score(batch_labels, batch_emits)
+        #     epoch_auc = roc_auc_score(epoch_labels, epoch_emits)
+        #     batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
+        #     batch_labels, batch_emits, batch_costs = [], [], []
+        #     elapsed_time = time.time() - start_time
+        #     start_time                              = time.time()
+        #     print('Epoch:{:02d} BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, batch_counter, batch_aver_cost, epoch_aver_cost, batch_auc, epoch_auc, elapsed_time))
+    #
+    epoch_aver_cost                         = sum(epoch_costs) / float(len(epoch_costs))
+    epoch_auc                               = roc_auc_score(epoch_labels, epoch_emits)
+    elapsed_time                            = time.time() - start_time
+    # start_time                              = time.time()
+    print('Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, epoch_aver_cost, epoch_auc, elapsed_time))
 
 def get_one_auc(prefix, data, docs):
     model.eval()
@@ -635,57 +687,11 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
     test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-def train_one():
-    model.train()
-    epoch_labels, epoch_emits, epoch_costs  = [], [], []
-    batch_labels, batch_emits, batch_costs  = [], [], []
-    batch_counter                           = 0
-    instance_counter                        = 0
-    start_time                              = time.time()
-    train_instances                         = train_data_step1(train_data)
-    random.shuffle(train_instances)
-    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-        gcost_, gemits_                     = model(
-            sents_embeds                    = datum['good_sents_embeds'],
-            question_embeds                 = datum['quest_embeds'],
-            sents_gaf                       = datum['good_sents_escores'],
-            sents_labels                    = datum['good_sent_tags']
-        )
-        bcost_, bemits_                     = model(
-            sents_embeds                    = datum['bad_sents_embeds'],
-            question_embeds                 = datum['quest_embeds'],
-            sents_gaf                       = datum['bad_sents_escores'],
-            sents_labels                    = datum['bad_sent_tags']
-        )
-        cost_                               = (gcost_ + bcost_) / 2.
-        gemits_                             = gemits_.data.cpu().numpy().tolist()
-        bemits_                             = bemits_.data.cpu().numpy().tolist()
-        #
-        batch_costs.append(cost_)
-        epoch_costs.append(cost_)
-        batch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
-        epoch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
-        batch_emits.extend(gemits_ + bemits_)
-        epoch_emits.extend(gemits_ + bemits_)
-        #
-        # instance_counter += 1
-        # if (instance_counter % b_size == 0):
-        #     batch_counter += 1
-        #     batch_auc = roc_auc_score(batch_labels, batch_emits)
-        #     epoch_auc = roc_auc_score(epoch_labels, epoch_emits)
-        #     batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
-        #     batch_labels, batch_emits, batch_costs = [], [], []
-        #     elapsed_time = time.time() - start_time
-        #     start_time                              = time.time()
-        #     print('Epoch:{:02d} BatchCounter:{:03d} BatchAverCost:{:.4f} EpochAverCost:{:.4f} BatchAUC:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, batch_counter, batch_aver_cost, epoch_aver_cost, batch_auc, epoch_auc, elapsed_time))
-    #
-    epoch_aver_cost                         = sum(epoch_costs) / float(len(epoch_costs))
-    epoch_auc                               = roc_auc_score(epoch_labels, epoch_emits)
-    elapsed_time                            = time.time() - start_time
-    # start_time                              = time.time()
-    print('Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, epoch_aver_cost, epoch_auc, elapsed_time))
-
 odir = '/home/dpappas/BCNN_run_{}/'.format(0)
+print(odir)
+if (not os.path.exists(odir)):
+    os.makedirs(odir)
+
 best_dev_auc, test_auc = None, None
 for epoch in range(10):
     # train_one()
