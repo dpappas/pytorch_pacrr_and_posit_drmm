@@ -188,7 +188,6 @@ def get_snips(quest_id, gid, bioasq6_data):
 
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
-    logger.info('Loading IDF tables')
     #
     # with open(dataloc + 'idf.pkl', 'rb') as f:
     with open(idf_path, 'rb') as f:
@@ -203,7 +202,6 @@ def load_idfs(idf_path, words):
             max_idf = idf[w]
     idf = None
     print('Loaded idf tables with max idf {}'.format(max_idf))
-    logger.info('Loaded idf tables with max idf {}'.format(max_idf))
     #
     return ret, max_idf
 
@@ -384,25 +382,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
                 'q_idfs'                : q_idfs,
             }
 
-def dummy_test():
-    model.train()
-    max_len     = 40
-    bx1         = np.random.randn(b_size, max_len, embedding_dim)
-    bx2         = np.random.randn(b_size, max_len, embedding_dim)
-    by          = np.random.randint(2, size=b_size)
-    bf          = np.random.randn(b_size, 8)
-    for i in range(500):
-        cost_ = model(
-            batch_x1        = bx1,
-            batch_x2        = bx2,
-            batch_y         = by,
-            batch_features  = bf
-        )
-        cost_.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-        print(cost_)
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -554,9 +533,16 @@ def train_one_only_positive():
     train_instances                         = train_data_step1(train_data)
     random.shuffle(train_instances)
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
+        # gcost_, gemits_                     = model(
+        #     sents_embeds                    = datum['good_sents_embeds'],
+        #     question_embeds                 = datum['quest_embeds'],
+        #     sents_gaf                       = datum['good_sents_escores'],
+        #     sents_labels                    = datum['good_sent_tags']
+        # )
         gcost_, gemits_                     = model(
-            sents_embeds                    = datum['good_sents_embeds'],
+            doc1_sents_embeds               = datum['good_sents_embeds'],
             question_embeds                 = datum['quest_embeds'],
+            q_idfs                          = datum['q_idfs'],
             sents_gaf                       = datum['good_sents_escores'],
             sents_labels                    = datum['good_sent_tags']
         )
@@ -653,7 +639,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_out_layer = nn.Linear(4, 1, bias=False)
         #
         self.init_mlps_for_pooled_attention()
-        self.init_sent_output_layer()
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
@@ -750,9 +735,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
-    def forward(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
+    def forward(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_labels):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
+        sents_labels        = autograd.Variable(torch.LongTensor(sents_labels),        requires_grad=False)
         #
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -762,6 +748,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         gs_emits            = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        print(gs_emits.size())
         return gs_emits
 
 class BCNN(nn.Module):
@@ -874,11 +861,13 @@ additional_feats    = 9
 b_size              = 32
 lr                  = 0.1
 
-model = BCNN(
-    embedding_dim       = embedding_dim,
-    additional_feats    = additional_feats,
-    convolution_size    = 4
-)
+# model = BCNN(
+#     embedding_dim       = embedding_dim,
+#     additional_feats    = additional_feats,
+#     convolution_size    = 4
+# )
+
+model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
 
 params      = model.parameters()
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
