@@ -644,7 +644,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # init_question_weight_module
         self.q_weights_mlp              = nn.Linear(self.embedding_dim+1, 1, bias=True)
         #
-        self.sent_out_layer             = nn.Linear(10, 2, bias=False)
+        self.convolution_size           = 4
+        self.out_conv                   = nn.Conv1d(
+            in_channels                 = 10,
+            out_channels                = 2,
+            kernel_size                 = self.convolution_size,
+            padding                     = self.convolution_size-1,
+            bias                        = True
+        )
+        # self.sent_out_layer             = nn.Linear(10, 2, bias=False)
         #
         self.init_mlps_for_pooled_attention()
     def init_mlps_for_pooled_attention(self):
@@ -707,8 +715,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
+        # self.out_conv
         res = torch.stack(res)
-        res = self.sent_out_layer(res)
+        # res = self.sent_out_layer(res)
+        res = self.out_conv(res.transpose(-1,-2).unsqueeze(0))
+        res = res.squeeze(0).transpose(-1,-2)
         return res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
