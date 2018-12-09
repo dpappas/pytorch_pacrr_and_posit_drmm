@@ -685,9 +685,10 @@ def train_one():
     # start_time                              = time.time()
     print('Epoch:{:02d} EpochAverCost:{:.4f} EpochAUC:{:.4f} ElapsedTime:{:.4f}'.format(epoch+1, epoch_aver_cost, epoch_auc, elapsed_time))
 
+odir = '/home/dpappas/BCNN_run_{}/'.format(0)
 best_dev_auc, test_auc = None, None
 for epoch in range(10):
-    train_one()
+    # train_one()
     epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
     if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
         best_dev_auc    = epoch_dev_auc
