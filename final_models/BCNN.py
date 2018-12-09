@@ -386,6 +386,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
 
 def dummy_test():
     model.train()
+    max_len     = 40
     bx1         = np.random.randn(b_size, max_len, embedding_dim)
     bx2         = np.random.randn(b_size, max_len, embedding_dim)
     by          = np.random.randint(2, size=b_size)
@@ -713,8 +714,7 @@ get_embeds          = get_embeds_use_unk
 embedding_dim       = 30
 additional_feats    = 9
 b_size              = 32
-max_len             = 40
-lr                  = 0.01
+lr                  = 0.1
 
 model = BCNN(
     embedding_dim       = embedding_dim,
