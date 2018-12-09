@@ -607,7 +607,7 @@ def get_one_auc(prefix, data, docs):
     #
     epoch_aver_cost             = sum(epoch_costs) / float(len(epoch_costs))
     epoch_aver_auc              = roc_auc_score(epoch_labels, epoch_emits)
-    epoch_aver_f1               = f1_score(epoch_labels, epoch_emits>1)
+    epoch_aver_f1               = f1_score(epoch_labels, epoch_emits>=.5)
     print(
         '{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {} epoch_aver_f1: {}'.format(
             prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1
