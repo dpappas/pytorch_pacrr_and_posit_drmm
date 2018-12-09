@@ -448,7 +448,7 @@ def data_step1(data):
             for gid in good_pmids:
                 bid = random.choice(bad_pmids)
                 ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
-    print('')
+    # print('')
     return ret
 
 def data_step2(instances, docs):
@@ -716,7 +716,7 @@ for run in range(5):
             best_dev_auc    = epoch_dev_auc
             test_auc        = get_one_auc('test', test_data, test_docs)
             save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
-        print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
+        print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
 
 
 
