@@ -344,7 +344,7 @@ def train_data_step1(train_data):
             for gid in good_pmids:
                 bid = random.choice(bad_pmids)
                 ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
-    print('')
+    # print('')
     return ret
 
 def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
