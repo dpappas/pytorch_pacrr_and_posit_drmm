@@ -598,8 +598,8 @@ def get_one_auc(prefix, data, docs):
         #
         cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
         gs_emits_               = gs_emits_.data.cpu().numpy().tolist()
-        good_sent_tags          = good_sent_tags + [0, 1]
-        gs_emits_               = gs_emits_ + [0, 1]
+        good_sent_tags          = good_sent_tags    + [0, 1]
+        gs_emits_               = gs_emits_         + [0, 1]
         #
         epoch_costs.append(cost_)
         epoch_labels.extend(good_sent_tags)
