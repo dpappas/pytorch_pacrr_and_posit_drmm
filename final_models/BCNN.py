@@ -628,15 +628,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         #
         self.embedding_dim              = embedding_dim
+        self.k                          = 5
         # to create q weights
         self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
         self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
         # init_question_weight_module
-        self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
+        self.q_weights_mlp              = nn.Linear(self.embedding_dim+1, 1, bias=True)
         #
-        self.sent_out_layer = nn.Linear(4, 1, bias=False)
+        self.sent_out_layer             = nn.Linear(10, 1, bias=False)
         #
         self.init_mlps_for_pooled_attention()
     def init_mlps_for_pooled_attention(self):
@@ -700,10 +701,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
-        if(self.sentence_out_method == 'MLP'):
-            res = self.sent_out_layer(res).squeeze(-1)
-        else:
-            res = self.apply_sent_res_bigru(res)
+        res = self.sent_out_layer(res).squeeze(-1)
         res = torch.sigmoid(res)
         return res
     def get_max_and_average_of_k_max(self, res, k):
