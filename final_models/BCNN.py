@@ -472,10 +472,7 @@ def data_step2(instances, docs):
             if(len(good_embeds)>0):
                 tomi            = (set(sent_toks) & set(quest_toks))
                 tomi_no_stop    = tomi - set(stopwords)
-                features        = [
-                    len(quest),
-                    len(good_text),
-                    len(tomi_no_stop),
+                features        = [len(quest), len(good_text), len(tomi_no_stop),
                     sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
                     sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
                 ]
