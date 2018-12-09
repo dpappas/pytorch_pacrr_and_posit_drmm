@@ -637,7 +637,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # init_question_weight_module
         self.q_weights_mlp              = nn.Linear(self.embedding_dim+1, 1, bias=True)
         #
-        self.sent_out_layer             = nn.Linear(10, 1, bias=False)
+        self.sent_out_layer             = nn.Linear(10, 2, bias=False)
         #
         self.init_mlps_for_pooled_attention()
     def init_mlps_for_pooled_attention(self):
@@ -701,8 +701,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
-        res = self.sent_out_layer(res).squeeze(-1)
-        res = torch.sigmoid(res)
+        res = self.sent_out_layer(res)
         return res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
@@ -746,8 +745,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         gs_emits            = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-        print(gs_emits.size())
-        return gs_emits
+        #
+        mlp_out             = F.log_softmax(gs_emits, dim=-1)
+        cost                = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
+        #
+        emit                = F.softmax(gs_emits, dim=-1)[:,1]
+        return cost, emit
 
 class BCNN(nn.Module):
     def __init__(self, embedding_dim=30, additional_feats=8, convolution_size=4):
