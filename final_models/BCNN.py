@@ -637,6 +637,133 @@ def init_the_logger(hdlr):
     logger.setLevel(logging.INFO)
     return logger, hdlr
 
+class Sent_Posit_Drmm_Modeler(nn.Module):
+    def __init__(self, embedding_dim= 30):
+        super(Sent_Posit_Drmm_Modeler, self).__init__()
+        #
+        self.embedding_dim              = embedding_dim
+        # to create q weights
+        self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
+        # init_question_weight_module
+        self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
+        #
+        self.sent_out_layer = nn.Linear(4, 1, bias=False)
+        #
+        self.init_mlps_for_pooled_attention()
+        self.init_sent_output_layer()
+    def init_mlps_for_pooled_attention(self):
+        self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
+        self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.linear_per_q2      = nn.Linear(8, 1, bias=True)
+    def apply_context_convolution(self, the_input, the_filters, activation):
+        conv_res        = the_filters(the_input.transpose(0,1).unsqueeze(0))
+        if(activation is not None):
+            conv_res    = activation(conv_res)
+        pad             = the_filters.padding[0]
+        ind_from        = int(np.floor(pad/2.0))
+        ind_to          = ind_from + the_input.size(0)
+        conv_res        = conv_res[:, :, ind_from:ind_to]
+        conv_res        = conv_res.transpose(1, 2)
+        conv_res        = conv_res + the_input
+        return conv_res.squeeze(0)
+    def my_cosine_sim(self, A, B):
+        A           = A.unsqueeze(0)
+        B           = B.unsqueeze(0)
+        A_mag       = torch.norm(A, 2, dim=2)
+        B_mag       = torch.norm(B, 2, dim=2)
+        num         = torch.bmm(A, B.transpose(-1,-2))
+        den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
+        dist_mat    = num / den
+        return dist_mat
+    def pooling_method(self, sim_matrix):
+        sorted_res              = torch.sort(sim_matrix, -1)[0]                             # sort the input minimum to maximum
+        k_max_pooled            = sorted_res[:,-self.k:]                                    # select the last k of each instance in our data
+        average_k_max_pooled    = k_max_pooled.sum(-1)/float(self.k)                        # average these k values
+        the_maximum             = k_max_pooled[:, -1]                                       # select the maximum value of each instance
+        the_average_over_all    = sorted_res.sum(-1)/float(sim_matrix.size(1))              # add average of all elements as long sentences might have more matches
+        the_concatenation       = torch.stack([the_maximum, average_k_max_pooled, the_average_over_all], dim=-1)  # concatenate maximum value and average of k-max values
+        return the_concatenation     # return the concatenation
+    def get_output(self, input_list, weights):
+        temp    = torch.cat(input_list, -1)
+        lo      = self.linear_per_q1(temp)
+        lo      = self.my_relu1(lo)
+        lo      = self.linear_per_q2(lo)
+        lo      = lo.squeeze(-1)
+        lo      = lo * weights
+        sr      = lo.sum(-1) / lo.size(-1)
+        return sr
+    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
+        res = []
+        for i in range(len(doc_sents_embeds)):
+            sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
+            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
+            conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+            conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
+            #
+            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
+            sim_oh              = (sim_insens > (1 - (1e-3))).float()
+            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+            #
+            insensitive_pooled  = self.pooling_method(sim_insens)
+            sensitive_pooled    = self.pooling_method(sim_sens)
+            oh_pooled           = self.pooling_method(sim_oh)
+            #
+            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            res.append(sent_add_feats)
+        res = torch.stack(res)
+        if(self.sentence_out_method == 'MLP'):
+            res = self.sent_out_layer(res).squeeze(-1)
+        else:
+            res = self.apply_sent_res_bigru(res)
+        res = torch.sigmoid(res)
+        return res
+    def get_max_and_average_of_k_max(self, res, k):
+        sorted_res              = torch.sort(res)[0]
+        k_max_pooled            = sorted_res[-k:]
+        average_k_max_pooled    = k_max_pooled.sum()/float(k)
+        the_maximum             = k_max_pooled[-1]
+        # print(the_maximum)
+        # print(the_maximum.size())
+        # print(average_k_max_pooled)
+        # print(average_k_max_pooled.size())
+        the_concatenation       = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
+        return the_concatenation
+    def get_max(self, res):
+        return torch.max(res)
+    def get_kmax(self, res):
+        res     = torch.sort(res,0)[0]
+        res     = res[-self.k2:].squeeze(-1)
+        if(res.size()[0] < self.k2):
+            res         = torch.cat([res, torch.zeros(self.k2 - res.size()[0])], -1)
+        return res
+    def get_average(self, res):
+        res = torch.sum(res) / float(res.size()[0])
+        return res
+    def get_mesh_rep(self, meshes_embeds, q_context):
+        meshes_embeds   = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
+        meshes_embeds   = torch.stack(meshes_embeds)
+        sim_matrix      = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
+        max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
+        output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
+        return output
+    def forward(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
+        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
+        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
+        #
+        q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        #
+        q_weights           = torch.cat([q_context, q_idfs], -1)
+        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights           = F.softmax(q_weights, dim=-1)
+        #
+        gs_emits            = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        return gs_emits
+
 class BCNN(nn.Module):
     def __init__(self, embedding_dim=30, additional_feats=8, convolution_size=4):
         super(BCNN, self).__init__()
