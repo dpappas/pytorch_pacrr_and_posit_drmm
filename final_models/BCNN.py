@@ -694,7 +694,7 @@ if (not os.path.exists(odir)):
 
 best_dev_auc, test_auc = None, None
 for epoch in range(10):
-    # train_one()
+    train_one()
     epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
     if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
         best_dev_auc    = epoch_dev_auc
