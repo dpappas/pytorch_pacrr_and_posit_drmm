@@ -707,7 +707,7 @@ embedding_dim       = 30
 additional_feats    = 9
 b_size              = 32
 max_len             = 40
-lr                  = 0.08
+lr                  = 0.01
 
 model = BCNN(
     embedding_dim       = embedding_dim,
@@ -717,8 +717,8 @@ model = BCNN(
 
 params      = model.parameters()
 # optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0004)
-optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-# optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
+# optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
 
 (
     test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
