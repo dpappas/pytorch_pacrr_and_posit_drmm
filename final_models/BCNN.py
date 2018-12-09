@@ -511,22 +511,25 @@ def train_one():
             sents_gaf                       = datum['good_sents_escores'],
             sents_labels                    = datum['good_sent_tags']
         )
-        bcost_, bemits_                     = model(
-            sents_embeds                    = datum['bad_sents_embeds'],
-            question_embeds                 = datum['quest_embeds'],
-            sents_gaf                       = datum['bad_sents_escores'],
-            sents_labels                    = datum['bad_sent_tags']
-        )
-        cost_                               = (gcost_ + bcost_) / 2.
+        # bcost_, bemits_                     = model(
+        #     sents_embeds                    = datum['bad_sents_embeds'],
+        #     question_embeds                 = datum['quest_embeds'],
+        #     sents_gaf                       = datum['bad_sents_escores'],
+        #     sents_labels                    = datum['bad_sent_tags']
+        # )
+        # cost_                               = (gcost_ + bcost_) / 2.
+        cost_                               = gcost_
         gemits_                             = gemits_.data.cpu().numpy().tolist()
-        bemits_                             = bemits_.data.cpu().numpy().tolist()
+        # bemits_                             = bemits_.data.cpu().numpy().tolist()
         #
         batch_costs.append(cost_)
         epoch_costs.append(cost_)
         batch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
         epoch_labels.extend(datum['good_sent_tags'] + datum['bad_sent_tags'])
-        batch_emits.extend(gemits_ + bemits_)
-        epoch_emits.extend(gemits_ + bemits_)
+        batch_emits.extend(gemits_)
+        epoch_emits.extend(gemits_)
+        # batch_emits.extend(gemits_ + bemits_)
+        # epoch_emits.extend(gemits_ + bemits_)
         #
         # instance_counter += 1
         # if (instance_counter % b_size == 0):
@@ -698,20 +701,22 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
     test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-odir = '/home/dpappas/BCNN_run_{}/'.format(0)
-print(odir)
-if (not os.path.exists(odir)):
-    os.makedirs(odir)
-
-best_dev_auc, test_auc = None, None
-for epoch in range(10):
-    train_one()
-    epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
-    if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
-        best_dev_auc    = epoch_dev_auc
-        test_auc        = get_one_auc('test', test_data, test_docs)
-        save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
-    print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
+for run in range(5):
+    #
+    odir = '/home/dpappas/BCNN_run_{}/'.format(run)
+    print(odir)
+    if (not os.path.exists(odir)):
+        os.makedirs(odir)
+    #
+    best_dev_auc, test_auc = None, None
+    for epoch in range(10):
+        train_one()
+        epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
+        if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
+            best_dev_auc    = epoch_dev_auc
+            test_auc        = get_one_auc('test', test_data, test_docs)
+            save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
+        print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
 
 
 
