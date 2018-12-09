@@ -644,7 +644,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # init_question_weight_module
         self.q_weights_mlp              = nn.Linear(self.embedding_dim+1, 1, bias=True)
         #
-        self.convolution_size           = 4
+        self.convolution_size           = 3
         self.out_conv                   = nn.Conv1d(
             in_channels                 = 10,
             out_channels                = 2,
@@ -718,7 +718,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # self.out_conv
         res = torch.stack(res)
         # res = self.sent_out_layer(res)
-        res = self.out_conv(res.transpose(-1,-2).unsqueeze(0))
+        res = self.out_conv(res.transpose(-1,-2).unsqueeze(0))[:,:,1:res.size(0)+1]
         res = res.squeeze(0).transpose(-1,-2)
         return res
     def get_max_and_average_of_k_max(self, res, k):
