@@ -577,11 +577,18 @@ def get_one_auc(prefix, data, docs):
     instances       = data_step1(data)
     # random.shuffle(instances)
     for (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags) in data_step2(instances, docs):
-        _, gs_emits_       = model(
-            sents_embeds        = good_sents_embeds,
-            question_embeds     = quest_embeds,
-            sents_gaf           = good_sents_escores,
-            sents_labels        = good_sent_tags
+        # _, gs_emits_       = model(
+        #     sents_embeds        = good_sents_embeds,
+        #     question_embeds     = quest_embeds,
+        #     sents_gaf           = good_sents_escores,
+        #     sents_labels        = good_sent_tags
+        # )
+        _, gemits_                          = model(
+            doc1_sents_embeds               = good_sents_embeds,
+            question_embeds                 = quest_embeds,
+            q_idfs                          = q_idfs,
+            sents_gaf                       = good_sents_escores,
+            sents_labels                    = good_sent_tags
         )
         #
         cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
