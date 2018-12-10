@@ -533,19 +533,19 @@ def train_one_only_positive():
     train_instances                         = train_data_step1(train_data)
     random.shuffle(train_instances)
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-        # gcost_, gemits_                     = model(
-        #     sents_embeds                    = datum['good_sents_embeds'],
-        #     question_embeds                 = datum['quest_embeds'],
-        #     sents_gaf                       = datum['good_sents_escores'],
-        #     sents_labels                    = datum['good_sent_tags']
-        # )
         gcost_, gemits_                     = model(
-            doc1_sents_embeds               = datum['good_sents_embeds'],
+            sents_embeds                    = datum['good_sents_embeds'],
             question_embeds                 = datum['quest_embeds'],
-            q_idfs                          = datum['q_idfs'],
             sents_gaf                       = datum['good_sents_escores'],
             sents_labels                    = datum['good_sent_tags']
         )
+        # gcost_, gemits_                     = model(
+        #     doc1_sents_embeds               = datum['good_sents_embeds'],
+        #     question_embeds                 = datum['quest_embeds'],
+        #     q_idfs                          = datum['q_idfs'],
+        #     sents_gaf                       = datum['good_sents_escores'],
+        #     sents_labels                    = datum['good_sent_tags']
+        # )
         cost_                               = gcost_
         gemits_                             = gemits_.data.cpu().numpy().tolist()
         #
@@ -577,19 +577,19 @@ def get_one_auc(prefix, data, docs):
     instances       = data_step1(data)
     # random.shuffle(instances)
     for (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags) in data_step2(instances, docs):
-        # _, gs_emits_       = model(
-        #     sents_embeds        = good_sents_embeds,
-        #     question_embeds     = quest_embeds,
-        #     sents_gaf           = good_sents_escores,
-        #     sents_labels        = good_sent_tags
-        # )
-        _, gs_emits_                        = model(
-            doc1_sents_embeds               = good_sents_embeds,
-            question_embeds                 = quest_embeds,
-            q_idfs                          = q_idfs,
-            sents_gaf                       = good_sents_escores,
-            sents_labels                    = good_sent_tags
+        _, gs_emits_       = model(
+            sents_embeds        = good_sents_embeds,
+            question_embeds     = quest_embeds,
+            sents_gaf           = good_sents_escores,
+            sents_labels        = good_sent_tags
         )
+        # _, gs_emits_                        = model(
+        #     doc1_sents_embeds               = good_sents_embeds,
+        #     question_embeds                 = quest_embeds,
+        #     q_idfs                          = q_idfs,
+        #     sents_gaf                       = good_sents_escores,
+        #     sents_labels                    = good_sent_tags
+        # )
         #
         cost_                   = get_two_snip_losses(good_sent_tags, gs_emits_)
         gs_emits_               = gs_emits_.data.cpu().numpy().tolist()
@@ -604,16 +604,9 @@ def get_one_auc(prefix, data, docs):
     epoch_aver_auc              = roc_auc_score(epoch_labels, epoch_emits)
     emit_tags                   = [1 if(e>=.5) else 0 for e in epoch_emits]
     epoch_aver_f1               = f1_score(epoch_labels, emit_tags)
-    print(
-        '{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {} epoch_aver_f1: {}'.format(
-            prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1
-        )
-    )
-    logger.info(
-        '{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {} epoch_aver_f1: {}'.format(
-            prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1
-        )
-    )
+    #
+    print('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {} epoch_aver_f1: {}'.format(prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1))
+    logger.info('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {} epoch_aver_f1: {}'.format(prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1))
     return epoch_aver_auc
 
 def init_the_logger(hdlr):
@@ -923,7 +916,7 @@ for run in range(5):
     if(use_cuda):
         torch.cuda.manual_seed_all(run)
     #
-    odir            = '/home/dpappas/BCNN_vs_PDRMM_2nd_run_{}/'.format(run)
+    odir            = '/home/dpappas/BCNN_vs_PDRMM_1st_run_{}/'.format(run)
     logger, hdlr    = init_the_logger(hdlr)
     if (not os.path.exists(odir)):
         os.makedirs(odir)
