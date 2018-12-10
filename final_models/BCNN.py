@@ -157,13 +157,14 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
         if (len(good_embeds) > 0):
             tomi            = (set(sent_toks) & set(quest_toks))
             tomi_no_stop    = tomi - set(stopwords)
-            features    = [
-                len(quest),
-                len(good_text),
-                len(tomi_no_stop),
-                sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
+            features        = [
+                len(quest) / 500.,
+                len(good_text) / 500.,
+                len(tomi_no_stop) / 100.,
+                sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]) / sum([max_idf for w in quest_toks]),
                 sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
             ]
+            print(features)
             #
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores+features)
