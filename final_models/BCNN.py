@@ -891,55 +891,58 @@ get_embeds          = get_embeds_use_unk
 embedding_dim       = 30
 additional_feats    = 9
 b_size              = 32
-lr                  = 0.01
-model_type          = 'BCNN'
-optim_type          = 'SGD'
-
-if(model_type == 'BCNN'):
-    model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
-else:
-    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
-
-params          = model.parameters()
-if(optim_type.lower() == 'sgd'):
-    optimizer   = optim.SGD(params,     lr=lr, momentum=0.9)
-elif(optim_type.lower() == 'adam'):
-    optimizer   = optim.Adam(params,    lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
-else:
-    optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
+# lr                  = 0.01
+# model_type          = 'BCNN'
+# optim_type          = 'SGD'
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-hdlr = None
-for run in range(5):
-    #
-    np.random.seed(run)
-    random.seed(run)
-    torch.manual_seed(run)
-    if(use_cuda):
-        torch.cuda.manual_seed_all(run)
-    #
-    odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
-    logger, hdlr    = init_the_logger(hdlr)
-    if (not os.path.exists(odir)):
-        os.makedirs(odir)
-    print(odir)
-    logger.info(odir)
-    #
-    best_dev_auc, test_auc, best_dev_epoch = None, None, None
-    for epoch in range(10):
-        logger.info('Training...')
-        train_one_only_positive()
-        logger.info('Validating...')
-        epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
-        if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
-            best_dev_epoch  = epoch+1
-            best_dev_auc    = epoch_dev_auc
-            logger.info('Testing...')
-            test_auc        = get_one_auc('test', test_data, test_docs)
-            save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
-        print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
-        logger.info('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
+for model_type in ['BCNN', 'PDRMM']:
+    for optim_type in ['SGD', 'ADAM', 'Adagrad']:
+        for lr in [0.01, 0.01, 0.1]:
+            #
+            if(model_type == 'BCNN'):
+                model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
+            else:
+                model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
+            params          = model.parameters()
+            if(optim_type.lower() == 'sgd'):
+                optimizer   = optim.SGD(params,     lr=lr, momentum=0.9)
+            elif(optim_type.lower() == 'adam'):
+                optimizer   = optim.Adam(params,    lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
+            else:
+                optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
+            #
+            hdlr = None
+            for run in range(5):
+                #
+                np.random.seed(run)
+                random.seed(run)
+                torch.manual_seed(run)
+                if(use_cuda):
+                    torch.cuda.manual_seed_all(run)
+                #
+                odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
+                logger, hdlr    = init_the_logger(hdlr)
+                if (not os.path.exists(odir)):
+                    os.makedirs(odir)
+                print(odir)
+                logger.info(odir)
+                #
+                best_dev_auc, test_auc, best_dev_epoch = None, None, None
+                for epoch in range(10):
+                    logger.info('Training...')
+                    train_one_only_positive()
+                    logger.info('Validating...')
+                    epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
+                    if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
+                        best_dev_epoch  = epoch+1
+                        best_dev_auc    = epoch_dev_auc
+                        logger.info('Testing...')
+                        test_auc        = get_one_auc('test', test_data, test_docs)
+                        save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
+                    print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
+                    logger.info('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
 
 
 
