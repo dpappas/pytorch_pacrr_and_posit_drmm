@@ -652,13 +652,22 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             padding                     = self.convolution_size-1,
             bias                        = True
         )
-        # self.sent_out_layer             = nn.Linear(10, 2, bias=False)
-        #
         self.init_mlps_for_pooled_attention()
+        if(use_cuda):
+            self.trigram_conv_1             = self.trigram_conv_1.cuda()
+            self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
+            self.trigram_conv_2             = self.trigram_conv_2.cuda()
+            self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
+            self.q_weights_mlp              = self.q_weights_mlp.cuda()
+            self.out_conv                   = self.out_conv.cuda()
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
+        if(use_cuda):
+            self.linear_per_q1  = self.linear_per_q1.cuda()
+            self.my_relu1       = self.my_relu1.cuda()
+            self.linear_per_q2  = self.linear_per_q2.cuda()
     def apply_context_convolution(self, the_input, the_filters, activation):
         conv_res        = the_filters(the_input.transpose(0,1).unsqueeze(0))
         if(activation is not None):
@@ -701,6 +710,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
+            if(use_cuda):
+                sent_embeds     = sent_embeds.cuda()
+                gaf             = gaf.cuda()
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
             #
@@ -754,6 +766,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         sents_labels        = autograd.Variable(torch.LongTensor(sents_labels),        requires_grad=False)
+        if(use_cuda):
+            q_idfs          = q_idfs.cuda()
+            question_embeds = question_embeds.cuda()
+            sents_labels    = sents_labels.cuda()
         #
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
