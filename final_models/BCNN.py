@@ -893,17 +893,20 @@ additional_feats    = 9
 b_size              = 32
 lr                  = 0.1
 model_type          = 'BCNN'
+optim               = 'SGD'
 
 if(model_type == 'BCNN'):
     model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
 else:
     model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
 
-params      = model.parameters()
-optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
-# optimizer   = optim.SGD(params, lr=lr, momentum=0.9)
-# optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-# optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
+params          = model.parameters()
+if(optim.lower() == 'sgd'):
+    optimizer   = optim.SGD(params, lr=lr, momentum=0.9)
+elif(optim.lower() == 'adam'):
+    optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
+else:
+    optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
