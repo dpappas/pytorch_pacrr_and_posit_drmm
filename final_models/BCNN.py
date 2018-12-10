@@ -627,6 +627,27 @@ def init_the_logger(hdlr):
     logger.setLevel(logging.INFO)
     return logger, hdlr
 
+def setup_random(run):
+    np.random.seed(run)
+    random.seed(run)
+    torch.manual_seed(run)
+    if(use_cuda):
+        torch.cuda.manual_seed_all(run)
+
+def setup_optim_model():
+    if(model_type == 'BCNN'):
+        model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
+    else:
+        model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
+    params          = model.parameters()
+    if(optim_type.lower() == 'sgd'):
+        optimizer   = optim.SGD(params,     lr=lr, momentum=0.9)
+    elif(optim_type.lower() == 'adam'):
+        optimizer   = optim.Adam(params,    lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
+    else:
+        optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
+    return model, optimizer
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim= 30):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -895,30 +916,13 @@ b_size              = 32
 # model_type          = 'BCNN'
 # optim_type          = 'SGD'
 
-def setup_random(run):
-    np.random.seed(run)
-    random.seed(run)
-    torch.manual_seed(run)
-    if(use_cuda):
-        torch.cuda.manual_seed_all(run)
-
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 for model_type in ['BCNN', 'PDRMM']:
     for optim_type in ['SGD', 'ADAM', 'Adagrad']:
         for lr in [0.01, 0.01, 0.1]:
             #
-            if(model_type == 'BCNN'):
-                model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
-            else:
-                model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
-            params          = model.parameters()
-            if(optim_type.lower() == 'sgd'):
-                optimizer   = optim.SGD(params,     lr=lr, momentum=0.9)
-            elif(optim_type.lower() == 'adam'):
-                optimizer   = optim.Adam(params,    lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
-            else:
-                optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
+            model, optimizer = setup_optim_model()
             #
             hdlr = None
             for run in range(5):
