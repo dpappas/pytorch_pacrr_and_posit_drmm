@@ -921,10 +921,8 @@ b_size              = 32
 for model_type in ['BCNN', 'PDRMM']:
     for optim_type in ['SGD', 'ADAM', 'Adagrad']:
         for lr in [0.001, 0.01, 0.1]:
-            #
-            model, optimizer = setup_optim_model()
-            #
-            hdlr = None
+            model, optimizer    = setup_optim_model()
+            hdlr                = None
             for run in range(5):
                 setup_random(run)
                 #
