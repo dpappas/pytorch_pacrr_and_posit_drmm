@@ -893,7 +893,7 @@ additional_feats    = 9
 b_size              = 32
 lr                  = 0.01
 model_type          = 'BCNN'
-optim               = 'SGD'
+optim_type          = 'SGD'
 
 if(model_type == 'BCNN'):
     model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
@@ -901,9 +901,9 @@ else:
     model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
 
 params          = model.parameters()
-if(optim.lower() == 'sgd'):
+if(optim_type.lower() == 'sgd'):
     optimizer   = optim.SGD(params,     lr=lr, momentum=0.9)
-elif(optim.lower() == 'adam'):
+elif(optim_type.lower() == 'adam'):
     optimizer   = optim.Adam(params,    lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
 else:
     optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
@@ -919,7 +919,7 @@ for run in range(5):
     if(use_cuda):
         torch.cuda.manual_seed_all(run)
     #
-    odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim, str(lr).replace('.',''), run)
+    odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
     logger, hdlr    = init_the_logger(hdlr)
     if (not os.path.exists(odir)):
         os.makedirs(odir)
