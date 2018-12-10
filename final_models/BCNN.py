@@ -917,10 +917,13 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 hdlr = None
 for run in range(5):
     #
+    np.random.seed(run)
     random.seed(run)
     torch.manual_seed(run)
+    if(use_cuda):
+        torch.cuda.manual_seed_all(run)
     #
-    odir            = '/home/dpappas/BCNN_run_{}/'.format(run)
+    odir            = '/home/dpappas/BCNN_vs_PDRMM_2nd_run_{}/'.format(run)
     logger, hdlr    = init_the_logger(hdlr)
     if (not os.path.exists(odir)):
         os.makedirs(odir)
