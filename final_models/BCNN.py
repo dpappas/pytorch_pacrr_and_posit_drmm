@@ -453,7 +453,9 @@ def data_step2(instances, docs):
                 tomi                            = (set(sent_toks) & set(quest_toks))
                 tomi_no_stop                    = tomi - set(stopwords)
                 features                        = [
-                    len(quest), len(good_text), len(tomi_no_stop),
+                    len(quest)          / 300.,
+                    len(good_text)      / 300.,
+                    len(tomi_no_stop)   / 100.,
                     sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
                     sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
                 ]
