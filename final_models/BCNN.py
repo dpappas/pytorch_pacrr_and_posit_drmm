@@ -638,7 +638,7 @@ def setup_optim_model():
     if(model_type == 'BCNN'):
         model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
     elif (model_type == 'BCNN_PDRMM'):
-        model = BCNN_PDRMM(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
+        model = BCNN_PDRMM(embedding_dim=embedding_dim)
     else:
         model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
     params          = model.parameters()
