@@ -891,7 +891,7 @@ get_embeds          = get_embeds_use_unk
 embedding_dim       = 30
 additional_feats    = 9
 b_size              = 32
-lr                  = 0.1
+lr                  = 0.01
 model_type          = 'BCNN'
 optim               = 'SGD'
 
