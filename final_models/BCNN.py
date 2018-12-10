@@ -930,19 +930,20 @@ for run in range(5):
     print(odir)
     logger.info(odir)
     #
-    best_dev_auc, test_auc = None, None
+    best_dev_auc, test_auc, best_dev_epoch = None, None, None
     for epoch in range(10):
         logger.info('Training...')
         train_one_only_positive()
         logger.info('Validating...')
         epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
         if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
+            best_dev_epoch  = epoch+1
             best_dev_auc    = epoch_dev_auc
             logger.info('Testing...')
             test_auc        = get_one_auc('test', test_data, test_docs)
             save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
-        print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
-        logger.info('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc))
+        print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
+        logger.info('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
 
 
 
