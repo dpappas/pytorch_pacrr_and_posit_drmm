@@ -919,7 +919,7 @@ for run in range(5):
     if(use_cuda):
         torch.cuda.manual_seed_all(run)
     #
-    odir            = '/home/dpappas/BCNN_vs_PDRMM_{}_{}_run_{}/'.format(model_type, str(lr).replace('.',''), run)
+    odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim, str(lr).replace('.',''), run)
     logger, hdlr    = init_the_logger(hdlr)
     if (not os.path.exists(odir)):
         os.makedirs(odir)
