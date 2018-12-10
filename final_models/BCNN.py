@@ -938,34 +938,35 @@ class BCNN_PDRMM(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
+    def glob_average_pool(self, the_input):
+        the_input               = the_input.unsqueeze(0).transpose(-1,-2)
+        the_input_global_pool   = F.avg_pool1d(the_input, the_input.size(-1), stride=None)
+        return the_input_global_pool.squeeze(-1)
     def forward(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_labels):
-        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
-        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
-        sents_labels        = autograd.Variable(torch.LongTensor(sents_labels),        requires_grad=False)
+        q_idfs                  = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
+        question_embeds         = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
+        sents_labels            = autograd.Variable(torch.LongTensor(sents_labels),        requires_grad=False)
         if(use_cuda):
-            q_idfs          = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
-            sents_labels    = sents_labels.cuda()
+            q_idfs              = q_idfs.cuda()
+            question_embeds     = question_embeds.cuda()
+            sents_labels        = sents_labels.cuda()
         #
-        q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        print(q_context.size())
-        print(question_embeds.size())
+        q_context               = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context               = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
-        print(quest_global_pool.size())
-        exit()
+        quest_global_pool       = self.glob_average_pool(question_embeds)
+        quest_cont_global_pool  = self.glob_average_pool(q_context)
         #
-        q_weights           = torch.cat([q_context, q_idfs], -1)
-        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights           = F.softmax(q_weights, dim=-1)
+        q_weights               = torch.cat([q_context, q_idfs], -1)
+        q_weights               = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights               = F.softmax(q_weights, dim=-1)
         #
-        gs_emits            = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        gs_emits                = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
         #
-        mlp_out             = F.log_softmax(gs_emits, dim=-1)
-        cost                = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
+        mlp_out                 = F.log_softmax(gs_emits, dim=-1)
+        cost                    = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
         #
-        emit                = F.softmax(gs_emits, dim=-1)[:,1]
+        emit                    = F.softmax(gs_emits, dim=-1)[:,1]
         return cost, emit
 
 class BCNN(nn.Module):
