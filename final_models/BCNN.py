@@ -637,6 +637,8 @@ def setup_random(run):
 def setup_optim_model():
     if(model_type == 'BCNN'):
         model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
+    elif (model_type == 'BCNN_PDRMM'):
+        model = BCNN_PDRMM(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
     else:
         model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
     params          = model.parameters()
@@ -947,6 +949,12 @@ class BCNN_PDRMM(nn.Module):
         #
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        print(q_context.size())
+        print(question_embeds.size())
+        #
+        quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
+        print(quest_global_pool.size())
+        exit()
         #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
@@ -1044,26 +1052,26 @@ class BCNN(nn.Module):
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# use_cuda            = True
-# odd                 = '/home/dpappas/'
-# get_embeds          = get_embeds_use_unk
-
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 use_cuda            = True
 odd                 = '/home/dpappas/'
 get_embeds          = get_embeds_use_unk
-# get_embeds          = get_embeds_use_only_unk
+
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# use_cuda            = True
+# odd                 = '/home/dpappas/'
+# get_embeds          = get_embeds_use_unk
+# # get_embeds          = get_embeds_use_only_unk
 
 embedding_dim       = 30
 additional_feats    = 9
@@ -1074,7 +1082,7 @@ b_size              = 32
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-for model_type in ['BCNN', 'PDRMM']:
+for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
     for optim_type in ['SGD', 'ADAM', 'Adagrad']:
         for lr in [0.001, 0.01, 0.1]:
             model, optimizer    = setup_optim_model()
