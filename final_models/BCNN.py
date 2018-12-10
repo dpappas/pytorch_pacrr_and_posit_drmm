@@ -583,7 +583,7 @@ def get_one_auc(prefix, data, docs):
         #     sents_gaf           = good_sents_escores,
         #     sents_labels        = good_sent_tags
         # )
-        _, gemits_                          = model(
+        _, gs_emits_                        = model(
             doc1_sents_embeds               = good_sents_embeds,
             question_embeds                 = quest_embeds,
             q_idfs                          = q_idfs,
