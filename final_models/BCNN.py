@@ -533,19 +533,21 @@ def train_one_only_positive():
     train_instances                         = train_data_step1(train_data)
     random.shuffle(train_instances)
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-        gcost_, gemits_                     = model(
-            sents_embeds                    = datum['good_sents_embeds'],
-            question_embeds                 = datum['quest_embeds'],
-            sents_gaf                       = datum['good_sents_escores'],
-            sents_labels                    = datum['good_sent_tags']
-        )
-        # gcost_, gemits_                     = model(
-        #     doc1_sents_embeds               = datum['good_sents_embeds'],
-        #     question_embeds                 = datum['quest_embeds'],
-        #     q_idfs                          = datum['q_idfs'],
-        #     sents_gaf                       = datum['good_sents_escores'],
-        #     sents_labels                    = datum['good_sent_tags']
-        # )
+        if (model_type == 'BCNN'):
+            gcost_, gemits_                     = model(
+                sents_embeds                    = datum['good_sents_embeds'],
+                question_embeds                 = datum['quest_embeds'],
+                sents_gaf                       = datum['good_sents_escores'],
+                sents_labels                    = datum['good_sent_tags']
+            )
+        else:
+            gcost_, gemits_                     = model(
+                doc1_sents_embeds               = datum['good_sents_embeds'],
+                question_embeds                 = datum['quest_embeds'],
+                q_idfs                          = datum['q_idfs'],
+                sents_gaf                       = datum['good_sents_escores'],
+                sents_labels                    = datum['good_sent_tags']
+            )
         cost_                               = gcost_
         gemits_                             = gemits_.data.cpu().numpy().tolist()
         #
@@ -888,14 +890,12 @@ embedding_dim       = 30
 additional_feats    = 9
 b_size              = 32
 lr                  = 0.1
+model_type          = 'BCNN'
 
-# model = BCNN(
-#     embedding_dim       = embedding_dim,
-#     additional_feats    = additional_feats,
-#     convolution_size    = 4
-# )
-
-model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
+if(model_type == 'BCNN'):
+    model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
+else:
+    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
 
 params      = model.parameters()
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0001)
@@ -903,9 +903,7 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 # optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 # optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
 
-(
-    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
-) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 hdlr = None
 for run in range(5):
@@ -916,7 +914,7 @@ for run in range(5):
     if(use_cuda):
         torch.cuda.manual_seed_all(run)
     #
-    odir            = '/home/dpappas/BCNN_vs_PDRMM_1st_run_{}/'.format(run)
+    odir            = '/home/dpappas/BCNN_vs_PDRMM_{}_run_{}/'.format(model_type, run)
     logger, hdlr    = init_the_logger(hdlr)
     if (not os.path.exists(odir)):
         os.makedirs(odir)
