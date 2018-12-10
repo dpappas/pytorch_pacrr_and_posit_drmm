@@ -822,7 +822,7 @@ class BCNN_PDRMM(nn.Module):
         #
         self.convolution_size           = 3
         self.out_conv                   = nn.Conv1d(
-            in_channels                 = 10,
+            in_channels                 = 12,
             out_channels                = 2,
             kernel_size                 = self.convolution_size,
             padding                     = self.convolution_size-1,
@@ -881,29 +881,34 @@ class BCNN_PDRMM(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, quest_global_pool, quest_cont_global_pool):
         res = []
         for i in range(len(doc_sents_embeds)):
-            sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
-            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
+            sent_embeds             = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
+            gaf                     = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if(use_cuda):
-                sent_embeds     = sent_embeds.cuda()
-                gaf             = gaf.cuda()
-            conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
+                sent_embeds         = sent_embeds.cuda()
+                gaf                 = gaf.cuda()
             #
-            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh              = (sim_insens > (1 - (1e-3))).float()
-            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+            conv_res                = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+            conv_res                = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
             #
-            insensitive_pooled  = self.pooling_method(sim_insens)
-            sensitive_pooled    = self.pooling_method(sim_sens)
-            oh_pooled           = self.pooling_method(sim_oh)
+            sent_global_pool        = self.glob_average_pool(sent_embeds)
+            glob_aver_sim           = self.my_cosine_sim(quest_global_pool, sent_global_pool).squeeze(0)
+            sent_cont_global_pool   = self.glob_average_pool(conv_res)
+            glob_cont_aver_sim      = self.my_cosine_sim(quest_cont_global_pool, sent_cont_global_pool).squeeze(0)
             #
-            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            sim_insens              = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
+            sim_oh                  = (sim_insens > (1 - (1e-3))).float()
+            sim_sens                = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+            #
+            insensitive_pooled      = self.pooling_method(sim_insens)
+            sensitive_pooled        = self.pooling_method(sim_sens)
+            oh_pooled               = self.pooling_method(sim_oh)
+            #
+            sent_emit               = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+            sent_add_feats          = torch.cat([gaf, sent_emit.unsqueeze(-1), glob_aver_sim.squeeze(-1), glob_cont_aver_sim.squeeze(-1)])
             res.append(sent_add_feats)
-        # self.out_conv
         res = torch.stack(res)
         # res = self.sent_out_layer(res)
         res = self.out_conv(res.transpose(-1,-2).unsqueeze(0))[:,:,1:res.size(0)+1]
@@ -961,7 +966,9 @@ class BCNN_PDRMM(nn.Module):
         q_weights               = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights               = F.softmax(q_weights, dim=-1)
         #
-        gs_emits                = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        gs_emits                = self.do_for_one_doc_cnn(
+            doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, quest_global_pool, quest_cont_global_pool
+        )
         #
         mlp_out                 = F.log_softmax(gs_emits, dim=-1)
         cost                    = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
@@ -1083,7 +1090,8 @@ b_size              = 32
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
+# for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
+for model_type in ['BCNN_PDRMM']:
     for optim_type in ['SGD', 'ADAM', 'Adagrad']:
         for lr in [0.001, 0.01, 0.1]:
             model, optimizer    = setup_optim_model()
