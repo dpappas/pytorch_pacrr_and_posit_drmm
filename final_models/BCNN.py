@@ -895,6 +895,13 @@ b_size              = 32
 # model_type          = 'BCNN'
 # optim_type          = 'SGD'
 
+def setup_random(run):
+    np.random.seed(run)
+    random.seed(run)
+    torch.manual_seed(run)
+    if(use_cuda):
+        torch.cuda.manual_seed_all(run)
+
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 for model_type in ['BCNN', 'PDRMM']:
@@ -915,12 +922,7 @@ for model_type in ['BCNN', 'PDRMM']:
             #
             hdlr = None
             for run in range(5):
-                #
-                np.random.seed(run)
-                random.seed(run)
-                torch.manual_seed(run)
-                if(use_cuda):
-                    torch.cuda.manual_seed_all(run)
+                setup_random(run)
                 #
                 odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
                 logger, hdlr    = init_the_logger(hdlr)
