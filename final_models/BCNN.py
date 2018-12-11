@@ -1094,35 +1094,37 @@ b_size              = 32
 
 # for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
 # for model_type in ['BCNN_PDRMM']:
-for model_type in ['PDRMM']:
-    for optim_type in ['SGD', 'ADAM', 'Adagrad']:
-        for lr in [0.001, 0.01, 0.1]:
-            model, optimizer    = setup_optim_model()
-            hdlr                = None
-            for run in range(5):
-                setup_random(run)
-                #
-                odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
-                logger, hdlr    = init_the_logger(hdlr)
-                if (not os.path.exists(odir)):
-                    os.makedirs(odir)
-                print(odir)
-                logger.info(odir)
-                #
-                best_dev_auc, test_auc, best_dev_epoch = None, None, None
-                for epoch in range(10):
-                    logger.info('Training...')
-                    train_one_only_positive()
-                    logger.info('Validating...')
-                    epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
-                    if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
-                        best_dev_epoch  = epoch+1
-                        best_dev_auc    = epoch_dev_auc
-                        logger.info('Testing...')
-                        test_auc        = get_one_auc('test', test_data, test_docs)
-                        save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
-                    print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
-                    logger.info('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
+
+model_type          = 'Adagrad'
+optim_type          = 'ADAM'
+lr                  = 0.01
+
+model, optimizer    = setup_optim_model()
+hdlr                = None
+for run in range(5):
+    setup_random(run)
+    #
+    odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
+    logger, hdlr    = init_the_logger(hdlr)
+    if (not os.path.exists(odir)):
+        os.makedirs(odir)
+    print(odir)
+    logger.info(odir)
+    #
+    best_dev_auc, test_auc, best_dev_epoch = None, None, None
+    for epoch in range(10):
+        logger.info('Training...')
+        train_one_only_positive()
+        logger.info('Validating...')
+        epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
+        if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
+            best_dev_epoch  = epoch+1
+            best_dev_auc    = epoch_dev_auc
+            logger.info('Testing...')
+            test_auc        = get_one_auc('test', test_data, test_docs)
+            save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
+        print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
+        logger.info('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
 
 
 
