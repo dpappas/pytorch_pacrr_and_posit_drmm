@@ -919,7 +919,7 @@ class BCNN_PDRMM(nn.Module):
         #
         self.convolution_size           = 3
         self.out_conv                   = nn.Conv1d(
-            in_channels                 = 12,
+            in_channels                 = 13,
             out_channels                = 2,
             kernel_size                 = self.convolution_size,
             padding                     = self.convolution_size-1,
