@@ -768,7 +768,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         self.convolution_size           = 3
         self.out_conv                   = nn.Conv1d(
-            in_channels                 = 12,
+            in_channels                 = 11,
             out_channels                = 2,
             kernel_size                 = self.convolution_size,
             padding                     = self.convolution_size-1,
