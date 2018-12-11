@@ -1195,9 +1195,9 @@ print(avgdl, mean, deviation)
 # for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
 # for model_type in ['BCNN_PDRMM']:
 
+# model_type          = 'BCNN_PDRMM'
 # model_type          = 'BCNN'
-# model_type          = 'PDRMM'
-model_type          = 'BCNN'
+model_type          = 'PDRMM'
 optim_type          = 'ADAM'
 lr                  = 0.01
 
