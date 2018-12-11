@@ -202,27 +202,38 @@ def get_embeds_use_only_unk(tokens, wv):
         ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
-    good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, avgdl_retr_docs):
+    good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    quest_toks  = tokenize(quest)
-    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    avgdl_this_doc  = compute_avgdl([tokenize(s) for s in good_sents])
+    ####
+    quest_toks      = tokenize(quest)
+    good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
         sent_toks                   = tokenize(good_text)
         good_tokens, good_embeds    = get_embeds(sent_toks, wv)
-        # qwords_in_doc_val + qwords_bigrams_in_doc_val + idf_qwords_in_doc_val + bm25
+        # qwords_in_sent + qwords_bigrams_in_sent + idf_qwords_in_sent + doc_bm25
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
             tomi            = (set(sent_toks) & set(quest_toks))
             tomi_no_stop    = tomi - set(stopwords)
+            # mean, deviation = compute_Zscore_values(
+            #     train_path, idf_scores, train_avgdl, 1.2, 0.75, rare_word_value
+            # )
+            BM25score       = similarity_score(
+                s1, s2, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf
+            )
             features        = [
+                # already have it
+                # already have it
                 len(quest)          / 300.,
                 len(good_text)      / 300.,
                 len(tomi_no_stop)   / 100.,
+                BM25score,
                 sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
                 sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
             ]
@@ -412,6 +423,15 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
     # for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         good_snips                  = get_snips(quest_id, gid, bioasq6_data)
         good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
+        #
+        # all_retr_ids                = [d.split('/')[-1] for d in bioasq6_data[quest_id]['documents']]
+        # all_retr_sent               = []
+        # for retr_id in all_retr_ids:
+        #     all_retr_sent.extend(tokenize(s) for s in sent_tokenize(docs[retr_id]['abstractText']))
+        #     all_retr_sent.extend(tokenize(s) for s in sent_tokenize(docs[retr_id]['title']))
+        # #
+        # avgdl_relevant_docs         = compute_avgdl(all_retr_sent)
+        # # print(avgdl_relevant_docs)
         #
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf)
         good_sents_embeds           = datum['sents_embeds']
@@ -1150,6 +1170,11 @@ additional_feats    = 9
 b_size              = 32
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+
+avgdl_relevant_docs         = compute_avgdl(all_retr_sent)
+mean, deviation = compute_Zscore_values(
+    train_path, idf_scores, train_avgdl, 1.2, 0.75, max_idf
+)
 
 # for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
 # for model_type in ['BCNN_PDRMM']:
