@@ -257,13 +257,14 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
                 sum(tomi_no_stop_idfs)  / float(len(tomi_no_stop_idfs)),
                 sum(tomi_idfs)          / sum(quest_idfs),
             ]
+            print(features)
             #
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores+features)
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
             #
-    exit()
+    # exit()
     ####
     return {
         'sents_embeds'     : good_sents_embeds,
