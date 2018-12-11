@@ -250,11 +250,11 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
             features            = [
                 # already have it
                 # already have it
-                len(quest)          / 300.,
-                len(good_text)      / 300.,
-                len(tomi_no_stop)   / 100.,
+                len(quest)              / 300.,
+                len(good_text)          / 300.,
+                len(tomi_no_stop)       / 100.,
                 BM25score,
-                sum(tomi_no_stop_idfs)  / float(len(tomi_no_stop_idfs)),
+                sum(tomi_no_stop_idfs)  / 100.,
                 sum(tomi_idfs)          / sum(quest_idfs),
             ]
             print(features)
@@ -1190,6 +1190,8 @@ print(avgdl, mean, deviation)
 # for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
 # for model_type in ['BCNN_PDRMM']:
 
+# model_type          = 'BCNN'
+# model_type          = 'PDRMM'
 model_type          = 'BCNN_PDRMM'
 optim_type          = 'ADAM'
 lr                  = 0.1
