@@ -18,6 +18,17 @@ from    sklearn.metrics                 import roc_auc_score, f1_score
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
 
+# Compute the term frequency of a word for a specific document
+def tf(term, document):
+    tf = 0
+    for word in document:
+        if word == term:
+            tf += 1
+    if len(document) == 0:
+        return tf
+    else:
+        return tf/len(document)
+
 # Use BM25 ranking function in order to cimpute the similarity score between a question anda snippet
 # query: the given question
 # document: the snippet
