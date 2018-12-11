@@ -41,7 +41,13 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
     score = 0
     for query_term in query:
         if query_term not in idf_scores:
-            score += rare_word * ((tf(query_term, document) * (k1 + 1)) / (tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+            score += rare_word * (
+                    (tf(query_term, document) * (k1 + 1)) /
+                    (
+                            tf(query_term, document) +
+                            k1 * (1 - b + b * (len(document) / avgdl))
+                    )
+            )
         else:
             score += idf_scores[query_term] * ((tf(query_term, document) * (k1 + 1)) / (tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
     if normalize:
@@ -50,18 +56,13 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
         return score
 
 # Compute mean and deviation for Z-score normalization
-def compute_Zscore_values(dataset, idf_scores, avgdl, k1, b, rare_word):
-    s1s, s2s, labels = [], [], []
-    BM25scores = []
+def compute_Zscore_values(all_retr_sent, idf_scores, avgdl, k1, b, rare_word):
+    BM25scores  = []
+    # for retr sent in all_retr_sent:
     with open(dataset, 'r') as f:
         for line in f:
-            items = line[:-1].split('\t')
             s1 = items[1].lower().split()
             s2 = items[2].lower().split()
-            label = int(items[3])
-            s1s.append(s1)
-            s2s.append(s2)
-            labels.append(label)
             BM25score = similarity_score(s1, s2, k1, b, idf_scores, avgdl, False, 0, 0, rare_word)
             BM25scores.append(BM25score)
     mean = sum(BM25scores)/ len(BM25scores)
@@ -423,15 +424,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
     # for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         good_snips                  = get_snips(quest_id, gid, bioasq6_data)
         good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
-        #
-        # all_retr_ids                = [d.split('/')[-1] for d in bioasq6_data[quest_id]['documents']]
-        # all_retr_sent               = []
-        # for retr_id in all_retr_ids:
-        #     all_retr_sent.extend(tokenize(s) for s in sent_tokenize(docs[retr_id]['abstractText']))
-        #     all_retr_sent.extend(tokenize(s) for s in sent_tokenize(docs[retr_id]['title']))
-        # #
-        # avgdl_relevant_docs         = compute_avgdl(all_retr_sent)
-        # # print(avgdl_relevant_docs)
         #
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf)
         good_sents_embeds           = datum['sents_embeds']
@@ -1171,10 +1163,42 @@ b_size              = 32
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-avgdl_relevant_docs         = compute_avgdl(all_retr_sent)
-mean, deviation = compute_Zscore_values(
-    train_path, idf_scores, train_avgdl, 1.2, 0.75, max_idf
-)
+def get_bm25_metrics():
+
+
+
+
+BM25scores  = []
+k1          = 1.2
+b           = 0.75
+not_found   = 0
+avgdl       = 0
+for qid in tqdm(bioasq6_data):
+    qtext           = bioasq6_data[qid]['body']
+    all_retr_ids    = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
+    for dic in all_retr_ids:
+        try:
+            sents   = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
+            q_toks  = tokenize(qtext)
+            for sent in sents:
+                BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
+                BM25scores.append(BM25score)
+        except KeyError:
+            not_found += 1
+
+mean = sum(BM25scores)/ len(BM25scores)
+nominator = 0
+for score in BM25scores:
+    nominator += ((score - mean) ** 2)
+deviation = math.sqrt((nominator) / len(BM25scores) - 1)
+
+print(not_found)
+print(mean)
+print(deviation)
+exit()
+
+avgdl               = compute_avgdl(all_retr_sent)
+mean, deviation     = compute_Zscore_values(all_retr_sent, idf, avgdl, 1.2, 0.75, max_idf)
 
 # for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
 # for model_type in ['BCNN_PDRMM']:
