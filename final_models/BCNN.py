@@ -545,12 +545,19 @@ def data_step2(instances, docs):
             if(len(good_embeds)>0):
                 tomi                            = (set(sent_toks) & set(quest_toks))
                 tomi_no_stop                    = tomi - set(stopwords)
-                features                        = [
-                    len(quest)          / 300.,
-                    len(good_text)      / 300.,
-                    len(tomi_no_stop)   / 100.,
-                    sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
-                    sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
+                BM25score                       = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+                tomi_no_stop_idfs               = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+                tomi_idfs                       = [idf_val(w, idf, max_idf) for w in tomi]
+                quest_idfs                      = [idf_val(w, idf, max_idf) for w in quest_toks]
+                features            = [
+                    # already have it
+                    # already have it
+                    len(quest)              / 300.,
+                    len(good_text)          / 300.,
+                    len(tomi_no_stop)       / 100.,
+                    BM25score,
+                    sum(tomi_no_stop_idfs)  / 100.,
+                    sum(tomi_idfs)          / sum(quest_idfs),
                 ]
                 good_sents_embeds.append(good_embeds)
                 good_sents_escores.append(good_escores+features)
@@ -1155,26 +1162,26 @@ class BCNN(nn.Module):
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-use_cuda            = True
-odd                 = '/home/dpappas/'
-get_embeds          = get_embeds_use_unk
-
-# # atlas , cslab243
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 # use_cuda            = True
 # odd                 = '/home/dpappas/'
 # get_embeds          = get_embeds_use_unk
-# # get_embeds          = get_embeds_use_only_unk
+
+# atlas , cslab243
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+use_cuda            = True
+odd                 = '/home/dpappas/'
+get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
 
 embedding_dim       = 30
 additional_feats    = 9
