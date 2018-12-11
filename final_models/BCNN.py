@@ -1079,7 +1079,7 @@ class BCNN_PDRMM(nn.Module):
         return cost, emit
 
 class BCNN(nn.Module):
-    def __init__(self, embedding_dim=30, additional_feats=9, convolution_size=4):
+    def __init__(self, embedding_dim=30, additional_feats=10, convolution_size=4):
         super(BCNN, self).__init__()
         self.additional_feats   = additional_feats
         self.convolution_size   = convolution_size
