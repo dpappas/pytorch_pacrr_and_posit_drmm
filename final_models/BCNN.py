@@ -645,8 +645,8 @@ def train_one_only_positive():
                 sents_gaf                       = datum['good_sents_escores'],
                 sents_labels                    = datum['good_sent_tags']
             )
-        cost_                               = gcost_
-        gemits_                             = gemits_.data.cpu().numpy().tolist()
+        cost_                                   = gcost_
+        gemits_                                 = gemits_.data.cpu().numpy().tolist()
         #
         batch_costs.append(cost_)
         epoch_costs.append(cost_)
