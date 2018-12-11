@@ -1,5 +1,5 @@
 
-import  os, json, time, random, re, nltk, pickle, logging, subprocess
+import  os, json, time, random, re, nltk, pickle, logging, subprocess, math
 import  torch
 import  torch.nn.functional             as F
 import  torch.nn                        as nn
@@ -17,6 +17,56 @@ from    sklearn.metrics                 import roc_auc_score, f1_score
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
+
+# Use BM25 ranking function in order to cimpute the similarity score between a question anda snippet
+# query: the given question
+# document: the snippet
+# k1, b: parameters
+# idf_scores: list with the idf scores
+# avddl: average document length
+# nomalize: in case we want to use Z-score normalization (Boolean)
+# mean, deviation: variables used for Z-score normalization
+def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
+    score = 0
+    for query_term in query:
+        if query_term not in idf_scores:
+            score += rare_word * ((tf(query_term, document) * (k1 + 1)) / (tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+        else:
+            score += idf_scores[query_term] * ((tf(query_term, document) * (k1 + 1)) / (tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+    if normalize:
+        return ((score - mean)/deviation)
+    else:
+        return score
+
+# Compute mean and deviation for Z-score normalization
+def compute_Zscore_values(dataset, idf_scores, avgdl, k1, b, rare_word):
+    s1s, s2s, labels = [], [], []
+    BM25scores = []
+    with open(dataset, 'r') as f:
+        for line in f:
+            items = line[:-1].split('\t')
+            s1 = items[1].lower().split()
+            s2 = items[2].lower().split()
+            label = int(items[3])
+            s1s.append(s1)
+            s2s.append(s2)
+            labels.append(label)
+            BM25score = similarity_score(s1, s2, k1, b, idf_scores, avgdl, False, 0, 0, rare_word)
+            BM25scores.append(BM25score)
+    mean = sum(BM25scores)/ len(BM25scores)
+    nominator = 0
+    for score in BM25scores:
+        nominator += ((score - mean) ** 2)
+    deviation = math.sqrt((nominator) / len(BM25scores) - 1)
+    return mean, deviation
+
+# Compute the average length from a collection of documents
+def compute_avgdl(documents):
+    total_words = 0
+    for document in documents:
+        total_words += len(document)
+    avgdl = total_words / len(documents)
+    return avgdl
 
 def uwords(words):
   uw = {}
@@ -152,6 +202,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
     for good_text in good_sents:
         sent_toks                   = tokenize(good_text)
         good_tokens, good_embeds    = get_embeds(sent_toks, wv)
+        # qwords_in_doc_val + qwords_bigrams_in_doc_val + idf_qwords_in_doc_val + bm25
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
@@ -613,7 +664,7 @@ def get_one_auc(prefix, data, docs):
     #
     print('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {} epoch_aver_f1: {}'.format(prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1))
     logger.info('{} Epoch:{} aver_epoch_cost: {} aver_epoch_auc: {} epoch_aver_f1: {}'.format(prefix, epoch+1, epoch_aver_cost, epoch_aver_auc, epoch_aver_f1))
-    return epoch_aver_auc
+    return epoch_aver_auc, epoch_aver_f1
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
@@ -1086,22 +1137,19 @@ get_embeds          = get_embeds_use_unk
 embedding_dim       = 30
 additional_feats    = 9
 b_size              = 32
-# lr                  = 0.01
-# model_type          = 'BCNN'
-# optim_type          = 'SGD'
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
 # for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
 # for model_type in ['BCNN_PDRMM']:
 
-model_type          = 'Adagrad'
+model_type          = 'BCNN_PDRMM'
 optim_type          = 'ADAM'
-lr                  = 0.01
+lr                  = 0.1
 
 model, optimizer    = setup_optim_model()
 hdlr                = None
-for run in range(5):
+for run in range(1):
     setup_random(run)
     #
     odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
@@ -1111,22 +1159,45 @@ for run in range(5):
     print(odir)
     logger.info(odir)
     #
-    best_dev_auc, test_auc, best_dev_epoch = None, None, None
+    best_dev_auc, test_auc, best_dev_epoch, best_dev_f1 = None, None, None, None
     for epoch in range(10):
         logger.info('Training...')
         train_one_only_positive()
         logger.info('Validating...')
-        epoch_dev_auc       = get_one_auc('dev', dev_data, dev_docs)
+        epoch_dev_auc, epoch_dev_f1 = get_one_auc('dev', dev_data, dev_docs)
         if(best_dev_auc is None or epoch_dev_auc>=best_dev_auc):
             best_dev_epoch  = epoch+1
             best_dev_auc    = epoch_dev_auc
+            best_dev_f1     = epoch_dev_f1
             logger.info('Testing...')
-            test_auc        = get_one_auc('test', test_data, test_docs)
+            test_auc, test_f1 = get_one_auc('test', test_data, test_docs)
             save_checkpoint(epoch, model, best_dev_auc, optimizer, filename=odir+'best_checkpoint.pth.tar')
-        print('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
-        logger.info('epoch:{} epoch_dev_auc:{} best_dev_auc:{} test_auc:{} best_dev_epoch:{}\n'.format(epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch))
+        print(
+            'epoch:{} '
+            'epoch_dev_auc:{} '
+            'best_dev_auc:{} '
+            'test_auc:{} '
+            'best_dev_epoch:{} '
+            'best_dev_f1:{} '
+            'test_f1:{} '
+            '\n'.format(
+                epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch, epoch_dev_f1, test_f1
+            )
 
+        )
+        logger.info(
+            'epoch:{} '
+            'epoch_dev_auc:{} '
+            'best_dev_auc:{} '
+            'test_auc:{} '
+            'best_dev_epoch:{} '
+            'best_dev_f1:{} '
+            'test_f1:{} '
+            '\n'.format(
+                epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch, epoch_dev_f1, test_f1
+            )
 
+        )
 
 
 
