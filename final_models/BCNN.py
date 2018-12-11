@@ -1192,7 +1192,7 @@ print(avgdl, mean, deviation)
 # model_type          = 'PDRMM'
 model_type          = 'BCNN_PDRMM'
 optim_type          = 'ADAM'
-lr                  = 0.1
+lr                  = 0.01
 
 model, optimizer    = setup_optim_model()
 hdlr                = None
