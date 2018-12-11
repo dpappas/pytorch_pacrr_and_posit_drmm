@@ -229,8 +229,6 @@ def get_embeds_use_only_unk(tokens, wv):
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
     good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    avgdl_this_doc  = compute_avgdl([tokenize(s) for s in good_sents])
-    ####
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
