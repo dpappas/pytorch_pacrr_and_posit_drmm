@@ -18,6 +18,46 @@ from    sklearn.metrics                 import roc_auc_score, f1_score
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
 
+def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
+    if(avgdl == 0):
+        total_words = 0
+        total_docs  = 0
+        for dic in tqdm(train_docs):
+            sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
+            for s in sents:
+                total_words += len(tokenize(s))
+                total_docs  += 1.
+        avgdl = float(total_words) / float(total_docs)
+    else:
+        print('avgdl {} provided'.format(avgdl))
+    #
+    if(mean == 0 and deviation==0):
+        BM25scores  = []
+        k1, b       = 1.2, 0.75
+        not_found   = 0
+        for qid in tqdm(bioasq6_data):
+            qtext           = bioasq6_data[qid]['body']
+            all_retr_ids    = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
+            for dic in all_retr_ids:
+                try:
+                    sents   = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
+                    q_toks  = tokenize(qtext)
+                    for sent in sents:
+                        BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
+                        BM25scores.append(BM25score)
+                except KeyError:
+                    not_found += 1
+        #
+        mean        = sum(BM25scores)/float(len(BM25scores))
+        nominator   = 0
+        for score in BM25scores:
+            nominator += ((score - mean) ** 2)
+        deviation   = math.sqrt((nominator) / float(len(BM25scores) - 1))
+    else:
+        print('mean {} provided'.format(mean))
+        print('deviation {} provided'.format(deviation))
+    return avgdl, mean, deviation
+
 # Compute the term frequency of a word for a specific document
 def tf(term, document):
     tf = 0
@@ -54,23 +94,6 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
         return ((score - mean)/deviation)
     else:
         return score
-
-# Compute mean and deviation for Z-score normalization
-def compute_Zscore_values(all_retr_sent, idf_scores, avgdl, k1, b, rare_word):
-    BM25scores  = []
-    # for retr sent in all_retr_sent:
-    with open(dataset, 'r') as f:
-        for line in f:
-            s1 = items[1].lower().split()
-            s2 = items[2].lower().split()
-            BM25score = similarity_score(s1, s2, k1, b, idf_scores, avgdl, False, 0, 0, rare_word)
-            BM25scores.append(BM25score)
-    mean = sum(BM25scores)/ len(BM25scores)
-    nominator = 0
-    for score in BM25scores:
-        nominator += ((score - mean) ** 2)
-    deviation = math.sqrt((nominator) / len(BM25scores) - 1)
-    return mean, deviation
 
 # Compute the average length from a collection of documents
 def compute_avgdl(documents):
@@ -203,7 +226,7 @@ def get_embeds_use_only_unk(tokens, wv):
         ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, avgdl_retr_docs):
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
     good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     avgdl_this_doc  = compute_avgdl([tokenize(s) for s in good_sents])
@@ -222,12 +245,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, avgdl_retr
         if (len(good_embeds) > 0):
             tomi            = (set(sent_toks) & set(quest_toks))
             tomi_no_stop    = tomi - set(stopwords)
-            # mean, deviation = compute_Zscore_values(
-            #     train_path, idf_scores, train_avgdl, 1.2, 0.75, rare_word_value
-            # )
-            BM25score       = similarity_score(
-                s1, s2, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf
-            )
+            BM25score       = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
             features        = [
                 # already have it
                 # already have it
@@ -238,12 +256,14 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, avgdl_retr
                 sum([idf_val(w, idf, max_idf) for w in tomi_no_stop]),
                 sum([idf_val(w, idf, max_idf) for w in tomi]) / sum([idf_val(w, idf, max_idf) for w in quest_toks]),
             ]
+            print(features)
             #
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores+features)
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
             #
+    exit()
     ####
     return {
         'sents_embeds'     : good_sents_embeds,
@@ -1163,42 +1183,8 @@ b_size              = 32
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
 
-def get_bm25_metrics():
-
-
-
-
-BM25scores  = []
-k1          = 1.2
-b           = 0.75
-not_found   = 0
-avgdl       = 0
-for qid in tqdm(bioasq6_data):
-    qtext           = bioasq6_data[qid]['body']
-    all_retr_ids    = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
-    for dic in all_retr_ids:
-        try:
-            sents   = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-            q_toks  = tokenize(qtext)
-            for sent in sents:
-                BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
-                BM25scores.append(BM25score)
-        except KeyError:
-            not_found += 1
-
-mean = sum(BM25scores)/ len(BM25scores)
-nominator = 0
-for score in BM25scores:
-    nominator += ((score - mean) ** 2)
-deviation = math.sqrt((nominator) / len(BM25scores) - 1)
-
-print(not_found)
-print(mean)
-print(deviation)
-exit()
-
-avgdl               = compute_avgdl(all_retr_sent)
-mean, deviation     = compute_Zscore_values(all_retr_sent, idf, avgdl, 1.2, 0.75, max_idf)
+avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
+print(avgdl, mean, deviation)
 
 # for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
 # for model_type in ['BCNN_PDRMM']:
