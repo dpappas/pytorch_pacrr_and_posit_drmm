@@ -1204,7 +1204,8 @@ print(avgdl, mean, deviation)
 
 # model_type          = 'BCNN_PDRMM'
 # model_type          = 'BCNN'
-model_type          = 'PDRMM'
+# model_type          = 'PDRMM'
+model_type          = 'ABCNN3'
 optim_type          = 'ADAM'
 lr                  = 0.001
 model, optimizer    = setup_optim_model()
