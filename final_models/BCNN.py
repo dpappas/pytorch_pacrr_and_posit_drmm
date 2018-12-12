@@ -1172,7 +1172,7 @@ class BCNN(nn.Module):
         return cost, emit
 
 class ABCNN3(nn.Module):
-    def __init__(self, embedding_dim=30, convolution_size=4):
+    def __init__(self, embedding_dim=30):
         super(ABCNN3, self).__init__()
         self.embedding_dim      = embedding_dim
         self.conv1              = nn.Conv1d(
@@ -1190,6 +1190,8 @@ class ABCNN3(nn.Module):
             bias                = True
         )
         self.linear_out         = nn.Linear(12, 2, bias=True)
+        max_len                 = 200
+        self.aW                 = autograd.Variable(torch.Tensor(max_len, self.embedding_dim), requires_grad=True)
         self.conv1_activ        = torch.nn.Tanh()
         if(use_cuda):
             self.linear_out     = self.linear_out.cuda()
@@ -1197,6 +1199,7 @@ class ABCNN3(nn.Module):
             self.conv1          = self.conv1.cuda()
             self.conv2          = self.conv2.cuda()
             self.conv1_activ    = self.conv1_activ.cuda()
+            self.aW             = self.aW.cuda()
     def my_cosine_sim(self, A, B):
         A_mag = torch.norm(A, 2, dim=2)
         B_mag = torch.norm(B, 2, dim=2)
@@ -1214,11 +1217,31 @@ class ABCNN3(nn.Module):
         ret = torch.stack(ret).permute(1,2,0)
         ret = torch.sqrt(ret)
         return ret
+    def get_attended(self, batch_x1, batch_x2):
+        att_mat             = self.make_attention_mat(batch_x1, batch_x2)
+        aw_part_x1          = self.aW[:att_mat.size(-1)]
+        aw_part_x1          = torch.stack(att_mat.size(0) * [aw_part_x1])
+        ret_x1              = torch.bmm(att_mat, aw_part_x1)
+        #
+        att_mat             = att_mat.transpose(-1, -2)
+        aw_part_x2          = self.aW[:att_mat.size(-1)]
+        aw_part_x2          = torch.stack(att_mat.size(0) * [aw_part_x2])
+        ret_x2              = torch.bmm(att_mat, aw_part_x2)
+        #
+        return ret_x1.transpose(-1,-2), ret_x2.transpose(-1,-2)
     def apply_one_conv(self, batch_x1, batch_x2, the_conv):
         print(batch_x1.size())
         print(batch_x2.size())
-        att_mat             = self.make_attention_mat(batch_x1, batch_x2)
-        print(att_mat.size())
+        #
+        att_bx1, att_bx2    = self.get_attended(batch_x1, batch_x2)
+        print(att_bx1.size())
+        print(att_bx2.size())
+        #
+        batch_x1            = torch.stack([batch_x1, att_bx1], dim=-1)
+        batch_x2            = torch.stack([batch_x2, att_bx2], dim=-1)
+        print(batch_x1.size())
+        print(batch_x2.size())
+        exit()
         #
         batch_x1_conv       = the_conv(batch_x1)
         batch_x2_conv       = the_conv(batch_x2)
