@@ -1193,7 +1193,7 @@ class ABCNN3(nn.Module):
             bias                = True
         )
         self.linear_out         = nn.Linear(13, 2, bias=True)
-        max_len                 = 200
+        max_len                 = 400
         self.aW                 = autograd.Variable(torch.Tensor(max_len, self.embedding_dim), requires_grad=True)
         self.conv1_activ        = torch.nn.Tanh()
         if(use_cuda):
