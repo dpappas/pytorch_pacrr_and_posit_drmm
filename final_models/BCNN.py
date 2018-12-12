@@ -752,6 +752,13 @@ def setup_optim_model():
         optimizer   = optim.Adagrad(params, lr=lr, lr_decay=0.00001, weight_decay=0.0004, initial_accumulator_value=0)
     return model, optimizer
 
+def load_model_from_checkpoint(model, resume_from_path):
+    if os.path.isfile(resume_from_path):
+        print("=> loading checkpoint '{}'".format(resume_from_path))
+        checkpoint = torch.load(resume_from_path, map_location=lambda storage, loc: storage)
+        model.load_state_dict(checkpoint['state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from_path, checkpoint['epoch']))
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim= 30):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
