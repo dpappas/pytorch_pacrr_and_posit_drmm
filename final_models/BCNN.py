@@ -1175,18 +1175,20 @@ class ABCNN3(nn.Module):
     def __init__(self, embedding_dim=30):
         super(ABCNN3, self).__init__()
         self.embedding_dim      = embedding_dim
-        self.conv1              = nn.Conv1d(
-            in_channels         = self.embedding_dim,
+        self.conv1              = nn.Conv2d(
+            in_channels         = 2,
             out_channels        = self.embedding_dim,
-            kernel_size         = 4,
-            padding             = 3,
+            kernel_size         = (4, self.embedding_dim),
+            stride              = (1, 1),
+            padding             = (3, 0),
             bias                = True
         )
-        self.conv2              = nn.Conv1d(
-            in_channels         = self.embedding_dim,
+        self.conv2              = nn.Conv2d(
+            in_channels         = 2,
             out_channels        = self.embedding_dim,
-            kernel_size         = 4,
-            padding             = 3,
+            kernel_size         = (4, self.embedding_dim),
+            stride              = (1, 1),
+            padding             = (3, 0),
             bias                = True
         )
         self.linear_out         = nn.Linear(12, 2, bias=True)
@@ -1237,16 +1239,36 @@ class ABCNN3(nn.Module):
         print(att_bx1.size())
         print(att_bx2.size())
         #
-        batch_x1            = torch.stack([batch_x1, att_bx1], dim=-1)
-        batch_x2            = torch.stack([batch_x2, att_bx2], dim=-1)
+        batch_x1            = torch.stack([batch_x1, att_bx1], dim=1).transpose(-1,-2)
+        batch_x2            = torch.stack([batch_x2, att_bx2], dim=1).transpose(-1,-2)
         print(batch_x1.size())
         print(batch_x2.size())
-        exit()
         #
-        batch_x1_conv       = the_conv(batch_x1)
-        batch_x2_conv       = the_conv(batch_x2)
+        batch_x1_conv       = the_conv(batch_x1).squeeze(-1)
+        batch_x2_conv       = the_conv(batch_x2).squeeze(-1)
         print(batch_x1_conv.size())
         print(batch_x2_conv.size())
+        #
+        att_mat             = self.make_attention_mat(batch_x1_conv, batch_x2_conv)
+        print(att_mat.size())
+        sum_left            = att_mat.sum(dim=-1).unsqueeze(1).expand_as(batch_x1_conv)
+        sum_right           = att_mat.sum(dim=-2).unsqueeze(1).expand_as(batch_x2_conv)
+        print(sum_left.size())
+        print(sum_right.size())
+        #
+        batch_x1_conv_w     = batch_x1_conv * sum_left
+        batch_x2_conv_w     = batch_x2_conv * sum_right
+        print(batch_x1_conv_w.size())
+        print(batch_x2_conv_w.size())
+        #
+        t1 = torch.stack(
+            [
+                sum_left[:, :, i:i+4].sum(1)
+                for i in range(batch_x1_conv_w.size(-1) - 4)
+            ],
+            dim = -1
+        )
+        print(t1.size())
         exit()
         #
         x1_window_pool      = F.avg_pool1d(batch_x1_conv, self.convolution_size, stride=1)
@@ -1391,6 +1413,16 @@ for run in range(1):
         )
 
 
+'''
 
+emb_size    = 100
+m           = nn.Conv2d(16, emb_size, kernel_size=(4, emb_size), stride=(1, 1), padding=(3, 0))
+input       = autograd.Variable(torch.randn(20, 16, 50, emb_size))
+output      = m(input)
+print(input.size())
+print(output.size())
+
+
+'''
 
 
