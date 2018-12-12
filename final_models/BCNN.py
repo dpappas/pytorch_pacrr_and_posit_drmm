@@ -1175,23 +1175,24 @@ class ABCNN3(nn.Module):
     def __init__(self, embedding_dim=30):
         super(ABCNN3, self).__init__()
         self.embedding_dim      = embedding_dim
+        self.convolution_size   = 4
         self.conv1              = nn.Conv2d(
             in_channels         = 2,
             out_channels        = self.embedding_dim,
-            kernel_size         = (4, self.embedding_dim),
+            kernel_size         = (self.convolution_size, self.embedding_dim),
             stride              = (1, 1),
-            padding             = (3, 0),
+            padding             = (self.convolution_size-1, 0),
             bias                = True
         )
         self.conv2              = nn.Conv2d(
             in_channels         = 2,
             out_channels        = self.embedding_dim,
-            kernel_size         = (4, self.embedding_dim),
+            kernel_size         = (self.convolution_size, self.embedding_dim),
             stride              = (1, 1),
-            padding             = (3, 0),
+            padding             = (self.convolution_size-1, 0),
             bias                = True
         )
-        self.linear_out         = nn.Linear(12, 2, bias=True)
+        self.linear_out         = nn.Linear(13, 2, bias=True)
         max_len                 = 200
         self.aW                 = autograd.Variable(torch.Tensor(max_len, self.embedding_dim), requires_grad=True)
         self.conv1_activ        = torch.nn.Tanh()
@@ -1232,47 +1233,24 @@ class ABCNN3(nn.Module):
         #
         return ret_x1.transpose(-1,-2), ret_x2.transpose(-1,-2)
     def apply_one_conv(self, batch_x1, batch_x2, the_conv):
-        print(batch_x1.size())
-        print(batch_x2.size())
         #
         att_bx1, att_bx2    = self.get_attended(batch_x1, batch_x2)
-        print(att_bx1.size())
-        print(att_bx2.size())
         #
         batch_x1            = torch.stack([batch_x1, att_bx1], dim=1).transpose(-1,-2)
         batch_x2            = torch.stack([batch_x2, att_bx2], dim=1).transpose(-1,-2)
-        print(batch_x1.size())
-        print(batch_x2.size())
         #
         batch_x1_conv       = the_conv(batch_x1).squeeze(-1)
         batch_x2_conv       = the_conv(batch_x2).squeeze(-1)
-        print(batch_x1_conv.size())
-        print(batch_x2_conv.size())
         #
         att_mat             = self.make_attention_mat(batch_x1_conv, batch_x2_conv)
-        print(att_mat.size())
         sum_left            = att_mat.sum(dim=-1).unsqueeze(1).expand_as(batch_x1_conv)
         sum_right           = att_mat.sum(dim=-2).unsqueeze(1).expand_as(batch_x2_conv)
-        print(sum_left.size())
-        print(sum_right.size())
         #
         batch_x1_conv_w     = batch_x1_conv * sum_left
         batch_x2_conv_w     = batch_x2_conv * sum_right
-        print(batch_x1_conv_w.size())
-        print(batch_x2_conv_w.size())
         #
-        t1 = torch.stack(
-            [
-                sum_left[:, :, i:i+4].sum(1)
-                for i in range(batch_x1_conv_w.size(-1) - 4)
-            ],
-            dim = -1
-        )
-        print(t1.size())
-        exit()
-        #
-        x1_window_pool      = F.avg_pool1d(batch_x1_conv, self.convolution_size, stride=1)
-        x2_window_pool      = F.avg_pool1d(batch_x2_conv, self.convolution_size, stride=1)
+        x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x1_conv_w.size(1))
+        x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x2_conv_w.size(1))
         #
         x1_global_pool      = F.avg_pool1d(batch_x1_conv, batch_x1_conv.size(-1), stride=None)
         x2_global_pool      = F.avg_pool1d(batch_x2_conv, batch_x2_conv.size(-1), stride=None)
@@ -1316,26 +1294,26 @@ class ABCNN3(nn.Module):
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-use_cuda            = True
-odd                 = '/home/dpappas/'
-get_embeds          = get_embeds_use_unk
-
-# # atlas , cslab243
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 # use_cuda            = True
 # odd                 = '/home/dpappas/'
 # get_embeds          = get_embeds_use_unk
-# # get_embeds          = get_embeds_use_only_unk
+
+# atlas , cslab243
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+use_cuda            = True
+odd                 = '/home/dpappas/'
+get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
 
 embedding_dim       = 30
 additional_feats    = 10
