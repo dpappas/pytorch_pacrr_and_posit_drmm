@@ -635,7 +635,7 @@ def train_one_only_positive():
     train_instances                         = train_data_step1(train_data)
     random.shuffle(train_instances)
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-        if (model_type in ['BCNN', 'ABCNN']):
+        if (model_type in ['BCNN', 'ABCNN3']):
             gcost_, gemits_                     = model(
                 sents_embeds                    = datum['good_sents_embeds'],
                 question_embeds                 = datum['quest_embeds'],
@@ -1204,9 +1204,22 @@ class ABCNN3(nn.Module):
         den = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1, -2))
         dist_mat = num / den
         return dist_mat
+    def make_attention_mat(self, x1, x2):
+        ret = []
+        for i in range(x2.size(-1)):
+            t   = x2[:,:,i].unsqueeze(-1).expand_as(x1)
+            dif = torch.pow(x1 - t, 2)
+            dif = torch.sum(dif, dim=1)
+            ret.append(dif)
+        ret = torch.stack(ret).permute(1,2,0)
+        ret = torch.sqrt(ret)
+        return ret
     def apply_one_conv(self, batch_x1, batch_x2, the_conv):
         print(batch_x1.size())
         print(batch_x2.size())
+        att_mat             = self.make_attention_mat(batch_x1, batch_x2)
+        print(att_mat.size())
+        #
         batch_x1_conv       = the_conv(batch_x1)
         batch_x2_conv       = the_conv(batch_x2)
         print(batch_x1_conv.size())
