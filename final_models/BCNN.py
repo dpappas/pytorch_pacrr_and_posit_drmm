@@ -635,7 +635,7 @@ def train_one_only_positive():
     train_instances                         = train_data_step1(train_data)
     random.shuffle(train_instances)
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
-        if (model_type == 'BCNN'):
+        if (model_type in ['BCNN', 'ABCNN']):
             gcost_, gemits_                     = model(
                 sents_embeds                    = datum['good_sents_embeds'],
                 question_embeds                 = datum['quest_embeds'],
