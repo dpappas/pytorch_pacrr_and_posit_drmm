@@ -1298,9 +1298,10 @@ model_type          = 'ABCNN3'
 optim_type          = 'ADAM'
 lr                  = 0.001
 model, optimizer    = setup_optim_model()
-resume_from_path    = '/home/dpappas/PDRMM_ADAM_001_run_0/best_checkpoint.pth.tar'
-load_model_from_checkpoint(model, resume_from_path)
-print(model.out_conv.weight[0].sum())
+
+# resume_from_path    = '/home/dpappas/PDRMM_ADAM_001_run_0/best_checkpoint.pth.tar'
+# load_model_from_checkpoint(model, resume_from_path)
+# print(model.out_conv.weight[0].sum())
 
 hdlr                = None
 for run in range(1):
