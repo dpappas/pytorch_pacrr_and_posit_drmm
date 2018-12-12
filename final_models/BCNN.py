@@ -737,7 +737,9 @@ def setup_random(run):
         torch.cuda.manual_seed_all(run)
 
 def setup_optim_model():
-    if(model_type == 'BCNN'):
+    if(model_type == 'ABCNN3'):
+        model = ABCNN3(embedding_dim=embedding_dim)
+    elif(model_type == 'BCNN'):
         model = BCNN(embedding_dim=embedding_dim, additional_feats=additional_feats, convolution_size=4)
     elif (model_type == 'BCNN_PDRMM'):
         model = BCNN_PDRMM(embedding_dim=embedding_dim)
@@ -1169,26 +1171,113 @@ class BCNN(nn.Module):
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# use_cuda            = True
-# odd                 = '/home/dpappas/'
-# get_embeds          = get_embeds_use_unk
+class ABCNN3(nn.Module):
+    def __init__(self, embedding_dim=30, convolution_size=4):
+        super(ABCNN3, self).__init__()
+        self.embedding_dim      = embedding_dim
+        self.conv1              = nn.Conv1d(
+            in_channels         = self.embedding_dim,
+            out_channels        = self.embedding_dim,
+            kernel_size         = 4,
+            padding             = 3,
+            bias                = True
+        )
+        self.conv2              = nn.Conv1d(
+            in_channels         = self.embedding_dim,
+            out_channels        = self.embedding_dim,
+            kernel_size         = 4,
+            padding             = 3,
+            bias                = True
+        )
+        self.linear_out         = nn.Linear(12, 2, bias=True)
+        self.conv1_activ        = torch.nn.Tanh()
+        if(use_cuda):
+            self.linear_out     = self.linear_out.cuda()
+            self.conv1_activ    = self.conv1_activ.cuda()
+            self.conv1          = self.conv1.cuda()
+            self.conv2          = self.conv2.cuda()
+            self.conv1_activ    = self.conv1_activ.cuda()
+    def my_cosine_sim(self, A, B):
+        A_mag = torch.norm(A, 2, dim=2)
+        B_mag = torch.norm(B, 2, dim=2)
+        num = torch.bmm(A, B.transpose(-1, -2))
+        den = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1, -2))
+        dist_mat = num / den
+        return dist_mat
+    def apply_one_conv(self, batch_x1, batch_x2, the_conv):
+        print(batch_x1.size())
+        print(batch_x2.size())
+        batch_x1_conv       = the_conv(batch_x1)
+        batch_x2_conv       = the_conv(batch_x2)
+        print(batch_x1_conv.size())
+        print(batch_x2_conv.size())
+        exit()
+        #
+        x1_window_pool      = F.avg_pool1d(batch_x1_conv, self.convolution_size, stride=1)
+        x2_window_pool      = F.avg_pool1d(batch_x2_conv, self.convolution_size, stride=1)
+        #
+        x1_global_pool      = F.avg_pool1d(batch_x1_conv, batch_x1_conv.size(-1), stride=None)
+        x2_global_pool      = F.avg_pool1d(batch_x2_conv, batch_x2_conv.size(-1), stride=None)
+        #
+        sim                 = self.my_cosine_sim(x1_global_pool.transpose(1,2), x2_global_pool.transpose(1,2))
+        sim                 = sim.squeeze(-1).squeeze(-1)
+        return x1_window_pool, x2_window_pool, x1_global_pool, x2_global_pool, sim
+    def forward(self, sents_embeds, question_embeds, sents_gaf, sents_labels):
+        sents_labels        = autograd.Variable(torch.LongTensor(sents_labels),     requires_grad=False)
+        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False)
+        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1, -2)
+        if(use_cuda):
+            sents_labels    = sents_labels.cuda()
+            sents_gaf       = sents_gaf.cuda()
+            question_embeds = question_embeds.cuda()
+        quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
+        #
+        mlp_in = []
+        for i in range(len(sents_embeds)):
+            sent_embed          = autograd.Variable(torch.FloatTensor(sents_embeds[i]), requires_grad=False).unsqueeze(0).transpose(-1,-2)
+            if (use_cuda):
+                sent_embed      = sent_embed.cuda()
+            sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
+            sim1                = self.my_cosine_sim(
+                quest_global_pool.transpose(-1, -2), sent_global_pool.transpose(-1, -2)
+            ).squeeze(-1).squeeze(-1)
+            (
+                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2
+            ) = self.apply_one_conv(question_embeds, sent_embed, self.conv1)
+            (
+                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3
+            ) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
+            mlp_in.append(torch.cat([sim1, sim2, sim3, sents_gaf[i]], dim=-1))
+        #
+        mlp_in              = torch.stack(mlp_in, dim=0)
+        mlp_out             = self.linear_out(mlp_in)
+        #
+        mlp_out             = F.log_softmax(mlp_out, dim=-1)
+        cost                = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
+        #
+        emit                = F.softmax(mlp_out, dim=-1)[:,1]
+        return cost, emit
 
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 use_cuda            = True
 odd                 = '/home/dpappas/'
 get_embeds          = get_embeds_use_unk
-# get_embeds          = get_embeds_use_only_unk
+
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# use_cuda            = True
+# odd                 = '/home/dpappas/'
+# get_embeds          = get_embeds_use_unk
+# # get_embeds          = get_embeds_use_only_unk
 
 embedding_dim       = 30
 additional_feats    = 10
