@@ -681,7 +681,7 @@ def get_one_auc(prefix, data, docs):
     instances       = data_step1(data)
     # random.shuffle(instances)
     for (good_sents_embeds, quest_embeds, q_idfs, good_sents_escores, good_sent_tags) in data_step2(instances, docs):
-        if (model_type == 'BCNN'):
+        if (model_type in ['BCNN', 'ABCNN3']):
             _, gs_emits_       = model(
                 sents_embeds        = good_sents_embeds,
                 question_embeds     = quest_embeds,
