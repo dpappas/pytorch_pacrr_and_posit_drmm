@@ -1392,16 +1392,9 @@ for run in range(1):
         )
 
 
-'''
-
-emb_size    = 100
-m           = nn.Conv2d(16, emb_size, kernel_size=(4, emb_size), stride=(1, 1), padding=(3, 0))
-input       = autograd.Variable(torch.randn(20, 16, 50, emb_size))
-output      = m(input)
-print(input.size())
-print(output.size())
-
 
 '''
-
-
+http://unbisnet.un.org:8080/ipac20/ipac.jsp?menu=search&profile=bib&index=.UD&term=ac360*&oper=AND&index=.TW&oper=AND&index=.TN&oper=AND&index=.AW&limitbox_2=TM01+%3D+tm_b03&limitbox_4=LA01+%3D+la_eng&npp=50&page=1
+http://unbisnet.un.org:8080/ipac20/ipac.jsp?menu=search&profile=bib&index=.UD&term=ac260SR*&oper=AND&index=.TW&oper=AND&index=.TN&oper=AND&index=.AW&limitbox_2=TM01+%3D+tm_b03&limitbox_4=LA01+%3D+la_eng&npp=50&page=1
+rsync -r -v --progress 194.177.192.80:/home/dpappas/ELK_news_backup.tar.gz ./
+'''
