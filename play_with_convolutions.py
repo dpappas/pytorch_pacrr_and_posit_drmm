@@ -12,9 +12,9 @@ print(output.size())
 print(20 * '-')
 
 emb_size    = 100
-input       = input.squeeze(1)
+input       = input.squeeze(1).transpose(-1,-2)
 print(input.size())
-m           = torch.nn.Conv1d(1, emb_size, ngram, padding=ngram-1, bias=True)
+m           = torch.nn.Conv1d(emb_size, emb_size, ngram, padding=ngram-1, bias=True)
 output      = m(input)
 print(output.size())
 
