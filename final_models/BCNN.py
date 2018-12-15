@@ -1333,7 +1333,8 @@ print(avgdl, mean, deviation)
 # model_type          = 'PDRMM'
 model_type          = 'ABCNN3'
 optim_type          = 'ADAM'
-lr                  = 0.001
+lr                  = 0.01
+epochs              = 10
 model, optimizer    = setup_optim_model()
 
 # resume_from_path    = '/home/dpappas/PDRMM_ADAM_001_run_0/best_checkpoint.pth.tar'
@@ -1352,7 +1353,7 @@ for run in range(1):
     logger.info(odir)
     #
     best_dev_auc, test_auc, best_dev_epoch, best_dev_f1 = None, None, None, None
-    for epoch in range(20):
+    for epoch in range(epochs):
         logger.info('Training...')
         train_one_only_positive()
         logger.info('Validating...')
