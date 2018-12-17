@@ -1503,11 +1503,6 @@ class ABCNN3_PDRMM(nn.Module):
             question_embeds = question_embeds.cuda()
             q_idfs          = q_idfs.cuda()
         #
-        print(q_idfs.size())
-        print(sents_labels.size())
-        print(sents_gaf.size())
-        print(question_embeds.size())
-        #
         quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
         #
         mlp_in = []
@@ -1515,18 +1510,34 @@ class ABCNN3_PDRMM(nn.Module):
             sent_embed          = autograd.Variable(torch.FloatTensor(doc1_sents_embeds[i]), requires_grad=False).unsqueeze(0).transpose(-1,-2)
             if (use_cuda):
                 sent_embed      = sent_embed.cuda()
-            print(sent_embed.size())
             sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
-            sim1                = self.my_cosine_sim(
-                quest_global_pool.transpose(-1, -2),
-                sent_global_pool.transpose(-1, -2)
-            ).squeeze(-1).squeeze(-1)
+            sim1                = self.my_cosine_sim(quest_global_pool.transpose(-1, -2), sent_global_pool.transpose(-1, -2)).squeeze(-1).squeeze(-1)
             (
-                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2
+                quest_window_pool,
+                sent_window_pool,
+                quest_global_pool,
+                sent_global_pool,
+                sim2
             ) = self.apply_one_conv(question_embeds, sent_embed, self.conv1)
+            cs1 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
+            print(quest_window_pool.size())
+            print(sent_window_pool.size())
+            print(cs1.size())
+            print(self.pooling_method(cs1.squeeze(0)).size())
+            print(20 * '#')
             (
-                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3
+                quest_window_pool,
+                sent_window_pool,
+                quest_global_pool,
+                sent_global_pool,
+                sim3
             ) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
+            cs1 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
+            print(quest_window_pool.size())
+            print(sent_window_pool.size())
+            print(cs1.size())
+            print(self.pooling_method(cs1.squeeze(0)).size())
+            print(20 * '#')
             mlp_in.append(torch.cat([sim1, sim2, sim3, sents_gaf[i]], dim=-1))
         mlp_in              = torch.stack(mlp_in, dim=0)
         print(mlp_in.size())
@@ -1576,8 +1587,8 @@ print(avgdl, mean, deviation)
 # model_type          = 'BCNN_PDRMM'
 # model_type          = 'BCNN'
 # model_type          = 'PDRMM'
-# model_type          = 'ABCNN3_PDRMM'
-model_type          = 'ABCNN3'
+model_type          = 'ABCNN3_PDRMM'
+# model_type          = 'ABCNN3'
 optim_type          = 'ADAM'
 lr                  = 0.001
 epochs              = 10
