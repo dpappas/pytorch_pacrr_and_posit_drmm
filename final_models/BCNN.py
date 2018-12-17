@@ -1196,16 +1196,18 @@ class ABCNN3(nn.Module):
         )
         self.linear_out         = nn.Linear(13, 2, bias=True)
         max_len                 = 400
-        self.aW                 = autograd.Variable(torch.zeros(max_len, self.embedding_dim), requires_grad=True)
-        torch.nn.init.xavier_uniform_(self.aW, gain=1)
+        # self.aW                 = autograd.Variable(torch.zeros(max_len, self.embedding_dim), requires_grad=True)
+        # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         self.conv1_activ        = torch.nn.Tanh()
+        self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
+        torch.nn.init.xavier_uniform_(self.aW, gain=1)
         if(use_cuda):
+            self.aW.data        = self.aW.data.cuda()
             self.linear_out     = self.linear_out.cuda()
             self.conv1_activ    = self.conv1_activ.cuda()
             self.conv1          = self.conv1.cuda()
             self.conv2          = self.conv2.cuda()
             self.conv1_activ    = self.conv1_activ.cuda()
-            self.aW             = self.aW.cuda()
     def my_cosine_sim(self, A, B):
         A_mag = torch.norm(A, 2, dim=2)
         B_mag = torch.norm(B, 2, dim=2)
@@ -1333,6 +1335,7 @@ class ABCNN3_PDRMM(nn.Module):
         self.init_mlps_for_pooled_attention()
         max_len                 = 400
         self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
+        torch.nn.init.xavier_uniform_(self.aW, gain=1)
         if(use_cuda):
             self.aW.data        = self.aW.data.cuda()
             self.conv1          = self.conv1.cuda()
