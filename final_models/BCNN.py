@@ -1334,8 +1334,7 @@ class ABCNN3_PDRMM(nn.Module):
         max_len                 = 400
         self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
         if(use_cuda):
-            self.aW.cuda()
-            # self.aW             = self.aW.cuda()
+            self.aW.data        = self.aW.data.cuda()
             self.conv1          = self.conv1.cuda()
             self.conv2          = self.conv2.cuda()
             self.q_weights_mlp  = self.q_weights_mlp.cuda()
