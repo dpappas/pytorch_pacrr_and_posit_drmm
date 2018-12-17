@@ -1510,6 +1510,13 @@ class ABCNN3_PDRMM(nn.Module):
             sent_embed          = autograd.Variable(torch.FloatTensor(doc1_sents_embeds[i]), requires_grad=False).unsqueeze(0).transpose(-1,-2)
             if (use_cuda):
                 sent_embed      = sent_embed.cuda()
+            #
+            cs0                 = self.my_cosine_sim(question_embeds.transpose(-1, -2), sent_embed.transpose(-1, -2))
+            print(question_embeds.size())
+            print(sent_embed.size())
+            print(cs0.size())
+            print(self.pooling_method(cs0.squeeze(0)).size())
+            print(20 * '-')
             sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
             sim1                = self.my_cosine_sim(quest_global_pool.transpose(-1, -2), sent_global_pool.transpose(-1, -2)).squeeze(-1).squeeze(-1)
             (
@@ -1532,7 +1539,7 @@ class ABCNN3_PDRMM(nn.Module):
                 sent_global_pool,
                 sim3
             ) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
-            cs1 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
+            cs2 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
             print(quest_window_pool.size())
             print(sent_window_pool.size())
             print(cs1.size())
