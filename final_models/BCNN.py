@@ -1336,12 +1336,14 @@ class ABCNN3_PDRMM(nn.Module):
         max_len                 = 400
         self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
         torch.nn.init.xavier_uniform_(self.aW, gain=1)
+        self.linear_out         = nn.Linear(14, 2, bias=True)
         if(use_cuda):
             self.aW.data        = self.aW.data.cuda()
             self.conv1          = self.conv1.cuda()
             self.conv2          = self.conv2.cuda()
             self.q_weights_mlp  = self.q_weights_mlp.cuda()
             self.out_conv       = self.out_conv.cuda()
+            self.linear_out     = self.linear_out.cuda()
     def make_attention_mat(self, x1, x2):
         ret = []
         for i in range(x2.size(-1)):
@@ -1511,12 +1513,9 @@ class ABCNN3_PDRMM(nn.Module):
             if (use_cuda):
                 sent_embed      = sent_embed.cuda()
             #
-            cs0                 = self.my_cosine_sim(question_embeds.transpose(-1, -2), sent_embed.transpose(-1, -2))
-            print(question_embeds.size())
-            print(sent_embed.size())
-            print(cs0.size())
-            print(self.pooling_method(cs0.squeeze(0)).size())
-            print(20 * '-')
+            cs0 = self.my_cosine_sim(question_embeds.transpose(-1, -2), sent_embed.transpose(-1, -2))
+            cs0 = self.pooling_method(cs0.squeeze(0))
+            #
             sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
             sim1                = self.my_cosine_sim(quest_global_pool.transpose(-1, -2), sent_global_pool.transpose(-1, -2)).squeeze(-1).squeeze(-1)
             (
@@ -1526,12 +1525,10 @@ class ABCNN3_PDRMM(nn.Module):
                 sent_global_pool,
                 sim2
             ) = self.apply_one_conv(question_embeds, sent_embed, self.conv1)
+            #
             cs1 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
-            print(quest_window_pool.size())
-            print(sent_window_pool.size())
-            print(cs1.size())
-            print(self.pooling_method(cs1.squeeze(0)).size())
-            print(20 * '#')
+            cs1 = self.pooling_method(cs1.squeeze(0))[:cs0.size(0)]
+            #
             (
                 quest_window_pool,
                 sent_window_pool,
@@ -1539,16 +1536,18 @@ class ABCNN3_PDRMM(nn.Module):
                 sent_global_pool,
                 sim3
             ) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
+            #
             cs2 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
-            print(quest_window_pool.size())
-            print(sent_window_pool.size())
-            print(cs1.size())
-            print(self.pooling_method(cs1.squeeze(0)).size())
-            print(20 * '#')
-            mlp_in.append(torch.cat([sim1, sim2, sim3, sents_gaf[i]], dim=-1))
+            cs2 = self.pooling_method(cs2.squeeze(0))[:cs0.size(0)]
+            #
+            q_weights       = torch.cat([sent_window_pool.squeeze(0).transpose(-2, -1)[:q_idfs.size(0)], q_idfs], -1)
+            q_weights       = self.q_weights_mlp(q_weights).squeeze(-1)
+            q_weights       = F.softmax(q_weights, dim=-1)
+            sent_emit       = self.get_output([cs0, cs1, cs2], q_weights)
+            #
+            mlp_in.append(torch.cat([sim1, sim2, sim3, sent_emit.unsqueeze(-1), sents_gaf[i]], dim=-1))
+            #
         mlp_in              = torch.stack(mlp_in, dim=0)
-        print(mlp_in.size())
-        exit()
         #
         mlp_out             = self.linear_out(mlp_in)
         #
