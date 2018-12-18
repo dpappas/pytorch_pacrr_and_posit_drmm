@@ -763,6 +763,37 @@ def load_model_from_checkpoint(model, resume_from_path):
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from_path, checkpoint['epoch']))
 
+def print_params(model):
+    '''
+    It just prints the number of parameters in the model.
+    :param model:   The pytorch model
+    :return:        Nothing.
+    '''
+    print(40 * '=')
+    print(model)
+    print(40 * '=')
+    logger.info(40 * '=')
+    logger.info(model)
+    logger.info(40 * '=')
+    trainable       = 0
+    untrainable     = 0
+    for parameter in model.parameters():
+        # print(parameter.size())
+        v = 1
+        for s in parameter.size():
+            v *= s
+        if(parameter.requires_grad):
+            trainable   += v
+        else:
+            untrainable += v
+    total_params = trainable + untrainable
+    print(40 * '=')
+    print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
+    print(40 * '=')
+    logger.info(40 * '=')
+    logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
+    logger.info(40 * '=')
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim= 30):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -1557,26 +1588,38 @@ class ABCNN3_PDRMM(nn.Module):
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# use_cuda            = True
-# odd                 = '/home/dpappas/'
-# get_embeds          = get_embeds_use_unk
-
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 use_cuda            = True
 odd                 = '/home/dpappas/'
 get_embeds          = get_embeds_use_unk
-# get_embeds          = get_embeds_use_only_unk
+
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# use_cuda            = True
+# odd                 = '/home/dpappas/'
+# get_embeds          = get_embeds_use_unk
+# # get_embeds          = get_embeds_use_only_unk
+
+# # cslab241
+# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
+# use_cuda            = False
+# odd                 = '/home/dpappas/'
+# get_embeds          = get_embeds_use_unk
+
 
 embedding_dim       = 30
 additional_feats    = 10
@@ -1596,10 +1639,9 @@ print(avgdl, mean, deviation)
 # model_type          = 'ABCNN3'
 model_type          = 'ABCNN3_PDRMM'
 optim_type          = 'ADAM'
-lr                  = 0.001
+lr                  = 0.01
 epochs              = 20
 model, optimizer    = setup_optim_model()
-
 # resume_from_path    = '/home/dpappas/PDRMM_ADAM_001_run_0/best_checkpoint.pth.tar'
 # load_model_from_checkpoint(model, resume_from_path)
 # print(model.out_conv.weight[0].sum())
@@ -1614,6 +1656,9 @@ for run in range(1):
         os.makedirs(odir)
     print(odir)
     logger.info(odir)
+    #
+    print_params(model)
+    exit()
     #
     best_dev_auc, test_auc, best_dev_epoch, best_dev_f1 = None, None, None, None
     for epoch in range(epochs):
