@@ -34,11 +34,14 @@ class LINEAR(torch.nn.Module):
 
 model       = LINEAR()
 params      = list(model.parameters()) #+ [model.w]
+print(params)
+# exit()
 optimizer   = torch.optim.SGD(params, lr=0.01)
 
 model.train()
 for i in  range(50):
-    y           = model([[1,2]])
+    my_x        = [[1,2]]
+    y           = model(my_x)
     cost_       = torch.abs(1 - y)
     print(y, cost_)
     cost_.backward()
