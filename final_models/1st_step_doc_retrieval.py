@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
-import sys
-
-reload(sys)
-sys.setdefaultencoding("utf-8")
+# import sys
+# reload(sys)
+# sys.setdefaultencoding("utf-8")
 
 import  os
 import  re
@@ -20,7 +19,8 @@ import  torch.nn as nn
 import  torch.optim as optim
 import  torch.nn.functional as F
 from    pprint import pprint
-import  cPickle as pickle
+# import  cPickle as pickle
+import  pickle
 import  torch.autograd as autograd
 from    tqdm import tqdm
 from    gensim.models.keyedvectors import KeyedVectors
