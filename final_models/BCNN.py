@@ -1540,7 +1540,7 @@ class ABCNN3_PDRMM(nn.Module):
             cs2 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
             cs2 = self.pooling_method(cs2.squeeze(0))[:cs0.size(0)]
             #
-            q_weights       = torch.cat([sent_window_pool.squeeze(0).transpose(-2, -1)[:q_idfs.size(0)], q_idfs], -1)
+            q_weights       = torch.cat([quest_window_pool.squeeze(0).transpose(-2, -1)[:q_idfs.size(0)], q_idfs], -1)
             q_weights       = self.q_weights_mlp(q_weights).squeeze(-1)
             q_weights       = F.softmax(q_weights, dim=-1)
             sent_emit       = self.get_output([cs0, cs1, cs2], q_weights)
