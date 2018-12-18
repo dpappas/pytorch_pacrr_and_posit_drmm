@@ -1398,7 +1398,7 @@ class ABCNN3_PDRMM(nn.Module):
         #
         return ret_x1.transpose(-1,-2), ret_x2.transpose(-1,-2)
     def init_mlps_for_pooled_attention(self):
-        self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
+        self.linear_per_q1      = nn.Linear(3 * 4, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
         if(use_cuda):
