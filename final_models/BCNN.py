@@ -1641,7 +1641,7 @@ print(avgdl, mean, deviation)
 # model_type          = 'PDRMM'
 # model_type          = 'ABCNN3'
 model_type          = 'ABCNN3_PDRMM'
-# optim_type          = 'ADAM'
+optim_type          = 'ADAM'
 lr                  = 0.01
 epochs              = 10
 model, optimizer    = setup_optim_model()
