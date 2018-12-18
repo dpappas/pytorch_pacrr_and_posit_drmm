@@ -26,8 +26,9 @@ class LINEAR(torch.nn.Module):
     def __init__(self):
         super(LINEAR, self).__init__()
         # self.w  = torch.autograd.Variable(torch.zeros(2, 1), requires_grad=True)
-        self.w  = torch.nn.Parameter(torch.zeros(2, 1))
-        torch.nn.init.xavier_uniform_(self.w, gain=1)
+        # self.w  = torch.nn.Parameter(torch.zeros(2, 1))
+        # torch.nn.init.xavier_uniform_(self.w, gain=1)
+        self.w  = torch.nn.Parameter(torch.randn(2, 1).uniform_(-1e-4, 1e-4))
     def forward(self, x):
         x       = torch.autograd.Variable(torch.FloatTensor(x), requires_grad=False)
         return torch.mm(x, self.w)
