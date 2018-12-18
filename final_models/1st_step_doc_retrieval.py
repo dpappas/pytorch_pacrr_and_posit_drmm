@@ -1096,10 +1096,11 @@ models = [
 ]
 models = dict([(item[0], item[1:]) for item in models])
 
-which_model = 'Doc_Ret_Model_04'
+which_model = 'Doc_Ret_Model_01'
 
 hdlr = None
-for run in range(5):
+# for run in range(5):
+for run in range(1):
     #
     my_seed = random.randint(1, 2000000)
     random.seed(my_seed)
