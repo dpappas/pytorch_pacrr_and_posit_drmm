@@ -1640,7 +1640,7 @@ print(avgdl, mean, deviation)
 model_type          = 'ABCNN3_PDRMM'
 optim_type          = 'ADAM'
 lr                  = 0.01
-epochs              = 20
+epochs              = 10
 model, optimizer    = setup_optim_model()
 # resume_from_path    = '/home/dpappas/PDRMM_ADAM_001_run_0/best_checkpoint.pth.tar'
 # load_model_from_checkpoint(model, resume_from_path)
