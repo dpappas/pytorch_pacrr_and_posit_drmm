@@ -1590,15 +1590,15 @@ class ABCNN3_PDRMM(nn.Module):
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-use_cuda            = True
-odd                 = '/home/dpappas/'
-get_embeds          = get_embeds_use_unk
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# use_cuda            = True
+# odd                 = '/home/dpappas/'
+# get_embeds          = get_embeds_use_unk
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1611,16 +1611,16 @@ get_embeds          = get_embeds_use_unk
 # get_embeds          = get_embeds_use_unk
 # # get_embeds          = get_embeds_use_only_unk
 
-# # cslab241
-# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-# use_cuda            = False
-# odd                 = '/home/dpappas/'
-# get_embeds          = get_embeds_use_unk
+# cslab241
+w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
+use_cuda            = False
+odd                 = '/home/dpappas/'
+get_embeds          = get_embeds_use_unk
 
 
 embedding_dim       = 30
