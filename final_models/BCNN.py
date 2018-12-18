@@ -1526,7 +1526,7 @@ class ABCNN3_PDRMM(nn.Module):
         the_input_global_pool   = F.avg_pool1d(the_input, the_input.size(-1), stride=None)
         return the_input_global_pool.squeeze(-1)
     def forward(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_labels):
-        q_idfs                  = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
+        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         sents_labels        = autograd.Variable(torch.LongTensor(sents_labels),     requires_grad=False)
         sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1, -2)
@@ -1545,7 +1545,9 @@ class ABCNN3_PDRMM(nn.Module):
                 sent_embed      = sent_embed.cuda()
             #
             cs0 = self.my_cosine_sim(question_embeds.transpose(-1, -2), sent_embed.transpose(-1, -2))
+            cs3 = (cs0 > (1 - (1e-3))).float()
             cs0 = self.pooling_method(cs0.squeeze(0))
+            cs3 = self.pooling_method(cs3.squeeze(0))
             #
             sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
             sim1                = self.my_cosine_sim(quest_global_pool.transpose(-1, -2), sent_global_pool.transpose(-1, -2)).squeeze(-1).squeeze(-1)
@@ -1574,7 +1576,7 @@ class ABCNN3_PDRMM(nn.Module):
             q_weights       = torch.cat([quest_window_pool.squeeze(0).transpose(-2, -1)[:q_idfs.size(0)], q_idfs], -1)
             q_weights       = self.q_weights_mlp(q_weights).squeeze(-1)
             q_weights       = F.softmax(q_weights, dim=-1)
-            sent_emit       = self.get_output([cs0, cs1, cs2], q_weights)
+            sent_emit       = self.get_output([cs0, cs1, cs2, cs3], q_weights)
             #
             mlp_in.append(torch.cat([sim1, sim2, sim3, sent_emit.unsqueeze(-1), sents_gaf[i]], dim=-1))
             #
