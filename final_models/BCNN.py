@@ -1365,8 +1365,9 @@ class ABCNN3_PDRMM(nn.Module):
         )
         self.init_mlps_for_pooled_attention()
         max_len                 = 400
-        self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
-        torch.nn.init.xavier_uniform_(self.aW, gain=1)
+        # self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
+        # torch.nn.init.xavier_uniform_(self.aW, gain=1)
+        self.aW                 = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(-1e-4, 1e-4))
         self.linear_out         = nn.Linear(14, 2, bias=True)
         if(use_cuda):
             self.aW.data        = self.aW.data.cuda()
@@ -1640,7 +1641,7 @@ print(avgdl, mean, deviation)
 # model_type          = 'PDRMM'
 # model_type          = 'ABCNN3'
 model_type          = 'ABCNN3_PDRMM'
-optim_type          = 'ADAM'
+# optim_type          = 'ADAM'
 lr                  = 0.01
 epochs              = 10
 model, optimizer    = setup_optim_model()
