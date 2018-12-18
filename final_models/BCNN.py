@@ -1660,7 +1660,7 @@ for run in range(1):
     logger.info(odir)
     #
     print_params(model)
-    exit()
+    # exit()
     #
     best_dev_auc, test_auc, best_dev_epoch, best_dev_f1 = None, None, None, None
     for epoch in range(epochs):
