@@ -1379,7 +1379,7 @@ class ABCNN3_PDRMM(nn.Module):
         # self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         # scale                   = 1e-4
-        self.aW                 = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(-1e-6, 1e-6))
+        self.aW                 = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(-1., 1))
         self.linear_out         = nn.Linear(14, 2, bias=True)
         if(use_cuda):
             self.aW.data        = self.aW.data.cuda()
@@ -1430,8 +1430,6 @@ class ABCNN3_PDRMM(nn.Module):
         conv_res        = conv_res + the_input
         return conv_res.squeeze(0)
     def my_cosine_sim(self, A, B):
-        A           += 1e-8
-        B           += 1e-8
         A_mag       = torch.norm(A, 2, dim=2)
         B_mag       = torch.norm(B, 2, dim=2)
         num         = torch.bmm(A, B.transpose(-1,-2))
@@ -1455,39 +1453,6 @@ class ABCNN3_PDRMM(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, quest_global_pool, quest_cont_global_pool):
-        res = []
-        for i in range(len(doc_sents_embeds)):
-            sent_embeds             = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
-            gaf                     = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            if(use_cuda):
-                sent_embeds         = sent_embeds.cuda()
-                gaf                 = gaf.cuda()
-            #
-            conv_res                = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res                = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
-            #
-            sent_global_pool        = self.glob_average_pool(sent_embeds)
-            glob_aver_sim           = self.my_cosine_sim(quest_global_pool, sent_global_pool).squeeze(0)
-            sent_cont_global_pool   = self.glob_average_pool(conv_res)
-            glob_cont_aver_sim      = self.my_cosine_sim(quest_cont_global_pool, sent_cont_global_pool).squeeze(0)
-            #
-            sim_insens              = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh                  = (sim_insens > (1 - (1e-3))).float()
-            sim_sens                = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled      = self.pooling_method(sim_insens)
-            sensitive_pooled        = self.pooling_method(sim_sens)
-            oh_pooled               = self.pooling_method(sim_oh)
-            #
-            sent_emit               = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats          = torch.cat([gaf, sent_emit.unsqueeze(-1), glob_aver_sim.squeeze(-1), glob_cont_aver_sim.squeeze(-1)])
-            res.append(sent_add_feats)
-        res = torch.stack(res)
-        # res = self.sent_out_layer(res)
-        res = self.out_conv(res.transpose(-1,-2).unsqueeze(0))[:,:,1:res.size(0)+1]
-        res = res.squeeze(0).transpose(-1,-2)
-        return res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
         k_max_pooled            = sorted_res[-k:]
@@ -1520,20 +1485,22 @@ class ABCNN3_PDRMM(nn.Module):
         batch_x1_conv       = the_conv(batch_x1).squeeze(-1)
         batch_x2_conv       = the_conv(batch_x2).squeeze(-1)
         #
-        batch_x1_conv       = self.my_tanh(batch_x1_conv)
-        batch_x2_conv       = self.my_tanh(batch_x2_conv)
+        # batch_x1_conv       = self.my_tanh(batch_x1_conv)
+        # batch_x2_conv       = self.my_tanh(batch_x2_conv)
         #
         att_mat             = self.make_attention_mat(batch_x1_conv, batch_x2_conv)
-        sum_left            = att_mat.sum(dim=-1).unsqueeze(1).expand_as(batch_x1_conv)
-        sum_right           = att_mat.sum(dim=-2).unsqueeze(1).expand_as(batch_x2_conv)
+        sum_left            = att_mat.sum(dim=-1) / float(att_mat.size(-1))
+        sum_left            = sum_left.unsqueeze(1).expand_as(batch_x1_conv)
+        sum_right           = att_mat.sum(dim=-2) / float(att_mat.size(-2))
+        sum_right           = sum_right.unsqueeze(1).expand_as(batch_x2_conv)
         #
         batch_x1_conv_w     = batch_x1_conv * sum_left
         batch_x2_conv_w     = batch_x2_conv * sum_right
         #
-        x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x1_conv_w.size(1))
-        x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x2_conv_w.size(1))
-        # x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1)
-        # x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1)
+        # x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x1_conv_w.size(1))
+        # x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x2_conv_w.size(1))
+        x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1)
+        x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1)
         #
         x1_global_pool      = F.avg_pool1d(batch_x1_conv, batch_x1_conv.size(-1), stride=None)
         x2_global_pool      = F.avg_pool1d(batch_x2_conv, batch_x2_conv.size(-1), stride=None)
