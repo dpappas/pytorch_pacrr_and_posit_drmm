@@ -794,6 +794,12 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
+def check_if_any_nan(mat):
+    for item in mat.flatten():
+        if(item!=item):
+            return True
+    return False
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim= 30):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
@@ -1420,6 +1426,9 @@ class ABCNN3_PDRMM(nn.Module):
         conv_res        = conv_res + the_input
         return conv_res.squeeze(0)
     def my_cosine_sim(self, A, B):
+        # the_max     = max(torch.abs(A).max(), torch.abs(B).max())
+        # A           = A + the_max
+        # B           = B + the_max
         A_mag       = torch.norm(A, 2, dim=2)
         B_mag       = torch.norm(B, 2, dim=2)
         num         = torch.bmm(A, B.transpose(-1,-2))
@@ -1547,10 +1556,10 @@ class ABCNN3_PDRMM(nn.Module):
             if (use_cuda):
                 sent_embed      = sent_embed.cuda()
             #
-            cs0 = self.my_cosine_sim(question_embeds.transpose(-1, -2), sent_embed.transpose(-1, -2))
-            cs3 = (cs0 > (1 - (1e-3))).float()
-            cs0 = self.pooling_method(cs0.squeeze(0))
-            cs3 = self.pooling_method(cs3.squeeze(0))
+            cs0                 = self.my_cosine_sim(question_embeds.transpose(-1, -2), sent_embed.transpose(-1, -2))
+            cs3                 = (cs0 > (1 - (1e-3))).float()
+            cs0                 = self.pooling_method(cs0.squeeze(0))
+            cs3                 = self.pooling_method(cs3.squeeze(0))
             #
             sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
             sim1                = self.my_cosine_sim(quest_global_pool.transpose(-1, -2), sent_global_pool.transpose(-1, -2)).squeeze(-1).squeeze(-1)
@@ -1560,10 +1569,10 @@ class ABCNN3_PDRMM(nn.Module):
                 quest_global_pool,
                 sent_global_pool,
                 sim2
-            ) = self.apply_one_conv(question_embeds, sent_embed, self.conv1)
+            )                   = self.apply_one_conv(question_embeds, sent_embed, self.conv1)
             #
-            cs1 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
-            cs1 = self.pooling_method(cs1.squeeze(0))[:cs0.size(0)]
+            cs1                 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
+            cs1                 = self.pooling_method(cs1.squeeze(0))[:cs0.size(0)]
             #
             (
                 quest_window_pool,
@@ -1571,10 +1580,23 @@ class ABCNN3_PDRMM(nn.Module):
                 quest_global_pool,
                 sent_global_pool,
                 sim3
-            ) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
+            )                   = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
             #
-            cs2 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
-            cs2 = self.pooling_method(cs2.squeeze(0))[:cs0.size(0)]
+            cs2                 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
+            cs2                 = self.pooling_method(cs2.squeeze(0))[:cs0.size(0)]
+            if(check_if_any_nan(cs2)):
+                print('quest_window_pool')
+                print(quest_window_pool)
+                print(sent_window_pool.size())
+                print(20 * '-')
+                print('sent_window_pool')
+                print(sent_window_pool)
+                print(sent_window_pool.size())
+                print(20 * '-')
+                print('cs2')
+                print(cs2)
+                print(20 * '-')
+                exit()
             #
             q_weights       = torch.cat([quest_window_pool.squeeze(0).transpose(-2, -1)[:q_idfs.size(0)], q_idfs], -1)
             q_weights       = self.q_weights_mlp(q_weights).squeeze(-1)
@@ -1624,7 +1646,6 @@ get_embeds          = get_embeds_use_unk
 # use_cuda            = False
 # odd                 = '/home/dpappas/'
 # get_embeds          = get_embeds_use_unk
-
 
 embedding_dim       = 30
 additional_feats    = 10
