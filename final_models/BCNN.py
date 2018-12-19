@@ -1515,8 +1515,8 @@ class ABCNN3_PDRMM(nn.Module):
         #
         batch_x1_conv       = the_conv(batch_x1).squeeze(-1)
         batch_x2_conv       = the_conv(batch_x2).squeeze(-1)
-        batch_x1_conv       = F.tanh(batch_x1_conv)
-        batch_x2_conv       = F.tanh(batch_x2_conv)
+        # batch_x1_conv       = torch.tanh(batch_x1_conv)
+        # batch_x2_conv       = torch.tanh(batch_x2_conv)
         #
         att_mat             = self.make_attention_mat(batch_x1_conv, batch_x2_conv)
         sum_left            = att_mat.sum(dim=-1).unsqueeze(1).expand_as(batch_x1_conv)
@@ -1525,10 +1525,12 @@ class ABCNN3_PDRMM(nn.Module):
         batch_x1_conv_w     = batch_x1_conv * sum_left
         batch_x2_conv_w     = batch_x2_conv * sum_right
         #
-        x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x1_conv_w.size(1))
-        x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x2_conv_w.size(1))
-        x1_window_pool      = F.tanh(x1_window_pool)
-        x2_window_pool      = F.tanh(x2_window_pool)
+        x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1)
+        x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1)
+        # x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x1_conv_w.size(1))
+        # x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x2_conv_w.size(1))
+        # x1_window_pool      = torch.tanh(x1_window_pool)
+        # x2_window_pool      = torch.tanh(x2_window_pool)
         #
         x1_global_pool      = F.avg_pool1d(batch_x1_conv, batch_x1_conv.size(-1), stride=None)
         x2_global_pool      = F.avg_pool1d(batch_x2_conv, batch_x2_conv.size(-1), stride=None)
