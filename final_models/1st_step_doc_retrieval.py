@@ -923,7 +923,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return the_concatenation
     def emit_doc_cnn(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
         conv_res            = self.apply_context_convolution(doc_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        conv_res            = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
+        conv_res            = self.apply_context_convolution(conv_res,   self.trigram_conv_2, self.trigram_conv_activation_2)
         sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
         sim_oh              = (sim_insens > (1 - (1e-3))).float()
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
