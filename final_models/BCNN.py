@@ -1426,15 +1426,16 @@ class ABCNN3_PDRMM(nn.Module):
         conv_res        = conv_res + the_input
         return conv_res.squeeze(0)
     def my_cosine_sim(self, A, B):
-        # the_max     = max(torch.abs(A).max(), torch.abs(B).max())
-        # A           = A + the_max
-        # B           = B + the_max
-        A_mag       = torch.norm(A, 2, dim=2)
-        B_mag       = torch.norm(B, 2, dim=2)
-        num         = torch.bmm(A, B.transpose(-1,-2))
-        den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
-        dist_mat    = num / den
-        return dist_mat
+        return F.cosine_similarity(A, B, dim=-1, eps=1e-8)
+        # # the_max     = max(torch.abs(A).max(), torch.abs(B).max())
+        # # A           = A + the_max
+        # # B           = B + the_max
+        # A_mag       = torch.norm(A, 2, dim=2)
+        # B_mag       = torch.norm(B, 2, dim=2)
+        # num         = torch.bmm(A, B.transpose(-1,-2))
+        # den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
+        # dist_mat    = num / den
+        # return dist_mat
     def pooling_method(self, sim_matrix):
         sorted_res              = torch.sort(sim_matrix, -1)[0]                             # sort the input minimum to maximum
         k_max_pooled            = sorted_res[:,-self.k:]                                    # select the last k of each instance in our data

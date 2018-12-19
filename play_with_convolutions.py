@@ -51,8 +51,11 @@ for i in  range(50):
 
 
 
-
-
+import torch.nn.functional as F
+input1  = torch.randn(1, 4, 30)
+input2  = torch.randn(1, 9, 30)
+simi    = F.cosine_similarity(input1, input2, dim=-1, eps=1e-8)
+print(simi.size())
 
 
 
