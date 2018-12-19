@@ -50,14 +50,31 @@ for i in  range(50):
     optimizer.zero_grad()
 
 
+def my_cosine_sim(in1, in2):
+    ret = []
+    for i in range(in1.size(1)):
+        simi = F.cosine_similarity(in1[:,i,:].expand_as(in2), in2, dim=-1, eps=1e-8)
+        ret.append(simi)
+    ret = torch.stack(ret, dim=1)
+    return ret
+
+def my_cosine_sim2(A, B):
+        A_mag       = torch.norm(A, 2, dim=2)
+        B_mag       = torch.norm(B, 2, dim=2)
+        num         = torch.bmm(A, B.transpose(-1, -2))
+        den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1, -2))
+        print(den)
+        dist_mat    = num / den
+        return dist_mat
 
 import torch.nn.functional as F
-input1  = torch.randn(1, 4, 30)
-input2  = torch.randn(1, 9, 30)
-simi    = F.cosine_similarity(input1, input2, dim=-1, eps=1e-8)
+# in1     = torch.randn(1, 4, 30)
+# in2     = torch.randn(1, 9, 30)
+in1     = torch.zeros(1, 4, 30) + 1e-8
+in2     = torch.randn(1, 9, 30) + 1e-8
+simi    = my_cosine_sim2(in1, in2)
 print(simi.size())
-
-
+print(simi)
 
 
 

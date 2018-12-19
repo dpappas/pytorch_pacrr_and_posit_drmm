@@ -1426,16 +1426,14 @@ class ABCNN3_PDRMM(nn.Module):
         conv_res        = conv_res + the_input
         return conv_res.squeeze(0)
     def my_cosine_sim(self, A, B):
-        return F.cosine_similarity(A, B, dim=-1, eps=1e-8)
-        # # the_max     = max(torch.abs(A).max(), torch.abs(B).max())
-        # # A           = A + the_max
-        # # B           = B + the_max
-        # A_mag       = torch.norm(A, 2, dim=2)
-        # B_mag       = torch.norm(B, 2, dim=2)
-        # num         = torch.bmm(A, B.transpose(-1,-2))
-        # den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
-        # dist_mat    = num / den
-        # return dist_mat
+        A           += 1e-8
+        B           += 1e-8
+        A_mag       = torch.norm(A, 2, dim=2)
+        B_mag       = torch.norm(B, 2, dim=2)
+        num         = torch.bmm(A, B.transpose(-1,-2))
+        den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
+        dist_mat    = num / den
+        return dist_mat
     def pooling_method(self, sim_matrix):
         sorted_res              = torch.sort(sim_matrix, -1)[0]                             # sort the input minimum to maximum
         k_max_pooled            = sorted_res[:,-self.k:]                                    # select the last k of each instance in our data
@@ -1517,6 +1515,8 @@ class ABCNN3_PDRMM(nn.Module):
         #
         batch_x1_conv       = the_conv(batch_x1).squeeze(-1)
         batch_x2_conv       = the_conv(batch_x2).squeeze(-1)
+        batch_x1_conv       = F.tanh(batch_x1_conv)
+        batch_x2_conv       = F.tanh(batch_x2_conv)
         #
         att_mat             = self.make_attention_mat(batch_x1_conv, batch_x2_conv)
         sum_left            = att_mat.sum(dim=-1).unsqueeze(1).expand_as(batch_x1_conv)
@@ -1527,6 +1527,8 @@ class ABCNN3_PDRMM(nn.Module):
         #
         x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x1_conv_w.size(1))
         x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x2_conv_w.size(1))
+        x1_window_pool      = F.tanh(x1_window_pool)
+        x2_window_pool      = F.tanh(x2_window_pool)
         #
         x1_global_pool      = F.avg_pool1d(batch_x1_conv, batch_x1_conv.size(-1), stride=None)
         x2_global_pool      = F.avg_pool1d(batch_x2_conv, batch_x2_conv.size(-1), stride=None)
@@ -1565,22 +1567,14 @@ class ABCNN3_PDRMM(nn.Module):
             sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
             sim1                = self.my_cosine_sim(quest_global_pool.transpose(-1, -2), sent_global_pool.transpose(-1, -2)).squeeze(-1).squeeze(-1)
             (
-                quest_window_pool,
-                sent_window_pool,
-                quest_global_pool,
-                sent_global_pool,
-                sim2
+                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2
             )                   = self.apply_one_conv(question_embeds, sent_embed, self.conv1)
             #
             cs1                 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
             cs1                 = self.pooling_method(cs1.squeeze(0))[:cs0.size(0)]
             #
             (
-                quest_window_pool,
-                sent_window_pool,
-                quest_global_pool,
-                sent_global_pool,
-                sim3
+                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3
             )                   = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
             #
             cs2                 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
