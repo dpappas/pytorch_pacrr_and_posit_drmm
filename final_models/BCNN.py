@@ -964,12 +964,13 @@ class BCNN_PDRMM(nn.Module):
         self.k                          = 5
         # to create q weights
         self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_activation_1  = nn.LeakyReLU(negative_slope=0.1)
         self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_activation_2  = nn.LeakyReLU(negative_slope=0.1)
         # init_question_weight_module
         self.q_weights_mlp              = nn.Linear(self.embedding_dim+1, 1, bias=True)
         #
+        self.my_tanh                    = nn.Tanh()
         self.convolution_size           = 3
         self.out_conv                   = nn.Conv1d(
             in_channels                 = 13,
@@ -1236,8 +1237,9 @@ class ABCNN3(nn.Module):
         # self.aW                 = autograd.Variable(torch.zeros(max_len, self.embedding_dim), requires_grad=True)
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         self.conv1_activ        = torch.nn.Tanh()
-        self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
-        torch.nn.init.xavier_uniform_(self.aW, gain=1)
+        self.aW                 = torch.nn.Parameter(torch.randn(2, 1).uniform_(-1e-6, 1e-6))
+        # self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
+        # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         if(use_cuda):
             self.aW.data        = self.aW.data.cuda()
             self.linear_out     = self.linear_out.cuda()
@@ -1369,13 +1371,15 @@ class ABCNN3_PDRMM(nn.Module):
             padding             = self.convolution_size-1,
             bias                = True
         )
+        #
+        self.my_tanh            = nn.Tanh()
+        #
         self.init_mlps_for_pooled_attention()
         max_len                 = 400
         # self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         # scale                   = 1e-4
-        # self.aW                 = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(-scale, scale))
-        self.aW                 = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(0.2, 0.4))
+        self.aW                 = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(-1e-6, 1e-6))
         self.linear_out         = nn.Linear(14, 2, bias=True)
         if(use_cuda):
             self.aW.data        = self.aW.data.cuda()
@@ -1515,8 +1519,9 @@ class ABCNN3_PDRMM(nn.Module):
         #
         batch_x1_conv       = the_conv(batch_x1).squeeze(-1)
         batch_x2_conv       = the_conv(batch_x2).squeeze(-1)
-        # batch_x1_conv       = torch.tanh(batch_x1_conv)
-        # batch_x2_conv       = torch.tanh(batch_x2_conv)
+        #
+        batch_x1_conv       = self.my_tanh(batch_x1_conv)
+        batch_x2_conv       = self.my_tanh(batch_x2_conv)
         #
         att_mat             = self.make_attention_mat(batch_x1_conv, batch_x2_conv)
         sum_left            = att_mat.sum(dim=-1).unsqueeze(1).expand_as(batch_x1_conv)
@@ -1525,12 +1530,10 @@ class ABCNN3_PDRMM(nn.Module):
         batch_x1_conv_w     = batch_x1_conv * sum_left
         batch_x2_conv_w     = batch_x2_conv * sum_right
         #
-        x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1)
-        x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1)
-        # x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x1_conv_w.size(1))
-        # x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x2_conv_w.size(1))
-        # x1_window_pool      = torch.tanh(x1_window_pool)
-        # x2_window_pool      = torch.tanh(x2_window_pool)
+        x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x1_conv_w.size(1))
+        x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1) * (self.convolution_size * batch_x2_conv_w.size(1))
+        # x1_window_pool      = F.avg_pool1d(batch_x1_conv_w, self.convolution_size, stride=1)
+        # x2_window_pool      = F.avg_pool1d(batch_x2_conv_w, self.convolution_size, stride=1)
         #
         x1_global_pool      = F.avg_pool1d(batch_x1_conv, batch_x1_conv.size(-1), stride=None)
         x2_global_pool      = F.avg_pool1d(batch_x2_conv, batch_x2_conv.size(-1), stride=None)
@@ -1543,19 +1546,19 @@ class ABCNN3_PDRMM(nn.Module):
         the_input_global_pool   = F.avg_pool1d(the_input, the_input.size(-1), stride=None)
         return the_input_global_pool.squeeze(-1)
     def forward(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_labels):
-        q_idfs                  = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
-        sents_labels            = autograd.Variable(torch.LongTensor(sents_labels),     requires_grad=False)
-        sents_gaf               = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False)
-        question_embeds         = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1, -2)
+        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
+        sents_labels        = autograd.Variable(torch.LongTensor(sents_labels),     requires_grad=False)
+        sents_gaf           = autograd.Variable(torch.FloatTensor(sents_gaf),       requires_grad=False)
+        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).unsqueeze(0).transpose(-1, -2)
         if(use_cuda):
-            sents_labels        = sents_labels.cuda()
-            sents_gaf           = sents_gaf.cuda()
-            question_embeds     = question_embeds.cuda()
-            q_idfs              = q_idfs.cuda()
+            sents_labels    = sents_labels.cuda()
+            sents_gaf       = sents_gaf.cuda()
+            question_embeds = question_embeds.cuda()
+            q_idfs          = q_idfs.cuda()
         #
-        quest_global_pool       = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
+        quest_global_pool   = F.avg_pool1d(question_embeds, question_embeds.size(-1), stride=None)
         #
-        mlp_in                  = []
+        mlp_in = []
         for i in range(len(doc1_sents_embeds)):
             sent_embed          = autograd.Variable(torch.FloatTensor(doc1_sents_embeds[i]), requires_grad=False).unsqueeze(0).transpose(-1,-2)
             if (use_cuda):
@@ -1581,22 +1584,35 @@ class ABCNN3_PDRMM(nn.Module):
             #
             cs2                 = self.my_cosine_sim(quest_window_pool.transpose(-1, -2), sent_window_pool.transpose(-1, -2))
             cs2                 = self.pooling_method(cs2.squeeze(0))[:cs0.size(0)]
+            if(check_if_any_nan(cs2)):
+                print('quest_window_pool')
+                print(quest_window_pool)
+                print(sent_window_pool.size())
+                print(20 * '-')
+                print('sent_window_pool')
+                print(sent_window_pool)
+                print(sent_window_pool.size())
+                print(20 * '-')
+                print('cs2')
+                print(cs2)
+                print(20 * '-')
+                exit()
             #
-            q_weights           = torch.cat([quest_window_pool.squeeze(0).transpose(-2, -1)[:q_idfs.size(0)], q_idfs], -1)
-            q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
-            q_weights           = F.softmax(q_weights, dim=-1)
-            sent_emit           = self.get_output([cs0, cs1, cs2, cs3], q_weights)
+            q_weights       = torch.cat([quest_window_pool.squeeze(0).transpose(-2, -1)[:q_idfs.size(0)], q_idfs], -1)
+            q_weights       = self.q_weights_mlp(q_weights).squeeze(-1)
+            q_weights       = F.softmax(q_weights, dim=-1)
+            sent_emit       = self.get_output([cs0, cs1, cs2, cs3], q_weights)
             #
             mlp_in.append(torch.cat([sim1, sim2, sim3, sent_emit.unsqueeze(-1), sents_gaf[i]], dim=-1))
             #
-        mlp_in                  = torch.stack(mlp_in, dim=0)
+        mlp_in              = torch.stack(mlp_in, dim=0)
         #
-        mlp_out                 = self.linear_out(mlp_in)
+        mlp_out             = self.linear_out(mlp_in)
         #
-        mlp_out                 = F.log_softmax(mlp_out, dim=-1)
-        cost                    = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
+        mlp_out             = F.log_softmax(mlp_out, dim=-1)
+        cost                = F.nll_loss(mlp_out, sents_labels, weight=None, reduction='elementwise_mean')
         #
-        emit                    = F.softmax(mlp_out, dim=-1)[:,1]
+        emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
 # # laptop
