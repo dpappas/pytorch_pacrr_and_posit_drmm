@@ -1367,7 +1367,9 @@ class ABCNN3_PDRMM(nn.Module):
         max_len                 = 400
         # self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
-        self.aW                 = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(-1e-4, 1e-4))
+        # scale                   = 1e-4
+        # self.aW                 = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(-scale, scale))
+        self.aW                 = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(0.2, 0.4))
         self.linear_out         = nn.Linear(14, 2, bias=True)
         if(use_cuda):
             self.aW.data        = self.aW.data.cuda()
