@@ -1675,7 +1675,13 @@ for run in range(1):
             'best_dev_f1:{} '
             'test_f1:{} '
             '\n'.format(
-                epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch, epoch_dev_f1, test_f1
+                epoch + 1,
+                epoch_dev_auc,
+                best_dev_auc,
+                test_auc,
+                best_dev_epoch,
+                best_dev_f1,
+                test_f1
             )
 
         )
@@ -1688,14 +1694,14 @@ for run in range(1):
             'best_dev_f1:{} '
             'test_f1:{} '
             '\n'.format(
-                epoch + 1, epoch_dev_auc, best_dev_auc, test_auc, best_dev_epoch, epoch_dev_f1, test_f1
+                epoch + 1,
+                epoch_dev_auc,
+                best_dev_auc,
+                test_auc,
+                best_dev_epoch,
+                best_dev_f1,
+                test_f1
             )
 
         )
 
-
-'''
-http://unbisnet.un.org:8080/ipac20/ipac.jsp?menu=search&profile=bib&index=.UD&term=ac360*&oper=AND&index=.TW&oper=AND&index=.TN&oper=AND&index=.AW&limitbox_2=TM01+%3D+tm_b03&limitbox_4=LA01+%3D+la_eng&npp=50&page=1
-http://unbisnet.un.org:8080/ipac20/ipac.jsp?menu=search&profile=bib&index=.UD&term=ac260SR*&oper=AND&index=.TW&oper=AND&index=.TN&oper=AND&index=.AW&limitbox_2=TM01+%3D+tm_b03&limitbox_4=LA01+%3D+la_eng&npp=50&page=1
-rsync -r -v --progress 194.177.192.80:/home/dpappas/ELK_news_backup.tar.gz ./
-'''
