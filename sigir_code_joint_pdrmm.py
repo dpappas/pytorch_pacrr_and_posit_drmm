@@ -1258,15 +1258,13 @@ max_epoch           = 30
 early_stop_after    = 4
 
 hdlr = None
-# for run in range(0, 5):
 for run in range(0, 1):
     #
-    # my_seed     = random.randint(1, 2000000)
     my_seed     = run
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'super_model_4_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir    = 'sigir_joint_2L_no_mesh_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
@@ -1283,11 +1281,7 @@ for run in range(0, 1):
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model                   = Sent_Posit_Drmm_Modeler(
-        embedding_dim       = embedding_dim,
-        k_for_maxpool       = k_for_maxpool,
-        number_of_heads     = 1
-    )
+    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, number_of_heads=1)
     if(use_cuda):
         model = model.cuda()
     params      = model.parameters()
@@ -1311,24 +1305,4 @@ for run in range(0, 1):
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
-'''
 
-DONE - add sentence len in tokens
-DONE - add document len in sents
-DONE - add dense layer in fig 4 output (relu)
-DONE - add dense layer in fig 6 output (relu)
-DONE - self attention (softmax before sigmoid) 
-DONE - add the sigmoid outputs trying to predict the number of relevant sents (MSE loss)
-DONE - entire document as sentence
-
-- tune weights of the losses
-DONE - multi headed attention
-DONE - use bigru last steps as input to sentence number prediction
-
-- MSE sentence loss only for relevant document  (Put it on ice for the time)
-Ok Ok ... - no third loss
-- 
-
-grep 'test MAP snippets:' super_model_20_11_2018_two_losses_run_0/model.log 
-
-'''
