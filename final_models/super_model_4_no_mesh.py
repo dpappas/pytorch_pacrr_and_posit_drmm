@@ -1263,7 +1263,8 @@ max_epoch           = 30
 early_stop_after    = 4
 
 hdlr = None
-for run in range(0, 5):
+# for run in range(0, 5):
+for run in range(0, 1):
     #
     # my_seed     = random.randint(1, 2000000)
     my_seed     = run
