@@ -762,7 +762,11 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+            print(
+                '{} {} {} {} {} {}'.format(
+                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time
+                )
+            )
             logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
