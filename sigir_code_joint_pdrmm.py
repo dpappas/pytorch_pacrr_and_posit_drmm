@@ -1188,8 +1188,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits, gdoc_out    = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
-        bad_out,  bs_emits, bdoc_out    = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
+        good_out, gs_emits, gdoc_out = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights)
+        bad_out,  bs_emits, bdoc_out = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights)
         #
         good_out_pp         = torch.cat([good_out,  doc_gaf, gdoc_out], -1)
         bad_out_pp          = torch.cat([bad_out,   doc_baf, bdoc_out], -1)
