@@ -1265,7 +1265,8 @@ early_stop_after    = 4
 hdlr = None
 for run in range(0, 5):
     #
-    my_seed = random.randint(1, 2000000)
+    # my_seed     = random.randint(1, 2000000)
+    my_seed     = run
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
