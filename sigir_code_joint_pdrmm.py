@@ -1054,10 +1054,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         all_oh          = []
         for i in range(len(doc_sents_embeds)):
             (
-                sent_embeds,
-                sim_insens,
-                sim_sens,
-                sim_oh
+                sent_embeds, sim_insens, sim_sens, sim_oh
             ) = self.process_and_get_pooling(doc_sents_embeds[i], question_embeds, q_conv_res_trigram)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if(use_cuda):
@@ -1283,13 +1280,13 @@ for run in range(0, 1):
     logger.info('Compiling model...')
     model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, number_of_heads=1)
     if(use_cuda):
-        model = model.cuda()
-    params      = model.parameters()
+        model               = model.cuda()
+    params                  = model.parameters()
     print_params(model)
-    optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    optimizer               = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
-    best_dev_map, test_map = None, None
-    patience    = 0
+    best_dev_map, test_map  = None, None
+    patience                = 0
     for epoch in range(max_epoch):
         train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
