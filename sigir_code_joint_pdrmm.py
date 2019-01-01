@@ -1026,7 +1026,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, number_of_heads=4):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
-        self.doc_add_feats                          = 5
+        self.doc_add_feats                          = 11
         self.sent_add_feats                         = 10
         self.number_of_heads                        = number_of_heads
         #
