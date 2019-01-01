@@ -608,6 +608,23 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
+    #
+    doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
+    tomi                = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop        = tomi - set(stopwords)
+    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features            = [
+        len(quest)                                      / 300.,
+        len(the_doc['title'] + the_doc['abstractText']) / 300.,
+        len(tomi_no_stop)                               / 100.,
+        BM25score,
+        sum(tomi_no_stop_idfs)                          / 100.,
+        sum(tomi_idfs)                                  / sum(quest_idfs),
+    ]
+    good_doc_af.extend(features)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
@@ -637,24 +654,11 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
-    good_meshes = get_the_mesh(the_doc)
-    good_mesh_embeds, good_mesh_escores = [], []
-    for good_mesh in good_meshes:
-        mesh_toks                       = tokenize(good_mesh)
-        gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
-        if (len(gm_tokens) > 0):
-            good_mesh_embeds.append(gm_embeds)
-            good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
-            good_escores.append(len(mesh_toks)/ 10.)
-            good_mesh_escores.append(good_escores)
-    ####
     return {
         'sents_embeds'     : good_sents_embeds,
         'sents_escores'    : good_sents_escores,
         'doc_af'           : good_doc_af,
         'sent_tags'        : good_sent_tags,
-        'mesh_embeds'      : good_mesh_embeds,
-        'mesh_escores'     : good_mesh_escores,
         'held_out_sents'   : held_out_sents,
     }
 
