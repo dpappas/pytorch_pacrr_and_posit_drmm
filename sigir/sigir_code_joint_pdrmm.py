@@ -1369,9 +1369,9 @@ b_size              = 32
 max_epoch           = 10
 
 hdlr = None
-for run in range(5, 10):
+for run in range(0, 1):
     #
-    my_seed = random.randint(1, 2000000)
+    my_seed = run
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
@@ -1386,20 +1386,12 @@ for run in range(5, 10):
     logger.info('random seed: {}'.format(my_seed))
     #
     (
-        test_data, test_docs, dev_data, dev_docs, train_data,
-        train_docs, idf, max_idf, wv, bioasq6_data
+        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
     ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model       = Sent_Posit_Drmm_Modeler(
-        embedding_dim       = embedding_dim,
-        k_for_maxpool       = k_for_maxpool,
-        context_method      = models[which_model][0],
-        sentence_out_method = models[which_model][1],
-        mesh_style          = models[which_model][2],
-        k_sent_maxpool      = 5
-    )
+    model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
     if(use_cuda):
         model   = model.cuda()
     params      = model.parameters()
@@ -1408,11 +1400,11 @@ for run in range(5, 10):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq6_data, two_losses=models[which_model][3], use_sent_tokenizer=models[which_model][4])
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=models[which_model][4])
+        train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
-            test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=models[which_model][4])
+            test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir,'best_checkpoint.pth.tar'))
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
