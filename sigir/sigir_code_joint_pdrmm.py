@@ -736,7 +736,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'q_idfs'                : q_idfs,
             }
 
-def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
+def     train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
@@ -873,9 +873,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
             sents_gaf           = datum['sents_escores'],
-            doc_gaf             = datum['doc_af'],
-            good_meshes_embeds  = datum['mesh_embeds'],
-            mesh_gaf            = datum['mesh_escores']
+            doc_gaf             = datum['doc_af']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
