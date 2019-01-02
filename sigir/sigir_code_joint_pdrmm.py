@@ -1368,40 +1368,6 @@ lr                  = 0.01
 b_size              = 32
 max_epoch           = 10
 
-# model_name, context_method, sentence_ouput, mesh_method, two_losses_or_not, sent_tokenize
-models = [
-#
-['Model_33', 'CNN',     'MLP',      None,      False,   False],
-['Model_34', 'CNN',     'MLP',      'SENT',    False,   False],
-['Model_35', 'CNN',     'BIGRU',    None,      False,   False],
-['Model_36', 'CNN',     'BIGRU',    'SENT',    False,   False],
-['Model_37', 'BIGRU',   'MLP',      None,      False,   False],
-['Model_38', 'BIGRU',   'MLP',      'SENT',    False,   False],
-['Model_39', 'BIGRU',   'BIGRU',    None,      False,   False],
-['Model_40', 'BIGRU',   'BIGRU',    'SENT',    False,   False],
-#
-['Model_41', 'CNN',     'MLP',      None,      False,   True],
-['Model_42', 'CNN',     'MLP',      'SENT',    False,   True],
-['Model_43', 'CNN',     'BIGRU',    None,      False,   True],
-['Model_44', 'CNN',     'BIGRU',    'SENT',    False,   True],
-['Model_45', 'BIGRU',   'MLP',      None,      False,   True],
-['Model_46', 'BIGRU',   'MLP',      'SENT',    False,   True],
-['Model_47', 'BIGRU',   'BIGRU',    None,      False,   True],
-['Model_48', 'BIGRU',   'BIGRU',    'SENT',    False,   True],
-#
-['Model_49', 'CNN',     'MLP',      None,      True,    True],
-['Model_50', 'CNN',     'MLP',      'SENT',    True,    True],
-['Model_51', 'CNN',     'BIGRU',    None,      True,    True],
-['Model_52', 'CNN',     'BIGRU',    'SENT',    True,    True],
-['Model_53', 'BIGRU',   'MLP',      None,      True,    True],
-['Model_54', 'BIGRU',   'MLP',      'SENT',    True,    True],
-['Model_55', 'BIGRU',   'BIGRU',    None,      True,    True],
-['Model_56', 'BIGRU',   'BIGRU',    'SENT',    True,    True],
-]
-models = dict([(item[0], item[1:]) for item in models])
-
-which_model = 'Model_50'
-
 hdlr = None
 for run in range(5, 10):
     #
@@ -1409,7 +1375,7 @@ for run in range(5, 10):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = '{}_my_model_run_5max_mlp_{}/'.format(which_model, run)
+    odir    = 'sigir_joint_simple_2L_no_mesh_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
@@ -1435,7 +1401,7 @@ for run in range(5, 10):
         k_sent_maxpool      = 5
     )
     if(use_cuda):
-        model = model.cuda()
+        model   = model.cuda()
     params      = model.parameters()
     print_params(model)
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
