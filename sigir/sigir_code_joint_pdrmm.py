@@ -25,9 +25,97 @@ from    gensim.models.keyedvectors  import KeyedVectors
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
 import  re
+import  nltk
+import  math
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
+stopwords   = nltk.corpus.stopwords.words("english")
+
+def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
+    if(avgdl == 0):
+        total_words = 0
+        total_docs  = 0
+        for dic in tqdm(train_docs):
+            sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
+            for s in sents:
+                total_words += len(tokenize(s))
+                total_docs  += 1.
+        avgdl = float(total_words) / float(total_docs)
+    else:
+        print('avgdl {} provided'.format(avgdl))
+    #
+    if(mean == 0 and deviation==0):
+        BM25scores  = []
+        k1, b       = 1.2, 0.75
+        not_found   = 0
+        for qid in tqdm(bioasq6_data):
+            qtext           = bioasq6_data[qid]['body']
+            all_retr_ids    = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
+            for dic in all_retr_ids:
+                try:
+                    sents   = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
+                    q_toks  = tokenize(qtext)
+                    for sent in sents:
+                        BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
+                        BM25scores.append(BM25score)
+                except KeyError:
+                    not_found += 1
+        #
+        mean        = sum(BM25scores)/float(len(BM25scores))
+        nominator   = 0
+        for score in BM25scores:
+            nominator += ((score - mean) ** 2)
+        deviation   = math.sqrt((nominator) / float(len(BM25scores) - 1))
+    else:
+        print('mean {} provided'.format(mean))
+        print('deviation {} provided'.format(deviation))
+    return avgdl, mean, deviation
+
+# Compute the term frequency of a word for a specific document
+def tf(term, document):
+    tf = 0
+    for word in document:
+        if word == term:
+            tf += 1
+    if len(document) == 0:
+        return tf
+    else:
+        return tf/len(document)
+
+# Use BM25 ranking function in order to cimpute the similarity score between a question anda snippet
+# query: the given question
+# document: the snippet
+# k1, b: parameters
+# idf_scores: list with the idf scores
+# avddl: average document length
+# nomalize: in case we want to use Z-score normalization (Boolean)
+# mean, deviation: variables used for Z-score normalization
+def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
+    score = 0
+    for query_term in query:
+        if query_term not in idf_scores:
+            score += rare_word * (
+                    (tf(query_term, document) * (k1 + 1)) /
+                    (
+                            tf(query_term, document) +
+                            k1 * (1 - b + b * (len(document) / avgdl))
+                    )
+            )
+        else:
+            score += idf_scores[query_term] * ((tf(query_term, document) * (k1 + 1)) / (tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+    if normalize:
+        return ((score - mean)/deviation)
+    else:
+        return score
+
+# Compute the average length from a collection of documents
+def compute_avgdl(documents):
+    total_words = 0
+    for document in documents:
+        total_words += len(document)
+    avgdl = total_words / len(documents)
+    return avgdl
 
 def weighted_binary_cross_entropy(output, target, weights=None):
     if weights is not None:
@@ -528,12 +616,30 @@ def snip_is_relevant(one_sent, gold_snips):
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     if(use_sent_tokenizer):
-        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     else:
-        good_sents = [the_doc['title'] + the_doc['abstractText']]
+        good_sents  = [the_doc['title'] + the_doc['abstractText']]
     ####
-    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    quest_toks      = tokenize(quest)
+    good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
+    #
+    doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
+    tomi                = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop        = tomi - set(stopwords)
+    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features            = [
+        len(quest)                                      / 300.,
+        len(the_doc['title'] + the_doc['abstractText']) / 300.,
+        len(tomi_no_stop)                               / 100.,
+        BM25score,
+        sum(tomi_no_stop_idfs)                          / 100.,
+        sum(tomi_idfs)                                  / sum(quest_idfs),
+    ]
+    good_doc_af.extend(features)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
@@ -542,29 +648,32 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
+            #
+            tomi                = (set(sent_toks) & set(quest_toks))
+            tomi_no_stop        = tomi - set(stopwords)
+            BM25score           = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+            tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+            tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+            quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+            features            = [
+                len(quest)              / 300.,
+                len(good_text)          / 300.,
+                len(tomi_no_stop)       / 100.,
+                BM25score,
+                sum(tomi_no_stop_idfs)  / 100.,
+                sum(tomi_idfs)          / sum(quest_idfs),
+            ]
+            #
             good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores)
+            good_sents_escores.append(good_escores+features)
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
-    ####
-    good_meshes = get_the_mesh(the_doc)
-    good_mesh_embeds, good_mesh_escores = [], []
-    for good_mesh in good_meshes:
-        mesh_toks                       = tokenize(good_mesh)
-        gm_tokens, gm_embeds            = get_embeds(mesh_toks, wv)
-        if (len(gm_tokens) > 0):
-            good_mesh_embeds.append(gm_embeds)
-            good_escores = GetScores(quest, good_mesh, the_bm25, idf, max_idf)[:-1]
-            good_escores.append(len(mesh_toks)/ 10.)
-            good_mesh_escores.append(good_escores)
     ####
     return {
         'sents_embeds'     : good_sents_embeds,
         'sents_escores'    : good_sents_escores,
         'doc_af'           : good_doc_af,
         'sent_tags'        : good_sent_tags,
-        'mesh_embeds'      : good_mesh_embeds,
-        'mesh_escores'     : good_mesh_escores,
         'held_out_sents'   : held_out_sents,
     }
 
