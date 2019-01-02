@@ -754,11 +754,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             sents_gaf           = datum['good_sents_escores'],
             sents_baf           = datum['bad_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
-            doc_baf             = datum['bad_doc_af'],
-            good_meshes_embeds  = datum['good_mesh_embeds'],
-            bad_meshes_embeds   = datum['bad_mesh_embeds'],
-            mesh_gaf            = datum['good_mesh_escores'],
-            mesh_baf            = datum['bad_mesh_escores']
+            doc_baf             = datum['bad_doc_af']
         )
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
@@ -1276,7 +1272,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
-    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf, good_meshes_embeds, mesh_gaf):
+    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
@@ -1306,7 +1302,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         gs_emits            = torch.sigmoid(gs_emits)
         #
         return final_good_output, gs_emits
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
