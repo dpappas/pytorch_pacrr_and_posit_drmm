@@ -974,28 +974,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.mesh_h0    = self.mesh_h0.cuda()
             self.mesh_gru   = self.mesh_gru.cuda()
     def init_context_module(self):
-        if(self.context_method == 'CNN'):
-            self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-            self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
-            self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-            self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
-            if(use_cuda):
-                self.trigram_conv_1             = self.trigram_conv_1.cuda()
-                self.trigram_conv_2             = self.trigram_conv_2.cuda()
-                self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
-                self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
-        else:
-            self.context_h0     = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
-            self.context_gru    = nn.GRU(
-                input_size      = self.embedding_dim,
-                hidden_size     = self.embedding_dim,
-                bidirectional   = True
-            )
-            self.context_gru_activation = torch.nn.LeakyReLU(negative_slope=0.1)
-            if(use_cuda):
-                self.context_gru            = self.context_gru.cuda()
-                self.context_h0             = self.context_h0.cuda()
-                self.context_gru_activation = self.context_gru_activation.cuda()
+        self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
+        if(use_cuda):
+            self.trigram_conv_1             = self.trigram_conv_1.cuda()
+            self.trigram_conv_2             = self.trigram_conv_2.cuda()
+            self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
+            self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
     def init_question_weight_module(self):
         self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
         if(use_cuda):
@@ -1212,31 +1199,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             question_embeds = question_embeds.cuda()
             doc_gaf         = doc_gaf.cuda()
         #
-        if(self.context_method=='CNN'):
-            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        else:
-            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
+        q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        if(self.context_method=='CNN'):
-            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        else:
-            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        if(self.mesh_style=='BIGRU'):
-            good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
-            good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-        elif(self.mesh_style=='SENT'):
-            if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
-            else:
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
-            good_out_pp = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
-        else:
-            good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         #
         final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
@@ -1259,39 +1231,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc_gaf         = doc_gaf.cuda()
             doc_baf         = doc_baf.cuda()
         #
-        if(self.context_method=='CNN'):
-            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        else:
-            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
+        q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        if(self.context_method=='CNN'):
-            good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-            bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        else:
-            good_out, gs_emits  = self.do_for_one_doc_bigru(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-            bad_out, bs_emits   = self.do_for_one_doc_bigru(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        if(self.mesh_style=='BIGRU'):
-            good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
-            bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds, q_context)
-            good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-            bad_out_pp          = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
-        elif(self.mesh_style=='SENT'):
-            if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights, 1)
-            else:
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights, 1)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_bigru(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights, 1)
-            good_out_pp = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
-            bad_out_pp  = torch.cat([bad_out, doc_baf, bad_mesh_out], -1)
-        else:
-            good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-            bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
         #
         final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
