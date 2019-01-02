@@ -1051,20 +1051,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
              embedding_dim          = 30,
              k_for_maxpool          = 5,
-             context_method         = 'CNN',
              sentence_out_method    = 'MLP',
-             mesh_style             = 'SENT',
              k_sent_maxpool         = 1
          ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         self.k_sent_maxpool                         = k_sent_maxpool
-        self.doc_add_feats                          = 5
-        self.sent_add_feats                         = 4
+        self.doc_add_feats                          = 11
+        self.sent_add_feats                         = 10
         #
         self.embedding_dim                          = embedding_dim
-        self.mesh_style                             = mesh_style
-        self.context_method                         = context_method
         self.sentence_out_method                    = sentence_out_method
         # to create q weights
         self.init_context_module()
@@ -1122,23 +1118,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 self.sent_res_bigru = self.sent_res_bigru.cuda()
                 self.sent_res_mlp   = self.sent_res_mlp.cuda()
     def init_doc_out_layer(self):
-        if(self.mesh_style=='BIGRU'):
-            self.init_mesh_module()
-            self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool + 30, 8, bias=True)
-            if(use_cuda):
-                self.final_layer_1    = self.final_layer_1.cuda()
-        elif(self.mesh_style=='SENT'):
-            self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool + 1, 8, bias=True)
-            if(use_cuda):
-                self.final_layer_1    = self.final_layer_1.cuda()
-        else:
-            self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True)
-            if(use_cuda):
-                self.final_layer_1    = self.final_layer_1.cuda()
+        self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True)
         self.final_activ_1  = torch.nn.LeakyReLU(negative_slope=0.1)
         self.final_layer_2  = nn.Linear(8, 1, bias=True)
         self.oo_layer       = nn.Linear(2, 1, bias=True)
         if(use_cuda):
+            self.final_layer_1  = self.final_layer_1.cuda()
             self.final_activ_1  = self.final_activ_1.cuda()
             self.final_layer_2  = self.final_layer_2.cuda()
             self.oo_layer       = self.oo_layer.cuda()
