@@ -1237,7 +1237,7 @@ class ABCNN3(nn.Module):
         # self.aW                 = autograd.Variable(torch.zeros(max_len, self.embedding_dim), requires_grad=True)
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         self.conv1_activ        = torch.nn.Tanh()
-        self.aW = torch.nn.Parameter(torch.randn(max_len, 1).uniform_(-1e-6, 1e-6))
+        self.aW = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(-1e-6, 1e-6))
         # self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         if(use_cuda):
@@ -1280,14 +1280,8 @@ class ABCNN3(nn.Module):
         #
         att_bx1, att_bx2    = self.get_attended(batch_x1, batch_x2)
         #
-        print(batch_x1.size())
-        print(att_bx1.size())
-        print(batch_x2.size())
-        print(att_bx2.size())
-        batch_x1 = torch.cat([batch_x1, att_bx1], dim=1).transpose(-1, -2)
-        batch_x2 = torch.cat([batch_x2, att_bx2], dim=1).transpose(-1, -2)
-        print(batch_x1.size())
-        print(batch_x2.size())
+        batch_x1 = torch.stack([batch_x1, att_bx1], dim=1).transpose(-1, -2)
+        batch_x2 = torch.stack([batch_x2, att_bx2], dim=1).transpose(-1, -2)
         #
         batch_x1_conv       = the_conv(batch_x1).squeeze(-1)
         batch_x2_conv       = the_conv(batch_x2).squeeze(-1)
@@ -1325,22 +1319,13 @@ class ABCNN3(nn.Module):
                 sent_embed      = sent_embed.cuda()
             sent_global_pool    = F.avg_pool1d(sent_embed, sent_embed.size(-1), stride=None)
             sim1                = self.my_cosine_sim(
-                quest_global_pool.transpose(-1, -2),
-                sent_global_pool.transpose(-1, -2)
+                quest_global_pool.transpose(-1, -2), sent_global_pool.transpose(-1, -2)
             ).squeeze(-1).squeeze(-1)
             (
-                quest_window_pool,
-                sent_window_pool,
-                quest_global_pool,
-                sent_global_pool,
-                sim2
+                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim2
             ) = self.apply_one_conv(question_embeds, sent_embed, self.conv1)
             (
-                quest_window_pool,
-                sent_window_pool,
-                quest_global_pool,
-                sent_global_pool,
-                sim3
+                quest_window_pool, sent_window_pool, quest_global_pool, sent_global_pool, sim3
             ) = self.apply_one_conv(quest_window_pool, sent_window_pool, self.conv2)
             mlp_in.append(torch.cat([sim1, sim2, sim3, sents_gaf[i]], dim=-1))
         #
@@ -1671,8 +1656,7 @@ for run in range(1):
     # exit()
     #
     best_dev_auc, test_auc, best_dev_epoch, best_dev_f1 = None, None, None, None
-    for epoch in \
-            range(epochs):
+    for epoch in range(epochs):
         logger.info('Training...')
         train_one_only_positive()
         logger.info('Validating...')
