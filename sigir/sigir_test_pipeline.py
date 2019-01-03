@@ -712,7 +712,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             good_meshes_embeds  = None,
             mesh_gaf            = None
         )
-        _, gs_emits_ = sent_model.emit_one(
+        _, gs_emits_ = sent_model.forward(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
