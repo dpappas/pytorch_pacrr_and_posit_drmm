@@ -1237,7 +1237,7 @@ class ABCNN3(nn.Module):
         # self.aW                 = autograd.Variable(torch.zeros(max_len, self.embedding_dim), requires_grad=True)
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         self.conv1_activ        = torch.nn.Tanh()
-        self.aW                 = torch.nn.Parameter(torch.randn(2, 1).uniform_(-1e-6, 1e-6))
+        self.aW = torch.nn.Parameter(torch.randn(max_len, 1).uniform_(-1e-6, 1e-6))
         # self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         if(use_cuda):
