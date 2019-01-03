@@ -837,8 +837,8 @@ def train_one(epoch, bioasq6_data):
     start_time      = time.time()
     for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, False):
         cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds         = datum['good_sents_embeds'],
-            doc2_embeds         = datum['bad_sents_embeds'],
+            doc1_embeds         = datum['good_sents_embeds'][0],
+            doc2_embeds         = datum['bad_sents_embeds'][0],
             question_embeds     = datum['quest_embeds'],
             q_idfs              = datum['q_idfs'],
             doc_gaf             = datum['good_doc_af'],
