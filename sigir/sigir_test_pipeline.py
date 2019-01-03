@@ -1420,7 +1420,7 @@ load_model_from_checkpoint(doc_resume_from, doc_model)
 #
 print('Compiling sent model...')
 logger.info('Compiling sent model...')
-sent_model   = SENT_PDRMM(embedding_dim=embedding_dim)
+sent_model = SENT_PDRMM(embedding_dim=embedding_dim)
 params      = sent_model.parameters()
 print_params(sent_model)
 #
