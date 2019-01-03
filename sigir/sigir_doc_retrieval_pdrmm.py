@@ -1043,21 +1043,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_embeds         = autograd.Variable(torch.FloatTensor(doc1_embeds),         requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         # HANDLE QUESTION
-        if(self.context_method=='CNN'):
-            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        else:
-            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
+        q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         # HANDLE DOCS
-        if(self.context_method=='CNN'):
-            good_out    = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
-        else:
-            good_out    = self.emit_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
+        good_out            = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
         #
-        good_out_pp     = torch.cat([good_out, doc_gaf], -1)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         return final_good_output
@@ -1071,24 +1066,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         # HANDLE QUESTION
-        if(self.context_method=='CNN'):
-            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        else:
-            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
+        q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         # HANDLE DOCS
-        if(self.context_method=='CNN'):
-            good_out    = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
-            bad_out     = self.emit_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
-        else:
-            good_out    = self.emit_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
-            bad_out     = self.emit_doc_bigru(doc2_embeds, question_embeds, q_context, q_weights)
+        good_out            = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
+        bad_out             = self.emit_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
         #
-        good_out_pp     = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
