@@ -708,7 +708,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             doc1_embeds         = datum['doc_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
-            doc_gaf             = datum['doc_af'][:5],
+            doc_gaf             = datum['doc_af'][:4],
             good_meshes_embeds  = None,
             mesh_gaf            = None
         )
