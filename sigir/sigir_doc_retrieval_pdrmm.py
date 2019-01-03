@@ -890,6 +890,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         #
+        self.doc_add_feats                          = 11
         self.embedding_dim                          = embedding_dim
         # to create q weights
         self.init_context_module()
@@ -910,7 +911,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
     def init_doc_out_layer(self):
-        self.final_layer = nn.Linear(5, 1, bias=True)
+        self.final_layer = nn.Linear(self.doc_add_feats+1, 1, bias=True)
     def init_sent_output_layer(self):
         if(self.context_method == 'MLP'):
             self.sent_out_layer = nn.Linear(4, 1, bias=False)
@@ -1152,7 +1153,7 @@ for run in range(1):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
+        train_one(epoch+1, bioasq6_data)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
