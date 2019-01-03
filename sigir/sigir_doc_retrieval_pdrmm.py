@@ -675,7 +675,8 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_.tolist()
+    if(not type(gs_emits_) is list):
+        emitss              = gs_emits_.tolist()
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
