@@ -20,13 +20,16 @@ import  torch.nn.functional as F
 from    pprint import pprint
 # import  cPickle as pickle
 import  pickle
+import  nltk
+import  math
 import  torch.autograd as autograd
 from    tqdm import tqdm
 from    gensim.models.keyedvectors import KeyedVectors
 from    nltk.tokenize import sent_tokenize
 from    difflib import SequenceMatcher
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords   = nltk.corpus.stopwords.words("english")
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
@@ -595,7 +598,7 @@ def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res
     doc = docs[retr['doc_id']]
     bm  = bm25s[retr['doc_id']]
     (good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores) = prep_data(quest, doc, bm)
-    doc_emit_               = model.emit_one(
+    doc_emit_               = doc_model.emit_one(
         doc1_embeds         = good_doc_embeds,
         question_embeds     = quest_embeds,
         q_idfs              = q_idfs,
@@ -631,6 +634,15 @@ def get_pseudo_retrieved(dato):
         for id in set(some_ids)
     ]
     return pseudo_retrieved
+
+def get_norm_doc_scores(the_doc_scores):
+    ks = list(the_doc_scores.keys())
+    vs = [the_doc_scores[k] for k in ks]
+    vs = softmax(vs)
+    norm_doc_scores = {}
+    for i in range(len(ks)):
+        norm_doc_scores[ks[i]] = vs[i]
+    return norm_doc_scores
 
 def select_snippets_v1(extracted_snippets):
     '''
@@ -1476,6 +1488,8 @@ logger.info('random seed: {}'.format(my_seed))
 (
     test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+#
+avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
 #
 print('Compiling doc model...')
 logger.info('Compiling doc model...')
