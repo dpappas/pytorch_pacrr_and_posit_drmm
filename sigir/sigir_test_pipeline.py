@@ -117,6 +117,15 @@ def compute_avgdl(documents):
     avgdl = total_words / len(documents)
     return avgdl
 
+
+def load_model_from_checkpoint(resume_from, model):
+    global start_epoch, optimizer
+    if os.path.isfile(resume_from):
+        print("=> loading checkpoint '{}'".format(resume_from))
+        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
+        model.load_state_dict(checkpoint['state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
 def RemoveTrainLargeYears(data, doc_text):
   for i in range(len(data['queries'])):
     hyear = 1900
@@ -991,15 +1000,12 @@ class ABCNN3(nn.Module):
         return cost, emit
 
 class DOC_PDRMM(nn.Module):
-    def __init__(self, embedding_dim= 30, k_for_maxpool= 5, context_method = 'CNN', mesh_style = 'SENT'):
+    def __init__(self, embedding_dim=30, k_for_maxpool=5):
         super(DOC_PDRMM, self).__init__()
         self.k                                      = k_for_maxpool
         #
+        self.doc_add_feats = 11
         self.embedding_dim                          = embedding_dim
-        self.mesh_style                             = mesh_style
-        self.context_method                         = context_method
-        if(mesh_style is not None):
-            self.init_sent_output_layer()
         # to create q weights
         self.init_context_module()
         self.init_question_weight_module()
@@ -1007,23 +1013,11 @@ class DOC_PDRMM(nn.Module):
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-    def init_mesh_module(self):
-        self.mesh_h0    = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
-        self.mesh_gru   = nn.GRU(self.embedding_dim, self.embedding_dim)
     def init_context_module(self):
-        if(self.context_method == 'CNN'):
-            self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-            self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
-            self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-            self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
-        else:
-            self.context_h0     = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
-            self.context_gru    = nn.GRU(
-                input_size      = self.embedding_dim,
-                hidden_size     = self.embedding_dim,
-                bidirectional   = True
-            )
-            self.context_gru_activation = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1)
     def init_question_weight_module(self):
         self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
     def init_mlps_for_pooled_attention(self):
@@ -1031,13 +1025,7 @@ class DOC_PDRMM(nn.Module):
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
     def init_doc_out_layer(self):
-        if(self.mesh_style=='BIGRU'):
-            self.init_mesh_module()
-            self.final_layer = nn.Linear(5 + 30, 1, bias=True)
-        elif(self.mesh_style=='SENT'):
-            self.final_layer = nn.Linear(1 + 4 + 1, 1, bias=True)
-        else:
-            self.final_layer = nn.Linear(5, 1, bias=True)
+        self.final_layer = nn.Linear(self.doc_add_feats + 1, 1, bias=True)
     def init_sent_output_layer(self):
         if(self.context_method == 'MLP'):
             self.sent_out_layer = nn.Linear(4, 1, bias=False)
@@ -1049,14 +1037,6 @@ class DOC_PDRMM(nn.Module):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
-    def apply_context_gru(self, the_input, h0):
-        output, hn      = self.context_gru(the_input.unsqueeze(1), h0)
-        output          = self.context_gru_activation(output)
-        out_forward     = output[:, 0, :self.embedding_dim]
-        out_backward    = output[:, 0, self.embedding_dim:]
-        output          = out_forward + out_backward
-        res             = output + the_input
-        return res, hn
     def apply_context_convolution(self, the_input, the_filters, activation):
         conv_res        = the_filters(the_input.transpose(0,1).unsqueeze(0))
         if(activation is not None):
@@ -1118,37 +1098,7 @@ class DOC_PDRMM(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
-        if(self.mesh_style == 'MLP'):
-            res = self.sent_out_layer(res).squeeze(-1)
-        else:
-            res = self.apply_sent_res_bigru(res)
-        ret = self.get_max(res).unsqueeze(0)
-        res = torch.sigmoid(res)
-        return ret, res
-    def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
-        res = []
-        hn  = self.context_h0
-        for i in range(len(doc_sents_embeds)):
-            sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
-            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            conv_res, hn        = self.apply_context_gru(sent_embeds, hn)
-            #
-            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh              = (sim_insens > (1 - (1e-3))).float()
-            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled  = self.pooling_method(sim_insens)
-            sensitive_pooled    = self.pooling_method(sim_sens)
-            oh_pooled           = self.pooling_method(sim_oh)
-            #
-            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
-            res.append(sent_add_feats)
-        res = torch.stack(res)
-        if(self.mesh_style == 'MLP'):
-            res = self.sent_out_layer(res).squeeze(-1)
-        else:
-            res = self.apply_sent_res_bigru(res)
+        res = self.sent_out_layer(res).squeeze(-1)
         ret = self.get_max(res).unsqueeze(0)
         res = torch.sigmoid(res)
         return ret, res
@@ -1201,53 +1151,29 @@ class DOC_PDRMM(nn.Module):
         res = self.min_max_norm(res)
         res = torch.max(res)
         return res
-    def apply_mesh_gru(self, mesh_embeds):
-        mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-        output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
-        return output[-1,0,:]
-    def get_mesh_rep(self, meshes_embeds, q_context):
-        meshes_embeds   = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
-        meshes_embeds   = torch.stack(meshes_embeds)
-        sim_matrix      = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
-        max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
-        output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
-        return output
-    def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf, good_meshes_embeds, mesh_gaf):
+
+    def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc1_embeds         = autograd.Variable(torch.FloatTensor(doc1_embeds),         requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         # HANDLE QUESTION
-        if(self.context_method=='CNN'):
-            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        else:
-            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
+        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
+        #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         # HANDLE DOCS
-        if(self.context_method=='CNN'):
-            good_out    = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
-        else:
-            good_out    = self.emit_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
-        # HANDLE MESH TERMS
-        if(self.mesh_style=='BIGRU'):
-            good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
-            good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-        elif(self.mesh_style=='SENT'):
-            if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-            else:
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-            good_out_pp     = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
-        else:
-            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
+        good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
+        #
+        good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         return final_good_output
-    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds, mesh_gaf, mesh_baf):
+
+    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
@@ -1257,39 +1183,18 @@ class DOC_PDRMM(nn.Module):
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         # HANDLE QUESTION
-        if(self.context_method=='CNN'):
-            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        else:
-            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
+        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
+        #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         # HANDLE DOCS
-        if(self.context_method=='CNN'):
-            good_out    = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
-            bad_out     = self.emit_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
-        else:
-            good_out    = self.emit_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
-            bad_out     = self.emit_doc_bigru(doc2_embeds, question_embeds, q_context, q_weights)
-        # HANDLE MESH TERMS
-        if(self.mesh_style=='BIGRU'):
-            good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
-            bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds, q_context)
-            good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-            bad_out_pp          = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
-        elif(self.mesh_style=='SENT'):
-            if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
-            else:
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_bigru(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
-            good_out_pp     = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
-            bad_out_pp      = torch.cat([bad_out, doc_baf, bad_mesh_out], -1)
-        else:
-            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
-            bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
+        good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
+        bad_out = self.emit_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
+        #
+        good_out_pp = torch.cat([good_out, doc_gaf], -1)
+        bad_out_pp = torch.cat([bad_out, doc_baf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
@@ -1507,9 +1412,11 @@ avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=
 #
 print('Compiling doc model...')
 logger.info('Compiling doc model...')
-doc_model   = DOC_PDRMM(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, context_method='CNN', mesh_style=None)
+doc_model = DOC_PDRMM(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 params      = doc_model.parameters()
 print_params(doc_model)
+doc_resume_from = '/home/dpappas/DOC_CNN_PDRMM_run_0/best_checkpoint.pth.tar'
+load_model_from_checkpoint(doc_resume_from, doc_model)
 #
 print('Compiling sent model...')
 logger.info('Compiling sent model...')
