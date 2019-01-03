@@ -447,6 +447,8 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
+    doc_toks                = tokenize(the_doc['title'] + the_doc['abstractText'])
+    doc_tokens, doc_embeds  = get_embeds(doc_toks, wv)
     #
     doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
     tomi                = (set(doc_toks) & set(quest_toks))
@@ -494,11 +496,12 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
     return {
-        'sents_embeds'     : good_sents_embeds,
-        'sents_escores'    : good_sents_escores,
-        'doc_af'           : good_doc_af,
-        'sent_tags'        : good_sent_tags,
-        'held_out_sents'   : held_out_sents,
+        'sents_embeds'      : good_sents_embeds,
+        'sents_escores'     : good_sents_escores,
+        'doc_af'            : good_doc_af,
+        'sent_tags'         : good_sent_tags,
+        'held_out_sents'    : held_out_sents,
+        'doc_embeds'        : doc_embeds,
     }
 
 def get_gold_snips(quest_id, bioasq6_data):
@@ -594,21 +597,24 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             ret[k]  = float(v)
     return ret
 
-def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res):
-    doc = docs[retr['doc_id']]
-    bm  = bm25s[retr['doc_id']]
-    (good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores) = prep_data(quest, doc, bm)
-    doc_emit_               = doc_model.emit_one(
-        doc1_embeds         = good_doc_embeds,
-        question_embeds     = quest_embeds,
-        q_idfs              = q_idfs,
-        doc_gaf             = good_doc_af,
-        good_meshes_embeds  = good_mesh_embeds,
-        mesh_gaf            = good_mesh_escores
-    )
+def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_.tolist()
+    mmax                    = max(emitss)
+    all_emits, extracted_from_one = [], []
+    for ind in range(len(emitss)):
+        t = (
+            snip_is_relevant(held_out_sents[ind], gold_snips),
+            emitss[ind],
+            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+            held_out_sents[ind]
+        )
+        all_emits.append(t)
+        if(emitss[ind] == mmax):
+            extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
-    return doc_res
+    all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
+    return doc_res, extracted_from_one, all_emits
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
@@ -698,12 +704,20 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
-        doc_emit_, gs_emits_    = model.emit_one(
+        doc_emit_ = doc_model.emit_one(
+            doc1_embeds         = datum['doc_embeds'],
+            question_embeds     = quest_embeds,
+            q_idfs              = q_idfs,
+            doc_gaf             = datum['doc_af'][:5],
+            good_meshes_embeds  = None,
+            mesh_gaf            = None
+        )
+        _, gs_emits_ = sent_model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
             sents_gaf           = datum['sents_escores'],
-            doc_gaf             = datum['doc_af']
+            sents_labels        = datum['sent_tags']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
@@ -1504,8 +1518,8 @@ params      = sent_model.parameters()
 print_params(sent_model)
 #
 best_dev_map, test_map = None, None
-epoch_dev_map   = get_one_map('dev', dev_data, dev_docs)
-test_map        = get_one_map('test', test_data, test_docs)
+epoch_dev_map   = get_one_map('dev', dev_data, dev_docs, True)
+test_map        = get_one_map('test', test_data, test_docs, True)
 print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(-1, epoch_dev_map, best_dev_map, test_map))
 logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(-1, epoch_dev_map, best_dev_map, test_map))
 
