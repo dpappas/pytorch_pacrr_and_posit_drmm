@@ -673,19 +673,24 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             ret[k]  = float(v)
     return ret
 
-def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res):
-    doc = docs[retr['doc_id']]
-    bm  = bm25s[retr['doc_id']]
-    (good_doc_embeds, good_doc_af, good_mesh_embeds, good_mesh_escores) = prep_data(quest, doc, bm)
-    doc_emit_               = model.emit_one(
-        doc1_embeds         = good_doc_embeds,
-        question_embeds     = quest_embeds,
-        q_idfs              = q_idfs,
-        doc_gaf             = good_doc_af
-    )
+def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_.tolist()
+    mmax                    = max(emitss)
+    all_emits, extracted_from_one = [], []
+    for ind in range(len(emitss)):
+        t = (
+            snip_is_relevant(held_out_sents[ind], gold_snips),
+            emitss[ind],
+            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+            held_out_sents[ind]
+        )
+        all_emits.append(t)
+        if(emitss[ind] == mmax):
+            extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
-    return doc_res
+    all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
+    return doc_res, extracted_from_one, all_emits
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
@@ -734,7 +739,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             q_idfs              = q_idfs,
             doc_gaf             = datum['doc_af']
         )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
+            doc_emit_, [], datum['held_out_sents'], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
@@ -752,23 +758,12 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     emitions['documents']                   = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
-    extracted_snippets                      = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-    extracted_snippets_known_rel_num        = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
-    #
     extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3 = [], [], []
     extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3 = [], [], []
     #
-    # pprint(extracted_snippets_v1)
-    # pprint(extracted_snippets_v2)
-    # pprint(extracted_snippets_v3)
-    # exit()
     snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    # pprint(snips_res_v1)
-    # pprint(snips_res_v2)
-    # pprint(snips_res_v3)
-    # exit()
     #
     snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
@@ -1234,10 +1229,10 @@ for run in range(1):
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
         train_one(epoch+1, bioasq6_data)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
+        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, False)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
-            test_map        = get_one_map('test', test_data, test_docs)
+            test_map        = get_one_map('test', test_data, test_docs, False)
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
