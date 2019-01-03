@@ -439,7 +439,7 @@ def train_data_yielder():
                 bad_escores                 = GetScores(quest, bad_text,  bm25s[bid])
                 yield(good_embeds, bad_embeds, quest_embeds, q_idfs, good_escores, bad_escores)
 
-def train_data_step1():
+def train_data_step1(train_data):
     ret = []
     for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
@@ -453,7 +453,6 @@ def train_data_step1():
                 bid = random.choice(bad_pmids)
                 ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
     print('')
-    logger.info('')
     return ret
 
 def get_snips(quest_id, gid):
@@ -487,46 +486,6 @@ def get_the_mesh(the_doc):
     # good_mesh = [gm.split() for gm in good_mesh]
     good_mesh = [gm for gm in good_mesh]
     return good_mesh
-
-def train_data_step2(train_instances):
-    for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
-        quest_tokens, quest_embeds              = get_embeds(tokenize(quest), wv)
-        q_idfs                                  = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-        #
-        good_meshes                             = get_the_mesh(train_docs[gid])
-        good_doc_text                           = train_docs[gid]['title'] + train_docs[gid]['abstractText']
-        good_doc_af                             = GetScores(quest, good_doc_text, bm25s_gid)
-        good_tokens, good_embeds                = get_embeds(tokenize(good_doc_text), wv)
-        #
-        # Handle good mesh terms
-        good_mesh_embeds, good_mesh_escores = [], []
-        for good_mesh in good_meshes:
-            gm_tokens, gm_embeds = get_embeds(good_mesh, wv)
-            if(len(gm_tokens)>0):
-                good_mesh_embeds.append(gm_embeds)
-                good_escores = GetScores(quest, good_mesh, bm25s_gid)[:-1]
-                good_mesh_escores.append(good_escores)
-        #
-        bad_meshes                              = get_the_mesh(train_docs[bid])
-        bad_doc_text                            = train_docs[bid]['title'] + train_docs[bid]['abstractText']
-        bad_doc_af                              = GetScores(quest, bad_doc_text, bm25s_bid)
-        bad_tokens, bad_embeds                  = get_embeds(tokenize(bad_doc_text), wv)
-        #
-        # Handle bad mesh terms
-        bad_mesh_embeds, bad_mesh_escores = [], []
-        for bad_mesh in bad_meshes:
-            gm_tokens, gm_embeds = get_embeds(bad_mesh, wv)
-            if(len(gm_tokens)>0):
-                bad_mesh_embeds.append(gm_embeds)
-                bad_escores = GetScores(quest, bad_mesh, bm25s_gid)[:-1]
-                bad_mesh_escores.append(bad_escores)
-        yield (
-            good_embeds,        bad_embeds,
-            quest_embeds,       q_idfs,
-            good_doc_af,        bad_doc_af,
-            good_mesh_embeds,   bad_mesh_embeds,
-            good_mesh_escores,  bad_mesh_escores
-        )
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -824,27 +783,66 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d2_l         = F.binary_cross_entropy(bs_emits_, torch.zeros_like(bs_emits_), size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
 
-def train_one(epoch):
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
+        if(use_sent_tokenizer):
+            good_snips              = get_snips(quest_id, gid, bioasq6_data)
+            good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
+        else:
+            good_snips              = []
+        #
+        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
+        good_sents_embeds           = datum['sents_embeds']
+        good_sents_escores          = datum['sents_escores']
+        good_doc_af                 = datum['doc_af']
+        good_sent_tags              = datum['sent_tags']
+        good_held_out_sents         = datum['held_out_sents']
+        #
+        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
+        bad_sents_embeds            = datum['sents_embeds']
+        bad_sents_escores           = datum['sents_escores']
+        bad_doc_af                  = datum['doc_af']
+        bad_sent_tags               = [0] * len(datum['sent_tags'])
+        bad_held_out_sents          = datum['held_out_sents']
+        #
+        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        #
+        if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
+            yield {
+                'good_sents_embeds'     : good_sents_embeds,
+                'good_sents_escores'    : good_sents_escores,
+                'good_doc_af'           : good_doc_af,
+                'good_sent_tags'        : good_sent_tags,
+                'good_held_out_sents'   : good_held_out_sents,
+                #
+                'bad_sents_embeds'      : bad_sents_embeds,
+                'bad_sents_escores'     : bad_sents_escores,
+                'bad_doc_af'            : bad_doc_af,
+                'bad_sent_tags'         : bad_sent_tags,
+                'bad_held_out_sents'    : bad_held_out_sents,
+                #
+                'quest_embeds'          : quest_embeds,
+                'q_idfs'                : q_idfs,
+            }
+
+def train_one(epoch, bioasq6_data):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    batch_counter = 0
-    train_instances = train_data_step1()
-    # train_instances = train_instances[:len(train_instances)/2]
-    epoch_aver_cost, epoch_aver_acc = 0., 0.
+    batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
+    #
+    train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
+    #
     start_time      = time.time()
-    for (
-        good_embeds,        bad_embeds,
-        quest_embeds,       q_idfs,
-        good_doc_af,        bad_doc_af
-    ) in train_data_step2(train_instances):
+    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, False):
         cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds         = good_embeds,
-            doc2_embeds         = bad_embeds,
-            question_embeds     = quest_embeds,
-            q_idfs              = q_idfs,
-            doc_gaf             = good_doc_af,
-            doc_baf             = bad_doc_af
+            doc1_embeds         = datum['good_sents_embeds'],
+            doc2_embeds         = datum['bad_sents_embeds'],
+            question_embeds     = datum['quest_embeds'],
+            q_idfs              = datum['q_idfs'],
+            doc_gaf             = datum['good_doc_af'],
+            doc_baf             = datum['bad_doc_af']
         )
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -856,7 +854,11 @@ def train_one(epoch):
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+            print(
+                '{} {} {} {} {} {}'.format(
+                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time
+                )
+            )
             logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
