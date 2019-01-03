@@ -675,8 +675,10 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition                 = doc_emit_.cpu().item()
-    if(not type(gs_emits_) is list):
-        emitss              = gs_emits_.tolist()
+    if(type(gs_emits_) is list):
+        emitss = gs_emits_
+    else:
+        emitss = gs_emits_.tolist()
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
@@ -912,7 +914,8 @@ def train_one(epoch, bioasq6_data):
     random.shuffle(train_instances)
     #
     start_time      = time.time()
-    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, False):
+    pbar            = tqdm(train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, False))
+    for datum in pbar:
         cost_, doc1_emit_, doc2_emit_ = model(
             doc1_embeds         = datum['good_sents_embeds'][0],
             doc2_embeds         = datum['bad_sents_embeds'][0],
@@ -931,7 +934,7 @@ def train_one(epoch, bioasq6_data):
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            print(
+            pbar.set_description(
                 '{} {} {} {} {} {}'.format(
                     batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time
                 )
@@ -943,7 +946,7 @@ def train_one(epoch, bioasq6_data):
         batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
         elapsed_time = time.time() - start_time
         start_time = time.time()
-        print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+        pbar.set_description('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
         logger.info('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
     print('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{} aver_epoch_cost: {} aver_epoch_acc: {}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
