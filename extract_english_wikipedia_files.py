@@ -6,15 +6,16 @@
 
 # bzcat enwiki-latest-pages-articles.xml.bz2 | head -100
 
-import sys
-reload(sys)
-sys.setdefaultencoding("utf-8")
+# import sys
+# reload(sys)
+# sys.setdefaultencoding("utf-8")
 
 import subprocess
 from bs4 import BeautifulSoup
 from pprint import pprint
 import re
 from lxml import etree as et
+
 fpath   = '/media/dpappas/dpappas_data/enwiki-latest-pages-articles.xml.bz2'
 proc    = subprocess.Popen(["bzcat",fpath], stdout=subprocess.PIPE)
 temp_text = ''
@@ -23,7 +24,7 @@ while True:
     if('<page>' in line):
         temp_text   = ''
         temp_text   += '\n'+line
-        print "test:", line
+        print("test:", line)
     elif ('</page>' in line):
         temp_text   += '\n'+line
         annots      = re.findall(r'{{.*?}}', temp_text, flags=re.DOTALL)
@@ -31,13 +32,12 @@ while True:
         # temp_text = temp_text.replace('&gt;', '>')
         # temp_text = temp_text.replace('&lt;', '<')
         soup = BeautifulSoup(temp_text, 'lxml')
-        print soup.prettify()
+        print(soup.prettify())
         pprint(annots)
-        print 20 * '='
+        print(20 * '=')
         temp_text = ''
     else:
         temp_text += '\n'+line
-
 
 exit()
 
@@ -97,7 +97,7 @@ tar         = tarfile.open(filename)
 nonos       = ['Image', 'User', 'Talk', 'Category']
 for member_info in tar:
     if(not any([nono in member_info.name for nono in nonos])):
-        print member_info.name
+        print(member_info.name)
         f       = tar.extractfile(member_info)
         content = f.read()
         soup    = BeautifulSoup(content, "lxml")
