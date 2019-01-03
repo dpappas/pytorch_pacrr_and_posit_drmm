@@ -1084,24 +1084,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         else:
             good_out    = self.emit_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
             bad_out     = self.emit_doc_bigru(doc2_embeds, question_embeds, q_context, q_weights)
-        # HANDLE MESH TERMS
-        if(self.mesh_style=='BIGRU'):
-            good_meshes_out     = self.get_mesh_rep(good_meshes_embeds, q_context)
-            bad_meshes_out      = self.get_mesh_rep(bad_meshes_embeds, q_context)
-            good_out_pp         = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-            bad_out_pp          = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
-        elif(self.mesh_style=='SENT'):
-            if(self.context_method=='CNN'):
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_cnn(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_cnn(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
-            else:
-                good_mesh_out, gs_mesh_emits    = self.do_for_one_doc_bigru(good_meshes_embeds, mesh_gaf, question_embeds, q_context, q_weights)
-                bad_mesh_out, bs_mesh_emits     = self.do_for_one_doc_bigru(bad_meshes_embeds, mesh_baf, question_embeds, q_context, q_weights)
-            good_out_pp     = torch.cat([good_out, doc_gaf, good_mesh_out], -1)
-            bad_out_pp      = torch.cat([bad_out, doc_baf, bad_mesh_out], -1)
-        else:
-            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
-            bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
+        #
+        good_out_pp     = torch.cat([good_out, doc_gaf], -1)
+        bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
@@ -1142,7 +1127,6 @@ lr              = 0.01
 b_size          = 32
 max_epoch       = 10
 
-models = dict([(item[0], item[1:]) for item in models])
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
 print(avgdl, mean, deviation)
 #
