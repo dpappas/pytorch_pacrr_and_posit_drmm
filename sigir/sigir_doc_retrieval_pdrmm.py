@@ -248,7 +248,7 @@ def get_map_res(fgold, femit):
 def tokenize(x):
   return bioclean(x)
 
-def idf_val(w):
+def idf_val(w, idf, max_idf):
     if w in idf:
         return idf[w]
     return max_idf
