@@ -787,7 +787,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
 
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
-    pprint(bioasq_snip_res)
+    # pprint(bioasq_snip_res)
     print('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
     print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
     print('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
@@ -798,7 +798,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     logger.info('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
-    pprint(bioasq_snip_res)
+    # pprint(bioasq_snip_res)
     print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
     print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
     print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
@@ -832,8 +832,8 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
     #
-    print_the_results('v1 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1, data_for_revision)
-    print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
+    # print_the_results('v1 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1, data_for_revision)
+    # print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
     print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
     #
     if (prefix == 'dev'):
@@ -914,7 +914,10 @@ def train_one(epoch, bioasq6_data):
     random.shuffle(train_instances)
     #
     start_time      = time.time()
-    pbar            = tqdm(train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, False))
+    pbar            = tqdm(
+        iterable    = train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, False),
+        total       = 378
+    )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_ = model(
             doc1_embeds         = datum['good_sents_embeds'][0],
