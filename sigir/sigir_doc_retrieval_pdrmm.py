@@ -253,10 +253,10 @@ def idf_val(w, idf, max_idf):
         return idf[w]
     return max_idf
 
-def get_words(s):
+def get_words(s, idf, max_idf):
     sl  = tokenize(s)
     sl  = [s for s in sl]
-    sl2 = [s for s in sl if idf_val(s) >= 2.0]
+    sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
     return sl, sl2
 
 def get_embeds(tokens, wv):
