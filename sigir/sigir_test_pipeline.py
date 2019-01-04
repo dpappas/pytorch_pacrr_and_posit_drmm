@@ -719,10 +719,16 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             q_idfs              = q_idfs,
             doc_gaf=datum['doc_af']
         )
+        # _, gs_emits_ = sent_model.forward(
+        #     doc1_sents_embeds   = datum['sents_embeds'],
+        #     question_embeds     = quest_embeds,
+        #     q_idfs              = q_idfs,
+        #     sents_gaf           = datum['sents_escores'],
+        #     sents_labels        = datum['sent_tags']
+        # )
         _, gs_emits_ = sent_model.forward(
-            doc1_sents_embeds   = datum['sents_embeds'],
+            sents_embeds=datum['sents_embeds'],
             question_embeds     = quest_embeds,
-            q_idfs              = q_idfs,
             sents_gaf           = datum['sents_escores'],
             sents_labels        = datum['sent_tags']
         )
@@ -896,7 +902,7 @@ class ABCNN3(nn.Module):
         # self.aW                 = autograd.Variable(torch.zeros(max_len, self.embedding_dim), requires_grad=True)
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         self.conv1_activ        = torch.nn.Tanh()
-        self.aW                 = torch.nn.Parameter(torch.randn(2, 1).uniform_(-1e-6, 1e-6))
+        self.aW = torch.nn.Parameter(torch.randn(max_len, self.embedding_dim).uniform_(-1e-6, 1e-6))
         # self.aW                 = torch.nn.Parameter(torch.zeros(max_len, self.embedding_dim))
         # torch.nn.init.xavier_uniform_(self.aW, gain=1)
         if(use_cuda):
@@ -939,8 +945,8 @@ class ABCNN3(nn.Module):
         #
         att_bx1, att_bx2    = self.get_attended(batch_x1, batch_x2)
         #
-        batch_x1            = torch.stack([batch_x1, att_bx1], dim=1).transpose(-1,-2)
-        batch_x2            = torch.stack([batch_x2, att_bx2], dim=1).transpose(-1,-2)
+        batch_x1 = torch.stack([batch_x1, att_bx1], dim=1).transpose(-1, -2)
+        batch_x2 = torch.stack([batch_x2, att_bx2], dim=1).transpose(-1, -2)
         #
         batch_x1_conv       = the_conv(batch_x1).squeeze(-1)
         batch_x2_conv       = the_conv(batch_x2).squeeze(-1)
