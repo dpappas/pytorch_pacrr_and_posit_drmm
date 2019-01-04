@@ -717,9 +717,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             doc1_embeds         = datum['doc_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
-            doc_gaf             = datum['doc_af'][:4],
-            good_meshes_embeds  = None,
-            mesh_gaf            = None
+            doc_gaf=datum['doc_af']
         )
         _, gs_emits_ = sent_model.forward(
             doc1_sents_embeds   = datum['sents_embeds'],
@@ -1151,7 +1149,6 @@ class DOC_PDRMM(nn.Module):
         res = self.min_max_norm(res)
         res = torch.max(res)
         return res
-
     def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -1418,12 +1415,20 @@ print_params(doc_model)
 doc_resume_from = '/home/dpappas/DOC_CNN_PDRMM_run_0/best_checkpoint.pth.tar'
 load_model_from_checkpoint(doc_resume_from, doc_model)
 #
+# print('Compiling sent model...')
+# logger.info('Compiling sent model...')
+# sent_model = SENT_PDRMM(embedding_dim=embedding_dim)
+# params      = sent_model.parameters()
+# print_params(sent_model)
+# sent_resume_from = '/home/dpappas/MODELS_OUTPUTS/PDRMM_ADAM_001_run_0/best_checkpoint.pth.tar'
+# load_model_from_checkpoint(sent_resume_from, sent_model)
+#
 print('Compiling sent model...')
 logger.info('Compiling sent model...')
-sent_model = SENT_PDRMM(embedding_dim=embedding_dim)
+sent_model = ABCNN3(embedding_dim=embedding_dim)
 params      = sent_model.parameters()
 print_params(sent_model)
-sent_resume_from = '/home/dpappas/MODELS_OUTPUTS/PDRMM_ADAM_001_run_0/best_checkpoint.pth.tar'
+sent_resume_from = '/home/dpappas/MODELS_OUTPUTS/ABCNN3_ADAM_001_run_0/best_checkpoint.pth.tar'
 load_model_from_checkpoint(sent_resume_from, sent_model)
 #
 best_dev_map, test_map = None, None
