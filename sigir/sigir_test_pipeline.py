@@ -1423,7 +1423,7 @@ logger.info('Compiling sent model...')
 sent_model = SENT_PDRMM(embedding_dim=embedding_dim)
 params      = sent_model.parameters()
 print_params(sent_model)
-sent_resume_from = '/home/dpappas/DOC_CNN_PDRMM_run_0/best_checkpoint.pth.tar'
+sent_resume_from = '/home/dpappas/MODELS_OUTPUTS/PDRMM_ADAM_001_run_0/best_checkpoint.pth.tar'
 load_model_from_checkpoint(sent_resume_from, sent_model)
 #
 best_dev_map, test_map = None, None
