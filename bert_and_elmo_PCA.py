@@ -10,7 +10,7 @@ diri = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
 mat, m = None, 0
 
 transformer = IncrementalPCA(n_components=50)
-for f in tqdm(os.listdir(diri)):
+for f in tqdm(os.listdir(diri), ascii=True):
     m += 1
     fpath = os.path.join(diri, f)
     d = pickle.load(open(fpath, 'rb'))
