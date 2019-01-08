@@ -1373,6 +1373,7 @@ dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd = '/home/dpappas/'
+use_cuda = True
 # get_embeds          = get_embeds_use_unk
 # get_embeds          = get_embeds_use_only_unk
 
@@ -1400,7 +1401,7 @@ b_size              = 32
 max_epoch           = 10
 
 hdlr = None
-for run in range(0, 1):
+for run in range(0, 5):
     #
     my_seed = run
     random.seed(my_seed)
