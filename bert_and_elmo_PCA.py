@@ -14,27 +14,19 @@ for f in tqdm(os.listdir(diri)):
     m += 1
     fpath = os.path.join(diri, f)
     d = pickle.load(open(fpath, 'rb'))
-    transformer.partial_fit(
-        np.concatenate(d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
-    )
-    # if (mat is None):
-    #     mat = np.concatenate(d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
-    # else:
-    #     mat = np.concatenate([mat] + d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
-    # if (mat.shape[0] > 10000000):
-    #     break
+    #
+    if (mat is None):
+        mat = np.concatenate(d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
+    else:
+        mat = np.concatenate([mat] + d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
+    if (mat.shape[0] > 1000):
+        transformer.partial_fit(
+            np.concatenate(d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
+        )
+        mat = None
 
 filename = '/home/dpappas/bioasq_all/pca_bert_transformer.sav'
 pickle.dump(transformer, open(filename, 'wb'))
-
-# print(m)
-# print(mat.shape)
-#
-# # selector    = PCA(n_components=0.9)
-# selector = PCA(n_components=50)
-# selector.fit(mat)
-# temp = selector.transform(mat)
-# print(temp.shape)
 
 '''
 
