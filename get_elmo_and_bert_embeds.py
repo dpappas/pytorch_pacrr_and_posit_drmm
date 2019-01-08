@@ -496,30 +496,28 @@ print('total: {}'.format(total))
 print('Good to go!!!')
 
 '''
-manolis mail gia text analytics
-
-read the thread for stat. sign.
+manolis mail gia text analytics     -   OK
+read the thread for stat. sign.     -   pending
 
 snippets: 
-MAP + NDCG
-stat. sign.
-
+MAP + NDCG                          -   pending
+stat. sign.                         -   pending
 
 doc ret.
-BM25 baseline
-stat. sign.
+BM25 baseline                       -   pending
+stat. sign.                         -   pending
 
 
 joint model
-voting 5 modelwn (ensemble)
-stat. sign.
+voting 5 modelwn (ensemble)         -   pending
+stat. sign.                         -   pending
 
 
-Bert+Elmo -> PCA
-Baselines se bert ???
+Bert+Elmo -> PCA                    -   pending
+Baselines se bert ???               -   pending
 
-BM25+ABCNN3
-BM25+PDRMM
+BM25+ABCNN3                         -   pending
+BM25+PDRMM                          -   pending
 
 use setting 1 and not setting 3 in pipeline and joint models
 
