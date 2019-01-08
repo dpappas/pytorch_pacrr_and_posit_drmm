@@ -1,4 +1,5 @@
-from sklearn.decomposition import PCA
+# from sklearn.decomposition import PCA
+from sklearn.decomposition import IncrementalPCA
 from pprint import pprint
 import numpy as np
 import pickle
@@ -8,25 +9,32 @@ from tqdm import tqdm
 diri = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
 mat, m = None, 0
 
+transformer = IncrementalPCA(n_components=50)
 for f in tqdm(os.listdir(diri)):
     m += 1
     fpath = os.path.join(diri, f)
     d = pickle.load(open(fpath, 'rb'))
-    if (mat is None):
-        mat = np.concatenate(d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
-    else:
-        mat = np.concatenate([mat] + d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
-    if (mat.shape[0] > 10000000):
-        break
+    transformer.partial_fit(
+        np.concatenate(d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
+    )
+    # if (mat is None):
+    #     mat = np.concatenate(d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
+    # else:
+    #     mat = np.concatenate([mat] + d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
+    # if (mat.shape[0] > 10000000):
+    #     break
 
-print(m)
-print(mat.shape)
+filename = '/home/dpappas/bioasq_all/pca_bert_transformer.sav'
+pickle.dump(transformer, open(filename, 'wb'))
 
-# selector    = PCA(n_components=0.9)
-selector = PCA(n_components=50)
-selector.fit(mat)
-temp = selector.transform(mat)
-print(temp.shape)
+# print(m)
+# print(mat.shape)
+#
+# # selector    = PCA(n_components=0.9)
+# selector = PCA(n_components=50)
+# selector.fit(mat)
+# temp = selector.transform(mat)
+# print(temp.shape)
 
 '''
 
