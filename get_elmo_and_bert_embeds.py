@@ -399,7 +399,6 @@ def work3(args):
         #
         pickle.dump(ret, open(opath, 'wb'))
 
-
 # # laptop
 # init_checkpoint_pt  = "/home/dpappas/for_ryan/uncased_L-12_H-768_A-12/"
 # dataloc             = '/home/dpappas/for_ryan/'
