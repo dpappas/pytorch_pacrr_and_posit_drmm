@@ -20,9 +20,7 @@ for f in tqdm(os.listdir(diri), ascii=True):
     else:
         mat = np.concatenate([mat] + d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
     if (mat.shape[0] > 1000):
-        transformer.partial_fit(
-            np.concatenate(d['title_bert_average_embeds'] + d['abs_bert_average_embeds'], axis=0)
-        )
+        transformer.partial_fit(mat)
         mat = None
 
 filename = '/home/dpappas/bioasq_all/pca_bert_transformer.sav'
