@@ -34,7 +34,6 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
 softmax = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords = nltk.corpus.stopwords.words("english")
 
-
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
         total_words = 0
@@ -75,7 +74,6 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         print('deviation {} provided'.format(deviation))
     return avgdl, mean, deviation
 
-
 # Compute the term frequency of a word for a specific document
 def tf(term, document):
     tf = 0
@@ -86,7 +84,6 @@ def tf(term, document):
         return tf
     else:
         return tf / len(document)
-
 
 # Use BM25 ranking function in order to cimpute the similarity score between a question anda snippet
 # query: the given question
@@ -115,7 +112,6 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
     else:
         return score
 
-
 # Compute the average length from a collection of documents
 def compute_avgdl(documents):
     total_words = 0
@@ -124,7 +120,6 @@ def compute_avgdl(documents):
     avgdl = total_words / len(documents)
     return avgdl
 
-
 def weighted_binary_cross_entropy(output, target, weights=None):
     if weights is not None:
         assert len(weights) == 2
@@ -132,7 +127,6 @@ def weighted_binary_cross_entropy(output, target, weights=None):
     else:
         loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
     return torch.neg(torch.mean(loss))
-
 
 def RemoveTrainLargeYears(data, doc_text):
     for i in range(len(data['queries'])):
@@ -156,7 +150,6 @@ def RemoveTrainLargeYears(data, doc_text):
                 break
     return data
 
-
 def RemoveBadYears(data, doc_text, train):
     for i in range(len(data['queries'])):
         j = 0
@@ -176,7 +169,6 @@ def RemoveBadYears(data, doc_text, train):
             if j == len(data['queries'][i]['retrieved_documents']):
                 break
     return data
-
 
 def print_params(model):
     '''
@@ -209,7 +201,6 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-
 def dummy_test():
     doc1_embeds = np.random.rand(40, 200)
     doc2_embeds = np.random.rand(30, 200)
@@ -233,7 +224,6 @@ def dummy_test():
         print(the_cost, float(doc1_emit_), float(doc2_emit_))
     print(20 * '-')
 
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -243,7 +233,6 @@ def compute_the_cost(costs, back_prop=True):
         optimizer.zero_grad()
     the_cost = cost_.cpu().item()
     return the_cost
-
 
 def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
     '''
@@ -259,7 +248,6 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     }
     torch.save(state, filename)
 
-
 def get_map_res(fgold, femit):
     trec_eval_res = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err) = trec_eval_res.communicate()
@@ -267,7 +255,6 @@ def get_map_res(fgold, femit):
     map_res = [l for l in lines if (l.startswith('map '))][0].split('\t')
     map_res = float(map_res[-1])
     return map_res
-
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -279,7 +266,6 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_aver_acc = sum(batch_acc) / float(len(batch_acc))
     epoch_aver_acc = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
-
 
 def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
@@ -335,7 +321,6 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             ret[k] = float(v)
     return ret
 
-
 def similar(upstream_seq, downstream_seq):
     upstream_seq = upstream_seq.encode('ascii', 'ignore')
     downstream_seq = downstream_seq.encode('ascii', 'ignore')
@@ -347,7 +332,6 @@ def similar(upstream_seq, downstream_seq):
     to_match = upstream_seq if (len(downstream_seq) > len(upstream_seq)) else downstream_seq
     r1 = SequenceMatcher(None, to_match, longest_match).ratio()
     return r1
-
 
 def get_pseudo_retrieved(dato):
     some_ids = [item['document'].split('/')[-1].strip() for item in bioasq6_data[dato['query_id']]['snippets']]
@@ -362,14 +346,12 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-
 def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
     wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
     wrong = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
     wrong = torch.cat(wrong + [bs_emits_.squeeze(-1)])
     losses = [model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
     return sum(losses) / float(len(losses))
-
 
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     bs_emits_ = bs_emits_.squeeze(-1)
@@ -383,7 +365,6 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
     sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
-
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
@@ -399,23 +380,19 @@ def init_the_logger(hdlr):
     logger.setLevel(logging.INFO)
     return logger, hdlr
 
-
 def get_words(s, idf, max_idf):
     sl = tokenize(s)
     sl = [s for s in sl]
     sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
     return sl, sl2
 
-
 def tokenize(x):
     return bioclean(x)
-
 
 def idf_val(w, idf, max_idf):
     if w in idf:
         return idf[w]
     return max_idf
-
 
 def get_embeds(tokens, wv):
     ret1, ret2 = [], []
@@ -424,7 +401,6 @@ def get_embeds(tokens, wv):
             ret1.append(tok)
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
-
 
 def get_embeds_use_unk(tokens, wv):
     ret1, ret2 = [], []
@@ -438,7 +414,6 @@ def get_embeds_use_unk(tokens, wv):
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
-
 def get_embeds_use_only_unk(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
@@ -446,7 +421,6 @@ def get_embeds_use_only_unk(tokens, wv):
         ret1.append(tok)
         ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
-
 
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
@@ -467,13 +441,11 @@ def load_idfs(idf_path, words):
     #
     return ret, max_idf
 
-
 def uwords(words):
     uw = {}
     for w in words:
         uw[w] = 1
     return [w for w in uw]
-
 
 def ubigrams(words):
     uw = {}
@@ -482,7 +454,6 @@ def ubigrams(words):
         uw[prevw + '_' + w] = 1
         prevw = w
     return [w for w in uw]
-
 
 def query_doc_overlap(qwords, dwords, idf, max_idf):
     # % Query words in doc.
@@ -531,7 +502,6 @@ def query_doc_overlap(qwords, dwords, idf, max_idf):
         idf_qwords_in_doc_val,
         idf_qwords_bigrams_in_doc_val
     ]
-
 
 def GetScores(qtext, dtext, bm25, idf, max_idf):
     qwords, qw2 = get_words(qtext, idf, max_idf)
