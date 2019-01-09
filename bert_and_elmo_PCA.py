@@ -58,10 +58,12 @@ if (not os.path.exists(odiri)):
 
 for f in tqdm(os.listdir(diri), ascii=True):
     fpath = os.path.join(diri, f)
-    d = pickle.load(open(fpath, 'rb'))
-    od = {
-        'title_bert_average_embeds': [transformer.transform(m) for m in d['title_bert_average_embeds']],
-        'abs_bert_average_embeds': [transformer.transform(m) for m in d['abs_bert_average_embeds']],
-        'mesh_bert_average_embeds': [transformer.transform(m) for m in d['mesh_bert_average_embeds']],
-    }
-    pickle.dump(od, open(os.path.join(odiri, f), 'wb'), protocol=2)
+    opath = os.path.join(odiri, f)
+    if (not os.path.exists(opath)):
+        d = pickle.load(open(fpath, 'rb'))
+        od = {
+            'title_bert_average_embeds': [transformer.transform(m) for m in d['title_bert_average_embeds']],
+            'abs_bert_average_embeds': [transformer.transform(m) for m in d['abs_bert_average_embeds']],
+            'mesh_bert_average_embeds': [transformer.transform(m) for m in d['mesh_bert_average_embeds']],
+        }
+        pickle.dump(od, open(opath, 'wb'), protocol=2)
