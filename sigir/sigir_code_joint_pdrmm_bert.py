@@ -1073,7 +1073,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     return res_map
 
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+def load_all_data(dataloc, idf_pickle_path):
     print('loading pickle data')
     #
     with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
@@ -1106,10 +1106,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     #
     print('loading idfs')
     idf, max_idf = load_idfs(idf_pickle_path, words)
-    print('loading w2v')
-    wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
@@ -1458,51 +1455,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# # use_cuda            = False
-# odd                 = '/home/dpappas/'
-# # get_embeds          = get_embeds_use_unk
-# # get_embeds          = get_embeds_use_only_unk
-
-# # cslab241
-# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-
 # atlas , cslab243
-w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
+bert_embeds_dir = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
 eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd = '/home/dpappas/'
 use_cuda = True
-# get_embeds          = get_embeds_use_unk
-# get_embeds          = get_embeds_use_only_unk
-
-# # gpu_server_1
-# w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/media/large_space_1/DATA/bioasq_all/idf.pkl'
-# dataloc             = '/media/large_space_1/DATA/bioasq_all/bioasq_data/'
-# eval_path           = '/media/large_space_1/DATA/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/media/large_space_1/DATA/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/media/large_space_1/dpappas/'
-
-# # gpu_server_2
-# w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/cave/dpappas/'
 
 k_for_maxpool = 5
 k_sent_maxpool = 5
@@ -1518,7 +1478,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_joint_simple_bert_2L_no_mesh_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
