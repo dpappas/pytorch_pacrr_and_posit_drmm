@@ -540,7 +540,6 @@ def GetScores(qtext, dtext, bm25, idf, max_idf):
     bm25 = [bm25]
     return qd1[0:3] + bm25
 
-
 def GetWords(data, doc_text, words):
     for i in range(len(data['queries'])):
         qwds = tokenize(data['queries'][i]['query_text'])
@@ -561,14 +560,12 @@ def GetWords(data, doc_text, words):
             for w in dwds:
                 words[w] = 1
 
-
 def get_gold_snips(quest_id, bioasq6_data):
     gold_snips = []
     if ('snippets' in bioasq6_data[quest_id]):
         for sn in bioasq6_data[quest_id]['snippets']:
             gold_snips.extend(sent_tokenize(sn['text']))
     return list(set(gold_snips))
-
 
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
@@ -604,7 +601,6 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         ret['snippets'].append(esnip_res)
     return ret
 
-
 def get_snips(quest_id, gid, bioasq6_data):
     good_snips = []
     if ('snippets' in bioasq6_data[quest_id]):
@@ -612,7 +608,6 @@ def get_snips(quest_id, gid, bioasq6_data):
             if (sn['document'].endswith(gid)):
                 good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
-
 
 def get_the_mesh(the_doc):
     good_meshes = []
@@ -638,7 +633,6 @@ def get_the_mesh(the_doc):
     good_mesh = [gm for gm in good_mesh]
     return good_mesh
 
-
 def snip_is_relevant(one_sent, gold_snips):
     # print one_sent
     # pprint(gold_snips)
@@ -652,7 +646,6 @@ def snip_is_relevant(one_sent, gold_snips):
             ]
         )
     )
-
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     if (use_sent_tokenizer):
@@ -717,7 +710,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         'held_out_sents': held_out_sents,
     }
 
-
 def train_data_step1(train_data):
     ret = []
     for dato in tqdm(train_data['queries']):
@@ -733,7 +725,6 @@ def train_data_step1(train_data):
                 ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
     print('')
     return ret
-
 
 def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
@@ -777,7 +768,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'quest_embeds': quest_embeds,
                 'q_idfs': q_idfs,
             }
-
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
@@ -837,7 +827,6 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     logger.info(
         'Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
-
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition = doc_emit_.cpu().item()
     emitss = gs_emits_.tolist()
@@ -857,7 +846,6 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-
 def get_norm_doc_scores(the_doc_scores):
     ks = list(the_doc_scores.keys())
     vs = [the_doc_scores[k] for k in ks]
@@ -867,7 +855,6 @@ def get_norm_doc_scores(the_doc_scores):
         norm_doc_scores[ks[i]] = vs[i]
     return norm_doc_scores
 
-
 def select_snippets_v1(extracted_snippets):
     '''
     :param extracted_snippets:
@@ -876,7 +863,6 @@ def select_snippets_v1(extracted_snippets):
     '''
     sorted_snips = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
     return sorted_snips[:10]
-
 
 def select_snippets_v2(extracted_snippets):
     '''
@@ -895,7 +881,6 @@ def select_snippets_v2(extracted_snippets):
     sorted_snips = sorted(ret.values(), key=lambda x: x[1], reverse=True)
     return sorted_snips[:10]
 
-
 def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
     :param      extracted_snippets:
@@ -907,7 +892,6 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
     sorted_snips = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
-
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions = {
@@ -1026,7 +1010,6 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
 
-
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
     #
@@ -1072,7 +1055,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
                               os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'))
     return res_map
 
-
 def load_all_data(dataloc, idf_pickle_path):
     print('loading pickle data')
     #
@@ -1107,7 +1089,6 @@ def load_all_data(dataloc, idf_pickle_path):
     print('loading idfs')
     idf, max_idf = load_idfs(idf_pickle_path, words)
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
-
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1452,7 +1433,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-
 use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
@@ -1490,7 +1470,7 @@ for run in range(0, 5):
     #
     (
         test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
-    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+    ) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
     #
     avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
     print(avgdl, mean, deviation)
