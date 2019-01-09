@@ -45,9 +45,7 @@ pickle.dump(transformer, open(filename, 'wb'))
 
 import os
 import pickle
-import numpy as np
 from tqdm import tqdm
-from pprint import pprint
 from sklearn.decomposition import IncrementalPCA
 
 diri = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
@@ -55,6 +53,9 @@ filename = '/home/dpappas/bioasq_all/pca_bert_transformer.sav'
 transformer = pickle.load(open(filename, 'rb'))
 
 odiri = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
+if (not os.path.exists(odiri)):
+    os.makedirs(odiri)
+
 for f in tqdm(os.listdir(diri), ascii=True):
     fpath = os.path.join(diri, f)
     d = pickle.load(open(fpath, 'rb'))
@@ -63,3 +64,4 @@ for f in tqdm(os.listdir(diri), ascii=True):
         'abs_bert_average_embeds': [transformer.transform(m) for m in d['abs_bert_average_embeds']],
         'mesh_bert_average_embeds': [transformer.transform(m) for m in d['mesh_bert_average_embeds']],
     }
+    pickle.dump(od, open(os.path.join(odiri, f), 'wb'), protocol=2)
