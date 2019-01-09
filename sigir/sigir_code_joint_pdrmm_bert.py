@@ -696,7 +696,8 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+
+def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         if (use_sent_tokenizer):
             good_snips = get_snips(quest_id, gid, bioasq6_data)
@@ -748,7 +749,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     random.shuffle(train_instances)
     #
     start_time = time.time()
-    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+    for datum in train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds=datum['good_sents_embeds'],
             doc2_sents_embeds=datum['bad_sents_embeds'],

@@ -16,14 +16,12 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
                             t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
                                                                                           '').strip().lower()).split()
 
-
 class InputExample(object):
 
     def __init__(self, unique_id, text_a, text_b):
         self.unique_id = unique_id
         self.text_a = text_a
         self.text_b = text_b
-
 
 class InputFeatures(object):
     """A single set of features of data."""
@@ -34,7 +32,6 @@ class InputFeatures(object):
         self.input_ids = input_ids
         self.input_mask = input_mask
         self.input_type_ids = input_type_ids
-
 
 def print_params(model):
     '''
@@ -61,7 +58,6 @@ def print_params(model):
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
 
-
 def read_examples(sentences):
     """Read a list of `InputExample`s from an input file."""
     ret = []
@@ -78,7 +74,6 @@ def read_examples(sentences):
         ret.append(InputExample(unique_id=unique_id, text_a=text_a, text_b=text_b))
     return ret
 
-
 def _truncate_seq_pair(tokens_a, tokens_b, max_length):
     """Truncates a sequence pair in place to the maximum length."""
 
@@ -94,7 +89,6 @@ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
             tokens_a.pop()
         else:
             tokens_b.pop()
-
 
 def convert_examples_to_features(examples, seq_length, tokenizer):
     """Loads a data file into a list of `InputBatch`s."""
@@ -182,7 +176,6 @@ def convert_examples_to_features(examples, seq_length, tokenizer):
         )
     return features
 
-
 def RemoveTrainLargeYears(data, doc_text):
     for i in range(len(data['queries'])):
         hyear = 1900
@@ -205,7 +198,6 @@ def RemoveTrainLargeYears(data, doc_text):
                 break
     return data
 
-
 def RemoveBadYears(data, doc_text, train):
     for i in range(len(data['queries'])):
         j = 0
@@ -225,7 +217,6 @@ def RemoveBadYears(data, doc_text, train):
             if j == len(data['queries'][i]['retrieved_documents']):
                 break
     return data
-
 
 def load_all_data(dataloc):
     print('loading pickle data')
@@ -254,11 +245,10 @@ def load_all_data(dataloc):
     #
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
 
-
 def bert_embed_sents(sentences):
     if (len(sentences) == 0):
         return [], [], []
-    pprint(sentences)
+    # pprint(sentences)
     examples = read_examples(sentences)
     features = convert_examples_to_features(examples=examples, seq_length=100, tokenizer=tokenizer)
     all_ret_embeds = []
@@ -293,10 +283,8 @@ def bert_embed_sents(sentences):
         all_ret_embeds.append(ret_embedds)
     return all_ret_embeds, bert_split_tokens, bert_original_embeds
 
-
 def tokenize(x):
     return bioclean(x)
-
 
 def get_elmo_embeds(sentences):
     if (len(sentences) == 0):
@@ -311,7 +299,6 @@ def get_elmo_embeds(sentences):
     ]
     return ret
 
-
 def work(datum):
     question_bert_embeds = [' '.join(bioclean(datum['query_text']))]
     all_ret_embeds, bert_split_tokens, bert_original_embeds = bert_embed_sents(question_bert_embeds)
@@ -320,7 +307,6 @@ def work(datum):
     datum['quest_bert_original_tokens'] = bert_split_tokens
     datum['quest_elmo_embeds'] = get_elmo_embeds(question_bert_embeds)
     return datum
-
 
 def work2(args):
     doc, datum = args
@@ -356,7 +342,6 @@ def work2(args):
     datum['mesh_bert_original_embeds'] = bert_original_embeds
     datum['mesh_bert_original_tokens'] = bert_split_tokens
     return (doc, datum)
-
 
 def work3(args):
     doc, datum, odir = args
@@ -418,6 +403,7 @@ if (not os.path.exists(odir)):
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
+
 
 if (not os.path.exists(os.path.join(init_checkpoint_pt, 'pytorch_model.bin'))):
     convert_tf_checkpoint_to_pytorch(os.path.join(init_checkpoint_pt, 'bert_model.ckpt'),
@@ -492,6 +478,22 @@ for doc in tqdm(random.sample(the_docs.keys(), len(the_docs.keys()))):
 del (train_docs)
 print('\nDone train\n')
 print('total: {}'.format(total))
+
+all_qs = {}
+for t in tqdm(test_data['queries'] + train_data['queries'] + dev_data['queries'], ascii=True):
+    text = t['query_text']
+    quest_sents = sent_tokenize(text)
+    quest_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in quest_sents]
+    quest_sents = [s for s in quest_sents if (len(s.strip()) > 0)]
+    #
+    all_qs[text] = {}
+    all_qs[text]['title_sent_elmo_embeds'] = get_elmo_embeds(quest_sents)
+    all_ret_embeds, bert_split_tokens, bert_original_embeds = bert_embed_sents(quest_sents)
+    all_qs[text]['title_bert_average_embeds'] = all_ret_embeds
+    all_qs[text]['title_bert_original_embeds'] = bert_original_embeds
+    all_qs[text]['title_bert_original_tokens'] = bert_split_tokens
+
+pickle.dump(all_qs, open('/home/dpappas/bioasq_all/all_quest_embeds.p', 'wb'))
 
 print('Good to go!!!')
 
