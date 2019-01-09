@@ -27,7 +27,6 @@ filename = '/home/dpappas/bioasq_all/pca_bert_transformer.sav'
 pickle.dump(transformer, open(filename, 'wb'))
 
 '''
-
 # [
 # 'title_sent_elmo_embeds',
 # 'abs_sent_elmo_embeds',
@@ -42,5 +41,25 @@ pickle.dump(transformer, open(filename, 'wb'))
 # 'mesh_bert_original_embeds',
 # 'mesh_bert_original_tokens'
 # ]
-
 '''
+
+import os
+import pickle
+import numpy as np
+from tqdm import tqdm
+from pprint import pprint
+from sklearn.decomposition import IncrementalPCA
+
+diri = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
+filename = '/home/dpappas/bioasq_all/pca_bert_transformer.sav'
+transformer = pickle.load(open(filename, 'rb'))
+
+odiri = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
+for f in tqdm(os.listdir(diri), ascii=True):
+    fpath = os.path.join(diri, f)
+    d = pickle.load(open(fpath, 'rb'))
+    od = {
+        'title_bert_average_embeds': [transformer.transform(m) for m in d['title_bert_average_embeds']],
+        'abs_bert_average_embeds': [transformer.transform(m) for m in d['abs_bert_average_embeds']],
+        'mesh_bert_average_embeds': [transformer.transform(m) for m in d['mesh_bert_average_embeds']],
+    }
