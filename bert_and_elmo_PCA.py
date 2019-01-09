@@ -67,3 +67,11 @@ for f in tqdm(os.listdir(diri), ascii=True):
             'mesh_bert_average_embeds': [transformer.transform(m) for m in d['mesh_bert_average_embeds']],
         }
         pickle.dump(od, open(opath, 'wb'), protocol=2)
+
+all_qs = pickle.load(open('/home/dpappas/bioasq_all/all_quest_embeds.p', 'rb'))
+all_qs_pca = {}
+
+for quest in tqdm(all_qs.keys(), ascii=True):
+    all_qs_pca[quest] = [transformer.transform(m) for m in all_qs[quest]['title_bert_average_embeds']]
+
+pickle.dump(all_qs_pca, open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'wb'), protocol=2)
