@@ -366,8 +366,10 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
         good_sent_tags = good_sent_tags.cuda()
         tags_2 = tags_2.cuda()
     #
-    sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
-    sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
+    # sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
+    # sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
+    sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, reduction='sum')
+    sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
     return sn_d1_l, sn_d2_l
 
 def init_the_logger(hdlr):
@@ -632,7 +634,7 @@ def create_one_hot_and_sim(tokens1, tokens2):
     exxample call : create_one_hot_and_sim('c d e'.split(), 'a b c'.split())
     '''
     label_encoder = LabelEncoder()
-    onehot_encoder = OneHotEncoder(sparse=False)
+    onehot_encoder = OneHotEncoder(sparse=False, categories='auto')
     #
     values = list(set(tokens1 + tokens2))
     integer_encoded = label_encoder.fit_transform(values)
@@ -793,12 +795,14 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
                 'good_doc_af': good_doc_af,
                 'good_sent_tags': good_sent_tags,
                 'good_held_out_sents': good_held_out_sents,
+                'good_oh_sims': good_oh_sims,
                 #
                 'bad_sents_embeds': bad_sents_embeds,
                 'bad_sents_escores': bad_sents_escores,
                 'bad_doc_af': bad_doc_af,
                 'bad_sent_tags': bad_sent_tags,
                 'bad_held_out_sents': bad_held_out_sents,
+                'bad_oh_sims': bad_oh_sims,
                 #
                 'quest_embeds': qemb,
                 'q_idfs': q_idfs,
@@ -823,6 +827,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds=datum['good_sents_embeds'],
             doc2_sents_embeds=datum['bad_sents_embeds'],
+            doc1_oh_sim=datum['good_oh_sims'],
+            doc2_oh_sim=datum['bad_oh_sims'],
             question_embeds=datum['quest_embeds'],
             q_idfs=datum['q_idfs'],
             sents_gaf=datum['good_sents_escores'],
@@ -966,6 +972,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         )
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds=datum['sents_embeds'],
+            doc1_oh_sim=datum['oh_sims'],
             question_embeds=qemb,
             q_idfs=q_idfs,
             sents_gaf=datum['sents_escores'],
@@ -1577,7 +1584,7 @@ for run in range(0, 5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
