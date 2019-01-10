@@ -617,7 +617,6 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if (use_sent_tokenizer):
         good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
@@ -658,6 +657,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
         sent_toks = tokenize(good_text)
         print(len(sent_toks), len(bert_embeds))
+        print(sent_toks)
         # sent_toks = tokenize(good_text)
         # good_tokens, good_embeds    = get_embeds(sent_toks, wv)
         # good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
@@ -1421,7 +1421,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-
 use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
@@ -1488,3 +1487,39 @@ for run in range(0, 5):
         logger.info(
             'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
                                                                                            best_dev_map, test_map))
+
+'''
+['[CLS]', 'the', 'drugs', 'covered', 'target', 'ga', '##ba', '##a', 'za', '##le', '##pl', '##on', '-', 'cr', 'lore', '##di', '##pl', '##on', 'ev', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tam', '##ine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'ser', '##oton', '##in', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'mel', '##aton', '##ins', '##ero', '##ton', '##in', '##5', '-', 'h', '##t', '##1', '##a', 'pi', '##rom', '##ela', '##tine', 'and', 'mel', '##aton', '##in', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'mel', '##aton', '##in', 'and', 'ta', '##si', '##mel', '##te', '##on', 'for', 'pediatric', 'sleep', 'and', 'circa', '##dian', '[SEP]']
+len([
+'the', 'drugs', 'covered', 'target', 'gabaa', 'zaleplon', '-', 'cr', 'lorediplon', 'evt', '-', '201', 'orexin', 
+'filorexant', 'min', '-', '202', 'histamine', '-', 'h1', 'ly2624803', 'serotonin', '5', '-', 'ht2a', 'iti', '-', 
+'007', 'melatoninserotonin5', '-', 'ht1a', 'piromelatine', 'and', 'melatonin', 'indication', 'expansions', 
+'of', 'prolonged', '-', 'release', 'melatonin', 'and', 'tasimelteon', 'for', 'pediatric', 'sleep', 'and', 
+'circadian'
+])
+
+['the', 'drugs', 'covered', 'target', 'gabaa', 'zaleplon-cr', 'lorediplon', 'evt-201', 'orexin', 
+'filorexant', 'min-202', 'histamine-h1', 'ly2624803', 'serotonin', '5-ht2a', 'iti-007',
+'melatoninserotonin5-ht1a', 'piromelatine', 'and', 'melatonin', 'indication', 'expansions', 
+'of', 'prolonged-release', 'melatonin', 'and', 'tasimelteon', 'for', 'pediatric', 'sleep', 'and', 'circadian', 
+'rhythm', 'disorders', 'receptors']
+
+python3.6
+import pickle
+from pprint import pprint
+d = pickle.load(open('/home/dpappas/bioasq_all/bert_elmo_embeds/25423562.p','rb'))
+pprint(list(d.keys()))
+
+pprint(d['abs_bert_original_tokens'])
+
+[
+['[CLS]', 'introduction', 'ins', '##om', '##nia', 'is', 'ty', '##pi', '##fied', 'by', 'a', 'difficulty', 'in', 'sleep', 'initiation', 'maintenance', 'and', '##or', 'quality', 'non', '-', 'rest', '##ora', '##tive', 'sleep', 'resulting', 'in', 'significant', 'daytime', 'distress', '[SEP]'], 
+['[CLS]', 'areas', 'covered', 'this', 'review', 'sum', '##mar', '##izes', 'the', 'available', 'efficacy', 'and', 'safety', 'data', 'for', 'drugs', 'currently', 'in', 'the', 'pipeline', 'for', 'treating', 'ins', '##om', '##nia', '[SEP]'], 
+['[CLS]', 'specifically', 'the', 'authors', 'performed', 'med', '##line', 'and', 'internet', 'searches', 'using', 'the', 'key', '##words', 'phase', 'ii', 'and', 'ins', '##om', '##nia', '[SEP]'], 
+['[CLS]', 'the', 'drugs', 'covered', 'target', 'ga', '##ba', '##a', 'za', '##le', '##pl', '##on', '-', 'cr', 'lore', '##di', '##pl', '##on', 'ev', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tam', '##ine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'ser', '##oton', '##in', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'mel', '##aton', '##ins', '##ero', '##ton', '##in', '##5', '-', 'h', '##t', '##1', '##a', 'pi', '##rom', '##ela', '##tine', 'and', 'mel', '##aton', '##in', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'mel', '##aton', '##in', 'and', 'ta', '##si', '##mel', '##te', '##on', 'for', 'pediatric', 'sleep', 'and', 'circa', '##dian', '[SEP]'], 
+['[CLS]', 'expert', 'opinion', 'low', '-', 'priced', 'generic', 'environments', 'and', 'high', 'development', 'costs', 'limit', 'the', 'further', 'development', 'of', 'drugs', 'that', 'treat', 'ins', '##om', '##nia', '[SEP]'], 
+['[CLS]', 'however', 'the', 'bid', '##ire', '##ction', '##al', 'link', 'between', 'sleep', 'and', 'certain', 'como', '##rb', '##idi', '##ties', 'may', 'encourage', 'development', 'of', 'specific', 'drugs', 'for', 'como', '##rb', '##id', 'ins', '##om', '##nia', '[SEP]'], 
+['[CLS]', 'new', 'ins', '##om', '##nia', 'the', '##ra', '##pies', 'will', 'most', 'likely', 'move', 'away', 'from', 'ga', '##ba', '##ar', 'receptors', 'modulation', 'to', 'more', 'subtle', 'neurological', 'pathways', 'that', 'regulate', 'the', 'sleep', '-', 'wake', 'cycle', '[SEP]']
+]
+
+'''
