@@ -1294,19 +1294,21 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
 
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights,
+                           k2):
         res = []
         for i in range(len(doc_sents_embeds)):
+            sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False)
             sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if (use_cuda):
                 sent_embeds = sent_embeds.cuda()
+                sim_oh = sim_oh.cuda()
                 gaf = gaf.cuda()
             conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
             #
             sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh = (sim_insens > (1 - (1e-3))).float()
             sim_sens = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
             #
             insensitive_pooled = self.pooling_method(sim_insens)
@@ -1407,7 +1409,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
 
-    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
+    def emit_one(self, doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
@@ -1423,8 +1425,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context,
-                                                     q_weights, self.k_sent_maxpool)
+        good_out, gs_emits = self.do_for_one_doc_cnn(
+            doc1_sents_embeds,
+            doc1_oh_sim,
+            sents_gaf,
+            question_embeds,
+            q_context,
+            q_weights,
+            self.k_sent_maxpool
+        )
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
@@ -1469,10 +1478,24 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context,
-                                                     q_weights, self.k_sent_maxpool)
-        bad_out, bs_emits = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights,
-                                                    self.k_sent_maxpool)
+        good_out, gs_emits = self.do_for_one_doc_cnn(
+            doc1_sents_embeds,
+            doc1_oh_sim,
+            sents_gaf,
+            question_embeds,
+            q_context,
+            q_weights,
+            self.k_sent_maxpool
+        )
+        bad_out, bs_emits = self.do_for_one_doc_cnn(
+            doc2_sents_embeds,
+            doc2_oh_sim,
+            sents_baf,
+            question_embeds,
+            q_context,
+            q_weights,
+            self.k_sent_maxpool
+        )
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
