@@ -27,6 +27,8 @@ from difflib import SequenceMatcher
 import re
 import nltk
 import math
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
                             t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
@@ -616,6 +618,35 @@ def snip_is_relevant(one_sent, gold_snips):
             ]
         )
     )
+
+
+def create_one_hot_and_sim(tokens1, tokens2):
+    '''
+    :param tokens1:
+    :param tokens2:
+    :return:
+    exxample call : create_one_hot_and_sim('c d e'.split(), 'a b c'.split())
+    '''
+    label_encoder = LabelEncoder()
+    onehot_encoder = OneHotEncoder(sparse=False)
+    #
+    values = list(set(tokens1 + tokens2))
+    integer_encoded = label_encoder.fit_transform(values)
+    #
+    integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
+    onehot_encoder.fit(integer_encoded)
+    #
+    lab1 = label_encoder.transform(tokens1)
+    lab1 = np.expand_dims(lab1, axis=1)
+    oh1 = onehot_encoder.transform(lab1)
+    #
+    lab2 = label_encoder.transform(tokens2)
+    lab2 = np.expand_dims(lab2, axis=1)
+    oh2 = onehot_encoder.transform(lab2)
+    #
+    ret = np.matmul(oh1, np.transpose(oh2), out=None)
+    #
+    return oh1, oh2, ret
 
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if (use_sent_tokenizer):
