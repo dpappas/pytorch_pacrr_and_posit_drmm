@@ -31,9 +31,10 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
-                            t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
-                                                                                          '').strip().lower()).split()
+bioclean = lambda t: re.sub(
+    '[.,?;*!%^&_+():-\[\]{}]', '',
+    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()
+).split()
 softmax = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords = nltk.corpus.stopwords.words("english")
 
@@ -736,7 +737,6 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-
 def fix_bert_tokens(tokens):
     ret = []
     for t in tokens:
@@ -802,7 +802,12 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     random.shuffle(train_instances)
     #
     start_time = time.time()
-    for datum in train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+
+    pbar = tqdm(
+        iterable=train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
+        total=378
+    )
+    for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds=datum['good_sents_embeds'],
             doc2_sents_embeds=datum['bad_sents_embeds'],
