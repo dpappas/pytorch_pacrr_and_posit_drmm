@@ -652,12 +652,13 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     good_doc_af.extend(features)
     #
     all_bert_embeds = gemb['title_bert_average_embeds'] + gemb['abs_bert_average_embeds']
-    print(len(all_bert_embeds), len(good_sents))
+    print(pid, len(all_bert_embeds), len(good_sents))
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
         sent_toks = tokenize(good_text)
         print(len(sent_toks), len(bert_embeds))
+        # sent_toks = tokenize(good_text)
         # good_tokens, good_embeds    = get_embeds(sent_toks, wv)
         # good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         # good_escores.append(len(sent_toks) / 342.)
@@ -712,7 +713,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         print(quest_text)
         qemb = all_quest_embeds[quest_text]
-        pprint(qemb.keys())
+        # pprint(qemb.keys())
         if (use_sent_tokenizer):
             good_snips = get_snips(quest_id, gid, bioasq6_data)
             good_snips = [' '.join(bioclean(sn)) for sn in good_snips]
