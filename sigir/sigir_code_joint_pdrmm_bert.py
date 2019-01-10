@@ -775,7 +775,6 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         bad_held_out_sents = datum['held_out_sents']
         #
         quest_tokens = tokenize(quest_text)
-        # quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         # print(quest_tokens)
         # print(len(quest_tokens))
@@ -809,7 +808,6 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     random.shuffle(train_instances)
     #
     start_time = time.time()
-
     pbar = tqdm(
         iterable=train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
         # total=378,
@@ -939,24 +937,38 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text = dato['query_text']
-    quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
+    #
+    qemb = all_quest_embeds[quest_text]
+    qemb = np.concatenate(qemb, axis=0)
+    quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
+    #
+    quest_tokens = tokenize(quest_text)
     q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips = get_gold_snips(dato['query_id'], bioasq6_data)
     #
     doc_res, extracted_snippets = {}, []
     extracted_snippets_known_rel_num = []
     for retr in retr_docs:
-        datum = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf,
-                          use_sent_tokenizer=use_sent_tokenizer)
+        datum = prep_data(
+            quest_text,
+            docs[retr['doc_id']],
+            retr['doc_id'],
+            retr['norm_bm25_score'],
+            gold_snips,
+            idf,
+            max_idf,
+            use_sent_tokenizer
+        )
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds=datum['sents_embeds'],
-            question_embeds=quest_embeds,
+            question_embeds=qemb,
             q_idfs=q_idfs,
             sents_gaf=datum['sents_escores'],
             doc_gaf=datum['doc_af']
         )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'],
-                                                                      retr, doc_res, gold_snips)
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
+            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
+        )
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
@@ -1526,7 +1538,7 @@ for run in range(0, 5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        # train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
