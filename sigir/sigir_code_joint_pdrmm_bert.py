@@ -744,7 +744,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
                 'bad_sent_tags': bad_sent_tags,
                 'bad_held_out_sents': bad_held_out_sents,
                 #
-                'quest_embeds': quest_embeds,
+                'quest_embeds': np.concatenate(qemb, axis=0),
                 'q_idfs': q_idfs,
             }
 
