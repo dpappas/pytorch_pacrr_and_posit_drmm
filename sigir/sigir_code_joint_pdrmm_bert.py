@@ -518,7 +518,7 @@ def GetScores(qtext, dtext, bm25, idf, max_idf):
     return qd1[0:3] + bm25
 
 def GetWords(data, doc_text, words):
-    for i in range(len(data['queries'])):
+    for i in tqdm(range(len(data['queries'])), ascii=True):
         qwds = tokenize(data['queries'][i]['query_text'])
         for w in qwds:
             words[w] = 1
@@ -1013,7 +1013,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         'v3': snips_res_known_rel_num_v3,
     }
     return data_for_revision, ret_data, snips_res, snips_res_known
-
 
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known,
                       data_for_revision):
