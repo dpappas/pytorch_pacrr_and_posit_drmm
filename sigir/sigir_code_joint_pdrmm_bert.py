@@ -688,9 +688,11 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     all_bert_embeds = gemb['title_bert_average_embeds'] + gemb['abs_bert_average_embeds']
     # print(pid, len(all_bert_embeds), len(good_sents))
     ####
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
         sent_toks = tokenize(good_text)
+        oh1, oh2, oh_sim = create_one_hot_and_sim(quest_toks, sent_toks)
+        good_oh_sim.append(oh_sim)
         good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
         tomi = (set(sent_toks) & set(quest_toks))
@@ -719,6 +721,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
         'doc_af': good_doc_af,
         'sent_tags': good_sent_tags,
         'held_out_sents': held_out_sents,
+        'oh_sims': good_oh_sim
     }
 
 def train_data_step1(train_data):
