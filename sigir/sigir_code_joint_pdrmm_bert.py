@@ -651,7 +651,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     good_doc_af.extend(features)
     #
     all_bert_embeds = gemb['title_bert_average_embeds'] + gemb['abs_bert_average_embeds']
-    print(pid, len(all_bert_embeds), len(good_sents))
+    # print(pid, len(all_bert_embeds), len(good_sents))
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
@@ -712,23 +712,22 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         else:
             good_snips = []
         #
-        datum = prep_data(
-            quest_text, docs[gid], gid, bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer
-        )
+        datum = prep_data(quest_text, docs[gid], gid, bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds = datum['sents_embeds']
         good_sents_escores = datum['sents_escores']
         good_doc_af = datum['doc_af']
         good_sent_tags = datum['sent_tags']
         good_held_out_sents = datum['held_out_sents']
         #
-        datum = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
+        datum = prep_data(quest_text, docs[bid], bid, bm25s_bid, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds = datum['sents_embeds']
         bad_sents_escores = datum['sents_escores']
         bad_doc_af = datum['doc_af']
         bad_sent_tags = [0] * len(datum['sent_tags'])
         bad_held_out_sents = datum['held_out_sents']
         #
-        quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
+        quest_tokens = tokenize(quest_text)
+        # quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
