@@ -769,6 +769,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         good_doc_af = datum['doc_af']
         good_sent_tags = datum['sent_tags']
         good_held_out_sents = datum['held_out_sents']
+        good_oh_sims = datum['oh_sims']
         #
         datum = prep_data(quest_text, docs[bid], bid, bm25s_bid, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds = datum['sents_embeds']
@@ -776,6 +777,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         bad_doc_af = datum['doc_af']
         bad_sent_tags = [0] * len(datum['sent_tags'])
         bad_held_out_sents = datum['held_out_sents']
+        bad_oh_sims = datum['oh_sims']
         #
         quest_tokens = tokenize(quest_text)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
@@ -1437,8 +1439,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         return final_good_output, gs_emits
 
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf,
-                doc_baf):
+    def forward(
+            self,
+            doc1_sents_embeds,
+            doc2_sents_embeds,
+            doc1_oh_sim,
+            doc2_oh_sim,
+            question_embeds,
+            q_idfs,
+            sents_gaf,
+            sents_baf,
+            doc_gaf,
+            doc_baf
+    ):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
