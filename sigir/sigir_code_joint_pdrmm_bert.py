@@ -29,6 +29,7 @@ import nltk
 import math
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
+from pytorch_pretrained_bert.tokenization import BertTokenizer
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
                             t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
@@ -389,7 +390,10 @@ def get_words(s, idf, max_idf):
     return sl, sl2
 
 def tokenize(x):
-    return bioclean(x)
+    # return bioclean(x)
+    x_tokens = bert_tokenizer.tokenize(x)
+    x_tokens = fix_bert_tokens(x_tokens)
+    return x_tokens
 
 def idf_val(w, idf, max_idf):
     if w in idf:
@@ -685,8 +689,9 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
-        good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         sent_toks = tokenize(good_text)
+        good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores.append(len(sent_toks) / 342.)
         tomi = (set(sent_toks) & set(quest_toks))
         tomi_no_stop = tomi - set(stopwords)
         BM25score = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
@@ -729,6 +734,16 @@ def train_data_step1(train_data):
                 bid = random.choice(bad_pmids)
                 ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
     print('')
+    return ret
+
+
+def fix_bert_tokens(tokens):
+    ret = []
+    for t in tokens:
+        if (t.startswith('##')):
+            ret[-1] = ret[-1] + t[2:]
+        else:
+            ret.append(t)
     return ret
 
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
@@ -1100,12 +1115,7 @@ def load_all_data(dataloc, idf_pickle_path):
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self,
-                 embedding_dim=30,
-                 k_for_maxpool=5,
-                 sentence_out_method='MLP',
-                 k_sent_maxpool=1
-                 ):
+    def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k = k_for_maxpool
         self.k_sent_maxpool = k_sent_maxpool
@@ -1453,6 +1463,7 @@ eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd = '/home/dpappas/'
 use_cuda = True
+bert_tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 
 k_for_maxpool = 5
 k_sent_maxpool = 5
