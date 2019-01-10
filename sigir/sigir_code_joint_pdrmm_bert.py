@@ -42,7 +42,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
         total_words = 0
         total_docs = 0
-        for dic in tqdm(train_docs):
+        for dic in tqdm(train_docs, ascii=True):
             sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
             for s in sents:
                 total_words += len(tokenize(s))
@@ -55,7 +55,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         BM25scores = []
         k1, b = 1.2, 0.75
         not_found = 0
-        for qid in tqdm(bioasq6_data):
+        for qid in tqdm(bioasq6_data, ascii=True):
             qtext = bioasq6_data[qid]['body']
             all_retr_ids = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
             for dic in all_retr_ids:
@@ -723,7 +723,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
 
 def train_data_step1(train_data):
     ret = []
-    for dato in tqdm(train_data['queries']):
+    for dato in tqdm(train_data['queries'], ascii=True):
         quest = dato['query_text']
         quest_id = dato['query_id']
         bm25s = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
@@ -805,7 +805,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
 
     pbar = tqdm(
         iterable=train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
-        total=378
+        total=378,
+        ascii=True
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
@@ -1052,7 +1053,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     all_bioasq_gold_data = {'questions': []}
     data_for_revision = {}
     #
-    for dato in tqdm(data['queries']):
+    for dato in tqdm(data['queries'], ascii=True):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato,
                                                                                         dato['retrieved_documents'],
