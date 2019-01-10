@@ -696,7 +696,6 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         if (use_sent_tokenizer):
@@ -1404,9 +1403,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
+
 use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
+all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
 bert_embeds_dir = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
