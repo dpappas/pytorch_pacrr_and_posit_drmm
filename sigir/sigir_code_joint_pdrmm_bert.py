@@ -748,14 +748,17 @@ def fix_bert_tokens(tokens):
 
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        print(quest_text)
+        # print(quest_text)
         qemb = all_quest_embeds[quest_text]
+        qemb = np.concatenate(qemb, axis=0)
         # pprint(qemb.keys())
         if (use_sent_tokenizer):
             good_snips = get_snips(quest_id, gid, bioasq6_data)
             good_snips = [' '.join(bioclean(sn)) for sn in good_snips]
         else:
             good_snips = []
+        #
+        quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
         #
         datum = prep_data(quest_text, docs[gid], gid, bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds = datum['sents_embeds']
@@ -774,6 +777,10 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         quest_tokens = tokenize(quest_text)
         # quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        # print(quest_tokens)
+        # print(len(quest_tokens))
+        # print(len(q_idfs))
+        # print(qemb.shape)
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
             yield {
@@ -789,7 +796,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
                 'bad_sent_tags': bad_sent_tags,
                 'bad_held_out_sents': bad_held_out_sents,
                 #
-                'quest_embeds': np.concatenate(qemb, axis=0),
+                'quest_embeds': qemb,
                 'q_idfs': q_idfs,
             }
 
@@ -805,7 +812,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
 
     pbar = tqdm(
         iterable=train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
-        total=378,
+        # total=378,
+        total=9684,
         ascii=True
     )
     for datum in pbar:
@@ -1014,6 +1022,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     return data_for_revision, ret_data, snips_res, snips_res_known
 
+
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known,
                       data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
@@ -1110,10 +1119,14 @@ def load_all_data(dataloc, idf_pickle_path):
     dev_data = RemoveBadYears(dev_data, dev_docs, False)
     test_data = RemoveBadYears(test_data, test_docs, False)
     #
-    words = {}
-    GetWords(train_data, train_docs, words)
-    GetWords(dev_data, dev_docs, words)
-    GetWords(test_data, test_docs, words)
+    if (os.path.exists(bert_all_words_path)):
+        words = pickle.load(open(bert_all_words_path, 'rb'))
+    else:
+        words = {}
+        GetWords(train_data, train_docs, words)
+        GetWords(dev_data, dev_docs, words)
+        GetWords(test_data, test_docs, words)
+        pickle.dump(words, open(bert_all_words_path, 'wb'), protocol=2)
     #
     print('loading idfs')
     idf, max_idf = load_idfs(idf_pickle_path, words)
@@ -1460,6 +1473,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
+bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
