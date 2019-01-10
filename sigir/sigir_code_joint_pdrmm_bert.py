@@ -619,7 +619,6 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-
 def create_one_hot_and_sim(tokens1, tokens2):
     '''
     :param tokens1:
