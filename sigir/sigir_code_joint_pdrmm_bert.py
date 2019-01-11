@@ -31,10 +31,9 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 
-bioclean = lambda t: re.sub(
-    '[.,?;*!%^&_+():-\[\]{}]', '',
-    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()
-).split()
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
+                            t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
+                                                                                          '').strip().lower()).split()
 softmax = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords = nltk.corpus.stopwords.words("english")
 
