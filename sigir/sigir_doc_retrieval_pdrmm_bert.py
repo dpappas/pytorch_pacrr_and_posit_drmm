@@ -1401,7 +1401,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output = self.final_layer(good_out_pp)
         return final_good_output
 
-    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf):
+    def forward(self, doc1_embeds, doc2_embeds, doc1_oh_sim, doc2_oh_sim, question_embeds, q_idfs, doc_gaf, doc_baf):
+        doc1_oh_sim = autograd.Variable(torch.FloatTensor(doc1_oh_sim), requires_grad=False)
+        doc2_oh_sim = autograd.Variable(torch.FloatTensor(doc2_oh_sim), requires_grad=False)
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
