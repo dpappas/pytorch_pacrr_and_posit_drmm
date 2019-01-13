@@ -707,7 +707,8 @@ def prep_data(quest, the_doc, pid, the_bm25, idf, max_idf):
     return {
         'doc_af': good_doc_af,
         'doc_embeds': doc_embeds,
-        'doc_oh_sim': oh_sim
+        'doc_oh_sim': oh_sim,
+        'held_out_sents': good_sents
     }
 
 def train_data_step1(train_data):
@@ -931,14 +932,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     doc_res, extracted_snippets = {}, []
     extracted_snippets_known_rel_num = []
     for retr in retr_docs:
-        datum = prep_data(
-            quest_text,
-            docs[retr['doc_id']],
-            retr['doc_id'],
-            retr['norm_bm25_score'],
-            idf,
-            max_idf
-        )
+        datum = prep_data(quest_text, docs[retr['doc_id']], retr['doc_id'], retr['norm_bm25_score'], idf, max_idf)
         doc_emit_ = model.emit_one(
             good_doc_embeds=datum['doc_embeds'],
             good_oh_sims=datum['doc_oh_sim'],
@@ -946,7 +940,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             q_idfs=q_idfs,
             doc_gaf=datum['doc_af']
         )
-        gs_emits_ = [0]
+        gs_emits_ = [0] * len(datum['held_out_sents'])
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
         )
