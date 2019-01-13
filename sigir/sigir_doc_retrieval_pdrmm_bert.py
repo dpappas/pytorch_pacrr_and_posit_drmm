@@ -790,12 +790,12 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     pbar = tqdm(
         iterable=train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
         # total=378,
-        total=9684,
+        total=12114,
         ascii=True
     )
     #
     for datum in pbar:
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+        cost_, doc1_emit_, doc2_emit_ = model(
             good_doc_embeds=datum['good_doc_embeds'],
             bad_doc_embeds=datum['bad_doc_embeds'],
             good_oh_sims=datum['good_oh_sims'],
@@ -805,13 +805,6 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             doc_gaf=datum['good_doc_af'],
             doc_baf=datum['bad_doc_af']
         )
-        #
-        good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
-        if (two_losses):
-            sn_d1_l, sn_d2_l = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss = sn_d1_l + sn_d2_l
-            l = 0.5
-            cost_ = ((1 - l) * snip_loss) + (l * cost_)
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -947,11 +940,11 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             max_idf
         )
         doc_emit_ = model.emit_one(
-            good_doc_embeds=datum['good_doc_embeds'],
-            good_oh_sims=datum['good_oh_sims'],
-            question_embeds=datum['quest_embeds'],
-            q_idfs=datum['q_idfs'],
-            doc_gaf=datum['good_doc_af']
+            good_doc_embeds=datum['doc_embeds'],
+            good_oh_sims=datum['doc_oh_sim'],
+            question_embeds=qemb,
+            q_idfs=q_idfs,
+            doc_gaf=datum['doc_af']
         )
         gs_emits_ = [0]
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
@@ -1347,7 +1340,7 @@ bert_embeds_dir = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
 eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd = '/home/dpappas/'
-use_cuda = True
+use_cuda = False
 bert_tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 
 k_for_maxpool = 5
