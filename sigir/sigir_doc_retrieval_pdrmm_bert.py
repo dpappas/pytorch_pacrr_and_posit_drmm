@@ -213,30 +213,6 @@ def print_params(model):
     logger.info(40 * '=')
 
 
-def dummy_test():
-    doc1_embeds = np.random.rand(40, 200)
-    doc2_embeds = np.random.rand(30, 200)
-    question_embeds = np.random.rand(20, 200)
-    q_idfs = np.random.rand(20, 1)
-    gaf = np.random.rand(4)
-    baf = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds=doc1_embeds,
-            doc2_embeds=doc2_embeds,
-            question_embeds=question_embeds,
-            q_idfs=q_idfs,
-            gaf=gaf,
-            baf=baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -870,7 +846,10 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition = doc_emit_.cpu().item()
-    emitss = gs_emits_.tolist()
+    if (type(gs_emits_) is list):
+        emitss = gs_emits_
+    else:
+        emitss = gs_emits_.tolist()
     mmax = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
@@ -964,19 +943,17 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             docs[retr['doc_id']],
             retr['doc_id'],
             retr['norm_bm25_score'],
-            gold_snips,
             idf,
-            max_idf,
-            use_sent_tokenizer
+            max_idf
         )
-        doc_emit_, gs_emits_ = model.emit_one(
-            doc1_sents_embeds=datum['sents_embeds'],
-            doc1_oh_sim=datum['oh_sims'],
-            question_embeds=qemb,
-            q_idfs=q_idfs,
-            sents_gaf=datum['sents_escores'],
-            doc_gaf=datum['doc_af']
+        doc_emit_ = model.emit_one(
+            good_doc_embeds=datum['good_doc_embeds'],
+            good_oh_sims=datum['good_oh_sims'],
+            question_embeds=datum['quest_embeds'],
+            q_idfs=datum['q_idfs'],
+            doc_gaf=datum['good_doc_af']
         )
+        gs_emits_ = [0]
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
         )
@@ -1250,31 +1227,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output, hn = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
-        res = []
-        for i in range(len(doc_sents_embeds)):
-            sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
-            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
-            #
-            sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh = (sim_insens > (1 - (1e-3))).float()
-            sim_sens = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled = self.pooling_method(sim_insens)
-            sensitive_pooled = self.pooling_method(sim_sens)
-            oh_pooled = self.pooling_method(sim_oh)
-            #
-            sent_emit = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
-            res.append(sent_add_feats)
-        res = torch.stack(res)
-        res = self.sent_out_layer(res).squeeze(-1)
-        ret = self.get_max(res).unsqueeze(0)
-        res = torch.sigmoid(res)
-        return ret, res
 
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res = torch.sort(res)[0]
