@@ -787,30 +787,19 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         #
         quest_tokens = tokenize(quest_text)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        # print(quest_tokens)
-        # print(len(quest_tokens))
-        # print(len(q_idfs))
-        # print(qemb.shape)
         #
-        if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
-            yield {
-                'good_sents_embeds': good_sents_embeds,
-                'good_sents_escores': good_sents_escores,
-                'good_doc_af': good_doc_af,
-                'good_sent_tags': good_sent_tags,
-                'good_held_out_sents': good_held_out_sents,
-                'good_oh_sims': good_oh_sims,
-                #
-                'bad_sents_embeds': bad_sents_embeds,
-                'bad_sents_escores': bad_sents_escores,
-                'bad_doc_af': bad_doc_af,
-                'bad_sent_tags': bad_sent_tags,
-                'bad_held_out_sents': bad_held_out_sents,
-                'bad_oh_sims': bad_oh_sims,
-                #
-                'quest_embeds': qemb,
-                'q_idfs': q_idfs,
-            }
+        yield {
+            'good_doc_af': good_doc_af,
+            'good_doc_embeds': good_doc_embeds,
+            'good_oh_sims': good_oh_sims,
+            #
+            'bad_doc_af': bad_doc_af,
+            'bad_doc_embeds': bad_doc_embeds,
+            'bad_oh_sims': bad_oh_sims,
+            #
+            'quest_embeds': qemb,
+            'q_idfs': q_idfs,
+        }
 
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
@@ -828,16 +817,15 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         total=9684,
         ascii=True
     )
+    #
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds=datum['good_sents_embeds'],
-            doc2_sents_embeds=datum['bad_sents_embeds'],
-            doc1_oh_sim=datum['good_oh_sims'],
-            doc2_oh_sim=datum['bad_oh_sims'],
+            good_doc_embeds=datum['good_doc_embeds'],
+            bad_doc_embeds=datum['bad_doc_embeds'],
+            good_oh_sims=datum['good_oh_sims'],
+            bad_oh_sims=datum['bad_oh_sims'],
             question_embeds=datum['quest_embeds'],
             q_idfs=datum['q_idfs'],
-            sents_gaf=datum['good_sents_escores'],
-            sents_baf=datum['bad_sents_escores'],
             doc_gaf=datum['good_doc_af'],
             doc_baf=datum['bad_doc_af']
         )
@@ -1300,11 +1288,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_concatenation = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
         return the_concatenation
 
-    def emit_doc_cnn(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
+    def emit_doc_cnn(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights, sim_oh):
         conv_res = self.apply_context_convolution(doc_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
         sim_insens = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
-        sim_oh = (sim_insens > (1 - (1e-3))).float()
         sim_sens = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
         insensitive_pooled = self.pooling_method(sim_insens)
         sensitive_pooled = self.pooling_method(sim_sens)
@@ -1344,12 +1331,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = torch.max(res)
         return res
 
-    def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf):
+    def emit_one(self, good_doc_embeds, good_oh_sims, question_embeds, q_idfs, doc_gaf):
+        good_oh_sims = autograd.Variable(torch.FloatTensor(good_oh_sims), requires_grad=False)
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
-        doc1_embeds = autograd.Variable(torch.FloatTensor(doc1_embeds), requires_grad=False)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
+        good_doc_embeds = autograd.Variable(torch.FloatTensor(good_doc_embeds), requires_grad=False)
         # HANDLE QUESTION
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1358,24 +1345,24 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
         # HANDLE DOCS
-        good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
+        good_out = self.emit_doc_cnn(good_doc_embeds, question_embeds, q_context, q_weights, good_oh_sims)
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
         final_good_output = self.final_layer(good_out_pp)
         return final_good_output
 
-    def forward(self, doc1_embeds, doc2_embeds, doc1_oh_sim, doc2_oh_sim, question_embeds, q_idfs, doc_gaf, doc_baf):
-        doc1_oh_sim = autograd.Variable(torch.FloatTensor(doc1_oh_sim), requires_grad=False)
-        doc2_oh_sim = autograd.Variable(torch.FloatTensor(doc2_oh_sim), requires_grad=False)
+    def forward(
+            self, good_doc_embeds, bad_doc_embeds, good_oh_sims, bad_oh_sims, question_embeds, q_idfs, doc_gaf, doc_baf
+    ):
+        good_oh_sims = autograd.Variable(torch.FloatTensor(good_oh_sims), requires_grad=False)
+        bad_oh_sims = autograd.Variable(torch.FloatTensor(bad_oh_sims), requires_grad=False)
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
-        doc1_embeds = autograd.Variable(torch.FloatTensor(doc1_embeds), requires_grad=False)
-        doc2_embeds = autograd.Variable(torch.FloatTensor(doc2_embeds), requires_grad=False)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
-        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
+        good_doc_embeds = autograd.Variable(torch.FloatTensor(good_doc_embeds), requires_grad=False)
+        bad_doc_embeds = autograd.Variable(torch.FloatTensor(bad_doc_embeds), requires_grad=False)
         # HANDLE QUESTION
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1384,8 +1371,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
         # HANDLE DOCS
-        good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
-        bad_out = self.emit_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
+        good_out = self.emit_doc_cnn(good_doc_embeds, question_embeds, q_context, q_weights, good_oh_sims)
+        bad_out = self.emit_doc_cnn(bad_doc_embeds, question_embeds, q_context, q_weights, bad_oh_sims)
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
