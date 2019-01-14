@@ -1118,6 +1118,9 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path, n2v_path):
     wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
     print('loading n2v')
     n2v = pickle.load(open(n2v_path, 'rb'))
+    tot = len(n2v)
+    n2v = dict([(word, n2v[word]) for word in n2v.vocab.keys() if (word in words)])
+    print('kept {} n2v embedds from  total of {}'.format(len(n2v), tot))
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data, n2v
 
 
