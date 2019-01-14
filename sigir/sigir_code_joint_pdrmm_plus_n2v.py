@@ -27,9 +27,6 @@ from difflib import SequenceMatcher
 import re
 import nltk
 import math
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
-from pytorch_pretrained_bert.tokenization import BertTokenizer
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
                             t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
@@ -37,11 +34,12 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
 softmax = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords = nltk.corpus.stopwords.words("english")
 
+
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
         total_words = 0
         total_docs = 0
-        for dic in tqdm(train_docs, ascii=True):
+        for dic in tqdm(train_docs):
             sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
             for s in sents:
                 total_words += len(tokenize(s))
@@ -54,7 +52,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         BM25scores = []
         k1, b = 1.2, 0.75
         not_found = 0
-        for qid in tqdm(bioasq6_data, ascii=True):
+        for qid in tqdm(bioasq6_data):
             qtext = bioasq6_data[qid]['body']
             all_retr_ids = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
             for dic in all_retr_ids:
@@ -77,6 +75,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         print('deviation {} provided'.format(deviation))
     return avgdl, mean, deviation
 
+
 # Compute the term frequency of a word for a specific document
 def tf(term, document):
     tf = 0
@@ -87,6 +86,7 @@ def tf(term, document):
         return tf
     else:
         return tf / len(document)
+
 
 # Use BM25 ranking function in order to cimpute the similarity score between a question anda snippet
 # query: the given question
@@ -115,6 +115,7 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
     else:
         return score
 
+
 # Compute the average length from a collection of documents
 def compute_avgdl(documents):
     total_words = 0
@@ -123,6 +124,7 @@ def compute_avgdl(documents):
     avgdl = total_words / len(documents)
     return avgdl
 
+
 def weighted_binary_cross_entropy(output, target, weights=None):
     if weights is not None:
         assert len(weights) == 2
@@ -130,6 +132,7 @@ def weighted_binary_cross_entropy(output, target, weights=None):
     else:
         loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
     return torch.neg(torch.mean(loss))
+
 
 def RemoveTrainLargeYears(data, doc_text):
     for i in range(len(data['queries'])):
@@ -153,6 +156,7 @@ def RemoveTrainLargeYears(data, doc_text):
                 break
     return data
 
+
 def RemoveBadYears(data, doc_text, train):
     for i in range(len(data['queries'])):
         j = 0
@@ -172,6 +176,7 @@ def RemoveBadYears(data, doc_text, train):
             if j == len(data['queries'][i]['retrieved_documents']):
                 break
     return data
+
 
 def print_params(model):
     '''
@@ -204,6 +209,7 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
+
 def dummy_test():
     doc1_embeds = np.random.rand(40, 200)
     doc2_embeds = np.random.rand(30, 200)
@@ -227,6 +233,7 @@ def dummy_test():
         print(the_cost, float(doc1_emit_), float(doc2_emit_))
     print(20 * '-')
 
+
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -236,6 +243,7 @@ def compute_the_cost(costs, back_prop=True):
         optimizer.zero_grad()
     the_cost = cost_.cpu().item()
     return the_cost
+
 
 def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
     '''
@@ -251,6 +259,7 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     }
     torch.save(state, filename)
 
+
 def get_map_res(fgold, femit):
     trec_eval_res = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err) = trec_eval_res.communicate()
@@ -258,6 +267,7 @@ def get_map_res(fgold, femit):
     map_res = [l for l in lines if (l.startswith('map '))][0].split('\t')
     map_res = float(map_res[-1])
     return map_res
+
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -269,6 +279,7 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_aver_acc = sum(batch_acc) / float(len(batch_acc))
     epoch_aver_acc = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
+
 
 def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
@@ -324,6 +335,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             ret[k] = float(v)
     return ret
 
+
 def similar(upstream_seq, downstream_seq):
     upstream_seq = upstream_seq.encode('ascii', 'ignore')
     downstream_seq = downstream_seq.encode('ascii', 'ignore')
@@ -335,6 +347,7 @@ def similar(upstream_seq, downstream_seq):
     to_match = upstream_seq if (len(downstream_seq) > len(upstream_seq)) else downstream_seq
     r1 = SequenceMatcher(None, to_match, longest_match).ratio()
     return r1
+
 
 def get_pseudo_retrieved(dato):
     some_ids = [item['document'].split('/')[-1].strip() for item in bioasq6_data[dato['query_id']]['snippets']]
@@ -349,12 +362,14 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
+
 def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
     wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
     wrong = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
     wrong = torch.cat(wrong + [bs_emits_.squeeze(-1)])
     losses = [model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
     return sum(losses) / float(len(losses))
+
 
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     bs_emits_ = bs_emits_.squeeze(-1)
@@ -365,11 +380,10 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
         good_sent_tags = good_sent_tags.cuda()
         tags_2 = tags_2.cuda()
     #
-    # sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
-    # sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
-    sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, reduction='sum')
-    sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
+    sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
+    sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
+
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
@@ -385,22 +399,23 @@ def init_the_logger(hdlr):
     logger.setLevel(logging.INFO)
     return logger, hdlr
 
+
 def get_words(s, idf, max_idf):
     sl = tokenize(s)
     sl = [s for s in sl]
     sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
     return sl, sl2
 
+
 def tokenize(x):
-    # return bioclean(x)
-    x_tokens = bert_tokenizer.tokenize(x)
-    x_tokens = fix_bert_tokens(x_tokens)
-    return x_tokens
+    return bioclean(x)
+
 
 def idf_val(w, idf, max_idf):
     if w in idf:
         return idf[w]
     return max_idf
+
 
 def get_embeds(tokens, wv):
     ret1, ret2 = [], []
@@ -409,6 +424,7 @@ def get_embeds(tokens, wv):
             ret1.append(tok)
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
+
 
 def get_embeds_use_unk(tokens, wv):
     ret1, ret2 = [], []
@@ -422,6 +438,7 @@ def get_embeds_use_unk(tokens, wv):
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
+
 def get_embeds_use_only_unk(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
@@ -429,6 +446,7 @@ def get_embeds_use_only_unk(tokens, wv):
         ret1.append(tok)
         ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
+
 
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
@@ -449,11 +467,13 @@ def load_idfs(idf_path, words):
     #
     return ret, max_idf
 
+
 def uwords(words):
     uw = {}
     for w in words:
         uw[w] = 1
     return [w for w in uw]
+
 
 def ubigrams(words):
     uw = {}
@@ -462,6 +482,7 @@ def ubigrams(words):
         uw[prevw + '_' + w] = 1
         prevw = w
     return [w for w in uw]
+
 
 def query_doc_overlap(qwords, dwords, idf, max_idf):
     # % Query words in doc.
@@ -511,6 +532,7 @@ def query_doc_overlap(qwords, dwords, idf, max_idf):
         idf_qwords_bigrams_in_doc_val
     ]
 
+
 def GetScores(qtext, dtext, bm25, idf, max_idf):
     qwords, qw2 = get_words(qtext, idf, max_idf)
     dwords, dw2 = get_words(dtext, idf, max_idf)
@@ -518,8 +540,9 @@ def GetScores(qtext, dtext, bm25, idf, max_idf):
     bm25 = [bm25]
     return qd1[0:3] + bm25
 
+
 def GetWords(data, doc_text, words):
-    for i in tqdm(range(len(data['queries'])), ascii=True):
+    for i in range(len(data['queries'])):
         qwds = tokenize(data['queries'][i]['query_text'])
         for w in qwds:
             words[w] = 1
@@ -538,12 +561,14 @@ def GetWords(data, doc_text, words):
             for w in dwds:
                 words[w] = 1
 
+
 def get_gold_snips(quest_id, bioasq6_data):
     gold_snips = []
     if ('snippets' in bioasq6_data[quest_id]):
         for sn in bioasq6_data[quest_id]['snippets']:
             gold_snips.extend(sent_tokenize(sn['text']))
     return list(set(gold_snips))
+
 
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
@@ -579,6 +604,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         ret['snippets'].append(esnip_res)
     return ret
 
+
 def get_snips(quest_id, gid, bioasq6_data):
     good_snips = []
     if ('snippets' in bioasq6_data[quest_id]):
@@ -586,6 +612,7 @@ def get_snips(quest_id, gid, bioasq6_data):
             if (sn['document'].endswith(gid)):
                 good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
+
 
 def get_the_mesh(the_doc):
     good_meshes = []
@@ -611,6 +638,7 @@ def get_the_mesh(the_doc):
     good_mesh = [gm for gm in good_mesh]
     return good_mesh
 
+
 def snip_is_relevant(one_sent, gold_snips):
     # print one_sent
     # pprint(gold_snips)
@@ -625,45 +653,12 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-def create_one_hot_and_sim(tokens1, tokens2):
-    '''
-    :param tokens1:
-    :param tokens2:
-    :return:
-    exxample call : create_one_hot_and_sim('c d e'.split(), 'a b c'.split())
-    '''
-    label_encoder = LabelEncoder()
-    onehot_encoder = OneHotEncoder(sparse=False, categories='auto')
-    #
-    values = list(set(tokens1 + tokens2))
-    integer_encoded = label_encoder.fit_transform(values)
-    #
-    integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
-    onehot_encoder.fit(integer_encoded)
-    #
-    lab1 = label_encoder.transform(tokens1)
-    lab1 = np.expand_dims(lab1, axis=1)
-    oh1 = onehot_encoder.transform(lab1)
-    #
-    lab2 = label_encoder.transform(tokens2)
-    lab2 = np.expand_dims(lab2, axis=1)
-    oh2 = onehot_encoder.transform(lab2)
-    #
-    ret = np.matmul(oh1, np.transpose(oh2), out=None)
-    #
-    return oh1, oh2, ret
 
-def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     if (use_sent_tokenizer):
         good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     else:
         good_sents = [the_doc['title'] + the_doc['abstractText']]
-    ####
-    bert_f = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
-    gemb = pickle.load(open(bert_f, 'rb'))
-    # title_bert_average_embeds
-    # abs_bert_average_embeds
-    # mesh_bert_average_embeds
     ####
     quest_toks = tokenize(quest)
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -685,36 +680,34 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
         sum(tomi_idfs) / sum(quest_idfs),
     ]
     good_doc_af.extend(features)
-    #
-    all_bert_embeds = gemb['title_bert_average_embeds'] + gemb['abs_bert_average_embeds']
-    # print(pid, len(all_bert_embeds), len(good_sents))
     ####
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
-    for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    for good_text in good_sents:
         sent_toks = tokenize(good_text)
-        oh1, oh2, oh_sim = create_one_hot_and_sim(quest_toks, sent_toks)
-        good_oh_sim.append(oh_sim)
+        good_tokens, good_embeds = get_embeds(sent_toks, wv)
         good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
-        tomi = (set(sent_toks) & set(quest_toks))
-        tomi_no_stop = tomi - set(stopwords)
-        BM25score = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-        tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-        tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
-        quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
-        features = [
-            len(quest) / 300.,
-            len(good_text) / 300.,
-            len(tomi_no_stop) / 100.,
-            BM25score,
-            sum(tomi_no_stop_idfs) / 100.,
-            sum(tomi_idfs) / sum(quest_idfs),
-        ]
-        #
-        good_sents_embeds.append(bert_embeds)
-        good_sents_escores.append(good_escores + features)
-        held_out_sents.append(good_text)
-        good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+        if (len(good_embeds) > 0):
+            #
+            tomi = (set(sent_toks) & set(quest_toks))
+            tomi_no_stop = tomi - set(stopwords)
+            BM25score = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+            tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+            tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
+            quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
+            features = [
+                len(quest) / 300.,
+                len(good_text) / 300.,
+                len(tomi_no_stop) / 100.,
+                BM25score,
+                sum(tomi_no_stop_idfs) / 100.,
+                sum(tomi_idfs) / sum(quest_idfs),
+            ]
+            #
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores + features)
+            held_out_sents.append(good_text)
+            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
     return {
         'sents_embeds': good_sents_embeds,
@@ -722,12 +715,12 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
         'doc_af': good_doc_af,
         'sent_tags': good_sent_tags,
         'held_out_sents': held_out_sents,
-        'oh_sims': good_oh_sim
     }
+
 
 def train_data_step1(train_data):
     ret = []
-    for dato in tqdm(train_data['queries'], ascii=True):
+    for dato in tqdm(train_data['queries']):
         quest = dato['query_text']
         quest_id = dato['query_id']
         bm25s = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
@@ -741,51 +734,31 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def fix_bert_tokens(tokens):
-    ret = []
-    for t in tokens:
-        if (t.startswith('##')):
-            ret[-1] = ret[-1] + t[2:]
-        else:
-            ret.append(t)
-    return ret
 
-def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        # print(quest_text)
-        qemb = all_quest_embeds[quest_text]
-        qemb = np.concatenate(qemb, axis=0)
-        # pprint(qemb.keys())
         if (use_sent_tokenizer):
             good_snips = get_snips(quest_id, gid, bioasq6_data)
             good_snips = [' '.join(bioclean(sn)) for sn in good_snips]
         else:
             good_snips = []
         #
-        quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        #
-        datum = prep_data(quest_text, docs[gid], gid, bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer)
+        datum = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds = datum['sents_embeds']
         good_sents_escores = datum['sents_escores']
         good_doc_af = datum['doc_af']
         good_sent_tags = datum['sent_tags']
         good_held_out_sents = datum['held_out_sents']
-        good_oh_sims = datum['oh_sims']
         #
-        datum = prep_data(quest_text, docs[bid], bid, bm25s_bid, [], idf, max_idf, use_sent_tokenizer)
+        datum = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds = datum['sents_embeds']
         bad_sents_escores = datum['sents_escores']
         bad_doc_af = datum['doc_af']
         bad_sent_tags = [0] * len(datum['sent_tags'])
         bad_held_out_sents = datum['held_out_sents']
-        bad_oh_sims = datum['oh_sims']
         #
-        quest_tokens = tokenize(quest_text)
+        quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        # print(quest_tokens)
-        # print(len(quest_tokens))
-        # print(len(q_idfs))
-        # print(qemb.shape)
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
             yield {
@@ -794,18 +767,17 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
                 'good_doc_af': good_doc_af,
                 'good_sent_tags': good_sent_tags,
                 'good_held_out_sents': good_held_out_sents,
-                'good_oh_sims': good_oh_sims,
                 #
                 'bad_sents_embeds': bad_sents_embeds,
                 'bad_sents_escores': bad_sents_escores,
                 'bad_doc_af': bad_doc_af,
                 'bad_sent_tags': bad_sent_tags,
                 'bad_held_out_sents': bad_held_out_sents,
-                'bad_oh_sims': bad_oh_sims,
                 #
-                'quest_embeds': qemb,
+                'quest_embeds': quest_embeds,
                 'q_idfs': q_idfs,
             }
+
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
@@ -816,18 +788,10 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     random.shuffle(train_instances)
     #
     start_time = time.time()
-    pbar = tqdm(
-        iterable=train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
-        # total=378,
-        total=9684,
-        ascii=True
-    )
-    for datum in pbar:
+    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds=datum['good_sents_embeds'],
             doc2_sents_embeds=datum['bad_sents_embeds'],
-            doc1_oh_sim=datum['good_oh_sims'],
-            doc2_oh_sim=datum['bad_oh_sims'],
             question_embeds=datum['quest_embeds'],
             q_idfs=datum['q_idfs'],
             sents_gaf=datum['good_sents_escores'],
@@ -873,6 +837,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     logger.info(
         'Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
+
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition = doc_emit_.cpu().item()
     emitss = gs_emits_.tolist()
@@ -892,6 +857,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
+
 def get_norm_doc_scores(the_doc_scores):
     ks = list(the_doc_scores.keys())
     vs = [the_doc_scores[k] for k in ks]
@@ -901,6 +867,7 @@ def get_norm_doc_scores(the_doc_scores):
         norm_doc_scores[ks[i]] = vs[i]
     return norm_doc_scores
 
+
 def select_snippets_v1(extracted_snippets):
     '''
     :param extracted_snippets:
@@ -909,6 +876,7 @@ def select_snippets_v1(extracted_snippets):
     '''
     sorted_snips = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
     return sorted_snips[:10]
+
 
 def select_snippets_v2(extracted_snippets):
     '''
@@ -927,6 +895,7 @@ def select_snippets_v2(extracted_snippets):
     sorted_snips = sorted(ret.values(), key=lambda x: x[1], reverse=True)
     return sorted_snips[:10]
 
+
 def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
     :param      extracted_snippets:
@@ -939,6 +908,7 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     sorted_snips = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
 
+
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions = {
         'body': dato['query_text'],
@@ -947,39 +917,24 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text = dato['query_text']
-    #
-    qemb = all_quest_embeds[quest_text]
-    qemb = np.concatenate(qemb, axis=0)
-    quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-    #
-    quest_tokens = tokenize(quest_text)
+    quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
     q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips = get_gold_snips(dato['query_id'], bioasq6_data)
     #
     doc_res, extracted_snippets = {}, []
     extracted_snippets_known_rel_num = []
     for retr in retr_docs:
-        datum = prep_data(
-            quest_text,
-            docs[retr['doc_id']],
-            retr['doc_id'],
-            retr['norm_bm25_score'],
-            gold_snips,
-            idf,
-            max_idf,
-            use_sent_tokenizer
-        )
+        datum = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf,
+                          use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds=datum['sents_embeds'],
-            doc1_oh_sim=datum['oh_sims'],
-            question_embeds=qemb,
+            question_embeds=quest_embeds,
             q_idfs=q_idfs,
             sents_gaf=datum['sents_escores'],
             doc_gaf=datum['doc_af']
         )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
-            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
-        )
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'],
+                                                                      retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
@@ -1071,6 +1026,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
 
+
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
     #
@@ -1084,7 +1040,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     all_bioasq_gold_data = {'questions': []}
     data_for_revision = {}
     #
-    for dato in tqdm(data['queries'], ascii=True):
+    for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato,
                                                                                         dato['retrieved_documents'],
@@ -1116,7 +1072,8 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
                               os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'))
     return res_map
 
-def load_all_data(dataloc, idf_pickle_path):
+
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
     #
     with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
@@ -1142,21 +1099,26 @@ def load_all_data(dataloc, idf_pickle_path):
     dev_data = RemoveBadYears(dev_data, dev_docs, False)
     test_data = RemoveBadYears(test_data, test_docs, False)
     #
-    if (os.path.exists(bert_all_words_path)):
-        words = pickle.load(open(bert_all_words_path, 'rb'))
-    else:
-        words = {}
-        GetWords(train_data, train_docs, words)
-        GetWords(dev_data, dev_docs, words)
-        GetWords(test_data, test_docs, words)
-        pickle.dump(words, open(bert_all_words_path, 'wb'), protocol=2)
+    words = {}
+    GetWords(train_data, train_docs, words)
+    GetWords(dev_data, dev_docs, words)
+    GetWords(test_data, test_docs, words)
     #
     print('loading idfs')
     idf, max_idf = load_idfs(idf_pickle_path, words)
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
+    print('loading w2v')
+    wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
+    def __init__(self,
+                 embedding_dim=30,
+                 k_for_maxpool=5,
+                 sentence_out_method='MLP',
+                 k_sent_maxpool=1
+                 ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k = k_for_maxpool
         self.k_sent_maxpool = k_sent_maxpool
@@ -1300,21 +1262,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
 
-    def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights,
-                           k2):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
-            sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False)
             sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if (use_cuda):
                 sent_embeds = sent_embeds.cuda()
-                sim_oh = sim_oh.cuda()
                 gaf = gaf.cuda()
             conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
             #
             sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
+            sim_oh = (sim_insens > (1 - (1e-3))).float()
             sim_sens = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
             #
             insensitive_pooled = self.pooling_method(sim_insens)
@@ -1415,7 +1375,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
 
-    def emit_one(self, doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf):
+    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
@@ -1431,15 +1391,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits = self.do_for_one_doc_cnn(
-            doc1_sents_embeds,
-            doc1_oh_sim,
-            sents_gaf,
-            question_embeds,
-            q_context,
-            q_weights,
-            self.k_sent_maxpool
-        )
+        good_out, gs_emits = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context,
+                                                     q_weights, self.k_sent_maxpool)
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
@@ -1454,8 +1407,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         return final_good_output, gs_emits
 
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
-                question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf,
+                doc_baf):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
@@ -1473,24 +1426,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits = self.do_for_one_doc_cnn(
-            doc1_sents_embeds,
-            doc1_oh_sim,
-            sents_gaf,
-            question_embeds,
-            q_context,
-            q_weights,
-            self.k_sent_maxpool
-        )
-        bad_out, bs_emits = self.do_for_one_doc_cnn(
-            doc2_sents_embeds,
-            doc2_oh_sim,
-            sents_baf,
-            question_embeds,
-            q_context,
-            q_weights,
-            self.k_sent_maxpool
-        )
+        good_out, gs_emits = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context,
+                                                     q_weights, self.k_sent_maxpool)
+        bad_out, bs_emits = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights,
+                                                    self.k_sent_maxpool)
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
@@ -1516,35 +1455,70 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
+
 use_cuda = torch.cuda.is_available()
 
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# # use_cuda            = False
+# odd                 = '/home/dpappas/'
+# # get_embeds          = get_embeds_use_unk
+# # get_embeds          = get_embeds_use_only_unk
+
+# # cslab241
+# w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
+
 # atlas , cslab243
-bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
-all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
+w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-bert_embeds_dir = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
 eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd = '/home/dpappas/'
 use_cuda = True
-bert_tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
+# get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
+
+# # gpu_server_1
+# w2v_bin_path        = '/media/large_space_1/DATA/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/media/large_space_1/DATA/bioasq_all/idf.pkl'
+# dataloc             = '/media/large_space_1/DATA/bioasq_all/bioasq_data/'
+# eval_path           = '/media/large_space_1/DATA/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/media/large_space_1/DATA/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/media/large_space_1/dpappas/'
+
+# # gpu_server_2
+# w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/cave/dpappas/'
 
 k_for_maxpool = 5
 k_sent_maxpool = 5
-embedding_dim = 50  # 30  # 200
+embedding_dim = 30  # 200
 lr = 0.01
 b_size = 32
 max_epoch = 10
 
 hdlr = None
-for run in range(3, 5):
+for run in range(0, 5):
     #
     my_seed = run
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_bert_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_joint_simple_2L_no_mesh_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1555,8 +1529,8 @@ for run in range(3, 5):
     logger.info('random seed: {}'.format(my_seed))
     #
     (
-        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
-    ) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
+        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
     #
     avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
     print(avgdl, mean, deviation)
@@ -1584,39 +1558,3 @@ for run in range(3, 5):
         logger.info(
             'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
                                                                                            best_dev_map, test_map))
-
-'''
-['[CLS]', 'the', 'drugs', 'covered', 'target', 'ga', '##ba', '##a', 'za', '##le', '##pl', '##on', '-', 'cr', 'lore', '##di', '##pl', '##on', 'ev', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tam', '##ine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'ser', '##oton', '##in', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'mel', '##aton', '##ins', '##ero', '##ton', '##in', '##5', '-', 'h', '##t', '##1', '##a', 'pi', '##rom', '##ela', '##tine', 'and', 'mel', '##aton', '##in', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'mel', '##aton', '##in', 'and', 'ta', '##si', '##mel', '##te', '##on', 'for', 'pediatric', 'sleep', 'and', 'circa', '##dian', '[SEP]']
-len([
-'the', 'drugs', 'covered', 'target', 'gabaa', 'zaleplon', '-', 'cr', 'lorediplon', 'evt', '-', '201', 'orexin', 
-'filorexant', 'min', '-', '202', 'histamine', '-', 'h1', 'ly2624803', 'serotonin', '5', '-', 'ht2a', 'iti', '-', 
-'007', 'melatoninserotonin5', '-', 'ht1a', 'piromelatine', 'and', 'melatonin', 'indication', 'expansions', 
-'of', 'prolonged', '-', 'release', 'melatonin', 'and', 'tasimelteon', 'for', 'pediatric', 'sleep', 'and', 
-'circadian'
-])
-
-['the', 'drugs', 'covered', 'target', 'gabaa', 'zaleplon-cr', 'lorediplon', 'evt-201', 'orexin', 
-'filorexant', 'min-202', 'histamine-h1', 'ly2624803', 'serotonin', '5-ht2a', 'iti-007',
-'melatoninserotonin5-ht1a', 'piromelatine', 'and', 'melatonin', 'indication', 'expansions', 
-'of', 'prolonged-release', 'melatonin', 'and', 'tasimelteon', 'for', 'pediatric', 'sleep', 'and', 'circadian', 
-'rhythm', 'disorders', 'receptors']
-
-python3.6
-import pickle
-from pprint import pprint
-d = pickle.load(open('/home/dpappas/bioasq_all/bert_elmo_embeds/25423562.p','rb'))
-pprint(list(d.keys()))
-
-pprint(d['abs_bert_original_tokens'])
-
-[
-['[CLS]', 'introduction', 'ins', '##om', '##nia', 'is', 'ty', '##pi', '##fied', 'by', 'a', 'difficulty', 'in', 'sleep', 'initiation', 'maintenance', 'and', '##or', 'quality', 'non', '-', 'rest', '##ora', '##tive', 'sleep', 'resulting', 'in', 'significant', 'daytime', 'distress', '[SEP]'], 
-['[CLS]', 'areas', 'covered', 'this', 'review', 'sum', '##mar', '##izes', 'the', 'available', 'efficacy', 'and', 'safety', 'data', 'for', 'drugs', 'currently', 'in', 'the', 'pipeline', 'for', 'treating', 'ins', '##om', '##nia', '[SEP]'], 
-['[CLS]', 'specifically', 'the', 'authors', 'performed', 'med', '##line', 'and', 'internet', 'searches', 'using', 'the', 'key', '##words', 'phase', 'ii', 'and', 'ins', '##om', '##nia', '[SEP]'], 
-['[CLS]', 'the', 'drugs', 'covered', 'target', 'ga', '##ba', '##a', 'za', '##le', '##pl', '##on', '-', 'cr', 'lore', '##di', '##pl', '##on', 'ev', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tam', '##ine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'ser', '##oton', '##in', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'mel', '##aton', '##ins', '##ero', '##ton', '##in', '##5', '-', 'h', '##t', '##1', '##a', 'pi', '##rom', '##ela', '##tine', 'and', 'mel', '##aton', '##in', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'mel', '##aton', '##in', 'and', 'ta', '##si', '##mel', '##te', '##on', 'for', 'pediatric', 'sleep', 'and', 'circa', '##dian', '[SEP]'], 
-['[CLS]', 'expert', 'opinion', 'low', '-', 'priced', 'generic', 'environments', 'and', 'high', 'development', 'costs', 'limit', 'the', 'further', 'development', 'of', 'drugs', 'that', 'treat', 'ins', '##om', '##nia', '[SEP]'], 
-['[CLS]', 'however', 'the', 'bid', '##ire', '##ction', '##al', 'link', 'between', 'sleep', 'and', 'certain', 'como', '##rb', '##idi', '##ties', 'may', 'encourage', 'development', 'of', 'specific', 'drugs', 'for', 'como', '##rb', '##id', 'ins', '##om', '##nia', '[SEP]'], 
-['[CLS]', 'new', 'ins', '##om', '##nia', 'the', '##ra', '##pies', 'will', 'most', 'likely', 'move', 'away', 'from', 'ga', '##ba', '##ar', 'receptors', 'modulation', 'to', 'more', 'subtle', 'neurological', 'pathways', 'that', 'regulate', 'the', 'sleep', '-', 'wake', 'cycle', '[SEP]']
-]
-
-'''
