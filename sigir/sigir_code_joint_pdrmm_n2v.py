@@ -277,12 +277,17 @@ def get_words(s, idf, max_idf):
     return sl, sl2
 
 
-def get_embeds(tokens, wv):
+def get_embeds(tokens, wv, n2v):
     ret1, ret2 = [], []
     for tok in tokens:
         if (tok in wv):
             ret1.append(tok)
-            ret2.append(wv[tok])
+            the_emb = wv[tok]
+            if (tok in n2v):
+                the_emb = np.concatenate((the_emb, n2v[tok]), axis=-1)
+            else:
+                the_emb = np.concatenate((the_emb, np.zeros(n2v_embedding_dim)), axis=-1)
+            ret2.append(the_emb)
     return ret1, np.array(ret2, 'float64')
 
 
@@ -1278,6 +1283,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 # atlas , cslab243
 w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+n2v_path = '/home/dpappas/bioasq_all/isa_word_embeds_dict.p'
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
@@ -1312,9 +1318,9 @@ for run in range(5):
     logger.info('random seed: {}'.format(my_seed))
     #
     (
-        test_data, test_docs, dev_data, dev_docs, train_data,
-        train_docs, idf, max_idf, wv, bioasq6_data
-    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data, n2v
+    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path, n2v_path=n2v_path)
+
     #
     print('Compiling model...')
     logger.info('Compiling model...')
