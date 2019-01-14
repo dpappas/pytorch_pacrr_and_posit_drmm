@@ -666,7 +666,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
         sent_toks = tokenize(good_text)
-        good_tokens, good_embeds = get_embeds(sent_toks, wv)
+        good_tokens, good_embeds = get_embeds(sent_toks, wv, n2v)
         good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
         if (len(good_embeds) > 0):
@@ -739,7 +739,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_sent_tags = [0] * len(datum['sent_tags'])
         bad_held_out_sents = datum['held_out_sents']
         #
-        quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
+        quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv, n2v)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
@@ -897,7 +897,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text = dato['query_text']
-    quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
+    quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv, n2v)
     q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips = get_gold_snips(dato['query_id'], bioasq6_data)
     #
