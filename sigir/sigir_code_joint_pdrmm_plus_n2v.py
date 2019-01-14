@@ -11,6 +11,8 @@ import time
 import random
 import logging
 import subprocess
+from trace import pickle
+
 import torch
 import torch.nn.functional         as F
 import torch.nn                    as nn
@@ -417,12 +419,17 @@ def idf_val(w, idf, max_idf):
     return max_idf
 
 
-def get_embeds(tokens, wv):
+def get_embeds(tokens, wv, n2v):
     ret1, ret2 = [], []
     for tok in tokens:
         if (tok in wv):
             ret1.append(tok)
-            ret2.append(wv[tok])
+            the_emb = wv[tok]
+            if (tok in n2v):
+                the_emb = np.concatenate((the_emb, n2v[tok]), axis=-1)
+            else:
+                the_emb = np.concatenate((the_emb, np.zeros(n2v_embedding_dim)), axis=-1)
+            ret2.append(the_emb)
     return ret1, np.array(ret2, 'float64')
 
 
@@ -684,7 +691,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
         sent_toks = tokenize(good_text)
-        good_tokens, good_embeds = get_embeds(sent_toks, wv)
+        good_tokens, good_embeds = get_embeds(sent_toks, wv, n2v)
         good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
         if (len(good_embeds) > 0):
@@ -757,7 +764,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_sent_tags = [0] * len(datum['sent_tags'])
         bad_held_out_sents = datum['held_out_sents']
         #
-        quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
+        quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv, n2v)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
@@ -917,7 +924,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text = dato['query_text']
-    quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
+    quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv, n2v)
     q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips = get_gold_snips(dato['query_id'], bioasq6_data)
     #
@@ -1073,7 +1080,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     return res_map
 
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path, n2v_path):
     print('loading pickle data')
     #
     with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
@@ -1109,7 +1116,9 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading w2v')
     wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    print('loading n2v')
+    n2v = pickle.load(open(n2v_path, 'rb'))
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data, n2v
 
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
@@ -1479,6 +1488,7 @@ use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
 w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+n2v_path = '/home/dpappas/bioasq_all/isa_word_embeds_dict.p'
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
@@ -1506,7 +1516,10 @@ use_cuda = True
 
 k_for_maxpool = 5
 k_sent_maxpool = 5
-embedding_dim = 30  # 200
+w2v_embedding_dim = 30  # 200
+n2v_embedding_dim = 30  # 200
+embedding_dim = 60  # 200
+
 lr = 0.01
 b_size = 32
 max_epoch = 10
@@ -1518,7 +1531,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_joint_simple_n2v_2L_no_mesh_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1529,8 +1542,8 @@ for run in range(0, 5):
     logger.info('random seed: {}'.format(my_seed))
     #
     (
-        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
-    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data, n2v
+    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path, n2v_path=n2v_path)
     #
     avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
     print(avgdl, mean, deviation)
