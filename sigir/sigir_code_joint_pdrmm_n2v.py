@@ -441,7 +441,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path, n2v_path):
     idf, max_idf = load_idfs(idf_pickle_path, words)
     print('loading w2v')
     wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    tot = len(wv)
+    tot = len(wv.vocab.keys())
     wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
     print('kept {} glove embeds from {} in total'.format(len(wv), tot))
     print('loading n2v')
