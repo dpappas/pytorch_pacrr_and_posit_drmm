@@ -1296,7 +1296,9 @@ retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 # retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 
 k_for_maxpool = 5
-embedding_dim = 30  # 200
+w2v_embedding_dim = 30
+n2v_embedding_dim = 30
+embedding_dim = w2v_embedding_dim + n2v_embedding_dim  # 200
 lr = 0.01
 b_size = 32
 max_epoch = 10
