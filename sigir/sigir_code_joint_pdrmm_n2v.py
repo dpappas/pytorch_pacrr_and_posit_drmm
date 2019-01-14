@@ -770,7 +770,12 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     random.shuffle(train_instances)
     #
     start_time = time.time()
-    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+    pbar = tqdm(
+        iterable=train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer),
+        total=9684,
+        ascii=True
+    )
+    for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds=datum['good_sents_embeds'],
             doc2_sents_embeds=datum['bad_sents_embeds'],
@@ -799,11 +804,16 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
                                                                                          batch_acc, epoch_acc)
             elapsed_time = time.time() - start_time
             start_time = time.time()
-            print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                     batch_aver_acc, epoch_aver_acc, elapsed_time))
+            pbar.set_description(
+                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
+                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time
+                )
+            )
             logger.info(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
+                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
+                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time
+                )
+            )
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
         batch_counter += 1
