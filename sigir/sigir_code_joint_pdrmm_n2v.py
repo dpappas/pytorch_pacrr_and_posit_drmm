@@ -405,13 +405,13 @@ def GetWords(data, doc_text, words):
                 words[w] = 1
 
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+def load_all_data(dataloc, w2v_bin_path, idf_pickle_path, n2v_path):
     print('loading pickle data')
     #
     with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
         bioasq6_data = json.load(f)
         bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
-    # logger.info('loading pickle data')
+    #
     with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
         test_data = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
@@ -431,21 +431,25 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     dev_data = RemoveBadYears(dev_data, dev_docs, False)
     test_data = RemoveBadYears(test_data, test_docs, False)
     #
-    logger.info('loading words')
-    #
     words = {}
     GetWords(train_data, train_docs, words)
     GetWords(dev_data, dev_docs, words)
     GetWords(test_data, test_docs, words)
-    # mgmx
+    #
+    print('Total words: {}'.format(len(words)))
     print('loading idfs')
-    logger.info('loading idfs')
     idf, max_idf = load_idfs(idf_pickle_path, words)
     print('loading w2v')
-    logger.info('loading w2v')
     wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    tot = len(wv)
     wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    print('kept {} glove embeds from {} in total'.format(len(wv), tot))
+    print('loading n2v')
+    n2v = pickle.load(open(n2v_path, 'rb'))
+    tot = len(n2v)
+    n2v = dict([(word, n2v[word]) for word in n2v.keys() if (word in words)])
+    print('kept {} n2v embeds from {} in total'.format(len(n2v), tot))
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data, n2v
 
 
 def train_data_yielder():
