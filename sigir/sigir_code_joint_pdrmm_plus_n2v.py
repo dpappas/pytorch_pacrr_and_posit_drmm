@@ -1470,16 +1470,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# # use_cuda            = False
-# odd                 = '/home/dpappas/'
-# # get_embeds          = get_embeds_use_unk
-# # get_embeds          = get_embeds_use_only_unk
+# laptop
+w2v_bin_path = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+n2v_path = '/home/dpappas/for_ryan/isa_word_embeds_dict.p'
+idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc = '/home/dpappas/for_ryan/'
+eval_path = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# use_cuda            = False
+odd = '/home/dpappas/'
+# get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -1489,15 +1490,15 @@ use_cuda = torch.cuda.is_available()
 # retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/dpappas/'
 
-# atlas , cslab243
-w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-n2v_path = '/home/dpappas/bioasq_all/isa_word_embeds_dict.p'
-idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd = '/home/dpappas/'
-use_cuda = True
+# # atlas , cslab243
+# w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# n2v_path = '/home/dpappas/bioasq_all/isa_word_embeds_dict.p'
+# idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd = '/home/dpappas/'
+# use_cuda = True
 # get_embeds          = get_embeds_use_unk
 # get_embeds          = get_embeds_use_only_unk
 
