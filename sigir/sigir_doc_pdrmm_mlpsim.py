@@ -530,36 +530,22 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     else:
         good_sents = [the_doc['title'] + the_doc['abstractText']]
     ####
-    quest_toks = tokenize(quest)
+    quest_tokens = tokenize(quest)
+    quest_tokens, _ = get_embeds(quest_tokens, wv)
+    ####
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     doc_toks = tokenize(the_doc['title'] + the_doc['abstractText'])
     doc_tokens, doc_embeds = get_embeds(doc_toks, wv)
     #
-    doc_toks = tokenize(the_doc['title'] + the_doc['abstractText'])
-    tomi = (set(doc_toks) & set(quest_toks))
-    tomi_no_stop = tomi - set(stopwords)
-    BM25score = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-    tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-    tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
-    quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
-    features = [
-        len(quest) / 300.,
-        len(the_doc['title'] + the_doc['abstractText']) / 300.,
-        len(tomi_no_stop) / 100.,
-        BM25score,
-        sum(tomi_no_stop_idfs) / 100.,
-        sum(tomi_idfs) / sum(quest_idfs),
-    ]
-    good_doc_af.extend(features)
-    ####
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, doc_toks = [], [], [], [], []
     for good_text in good_sents:
         sent_toks = tokenize(good_text)
         good_tokens, good_embeds = get_embeds(sent_toks, wv)
         good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
         if (len(good_embeds) > 0):
+            doc_toks.extend(sent_toks)
             #
             tomi = (set(sent_toks) & set(quest_toks))
             tomi_no_stop = tomi - set(stopwords)
@@ -580,6 +566,22 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             good_sents_escores.append(good_escores + features)
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    ####
+    tomi = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop = tomi - set(stopwords)
+    BM25score = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features = [
+        len(quest) / 300.,
+        len(the_doc['title'] + the_doc['abstractText']) / 300.,
+        len(tomi_no_stop) / 100.,
+        BM25score,
+        sum(tomi_no_stop_idfs) / 100.,
+        sum(tomi_idfs) / sum(quest_idfs),
+    ]
+    good_doc_af.extend(features)
     ####
     oh1, oh2, oh_sim = create_one_hot_and_sim(quest_toks, doc_toks)
     return {
