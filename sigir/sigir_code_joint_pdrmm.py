@@ -1448,8 +1448,14 @@ for run in range(0, 5):
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
+'''
+29,041,002 articles
+29,017,626 with title
+18,707,863 with abstract as well 
+
+Is Hirschsprung disease a mendelian or a multifactorial disorder
+
+search: _exists_:AbstractText AND AbstractText:/.+/ AND _exists_:ArticleTitle AND ArticleTitle:/.+/
 
 
-
-
-
+'''
