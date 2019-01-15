@@ -1278,7 +1278,7 @@ for run in range(5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = '/home/dpappas/DOC_CNN_PDRMM_run_{}/'.format(run)
+    odir = '/home/dpappas/DOC_CNN_PDRMM_MLPSIM_run_{}/'.format(run)
     #
     logger, hdlr = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
