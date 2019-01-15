@@ -736,7 +736,8 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'q_idfs'                : q_idfs,
             }
 
-def     train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
+
+def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
@@ -1066,11 +1067,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.mesh_gru   = self.mesh_gru.cuda()
     def init_context_module(self):
         self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1)
-        # self.trigram_conv_activation_1  = torch.nn.Tanh()
+        # self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_activation_1 = torch.nn.Sigmoid()
         self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1)
-        # self.trigram_conv_activation_2  = torch.nn.Tanh()
+        # self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_activation_2 = torch.nn.Sigmoid()
         if(use_cuda):
             self.trigram_conv_1             = self.trigram_conv_1.cuda()
             self.trigram_conv_2             = self.trigram_conv_2.cuda()
@@ -1136,7 +1137,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         ind_to          = ind_from + the_input.size(0)
         conv_res        = conv_res[:, :, ind_from:ind_to]
         conv_res        = conv_res.transpose(1, 2)
-        # apply residuals
+        # residual
         conv_res = conv_res + the_input
         return conv_res.squeeze(0)
     def my_cosine_sim(self, A, B):
