@@ -161,3 +161,21 @@ GET pubmed_abstracts_0_1/_search
 }
 
 '''
+
+'''
+python3.6 \
+/home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/queries2galago.py \
+/home/dpappas/bioasq_all/BioASQ-training7b/trainining7b.json /home/dpappas/trolololo.json
+
+/home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/galago-3.10-bin/bin/galago \
+batch-search \
+--index=pubmed_only_abstract_galago_index \
+--verbose=False \
+--requested=100 \
+--scorer=bm25 \
+--defaultTextPart=postings.krovetz \
+--mode=threaded \
+/home/dpappas/trolololo.json \
+> /home/dpappas/bioasq7_bm25_retrieval.train.txt
+
+'''
