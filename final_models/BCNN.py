@@ -414,12 +414,15 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
+    print('TOTAL WORDS FOUND IN DATASET: {}'.format(len(words)))
     #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    print('TOTAL EMBEDDINGS OFFERED IN PRETRAINED EMBEDS: {}'.format(len(wv.vocab.keys())))
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
+    print('COMMON WORDS FOUND IN DATASET AND PRETRAINED EMBEDS: {}'.format(len(wv.keys())))
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 def train_data_step1(train_data):
@@ -1581,7 +1584,6 @@ class ABCNN3_PDRMM(nn.Module):
         #
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
-
 
 # # laptop
 # w2v_bin_path = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
