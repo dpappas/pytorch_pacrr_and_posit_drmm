@@ -530,8 +530,8 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     else:
         good_sents = [the_doc['title'] + the_doc['abstractText']]
     ####
-    quest_tokens = tokenize(quest)
-    quest_tokens, _ = get_embeds(quest_tokens, wv)
+    quest_toks = tokenize(quest)
+    quest_toks, _ = get_embeds(quest_toks, wv)
     ####
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
