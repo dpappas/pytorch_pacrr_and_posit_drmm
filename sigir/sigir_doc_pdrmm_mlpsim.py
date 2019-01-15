@@ -1234,7 +1234,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output
 
-
 # # laptop
 # w2v_bin_path = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 # idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
