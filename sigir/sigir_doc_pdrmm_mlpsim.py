@@ -951,7 +951,7 @@ def train_one(epoch, bioasq6_data):
     start_time = time.time()
     pbar = tqdm(
         iterable=train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, False),
-        total=378
+        total=9684
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_ = model(
