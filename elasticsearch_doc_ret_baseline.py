@@ -79,7 +79,6 @@ with open(emited_fpath, 'w') as f:
     f.close()
 
 
-
 '''
 
 GET pubmed_abstracts_0_1/_search
