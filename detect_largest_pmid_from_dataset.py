@@ -61,7 +61,13 @@ for q in tqdm(d['questions']):
     t['id'] = q['id']
     t["snippets"] = []
     t["documents"] = []
-
+    #
+    elk_scored_pmids = get_elk_results(q['body'])
+    sorted_keys = sorted(
+        elk_scored_pmids.keys(),
+        key=lambda x: elk_scored_pmids[x],
+        reverse=True
+    )
 
 
 
