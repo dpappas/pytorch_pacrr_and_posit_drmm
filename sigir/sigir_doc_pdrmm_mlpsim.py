@@ -1074,8 +1074,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return conv_res.squeeze(0)
 
     def my_sim_noncontext(self, A, B):
+        ret = []
+        for q in A:
+            temp = torch.cat((q.unsqueeze(0).expand_as(B), B), -1)
+            temp = self.noncontext_sim_layer_1(temp)
+            temp = F.sigmoid(temp)
+            temp = self.noncontext_sim_layer_2(temp)
+            temp = F.sigmoid(temp)
+            ret.append(temp)
         print(A.size())
         print(B.size())
+        ret = torch.cat(ret, -1).transpose(0, 1)
+        print(ret.size())
         exit()
 
     def my_sim_contextual(self, A, B):
