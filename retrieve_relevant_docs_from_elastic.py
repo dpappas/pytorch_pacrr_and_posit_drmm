@@ -95,7 +95,7 @@ def get_the_scores(pmids, elk_scored_pmids):
     my_truth_100    = float(sum(my_truth_100))  / float(len(my_truth_100))
     my_truth_50     = float(sum(my_truth_50))   / float(len(my_truth_50))
     my_truth_10     = float(sum(my_truth_10))   / float(len(my_truth_10))
-    print my_truth_10, my_truth_50, my_truth_100, my_truth_500, my_truth_1000
+    print(my_truth_10, my_truth_50, my_truth_100, my_truth_500, my_truth_1000)
 
 # bioasq_data_path    = '/home/DATA/Biomedical/bioasq6/bioasq6_data/BioASQ-trainingDataset6b.json'
 bioasq_data_path    = '/home/dpappas/bioasq_ir_data/BioASQ-trainingDataset6b.json'
@@ -120,5 +120,4 @@ for quest in data['questions'][50:60]:
     get_the_scores(pmids, elk_scored_pmids_4)
     m+=1
     print('Finished {} of {}'.format(m, total))
-    print 20 * '-'
-
+    print(20 * '-')
