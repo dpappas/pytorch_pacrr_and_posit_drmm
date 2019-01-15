@@ -736,7 +736,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'q_idfs'                : q_idfs,
             }
 
-
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
