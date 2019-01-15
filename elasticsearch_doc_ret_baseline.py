@@ -1,9 +1,44 @@
+import os
 import zipfile
 import json
 from pprint import pprint
 from tqdm import tqdm
+import subprocess
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk, scan
+
+
+def print_the_results(fpath_gold, fpath_emit):
+    bioasq_snip_res = get_bioasq_res(fpath_gold, fpath_emit)
+    print('MAP documents: {}'.format(bioasq_snip_res['MAP documents']))
+    print('F1 snippets: {}'.format(bioasq_snip_res['F1 snippets']))
+    print('MAP snippets: {}'.format(bioasq_snip_res['MAP snippets']))
+    print('GMAP snippets: {}'.format(bioasq_snip_res['GMAP snippets']))
+    #
+
+
+def get_bioasq_res(fpath_gold, fpath_emit):
+    '''
+    java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
+    evaluation.EvaluatorTask1b -phaseA -e 5
+    /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1
+    ./drmm-experimental_submit.json
+    '''
+    jar_path = retrieval_jar_path
+    #
+    command = ['java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b', '-phaseA', '-e', '5', fpath_gold,
+               fpath_emit]
+    print(' '.join(command))
+    bioasq_eval_res = subprocess.Popen(command, stdout=subprocess.PIPE, shell=False)
+    (out, err) = bioasq_eval_res.communicate()
+    lines = out.decode("utf-8").split('\n')
+    ret = {}
+    for line in lines:
+        if (':' in line):
+            k = line.split(':')[0].strip()
+            v = line.split(':')[1].strip()
+            ret[k] = float(v)
+    return ret
 
 def get_elk_results(search_text):
     bod = {
@@ -43,40 +78,63 @@ def get_elk_results(search_text):
         ] = item[u'_score']
     return ret
 
-archive = zipfile.ZipFile('/home/dpappas/Downloads/BioASQ-training7b.zip', 'r')
-jsondata = archive.read('BioASQ-training7b/trainining7b.json')
-d = json.loads(jsondata)
 
-maxx = 0
-for q in tqdm(d['questions']):
-    for link in q['documents']:
-        t = int(link.split('/')[-1])
-        maxx = max([maxx, t])
-
-print('https://www.ncbi.nlm.nih.gov/pubmed/{}'.format(maxx))
-
-es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
-index = 'pubmed_abstracts_0_1'
-map = "abstract_map_0_1"
-
-subm_data = {"questions": []}
-for q in tqdm(d['questions']):
-    t = {
-        'body': q['body'],
-        'id': q['id'],
-        'snippets': [],
-        'documents': []
-    }
-    #
-    elk_scored_pmids = get_elk_results(q['body'])
-    sorted_keys = sorted(elk_scored_pmids.keys(), key=lambda x: elk_scored_pmids[x], reverse=True)
-    t['documents'] = sorted_keys
-    subm_data['questions'].append(t)
+retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+gold_fpath = '/home/dpappas/bioasq_all/BioASQ-training7b/trainining7b.json'
 
 emited_fpath = '/home/dpappas/elk_doc_ret_emit.json'
-with open(emited_fpath, 'w') as f:
-    f.write(json.dumps(subm_data, indent=4, sort_keys=True))
-    f.close()
+gold_annot_fpath = '/home/dpappas/elk_doc_ret_gold.json'
+
+if (not os.path.exists(emited_fpath)):
+    archive = zipfile.ZipFile('/home/dpappas/bioasq_all/BioASQ-training7b.zip', 'r')
+    jsondata = archive.read('BioASQ-training7b/trainining7b.json')
+    d = json.loads(jsondata)
+    #
+    maxx = 0
+    for q in tqdm(d['questions']):
+        for link in q['documents']:
+            t = int(link.split('/')[-1])
+            maxx = max([maxx, t])
+    #
+    es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+    index = 'pubmed_abstracts_0_1'
+    map = "abstract_map_0_1"
+    #
+    subm_data = {"questions": []}
+    for q in tqdm(d['questions']):
+        t = {
+            'body': q['body'],
+            'id': q['id'],
+            'snippets': [],
+            'documents': []
+        }
+        #
+        elk_scored_pmids = get_elk_results(q['body'])
+        sorted_keys = sorted(elk_scored_pmids.keys(), key=lambda x: elk_scored_pmids[x], reverse=True)
+        t['documents'] = sorted_keys
+        subm_data['questions'].append(t)
+    with open(emited_fpath, 'w') as f:
+        f.write(json.dumps(subm_data, indent=4, sort_keys=True))
+        f.close()
+
+if (not os.path.exists(gold_annot_fpath)):
+    archive = zipfile.ZipFile('/home/dpappas/bioasq_all/BioASQ-training7b.zip', 'r')
+    jsondata = archive.read('BioASQ-training7b/trainining7b.json')
+    d = json.loads(jsondata)
+    gdata = {"questions": []}
+    for q in tqdm(d['questions']):
+        t = {
+            'body': q['body'],
+            'id': q['id'],
+            'snippets': [],
+            'documents': q['documents']
+        }
+        gdata['questions'].append(t)
+    with open(gold_annot_fpath, 'w') as f:
+        f.write(json.dumps(gdata, indent=4, sort_keys=True))
+        f.close()
+
+print_the_results(gold_annot_fpath, emited_fpath)
 
 
 '''
