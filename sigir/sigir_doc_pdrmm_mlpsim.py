@@ -1027,9 +1027,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
     def init_similarity_layer(self):
         self.contextual_sim_layer_1 = nn.Linear(2 * self.embedding_dim, 8, bias=True)
-        self.contextual_sim_layer_2 = nn.Linear(2 * self.embedding_dim, 1, bias=True)
+        self.contextual_sim_layer_2 = nn.Linear(8, 1, bias=True)
         self.noncontext_sim_layer_1 = nn.Linear(2 * self.embedding_dim, 8, bias=True)
-        self.noncontext_sim_layer_2 = nn.Linear(2 * self.embedding_dim, 1, bias=True)
+        self.noncontext_sim_layer_2 = nn.Linear(8, 1, bias=True)
 
     def init_context_module(self):
         self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
@@ -1078,20 +1078,24 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for q in A:
             temp = torch.cat((q.unsqueeze(0).expand_as(B), B), -1)
             temp = self.noncontext_sim_layer_1(temp)
-            temp = F.sigmoid(temp)
+            temp = torch.sigmoid(temp)
             temp = self.noncontext_sim_layer_2(temp)
-            temp = F.sigmoid(temp)
+            temp = torch.sigmoid(temp)
             ret.append(temp)
-        print(A.size())
-        print(B.size())
         ret = torch.cat(ret, -1).transpose(0, 1)
-        print(ret.size())
-        exit()
+        return ret
 
     def my_sim_contextual(self, A, B):
-        print(A.size())
-        print(B.size())
-        exit()
+        ret = []
+        for q in A:
+            temp = torch.cat((q.unsqueeze(0).expand_as(B), B), -1)
+            temp = self.contextual_sim_layer_1(temp)
+            temp = torch.sigmoid(temp)
+            temp = self.contextual_sim_layer_2(temp)
+            temp = torch.sigmoid(temp)
+            ret.append(temp)
+        ret = torch.cat(ret, -1).transpose(0, 1)
+        return ret
 
     def pooling_method(self, sim_matrix):
         sorted_res = torch.sort(sim_matrix, -1)[0]  # sort the input minimum to maximum
@@ -1174,14 +1178,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = torch.max(res)
         return res
 
-    def emit_one(
-            self,
-            doc1_embeds,
-            oh_sim_1,
-            question_embeds,
-            q_idfs,
-            doc_gaf
-    ):
+    def emit_one(self, doc1_embeds, oh_sim_1, question_embeds, q_idfs, doc_gaf):
         oh_sim_1 = autograd.Variable(torch.FloatTensor(oh_sim_1), requires_grad=False)
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
@@ -1203,17 +1200,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output = self.final_layer(good_out_pp)
         return final_good_output
 
-    def forward(
-            self,
-            doc1_embeds,
-            doc2_embeds,
-            oh_sim_1,
-            oh_sim_2,
-            question_embeds,
-            q_idfs,
-            doc_gaf,
-            doc_baf
-    ):
+    def forward(self, doc1_embeds, doc2_embeds, oh_sim_1, oh_sim_2, question_embeds, q_idfs, doc_gaf, doc_baf):
         oh_sim_1 = autograd.Variable(torch.FloatTensor(oh_sim_1), requires_grad=False)
         oh_sim_2 = autograd.Variable(torch.FloatTensor(oh_sim_2), requires_grad=False)
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
