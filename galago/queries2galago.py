@@ -5,9 +5,10 @@ import ijson
 import pickle
 
 # Modified bioclean: also split on dashes. Works better for retrieval with galago.
-bioclean_mod = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
-                                t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-",
-                                                                                                               ' ').strip().lower()).split()
+bioclean_mod = lambda t: re.sub(
+    '[.,?;*!%^&_+():-\[\]{}]', '',
+    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()
+).split()
 
 
 def prerpocess(path_in, path_out):
