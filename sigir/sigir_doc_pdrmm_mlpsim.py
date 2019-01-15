@@ -203,30 +203,6 @@ def print_params(model):
     logger.info(40 * '=')
 
 
-def dummy_test():
-    doc1_embeds = np.random.rand(40, 200)
-    doc2_embeds = np.random.rand(30, 200)
-    question_embeds = np.random.rand(20, 200)
-    q_idfs = np.random.rand(20, 1)
-    gaf = np.random.rand(4)
-    baf = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds=doc1_embeds,
-            doc2_embeds=doc2_embeds,
-            question_embeds=question_embeds,
-            q_idfs=q_idfs,
-            gaf=gaf,
-            baf=baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -969,6 +945,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_doc_af = datum['doc_af']
         good_sent_tags = datum['sent_tags']
         good_held_out_sents = datum['held_out_sents']
+        good_oh_sim = datum['doc_oh_sim']
         #
         datum = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds = datum['sents_embeds']
@@ -976,6 +953,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_doc_af = datum['doc_af']
         bad_sent_tags = [0] * len(datum['sent_tags'])
         bad_held_out_sents = datum['held_out_sents']
+        bad_oh_sim = datum['doc_oh_sim']
         #
         quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
@@ -984,12 +962,14 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
             yield {
                 'good_sents_embeds': good_sents_embeds,
                 'good_sents_escores': good_sents_escores,
+                'good_oh_sim': good_oh_sim,
                 'good_doc_af': good_doc_af,
                 'good_sent_tags': good_sent_tags,
                 'good_held_out_sents': good_held_out_sents,
                 #
                 'bad_sents_embeds': bad_sents_embeds,
                 'bad_sents_escores': bad_sents_escores,
+                'bad_oh_sim': bad_oh_sim,
                 'bad_doc_af': bad_doc_af,
                 'bad_sent_tags': bad_sent_tags,
                 'bad_held_out_sents': bad_held_out_sents,
@@ -1016,7 +996,8 @@ def train_one(epoch, bioasq6_data):
         cost_, doc1_emit_, doc2_emit_ = model(
             doc1_embeds=datum['good_sents_embeds'][0],
             doc2_embeds=datum['bad_sents_embeds'][0],
-
+            oh_sim_1=datum['good_oh_sim'],
+            oh_sim_2=datum['bad_oh_sim'],
             question_embeds=datum['quest_embeds'],
             q_idfs=datum['q_idfs'],
             doc_gaf=datum['good_doc_af'],
