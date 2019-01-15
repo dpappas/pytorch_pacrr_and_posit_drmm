@@ -55,7 +55,7 @@ for q in tqdm(d['questions']):
 
 print('https://www.ncbi.nlm.nih.gov/pubmed/{}'.format(maxx))
 
-es = Elasticsearch(['harvester2.ilsp.gr:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
 index = 'pubmed_abstracts_0_1'
 map = "abstract_map_0_1"
 
