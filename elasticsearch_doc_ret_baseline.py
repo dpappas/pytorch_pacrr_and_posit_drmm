@@ -176,6 +176,11 @@ batch-search \
 --defaultTextPart=postings.krovetz \
 --mode=threaded \
 /home/dpappas/trolololo.json \
-> /home/dpappas/bioasq7_bm25_retrieval.train.txt
+> \
+/home/dpappas/bioasq7_bm25_retrieval.train.txt
+
+python3.6 \
+/home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/generate_bioasq_data.py \
+/home/dpappas/bioasq7_bm25_retrieval.train.txt
 
 '''
