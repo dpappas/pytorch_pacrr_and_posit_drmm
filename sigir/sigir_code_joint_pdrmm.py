@@ -1066,13 +1066,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.mesh_gru   = self.mesh_gru.cuda()
     def init_context_module(self):
         self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        # self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
-        # self.trigram_conv_activation_1  = torch.nn.Sigmoid()
-        self.trigram_conv_activation_1 = torch.nn.Tanh()
+        self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1)
+        # self.trigram_conv_activation_1  = torch.nn.Tanh()
         self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        # self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
-        # self.trigram_conv_activation_2  = torch.nn.Sigmoid()
-        self.trigram_conv_activation_2 = torch.nn.Tanh()
+        self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1)
+        # self.trigram_conv_activation_2  = torch.nn.Tanh()
         if(use_cuda):
             self.trigram_conv_1             = self.trigram_conv_1.cuda()
             self.trigram_conv_2             = self.trigram_conv_2.cuda()
@@ -1138,8 +1136,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         ind_to          = ind_from + the_input.size(0)
         conv_res        = conv_res[:, :, ind_from:ind_to]
         conv_res        = conv_res.transpose(1, 2)
-        # # apply residuals
-        # conv_res        = conv_res + the_input
+        # apply residuals
+        conv_res = conv_res + the_input
         return conv_res.squeeze(0)
     def my_cosine_sim(self, A, B):
         A           = A.unsqueeze(0)
@@ -1412,7 +1410,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_tanh_noresidual_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_joint_simple_2L_no_mesh_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
