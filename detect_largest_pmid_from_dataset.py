@@ -5,7 +5,6 @@ from tqdm import tqdm
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk, scan
 
-
 def get_elk_results(search_text):
     bod = {
         "_source": ["ArticleTitle", "pmid"],
@@ -22,6 +21,16 @@ def get_elk_results(search_text):
                             "slop": 2
                         }
                     }
+                ],
+                "must": [
+                    {
+                        "range": {
+                            "DateCompleted": {
+                                "lte": "01/04/2018",
+                                "format": "dd/MM/yyyy||yyyy"
+                            }
+                        }
+                    }
                 ]
             }
         }
@@ -29,9 +38,10 @@ def get_elk_results(search_text):
     res = es.search(index=index, doc_type=map, body=bod)
     ret = {}
     for item in res['hits']['hits']:
-        ret[item[u'_source']['pmid']] = item[u'_score']
+        ret[
+            'http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(item[u'_source']['pmid'])
+        ] = item[u'_score']
     return ret
-
 
 archive = zipfile.ZipFile('/home/dpappas/Downloads/BioASQ-training7b.zip', 'r')
 jsondata = archive.read('BioASQ-training7b/trainining7b.json')
@@ -45,22 +55,18 @@ for q in tqdm(d['questions']):
 
 print('https://www.ncbi.nlm.nih.gov/pubmed/{}'.format(maxx))
 
-es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+es = Elasticsearch(['harvester2.ilsp.gr:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
 index = 'pubmed_abstracts_0_1'
 map = "abstract_map_0_1"
 
-# q = d['questions'][0]
-# pprint(q)
-# print(q['body'])
-# print(list(t.split('/')[-1] for t in q['documents']))
-
 subm_data = {"questions": []}
 for q in tqdm(d['questions']):
-    t = {}
-    t['body'] = q['body']
-    t['id'] = q['id']
-    t["snippets"] = []
-    t["documents"] = []
+    t = {
+        'body': q['body'],
+        'id': q['id'],
+        'snippets': [],
+        'documents': []
+    }
     #
     elk_scored_pmids = get_elk_results(q['body'])
     sorted_keys = sorted(
@@ -68,6 +74,8 @@ for q in tqdm(d['questions']):
         key=lambda x: elk_scored_pmids[x],
         reverse=True
     )
+    pprint(sorted_keys)
+    exit()
 
 
 
