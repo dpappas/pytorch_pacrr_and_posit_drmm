@@ -35,7 +35,6 @@ GET pubmed_abstracts_0_1/_search
             "query"                 : "What is Mendelian randomization",
             "type"                  : "best_fields",
             "fields"                : ["ArticleTitle", "AbstractText"],
-            "operator"              : "and", 
             "minimum_should_match"  : "50%",
             "slop"                  : 2
           }
