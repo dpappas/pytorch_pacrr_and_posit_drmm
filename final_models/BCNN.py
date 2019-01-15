@@ -1596,28 +1596,28 @@ class ABCNN3_PDRMM(nn.Module):
 # # get_embeds          = get_embeds_use_unk
 # # get_embeds          = get_embeds_use_only_unk
 
-# # atlas , cslab243
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# use_cuda            = True
-# odd                 = '/home/dpappas/'
-# # get_embeds          = get_embeds_use_unk
-# # get_embeds          = get_embeds_use_only_unk
-
-# cslab241
-w2v_bin_path = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
-dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-eval_path = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-retrieval_jar_path = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
-odd = '/home/dpappas/'
-use_cuda = False
+# atlas , cslab243
+w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+use_cuda = True
 odd = '/home/dpappas/'
 # get_embeds          = get_embeds_use_unk
 # get_embeds          = get_embeds_use_only_unk
+
+# # cslab241
+# w2v_bin_path = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
+# idf_pickle_path = '/home/dpappas/for_ryan/idf.pkl'
+# dataloc = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
+# eval_path = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
+# retrieval_jar_path = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
+# odd = '/home/dpappas/'
+# use_cuda = False
+# odd = '/home/dpappas/'
+# # get_embeds          = get_embeds_use_unk
+# # get_embeds          = get_embeds_use_only_unk
 
 embedding_dim       = 30
 additional_feats    = 10
@@ -1631,10 +1631,10 @@ print(avgdl, mean, deviation)
 # for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
 # for model_type in ['BCNN_PDRMM']:
 
-# model_type          = 'BCNN_PDRMM'
-# model_type          = 'BCNN'
-model_type = 'PDRMM'
+model_type = 'BCNN'
 # model_type          = 'ABCNN3'
+# model_type          = 'PDRMM'
+# model_type          = 'BCNN_PDRMM'
 # model_type          = 'ABCNN3_PDRMM'
 optim_type          = 'ADAM'
 lr                  = 0.01
@@ -1645,7 +1645,7 @@ model, optimizer    = setup_optim_model()
 # print(model.out_conv.weight[0].sum())
 
 hdlr                = None
-for run in range(1):
+for run in range(5):
     setup_random(run)
     #
     odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
