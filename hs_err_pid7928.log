@@ -1,0 +1,372 @@
+#
+# There is insufficient memory for the Java Runtime Environment to continue.
+# Native memory allocation (mmap) failed to map 87031808 bytes for committing reserved memory.
+# Possible reasons:
+#   The system is out of physical RAM or swap space
+#   In 32 bit mode, the process size limit was hit
+# Possible solutions:
+#   Reduce memory load on the system
+#   Increase physical memory or swap space
+#   Check if swap backing store is full
+#   Use 64 bit Java on a 64 bit OS
+#   Decrease Java heap size (-Xmx/-Xms)
+#   Decrease number of Java threads
+#   Decrease Java thread stack sizes (-Xss)
+#   Set larger code cache with -XX:ReservedCodeCacheSize=
+# This output file may be truncated or incomplete.
+#
+#  Out of Memory Error (os_linux.cpp:2640), pid=7928, tid=0x00007fc66d8bc700
+#
+# JRE version:  (8.0_152-b11) (build )
+# Java VM: OpenJDK 64-Bit Server VM (25.152-b11 mixed mode linux-amd64 compressed oops)
+# Failed to write core dump. Core dumps have been disabled. To enable core dumping, try "ulimit -c unlimited" before starting Java again
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00007fc66400a800):  JavaThread "Unknown thread" [_thread_in_vm, id=7929, stack(0x00007fc66d7bc000,0x00007fc66d8bd000)]
+
+Stack: [0x00007fc66d7bc000,0x00007fc66d8bd000],  sp=0x00007fc66d8bb440,  free space=1021k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0xa373de]  VMError::report_and_die()+0x14e
+V  [libjvm.so+0x4da7e9]  report_vm_out_of_memory(char const*, int, unsigned long, VMErrorType, char const*)+0x99
+V  [libjvm.so+0x8a5a43]  os::Linux::commit_memory_impl(char*, unsigned long, bool)+0xf3
+V  [libjvm.so+0x8a5d19]  os::pd_commit_memory(char*, unsigned long, unsigned long, bool)+0x29
+V  [libjvm.so+0x89ff8a]  os::commit_memory(char*, unsigned long, unsigned long, bool)+0x2a
+V  [libjvm.so+0x90d2bb]  PSVirtualSpace::expand_by(unsigned long)+0x6b
+V  [libjvm.so+0x8fd8a9]  PSOldGen::initialize(ReservedSpace, unsigned long, char const*, int)+0xc9
+V  [libjvm.so+0x2cedee]  AdjoiningGenerations::AdjoiningGenerations(ReservedSpace, GenerationSizer*, unsigned long)+0x38e
+V  [libjvm.so+0x8c5557]  ParallelScavengeHeap::initialize()+0x1e7
+V  [libjvm.so+0xa01f51]  Universe::initialize_heap()+0x101
+V  [libjvm.so+0xa03003]  universe_init()+0x33
+V  [libjvm.so+0x6060d5]  init_globals()+0x55
+V  [libjvm.so+0x9e77f7]  Threads::create_vm(JavaVMInitArgs*, bool*)+0x207
+V  [libjvm.so+0x66b4a4]  JNI_CreateJavaVM+0x74
+C  [libjli.so+0x7217]  JavaMain+0x87
+C  [libpthread.so.0+0x76ba]  start_thread+0xca
+
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+
+Other Threads:
+
+=>0x00007fc66400a800 (exited) JavaThread "Unknown thread" [_thread_in_vm, id=7929, stack(0x00007fc66d7bc000,0x00007fc66d8bd000)]
+
+VM state:not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread: None
+
+GC Heap History (0 events):
+No events
+
+Deoptimization events (0 events):
+No events
+
+Classes redefined (0 events):
+No events
+
+Internal exceptions (0 events):
+No events
+
+Events (0 events):
+No events
+
+
+Dynamic libraries:
+00400000-00401000 r-xp 00000000 08:02 2228627                            /home/dpappas/pycharm-2017.3.3/jre64/bin/java
+00600000-00601000 rw-p 00000000 08:02 2228627                            /home/dpappas/pycharm-2017.3.3/jre64/bin/java
+017df000-01800000 rw-p 00000000 00:00 0                                  [heap]
+8a900000-d7200000 ---p 00000000 00:00 0 
+d7200000-d9b00000 rw-p 00000000 00:00 0 
+d9b00000-100000000 ---p 00000000 00:00 0 
+7fc655000000-7fc655270000 rwxp 00000000 00:00 0 
+7fc655270000-7fc664000000 ---p 00000000 00:00 0 
+7fc664000000-7fc664035000 rw-p 00000000 00:00 0 
+7fc664035000-7fc668000000 ---p 00000000 00:00 0 
+7fc669fc0000-7fc66a238000 rw-p 00000000 00:00 0 
+7fc66a238000-7fc66a4c6000 ---p 00000000 00:00 0 
+7fc66a4c6000-7fc66a4db000 rw-p 00000000 00:00 0 
+7fc66a4db000-7fc66a60d000 ---p 00000000 00:00 0 
+7fc66a60d000-7fc66a618000 rw-p 00000000 00:00 0 
+7fc66a618000-7fc66a9ce000 ---p 00000000 00:00 0 
+7fc66a9ce000-7fc66a9e8000 r-xp 00000000 08:02 2228537                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/libzip.so
+7fc66a9e8000-7fc66abe7000 ---p 0001a000 08:02 2228537                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/libzip.so
+7fc66abe7000-7fc66abe8000 rw-p 00019000 08:02 2228537                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/libzip.so
+7fc66abe8000-7fc66abf3000 r-xp 00000000 08:02 262241                     /lib/x86_64-linux-gnu/libnss_files-2.23.so
+7fc66abf3000-7fc66adf2000 ---p 0000b000 08:02 262241                     /lib/x86_64-linux-gnu/libnss_files-2.23.so
+7fc66adf2000-7fc66adf3000 r--p 0000a000 08:02 262241                     /lib/x86_64-linux-gnu/libnss_files-2.23.so
+7fc66adf3000-7fc66adf4000 rw-p 0000b000 08:02 262241                     /lib/x86_64-linux-gnu/libnss_files-2.23.so
+7fc66adf4000-7fc66adfa000 rw-p 00000000 00:00 0 
+7fc66adfa000-7fc66ae05000 r-xp 00000000 08:02 266722                     /lib/x86_64-linux-gnu/libnss_nis-2.23.so
+7fc66ae05000-7fc66b004000 ---p 0000b000 08:02 266722                     /lib/x86_64-linux-gnu/libnss_nis-2.23.so
+7fc66b004000-7fc66b005000 r--p 0000a000 08:02 266722                     /lib/x86_64-linux-gnu/libnss_nis-2.23.so
+7fc66b005000-7fc66b006000 rw-p 0000b000 08:02 266722                     /lib/x86_64-linux-gnu/libnss_nis-2.23.so
+7fc66b006000-7fc66b01c000 r-xp 00000000 08:02 262161                     /lib/x86_64-linux-gnu/libnsl-2.23.so
+7fc66b01c000-7fc66b21b000 ---p 00016000 08:02 262161                     /lib/x86_64-linux-gnu/libnsl-2.23.so
+7fc66b21b000-7fc66b21c000 r--p 00015000 08:02 262161                     /lib/x86_64-linux-gnu/libnsl-2.23.so
+7fc66b21c000-7fc66b21d000 rw-p 00016000 08:02 262161                     /lib/x86_64-linux-gnu/libnsl-2.23.so
+7fc66b21d000-7fc66b21f000 rw-p 00000000 00:00 0 
+7fc66b21f000-7fc66b227000 r-xp 00000000 08:02 262236                     /lib/x86_64-linux-gnu/libnss_compat-2.23.so
+7fc66b227000-7fc66b426000 ---p 00008000 08:02 262236                     /lib/x86_64-linux-gnu/libnss_compat-2.23.so
+7fc66b426000-7fc66b427000 r--p 00007000 08:02 262236                     /lib/x86_64-linux-gnu/libnss_compat-2.23.so
+7fc66b427000-7fc66b428000 rw-p 00008000 08:02 262236                     /lib/x86_64-linux-gnu/libnss_compat-2.23.so
+7fc66b428000-7fc66b452000 r-xp 00000000 08:02 2228508                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/libjava.so
+7fc66b452000-7fc66b652000 ---p 0002a000 08:02 2228508                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/libjava.so
+7fc66b652000-7fc66b654000 rw-p 0002a000 08:02 2228508                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/libjava.so
+7fc66b654000-7fc66b663000 r-xp 00000000 08:02 2228536                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/libverify.so
+7fc66b663000-7fc66b862000 ---p 0000f000 08:02 2228536                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/libverify.so
+7fc66b862000-7fc66b864000 rw-p 0000e000 08:02 2228536                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/libverify.so
+7fc66b864000-7fc66b86b000 r-xp 00000000 08:02 266723                     /lib/x86_64-linux-gnu/librt-2.23.so
+7fc66b86b000-7fc66ba6a000 ---p 00007000 08:02 266723                     /lib/x86_64-linux-gnu/librt-2.23.so
+7fc66ba6a000-7fc66ba6b000 r--p 00006000 08:02 266723                     /lib/x86_64-linux-gnu/librt-2.23.so
+7fc66ba6b000-7fc66ba6c000 rw-p 00007000 08:02 266723                     /lib/x86_64-linux-gnu/librt-2.23.so
+7fc66ba6c000-7fc66bb74000 r-xp 00000000 08:02 262158                     /lib/x86_64-linux-gnu/libm-2.23.so
+7fc66bb74000-7fc66bd73000 ---p 00108000 08:02 262158                     /lib/x86_64-linux-gnu/libm-2.23.so
+7fc66bd73000-7fc66bd74000 r--p 00107000 08:02 262158                     /lib/x86_64-linux-gnu/libm-2.23.so
+7fc66bd74000-7fc66bd75000 rw-p 00108000 08:02 262158                     /lib/x86_64-linux-gnu/libm-2.23.so
+7fc66bd75000-7fc66c9b1000 r-xp 00000000 08:02 2228541                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/server/libjvm.so
+7fc66c9b1000-7fc66cbb1000 ---p 00c3c000 08:02 2228541                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/server/libjvm.so
+7fc66cbb1000-7fc66cc80000 rw-p 00c3c000 08:02 2228541                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/server/libjvm.so
+7fc66cc80000-7fc66ccc2000 rw-p 00000000 00:00 0 
+7fc66ccc2000-7fc66ce82000 r-xp 00000000 08:02 262228                     /lib/x86_64-linux-gnu/libc-2.23.so
+7fc66ce82000-7fc66d082000 ---p 001c0000 08:02 262228                     /lib/x86_64-linux-gnu/libc-2.23.so
+7fc66d082000-7fc66d086000 r--p 001c0000 08:02 262228                     /lib/x86_64-linux-gnu/libc-2.23.so
+7fc66d086000-7fc66d088000 rw-p 001c4000 08:02 262228                     /lib/x86_64-linux-gnu/libc-2.23.so
+7fc66d088000-7fc66d08c000 rw-p 00000000 00:00 0 
+7fc66d08c000-7fc66d08f000 r-xp 00000000 08:02 262230                     /lib/x86_64-linux-gnu/libdl-2.23.so
+7fc66d08f000-7fc66d28e000 ---p 00003000 08:02 262230                     /lib/x86_64-linux-gnu/libdl-2.23.so
+7fc66d28e000-7fc66d28f000 r--p 00002000 08:02 262230                     /lib/x86_64-linux-gnu/libdl-2.23.so
+7fc66d28f000-7fc66d290000 rw-p 00003000 08:02 262230                     /lib/x86_64-linux-gnu/libdl-2.23.so
+7fc66d290000-7fc66d2a5000 r-xp 00000000 08:02 2228490                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/jli/libjli.so
+7fc66d2a5000-7fc66d4a5000 ---p 00015000 08:02 2228490                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/jli/libjli.so
+7fc66d4a5000-7fc66d4a6000 rw-p 00015000 08:02 2228490                    /home/dpappas/pycharm-2017.3.3/jre64/lib/amd64/jli/libjli.so
+7fc66d4a6000-7fc66d4be000 r-xp 00000000 08:02 262227                     /lib/x86_64-linux-gnu/libpthread-2.23.so
+7fc66d4be000-7fc66d6bd000 ---p 00018000 08:02 262227                     /lib/x86_64-linux-gnu/libpthread-2.23.so
+7fc66d6bd000-7fc66d6be000 r--p 00017000 08:02 262227                     /lib/x86_64-linux-gnu/libpthread-2.23.so
+7fc66d6be000-7fc66d6bf000 rw-p 00018000 08:02 262227                     /lib/x86_64-linux-gnu/libpthread-2.23.so
+7fc66d6bf000-7fc66d6c3000 rw-p 00000000 00:00 0 
+7fc66d6c3000-7fc66d6e9000 r-xp 00000000 08:02 262169                     /lib/x86_64-linux-gnu/ld-2.23.so
+7fc66d7bc000-7fc66d7bf000 ---p 00000000 00:00 0 
+7fc66d7bf000-7fc66d8c2000 rw-p 00000000 00:00 0 
+7fc66d8de000-7fc66d8e6000 rw-s 00000000 08:02 5505249                    /tmp/hsperfdata_dpappas/7928
+7fc66d8e6000-7fc66d8e7000 rw-p 00000000 00:00 0 
+7fc66d8e7000-7fc66d8e8000 r--p 00000000 00:00 0 
+7fc66d8e8000-7fc66d8e9000 r--p 00025000 08:02 262169                     /lib/x86_64-linux-gnu/ld-2.23.so
+7fc66d8e9000-7fc66d8ea000 rw-p 00026000 08:02 262169                     /lib/x86_64-linux-gnu/ld-2.23.so
+7fc66d8ea000-7fc66d8eb000 rw-p 00000000 00:00 0 
+7ffcd9002000-7ffcd9023000 rw-p 00000000 00:00 0                          [stack]
+7ffcd913c000-7ffcd913f000 r--p 00000000 00:00 0                          [vvar]
+7ffcd913f000-7ffcd9141000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+
+VM Arguments:
+java_command: org.jetbrains.git4idea.http.GitAskPassApp Username for 'https://github.com': 
+java_class_path (initial): /home/dpappas/pycharm-2017.3.3/plugins/git4idea/lib/git4idea-rt.jar:/home/dpappas/pycharm-2017.3.3/lib/xmlrpc-2.0.jar:/home/dpappas/pycharm-2017.3.3/lib/commons-codec-1.9.jar:/home/dpappas/pycharm-2017.3.3/lib/util.jar
+Launcher Type: SUN_STANDARD
+
+Environment Variables:
+JAVA_HOME=/usr/lib/jvm/java-8-oracle
+PATH=/usr/lib/git-core:/home/dpappas/bin:/home/dpappas/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/db/bin:/usr/lib/jvm/java-8-oracle/jre/bin
+SHELL=/bin/bash
+DISPLAY=:0
+
+Signal Handlers:
+SIGSEGV: [libjvm.so+0xa37dc0], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGBUS: [libjvm.so+0xa37dc0], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGFPE: [libjvm.so+0x8a2620], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGPIPE: [libjvm.so+0x8a2620], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGXFSZ: [libjvm.so+0x8a2620], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGILL: [libjvm.so+0x8a2620], sa_mask[0]=11111111011111111101111111111110, sa_flags=SA_RESTART|SA_SIGINFO
+SIGUSR1: SIG_DFL, sa_mask[0]=00000000000000000000000000000000, sa_flags=none
+SIGUSR2: [libjvm.so+0x8a3d00], sa_mask[0]=00100000000000000000000000000000, sa_flags=SA_RESTART|SA_SIGINFO
+SIGHUP: SIG_DFL, sa_mask[0]=00000000000000000000000000000000, sa_flags=none
+SIGINT: SIG_DFL, sa_mask[0]=00000000000000000000000000000000, sa_flags=none
+SIGTERM: SIG_DFL, sa_mask[0]=00000000000000000000000000000000, sa_flags=none
+SIGQUIT: SIG_DFL, sa_mask[0]=00000000000000000000000000000000, sa_flags=none
+
+
+---------------  S Y S T E M  ---------------
+
+OS:DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=16.04
+DISTRIB_CODENAME=xenial
+DISTRIB_DESCRIPTION="Ubuntu 16.04.5 LTS"
+
+uname:Linux 4.15.0-38-generic #41~16.04.1-Ubuntu SMP Wed Oct 10 20:16:04 UTC 2018 x86_64
+libc:glibc 2.23 NPTL 2.23 
+rlimit: STACK 8192k, CORE 0k, NPROC 30819, NOFILE 1048576, AS infinity
+load average:2.79 1.24 1.14
+
+/proc/meminfo:
+MemTotal:        8031620 kB
+MemFree:          130692 kB
+MemAvailable:      28652 kB
+Buffers:            1052 kB
+Cached:           177176 kB
+SwapCached:         8968 kB
+Active:          6727712 kB
+Inactive:         855996 kB
+Active(anon):    6708120 kB
+Inactive(anon):   838428 kB
+Active(file):      19592 kB
+Inactive(file):    17568 kB
+Unevictable:          80 kB
+Mlocked:              80 kB
+SwapTotal:       8251388 kB
+SwapFree:              0 kB
+Dirty:               292 kB
+Writeback:             0 kB
+AnonPages:       7397460 kB
+Mapped:           220876 kB
+Shmem:            140624 kB
+Slab:              98340 kB
+SReclaimable:      40704 kB
+SUnreclaim:        57636 kB
+KernelStack:       12688 kB
+PageTables:        74328 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    12267196 kB
+Committed_AS:   21397208 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      283496 kB
+DirectMap2M:     5871616 kB
+DirectMap1G:     2097152 kB
+
+
+CPU:total 4 (initial active 4) (4 cores per cpu, 1 threads per core) family 6 model 158 stepping 9, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, avx, avx2, aes, clmul, erms, 3dnowpref, lzcnt, tsc, tscinvbit, bmi1, bmi2, adx
+
+/proc/cpuinfo:
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 158
+model name	: Intel(R) Core(TM) i5-7300HQ CPU @ 2.50GHz
+stepping	: 9
+microcode	: 0x8e
+cpu MHz		: 3099.999
+cache size	: 6144 KB
+physical id	: 0
+siblings	: 4
+core id		: 0
+cpu cores	: 4
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 22
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single pti ssbd ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp flush_l1d
+bugs		: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf
+bogomips	: 4992.00
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 39 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 158
+model name	: Intel(R) Core(TM) i5-7300HQ CPU @ 2.50GHz
+stepping	: 9
+microcode	: 0x8e
+cpu MHz		: 3100.000
+cache size	: 6144 KB
+physical id	: 0
+siblings	: 4
+core id		: 1
+cpu cores	: 4
+apicid		: 2
+initial apicid	: 2
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 22
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single pti ssbd ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp flush_l1d
+bugs		: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf
+bogomips	: 4992.00
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 39 bits physical, 48 bits virtual
+power management:
+
+processor	: 2
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 158
+model name	: Intel(R) Core(TM) i5-7300HQ CPU @ 2.50GHz
+stepping	: 9
+microcode	: 0x8e
+cpu MHz		: 3099.998
+cache size	: 6144 KB
+physical id	: 0
+siblings	: 4
+core id		: 2
+cpu cores	: 4
+apicid		: 4
+initial apicid	: 4
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 22
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single pti ssbd ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp flush_l1d
+bugs		: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf
+bogomips	: 4992.00
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 39 bits physical, 48 bits virtual
+power management:
+
+processor	: 3
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 158
+model name	: Intel(R) Core(TM) i5-7300HQ CPU @ 2.50GHz
+stepping	: 9
+microcode	: 0x8e
+cpu MHz		: 3100.000
+cache size	: 6144 KB
+physical id	: 0
+siblings	: 4
+core id		: 3
+cpu cores	: 4
+apicid		: 6
+initial apicid	: 6
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 22
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single pti ssbd ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp flush_l1d
+bugs		: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf
+bogomips	: 4992.00
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 39 bits physical, 48 bits virtual
+power management:
+
+
+
+Memory: 4k page, physical 8031620k(127288k free), swap 8251388k(0k free)
+
+vm_info: OpenJDK 64-Bit Server VM (25.152-b11) for linux-amd64 JRE (1.8.0_152-release-1024-b11), built on Dec 19 2017 07:52:56 by "root" with gcc 4.4.7 20120313 (Red Hat 4.4.7-16)
+
+time: Wed Oct 31 14:35:06 2018
+elapsed time: 0 seconds (0d 0h 0m 0s)
+
