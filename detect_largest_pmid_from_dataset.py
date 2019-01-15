@@ -25,10 +25,7 @@ print(list(t.split('/')[-1] for t in q['documents']))
 
 GET pubmed_abstracts_0_1/_search
 {
-  "_source": [
-    "ArticleTitle",
-    "pmid"
-  ],
+  "_source": ["ArticleTitle", "pmid"],
   "size" : 100,
   "query": {
     "bool": {
@@ -37,10 +34,8 @@ GET pubmed_abstracts_0_1/_search
           "multi_match" : {
             "query"                 : "What is Mendelian randomization",
             "type"                  : "best_fields",
-            "fields"                : [
-              "ArticleTitle",
-              "AbstractText"
-            ],
+            "fields"                : ["ArticleTitle", "AbstractText"],
+            "operator"              : "and", 
             "minimum_should_match"  : "50%",
             "slop"                  : 2
           }
