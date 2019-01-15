@@ -73,10 +73,10 @@ for q in tqdm(d['questions']):
     t['documents'] = sorted_keys
     subm_data['questions'].append(t)
 
-
-
-
-
+emited_fpath = '/home/dpappas/elk_doc_ret_emit.json'
+with open(emited_fpath, 'w') as f:
+    f.write(json.dumps(subm_data, indent=4, sort_keys=True))
+    f.close()
 
 
 
