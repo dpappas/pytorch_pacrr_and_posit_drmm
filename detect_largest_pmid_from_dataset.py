@@ -22,7 +22,6 @@ print(list(t.split('/')[-1] for t in q['documents']))
 
 '''
 
-
 GET pubmed_abstracts_0_1/_search
 {
   "_source": ["ArticleTitle", "pmid"],
