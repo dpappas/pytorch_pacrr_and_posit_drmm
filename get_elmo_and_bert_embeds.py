@@ -524,3 +524,8 @@ BM25+PDRMM                          -   pending
 use setting 1 and not setting 3 in pipeline and joint models
 
 '''
+
+'''
+Apo to bert pairnw to proteleftaio layer
+Apo to elmo apla kalw to modelo apo to standarad implementation pou mou dinei to teleftaio layer
+'''
