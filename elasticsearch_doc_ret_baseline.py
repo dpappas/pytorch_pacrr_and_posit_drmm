@@ -151,10 +151,7 @@ def create_body_3(search_text):
     }
 
 def get_elk_results(search_text):
-    # bod = create_body(search_text)
-    # bod = create_body_1(search_text)
-    # bod = create_body_2(search_text)
-    bod = create_body_3(search_text)
+    bod = create_body(search_text)
     res = es.search(index=index, doc_type=map, body=bod)
     ret = {}
     for item in res['hits']['hits']:
