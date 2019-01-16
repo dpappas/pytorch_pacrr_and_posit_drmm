@@ -164,7 +164,7 @@ retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 gold_fpath = '/home/dpappas/bioasq_all/BioASQ-training7b/trainining7b.json'
 elk_ip = 'harvester2.ilsp.gr:9200'
 
-emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit_3.json'
+emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit.json'
 emited_fpath_galago = '/home/dpappas/elk_doc_ret_emit_galago.json'
 gold_annot_fpath = '/home/dpappas/elk_doc_ret_gold.json'
 galago_ret_file = '/home/dpappas/bioasq7_bm25_retrieval.train.txt'
@@ -253,6 +253,12 @@ if (not os.path.exists(emited_fpath_galago)):
         f.close()
 
 print_the_results(gold_annot_fpath, emited_fpath_elastic)
+print_the_results(gold_annot_fpath, emited_fpath_galago)
+
+print_the_results(gold_annot_fpath, '/home/dpappas/elk_doc_ret_emit.json')
+print_the_results(gold_annot_fpath, '/home/dpappas/elk_doc_ret_emit_1.json')
+print_the_results(gold_annot_fpath, '/home/dpappas/elk_doc_ret_emit_2.json')
+print_the_results(gold_annot_fpath, '/home/dpappas/elk_doc_ret_emit_3.json')
 print_the_results(gold_annot_fpath, emited_fpath_galago)
 
 '''
