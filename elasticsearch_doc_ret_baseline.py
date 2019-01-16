@@ -150,7 +150,6 @@ def create_body_3(search_text):
         }
     }
 
-
 def create_body_4(search_text):
     return {
         "size": 100,
@@ -177,6 +176,35 @@ def create_body_4(search_text):
             {"regexp": {"ArticleTitle": ".+"}},
             {"regexp": {"AbstractText": ".+"}}
         ]
+    }
+
+
+def create_body_5(search_text):
+    return {
+        "size": 100,
+        "_source": ["pmid"],
+        "query": {
+            "bool": {
+                "should": [
+                    {"match_phrase": {"message": {"query": search_text}}},
+                ],
+                "filter": [
+                    {
+                        "range": {
+                            "DateCompleted": {
+                                "gte": "01/01/1985",
+                                "lte": "01/04/2018",
+                                "format": "dd/MM/yyyy||yyyy"
+                            }
+                        }
+                    },
+                    {"exists": {"field": "ArticleTitle"}},
+                    {"exists": {"field": "AbstractText"}},
+                    {"regexp": {"ArticleTitle": ".+"}},
+                    {"regexp": {"AbstractText": ".+"}}
+                ]
+            }
+        }
     }
 
 def get_elk_results(search_text):
