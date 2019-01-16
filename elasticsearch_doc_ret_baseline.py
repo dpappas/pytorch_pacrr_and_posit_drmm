@@ -38,10 +38,14 @@ def get_bioasq_res(fpath_gold, fpath_emit):
             ret[k] = float(v)
     return ret
 
-def get_elk_results(search_text):
-    bod = {
-        "_source": ["ArticleTitle", "pmid"],
+
+def create_body(search_text):
+    return {
         "size": 100,
+        "_source": [
+            "ArticleTitle",
+            "pmid"
+        ],
         "query": {
             "bool": {
                 "should": [
@@ -49,7 +53,10 @@ def get_elk_results(search_text):
                         "multi_match": {
                             "query": search_text,
                             "type": "best_fields",
-                            "fields": ["ArticleTitle", "AbstractText"],
+                            "fields": [
+                                "ArticleTitle",
+                                "AbstractText"
+                            ],
                             "minimum_should_match": "50%",
                             "slop": 2
                         }
@@ -68,6 +75,42 @@ def get_elk_results(search_text):
             }
         }
     }
+
+
+def create_body_1(search_text):
+    return {
+        "size": 100,
+        "_source": ["pmid"],
+        "query": {
+            "bool": {
+                "should": [
+                    {
+                        "multi_match": {
+                            "query": search_text,
+                            "type": "best_fields",
+                            "fields": [
+                                "ArticleTitle",
+                                "AbstractText"
+                            ],
+                            "minimum_should_match": "50%",
+                            "slop": 2
+                        }
+                    }
+                ],
+                "must": [
+                    {"range": {"DateCompleted": {"lte": "01/04/2018", "format": "dd/MM/yyyy||yyyy"}}},
+                    {"exists": {"field": "ArticleTitle"}},
+                    {"exists": {"field": "AbstractText"}},
+                    {"regexp": {"ArticleTitle": ".+"}},
+                    {"regexp": {"AbstractText": ".+"}}
+                ]
+            }
+        }
+    }
+
+def get_elk_results(search_text):
+    # bod = create_body(search_text)
+    bod = create_body_1(search_text)
     res = es.search(index=index, doc_type=map, body=bod)
     ret = {}
     for item in res['hits']['hits']:
@@ -79,8 +122,9 @@ def get_elk_results(search_text):
 
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 gold_fpath = '/home/dpappas/bioasq_all/BioASQ-training7b/trainining7b.json'
+elk_ip = 'harvester2.ilsp.gr:9200'
 
-emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit.json'
+emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit_1.json'
 emited_fpath_galago = '/home/dpappas/elk_doc_ret_emit_galago.json'
 gold_annot_fpath = '/home/dpappas/elk_doc_ret_gold.json'
 galago_ret_file = '/home/dpappas/bioasq7_bm25_retrieval.train.txt'
@@ -96,7 +140,7 @@ if (not os.path.exists(emited_fpath_elastic)):
             t = int(link.split('/')[-1])
             maxx = max([maxx, t])
     #
-    es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+    es = Elasticsearch([elk_ip], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
     index = 'pubmed_abstracts_0_1'
     map = "abstract_map_0_1"
     #
