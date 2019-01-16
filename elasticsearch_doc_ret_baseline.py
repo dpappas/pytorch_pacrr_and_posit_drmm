@@ -88,12 +88,58 @@ def create_body_1(search_text):
                         "multi_match": {
                             "query": search_text,
                             "type": "best_fields",
-                            "fields": [
-                                "ArticleTitle",
-                                "AbstractText"
-                            ],
+                            "fields": ["ArticleTitle", "AbstractText"],
                             "minimum_should_match": "50%",
                             "slop": 2
+                        }
+                    }
+                ],
+                "filter": [
+                    {"range": {"DateCompleted": {"lte": "01/04/2018", "format": "dd/MM/yyyy||yyyy"}}},
+                    {"exists": {"field": "ArticleTitle"}},
+                    {"exists": {"field": "AbstractText"}},
+                    {"regexp": {"ArticleTitle": ".+"}},
+                    {"regexp": {"AbstractText": ".+"}}
+                ]
+            }
+        }
+    }
+
+
+def create_body_2(search_text):
+    return {
+        "size": 100,
+        "_source": ["pmid"],
+        "query": {
+            "bool": {
+                "should": [
+                    {"match_phrase": {"message": {"query": search_text}}},
+                ],
+                "filter": [
+                    {"range": {"DateCompleted": {"lte": "01/04/2018", "format": "dd/MM/yyyy||yyyy"}}},
+                    {"exists": {"field": "ArticleTitle"}},
+                    {"exists": {"field": "AbstractText"}},
+                    {"regexp": {"ArticleTitle": ".+"}},
+                    {"regexp": {"AbstractText": ".+"}}
+                ]
+            }
+        }
+    }
+
+
+def create_body_3(search_text):
+    return {
+        "size": 100,
+        "_source": ["pmid"],
+        "query": {
+            "bool": {
+                "should": [
+                    {
+                        "more_like_this": {
+                            "fields": ["title", "description"],
+                            "like": search_text,
+                            "min_term_freq": 1,
+                            "max_query_terms": 25
                         }
                     }
                 ],
