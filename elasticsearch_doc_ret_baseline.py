@@ -332,6 +332,7 @@ print_the_results(gold_annot_fpath, '/home/dpappas/elk_doc_ret_emit.json')
 print_the_results(gold_annot_fpath, '/home/dpappas/elk_doc_ret_emit_1.json')
 print_the_results(gold_annot_fpath, '/home/dpappas/elk_doc_ret_emit_2.json')
 print_the_results(gold_annot_fpath, '/home/dpappas/elk_doc_ret_emit_3.json')
+print_the_results(gold_annot_fpath, '/home/dpappas/elk_doc_ret_emit_5.json')
 print_the_results(gold_annot_fpath, emited_fpath_galago)
 
 '''
