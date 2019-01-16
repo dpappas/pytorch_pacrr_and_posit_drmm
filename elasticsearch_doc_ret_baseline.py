@@ -7,7 +7,6 @@ import subprocess
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk, scan
 
-
 def print_the_results(fpath_gold, fpath_emit):
     bioasq_snip_res = get_bioasq_res(fpath_gold, fpath_emit)
     print('MAP documents: {}'.format(bioasq_snip_res['MAP documents']))
@@ -15,7 +14,6 @@ def print_the_results(fpath_gold, fpath_emit):
     print('MAP snippets: {}'.format(bioasq_snip_res['MAP snippets']))
     print('GMAP snippets: {}'.format(bioasq_snip_res['GMAP snippets']))
     #
-
 
 def get_bioasq_res(fpath_gold, fpath_emit):
     '''
@@ -82,10 +80,12 @@ def get_elk_results(search_text):
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 gold_fpath = '/home/dpappas/bioasq_all/BioASQ-training7b/trainining7b.json'
 
-emited_fpath = '/home/dpappas/elk_doc_ret_emit.json'
+emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit.json'
+emited_fpath_galago = '/home/dpappas/elk_doc_ret_emit_galago.json'
 gold_annot_fpath = '/home/dpappas/elk_doc_ret_gold.json'
+galago_ret_file = '/home/dpappas/bioasq7_bm25_retrieval.train.txt'
 
-if (not os.path.exists(emited_fpath)):
+if (not os.path.exists(emited_fpath_elastic)):
     archive = zipfile.ZipFile('/home/dpappas/bioasq_all/BioASQ-training7b.zip', 'r')
     jsondata = archive.read('BioASQ-training7b/trainining7b.json')
     d = json.loads(jsondata)
@@ -113,7 +113,7 @@ if (not os.path.exists(emited_fpath)):
         sorted_keys = sorted(elk_scored_pmids.keys(), key=lambda x: elk_scored_pmids[x], reverse=True)
         t['documents'] = sorted_keys
         subm_data['questions'].append(t)
-    with open(emited_fpath, 'w') as f:
+    with open(emited_fpath_elastic, 'w') as f:
         f.write(json.dumps(subm_data, indent=4, sort_keys=True))
         f.close()
 
@@ -134,8 +134,42 @@ if (not os.path.exists(gold_annot_fpath)):
         f.write(json.dumps(gdata, indent=4, sort_keys=True))
         f.close()
 
-print_the_results(gold_annot_fpath, emited_fpath)
+if (not os.path.exists(emited_fpath_galago)):
+    with open(galago_ret_file) as f:
+        lines = [l.strip() for l in f.readlines() if (len(l.strip()) > 0)]
+        f.close()
+    ####
+    ret = {}
+    for l in lines:
+        spl = l.split()
+        qid = spl[0]
+        pmid = spl[2]
+        score = float(spl[-2])
+        if (qid in ret):
+            ret[qid][pmid] = score
+        else:
+            ret[qid] = {}
+            ret[qid][pmid] = score
+    ####
+    subm_data = {"questions": []}
+    for qid in ret.keys():
+        t = {
+            'body': '',
+            'id': qid,
+            'snippets': [],
+            'documents': [
+                'http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(t) for t in
+                sorted(ret[qid].keys(), key=lambda x: ret[qid][x], reverse=True)
+            ]
+        }
+        subm_data['questions'].append(t)
+    ####
+    with open(emited_fpath_galago, 'w') as f:
+        f.write(json.dumps(subm_data, indent=4, sort_keys=True))
+        f.close()
 
+print_the_results(gold_annot_fpath, emited_fpath_elastic)
+print_the_results(gold_annot_fpath, emited_fpath_galago)
 
 '''
 
