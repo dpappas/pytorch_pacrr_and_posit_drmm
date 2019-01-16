@@ -150,6 +150,35 @@ def create_body_3(search_text):
         }
     }
 
+
+def create_body_4(search_text):
+    return {
+        "size": 100,
+        "_source": ["pmid"],
+        "query": {
+            "bool": {
+                "should": [
+                    {
+                        "multi_match": {
+                            "query": search_text,
+                            "type": "best_fields",
+                            "fields": ["ArticleTitle", "AbstractText"],
+                            "minimum_should_match": "50%",
+                            "slop": 2
+                        }
+                    }
+                ]
+            }
+        },
+        "filter": [
+            {"range": {"DateCompleted": {"lte": "01/04/2018", "format": "dd/MM/yyyy||yyyy"}}},
+            {"exists": {"field": "ArticleTitle"}},
+            {"exists": {"field": "AbstractText"}},
+            {"regexp": {"ArticleTitle": ".+"}},
+            {"regexp": {"AbstractText": ".+"}}
+        ]
+    }
+
 def get_elk_results(search_text):
     bod = create_body(search_text)
     res = es.search(index=index, doc_type=map, body=bod)
@@ -168,6 +197,21 @@ emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit.json'
 emited_fpath_galago = '/home/dpappas/elk_doc_ret_emit_galago.json'
 gold_annot_fpath = '/home/dpappas/elk_doc_ret_gold.json'
 galago_ret_file = '/home/dpappas/bioasq7_bm25_retrieval.train.txt'
+
+archive = zipfile.ZipFile('/home/dpappas/bioasq_all/BioASQ-training7b.zip', 'r')
+jsondata = archive.read('BioASQ-training7b/trainining7b.json')
+d = json.loads(jsondata)
+#
+maxx = 0
+minn = 10000000
+for q in tqdm(d['questions']):
+    for link in q['documents']:
+        t = int(link.split('/')[-1])
+        maxx = max([maxx, t])
+        minn = min([minn, t])
+
+print(minn)
+print(maxx)
 
 if (not os.path.exists(emited_fpath_elastic)):
     archive = zipfile.ZipFile('/home/dpappas/bioasq_all/BioASQ-training7b.zip', 'r')
