@@ -122,7 +122,7 @@ def get_elk_results(search_text):
 
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 gold_fpath = '/home/dpappas/bioasq_all/BioASQ-training7b/trainining7b.json'
-elk_ip = 'harvester2.ilsp.gr:9200'
+elk_ip = 'localhost:9200'
 
 emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit_1.json'
 emited_fpath_galago = '/home/dpappas/elk_doc_ret_emit_galago.json'
