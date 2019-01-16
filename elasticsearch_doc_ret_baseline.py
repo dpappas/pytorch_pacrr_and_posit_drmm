@@ -38,7 +38,6 @@ def get_bioasq_res(fpath_gold, fpath_emit):
             ret[k] = float(v)
     return ret
 
-
 def create_body(search_text):
     return {
         "size": 100,
@@ -76,7 +75,6 @@ def create_body(search_text):
         }
     }
 
-
 def create_body_1(search_text):
     return {
         "size": 100,
@@ -105,7 +103,6 @@ def create_body_1(search_text):
         }
     }
 
-
 def create_body_2(search_text):
     return {
         "size": 100,
@@ -125,7 +122,6 @@ def create_body_2(search_text):
             }
         }
     }
-
 
 def create_body_3(search_text):
     return {
@@ -156,7 +152,9 @@ def create_body_3(search_text):
 
 def get_elk_results(search_text):
     # bod = create_body(search_text)
-    bod = create_body_1(search_text)
+    # bod = create_body_1(search_text)
+    # bod = create_body_2(search_text)
+    bod = create_body_3(search_text)
     res = es.search(index=index, doc_type=map, body=bod)
     ret = {}
     for item in res['hits']['hits']:
@@ -165,12 +163,11 @@ def get_elk_results(search_text):
         ] = item[u'_score']
     return ret
 
-
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 gold_fpath = '/home/dpappas/bioasq_all/BioASQ-training7b/trainining7b.json'
 elk_ip = 'harvester2.ilsp.gr:9200'
 
-emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit_1.json'
+emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit_3.json'
 emited_fpath_galago = '/home/dpappas/elk_doc_ret_emit_galago.json'
 gold_annot_fpath = '/home/dpappas/elk_doc_ret_gold.json'
 galago_ret_file = '/home/dpappas/bioasq7_bm25_retrieval.train.txt'
