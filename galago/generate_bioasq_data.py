@@ -200,3 +200,19 @@ if __name__ == '__main__':
     # generate_data('../bioasq.train.json', 'bioasq_bm25_retrieval.train.txt', 'train', 2015)
     generate_data('../bioasq.dev.json', 'bioasq_bm25_retrieval.dev.txt', 'dev', 2016)
     # generate_data('../bioasq.test.json', 'bioasq_bm25_retrieval.test.txt', 'test', 2016)
+
+'''
+
+sudo /home/dpappas/mongo/mongodb/bin/mongod --dbpath /home/dpappas/mongo/mongo_database
+
+python
+from pymongo import MongoClient
+from pprint import pprint
+client = MongoClient('localhost', 27017)
+db = client.pubmedBaseline2018
+collection = db.articles
+res = collection.find_one()
+pprint(res)
+
+
+'''
