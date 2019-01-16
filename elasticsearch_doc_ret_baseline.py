@@ -178,7 +178,6 @@ def create_body_4(search_text):
         ]
     }
 
-
 def create_body_5(search_text):
     return {
         "size": 100,
@@ -221,7 +220,9 @@ retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 gold_fpath = '/home/dpappas/bioasq_all/BioASQ-training7b/trainining7b.json'
 elk_ip = 'harvester2.ilsp.gr:9200'
 
-emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit.json'
+emited_fpath_elastic = '/home/dpappas/elk_doc_ret_emit_5.json'
+create_body = create_body_5
+
 emited_fpath_galago = '/home/dpappas/elk_doc_ret_emit_galago.json'
 gold_annot_fpath = '/home/dpappas/elk_doc_ret_gold.json'
 galago_ret_file = '/home/dpappas/bioasq7_bm25_retrieval.train.txt'
