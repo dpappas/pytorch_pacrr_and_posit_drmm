@@ -97,6 +97,8 @@ pickle.dump(transformer, open(filename, 'wb'))
 # ]
 '''
 
+#####################
+
 import os
 import pickle
 from tqdm import tqdm
@@ -130,8 +132,3 @@ for quest in tqdm(all_qs.keys(), ascii=True):
 
 pickle.dump(all_qs_pca, open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'wb'), protocol=2)
 
-python3
-.6
-import pickle
-
-d = pickle.load(open('/home/dpappas/bioasq_all/bert_elmo_embeds/1002140.p', 'rb'))
