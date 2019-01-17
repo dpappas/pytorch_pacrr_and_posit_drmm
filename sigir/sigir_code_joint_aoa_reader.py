@@ -1119,14 +1119,9 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 
-class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self,
-                 embedding_dim=30,
-                 k_for_maxpool=5,
-                 sentence_out_method='MLP',
-                 k_sent_maxpool=1
-                 ):
-        super(Sent_Posit_Drmm_Modeler, self).__init__()
+class Sent_AOA_Modeler(nn.Module):
+    def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
+        super(Sent_AOA_Modeler, self).__init__()
         self.k = k_for_maxpool
         self.k_sent_maxpool = k_sent_maxpool
         self.doc_add_feats = 11
@@ -1156,14 +1151,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         # self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
         self.trigram_conv_activation_1 = torch.nn.Sigmoid()
-        self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        # self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.trigram_conv_activation_2 = torch.nn.Sigmoid()
         if (use_cuda):
             self.trigram_conv_1 = self.trigram_conv_1.cuda()
-            self.trigram_conv_2 = self.trigram_conv_2.cuda()
             self.trigram_conv_activation_1 = self.trigram_conv_activation_1.cuda()
-            self.trigram_conv_activation_2 = self.trigram_conv_activation_2.cuda()
 
     def init_question_weight_module(self):
         self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
@@ -1272,7 +1262,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
 
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
+    def do_for_one_doc_cnn(self, q_context, doc_sents_embeds, sents_af):
         res = []
         for i in range(len(doc_sents_embeds)):
             sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
@@ -1281,15 +1271,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 sent_embeds = sent_embeds.cuda()
                 gaf = gaf.cuda()
             conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
-            #
-            sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh = (sim_insens > (1 - (1e-3))).float()
-            sim_sens = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled = self.pooling_method(sim_insens)
-            sensitive_pooled = self.pooling_method(sim_sens)
-            oh_pooled = self.pooling_method(sim_oh)
+            att_mat = torch.mm(q_context, conv_res.transpose(0, 1))
+            cw_softmax = F.softmax(att_mat, dim=-1)
+            rw_softmax = F.softmax(att_mat, dim=-2)
+            print(att_mat.size())
+            print(cw_softmax.size())
+            print(rw_softmax.size())
+            print(rw_softmax[0])
+            exit()
             #
             sent_emit = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
@@ -1430,16 +1419,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc_baf = doc_baf.cuda()
         #
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_weights = torch.cat([q_context, q_idfs], -1)
-        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights = F.softmax(q_weights, dim=-1)
-        #
-        good_out, gs_emits = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context,
-                                                     q_weights, self.k_sent_maxpool)
-        bad_out, bs_emits = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights,
-                                                    self.k_sent_maxpool)
+        good_out, gs_emits = self.do_for_one_doc_cnn(q_context, doc1_sents_embeds, sents_gaf)
+        bad_out, bs_emits = self.do_for_one_doc_cnn(q_context, doc2_sents_embeds, sents_baf)
+        exit()
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
@@ -1464,7 +1447,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
-
 
 use_cuda = torch.cuda.is_available()
 
@@ -1504,7 +1486,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_2L_only_positive_sents_0p01_run_{}/'.format(run)
+    odir = 'sigir_joint_AOA_2L_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1523,7 +1505,7 @@ for run in range(0, 5):
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
+    model = Sent_AOA_Modeler(embedding_dim=embedding_dim)
     if (use_cuda):
         model = model.cuda()
     params = model.parameters()
@@ -1545,14 +1527,3 @@ for run in range(0, 5):
             'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
                                                                                            best_dev_map, test_map))
 
-'''
-29,041,002 articles
-29,017,626 with title
-18,707,863 with abstract as well 
-
-Is Hirschsprung disease a mendelian or a multifactorial disorder
-
-search: _exists_:AbstractText AND AbstractText:/.+/ AND _exists_:ArticleTitle AND ArticleTitle:/.+/
-
-
-'''
