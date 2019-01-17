@@ -1122,7 +1122,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
 class Sent_AOA_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
         super(Sent_AOA_Modeler, self).__init__()
-        self.k = k_for_maxpool
+        self.k_for_maxpool = k_for_maxpool
         self.doc_add_feats = 11
         self.sent_add_feats = 10
         #
@@ -1130,7 +1130,6 @@ class Sent_AOA_Modeler(nn.Module):
         self.sentence_out_method = sentence_out_method
         # to create q weights
         self.init_context_module()
-        self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
         self.init_sent_output_layer()
         self.init_doc_out_layer()
@@ -1153,11 +1152,6 @@ class Sent_AOA_Modeler(nn.Module):
         if (use_cuda):
             self.trigram_conv_1 = self.trigram_conv_1.cuda()
             self.trigram_conv_activation_1 = self.trigram_conv_activation_1.cuda()
-
-    def init_question_weight_module(self):
-        self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
-        if (use_cuda):
-            self.q_weights_mlp = self.q_weights_mlp.cuda()
 
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1 = nn.Linear(3 * 3, 8, bias=True)
@@ -1203,15 +1197,6 @@ class Sent_AOA_Modeler(nn.Module):
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
 
-    def apply_context_gru(self, the_input, h0):
-        output, hn = self.context_gru(the_input.unsqueeze(1), h0)
-        output = self.context_gru_activation(output)
-        out_forward = output[:, 0, :self.embedding_dim]
-        out_backward = output[:, 0, self.embedding_dim:]
-        output = out_forward + out_backward
-        res = output + the_input
-        return res, hn
-
     def apply_context_convolution(self, the_input, the_filters, activation):
         conv_res = the_filters(the_input.transpose(0, 1).unsqueeze(0))
         if (activation is not None):
@@ -1224,16 +1209,6 @@ class Sent_AOA_Modeler(nn.Module):
         # residual
         conv_res = conv_res + the_input
         return conv_res.squeeze(0)
-
-    def my_cosine_sim(self, A, B):
-        A = A.unsqueeze(0)
-        B = B.unsqueeze(0)
-        A_mag = torch.norm(A, 2, dim=2)
-        B_mag = torch.norm(B, 2, dim=2)
-        num = torch.bmm(A, B.transpose(-1, -2))
-        den = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1, -2))
-        dist_mat = num / den
-        return dist_mat
 
     def pooling_method(self, sim_matrix):
         sorted_res = torch.sort(sim_matrix, -1)[0]  # sort the input minimum to maximum
@@ -1256,11 +1231,6 @@ class Sent_AOA_Modeler(nn.Module):
         sr = lo.sum(-1) / lo.size(-1)
         return sr
 
-    def apply_sent_res_bigru(self, the_input):
-        output, hn = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
-        output = self.sent_res_mlp(output)
-        return output.squeeze(-1).squeeze(-1)
-
     def do_for_one_doc_cnn(self, q_context, doc_sents_embeds, sents_af):
         res = []
         for i in range(len(doc_sents_embeds)):
@@ -1275,52 +1245,19 @@ class Sent_AOA_Modeler(nn.Module):
             rw_softmax = F.softmax(att_mat, dim=-1)
             cw_aver_of_rw_softmax = rw_softmax.sum(dim=-1) / rw_softmax.size(-1)
             out_vector = torch.mm(cw_aver_of_rw_softmax.unsqueeze(0), cw_softmax)
-            sent_emit = out_vector.sum() / out_vector.size(-1)
+            #
+            sorted_res = torch.sort(out_vector, -1)[0]
+            k_max_pooled = sorted_res[:, 4:]
+            average_k_max_pooled = k_max_pooled.sum(-1) / 4.0
+            #
+            sent_emit = average_k_max_pooled.squeeze(-1)
             sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
-        if (self.sentence_out_method == 'MLP'):
-            res = self.sent_out_layer_1(res)
-            res = self.sent_out_activ_1(res)
-            res = self.sent_out_layer_2(res).squeeze(-1)
-        else:
-            res = self.apply_sent_res_bigru(res)
-        # ret = self.get_max(res).unsqueeze(0)
+        res = self.sent_out_layer_1(res)
+        res = self.sent_out_activ_1(res)
+        res = self.sent_out_layer_2(res).squeeze(-1)
         ret = self.get_kmax(res, 5)
-        return ret, res
-
-    def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
-        res = []
-        hn = self.context_h0
-        for i in range(len(doc_sents_embeds)):
-            sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
-            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            if (use_cuda):
-                sent_embeds = sent_embeds.cuda()
-                gaf = gaf.cuda()
-            conv_res, hn = self.apply_context_gru(sent_embeds, hn)
-            #
-            sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh = (sim_insens > (1 - (1e-3))).float()
-            sim_sens = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled = self.pooling_method(sim_insens)
-            sensitive_pooled = self.pooling_method(sim_sens)
-            oh_pooled = self.pooling_method(sim_oh)
-            #
-            sent_emit = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
-            res.append(sent_add_feats)
-        res = torch.stack(res)
-        if (self.sentence_out_method == 'MLP'):
-            res = self.sent_out_layer_1(res)
-            res = self.sent_out_activ_1(res)
-            res = self.sent_out_layer_2(res).squeeze(-1)
-        else:
-            res = self.apply_sent_res_bigru(res)
-        # ret = self.get_max(res).unsqueeze(0)
-        ret = self.get_kmax(res, k2)
-        res = torch.sigmoid(res)
         return ret, res
 
     def get_max(self, res):
@@ -1354,21 +1291,6 @@ class Sent_AOA_Modeler(nn.Module):
         res = torch.max(res)
         return res
 
-    def apply_mesh_gru(self, mesh_embeds):
-        mesh_embeds = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-        if (use_cuda):
-            mesh_embeds = mesh_embeds.cuda()
-        output, hn = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
-        return output[-1, 0, :]
-
-    def get_mesh_rep(self, meshes_embeds, q_context):
-        meshes_embeds = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
-        meshes_embeds = torch.stack(meshes_embeds)
-        sim_matrix = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
-        max_sim = torch.sort(sim_matrix, -1)[0][:, -1]
-        output = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
-        return output
-
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
@@ -1379,14 +1301,8 @@ class Sent_AOA_Modeler(nn.Module):
             doc_gaf = doc_gaf.cuda()
         #
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_weights = torch.cat([q_context, q_idfs], -1)
-        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights = F.softmax(q_weights, dim=-1)
-        #
-        good_out, gs_emits = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context,
-                                                     q_weights, self.k_sent_maxpool)
+        good_out, gs_emits = self.do_for_one_doc_cnn(q_context, doc1_sents_embeds, sents_gaf)
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
