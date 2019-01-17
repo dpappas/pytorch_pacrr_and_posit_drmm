@@ -1123,7 +1123,6 @@ class Sent_AOA_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
         super(Sent_AOA_Modeler, self).__init__()
         self.k = k_for_maxpool
-        self.k_sent_maxpool = k_sent_maxpool
         self.doc_add_feats = 11
         self.sent_add_feats = 10
         #
@@ -1189,7 +1188,7 @@ class Sent_AOA_Modeler(nn.Module):
                 self.sent_res_mlp = self.sent_res_mlp.cuda()
 
     def init_doc_out_layer(self):
-        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True)
+        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_for_maxpool, 8, bias=True)
         self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1)
         self.final_layer_2 = nn.Linear(8, 1, bias=True)
         self.oo_layer = nn.Linear(2, 1, bias=True)
@@ -1272,15 +1271,11 @@ class Sent_AOA_Modeler(nn.Module):
                 gaf = gaf.cuda()
             conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
             att_mat = torch.mm(q_context, conv_res.transpose(0, 1))
-            cw_softmax = F.softmax(att_mat, dim=-1)
-            rw_softmax = F.softmax(att_mat, dim=-2)
-            print(att_mat.size())
-            print(cw_softmax.size())
-            print(rw_softmax.size())
-            print(rw_softmax[0])
-            exit()
-            #
-            sent_emit = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+            cw_softmax = F.softmax(att_mat, dim=-2)
+            rw_softmax = F.softmax(att_mat, dim=-1)
+            cw_aver_of_rw_softmax = rw_softmax.sum(dim=-1) / rw_softmax.size(-1)
+            out_vector = torch.mm(cw_aver_of_rw_softmax.unsqueeze(0), cw_softmax)
+            sent_emit = out_vector.sum() / out_vector.size(-1)
             sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
@@ -1291,7 +1286,7 @@ class Sent_AOA_Modeler(nn.Module):
         else:
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
-        ret = self.get_kmax(res, k2)
+        ret = self.get_kmax(res, 5)
         return ret, res
 
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
@@ -1422,7 +1417,6 @@ class Sent_AOA_Modeler(nn.Module):
         #
         good_out, gs_emits = self.do_for_one_doc_cnn(q_context, doc1_sents_embeds, sents_gaf)
         bad_out, bs_emits = self.do_for_one_doc_cnn(q_context, doc2_sents_embeds, sents_baf)
-        exit()
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
