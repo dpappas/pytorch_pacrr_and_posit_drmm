@@ -63,6 +63,16 @@ pickle.dump(all_qs_pca, open('/home/dpappas/bioasq_all/all_quest_elmo_embeds_aft
 
 exit()
 
+from sklearn.decomposition import IncrementalPCA
+from pprint import pprint
+import numpy as np
+import pickle
+import os
+from tqdm import tqdm
+
+diri = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
+mat, m = None, 0
+
 transformer = IncrementalPCA(n_components=50)
 for f in tqdm(os.listdir(diri), ascii=True):
     m += 1
