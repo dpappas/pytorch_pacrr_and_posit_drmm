@@ -1385,10 +1385,12 @@ k_sent_maxpool = 5
 embedding_dim = 30  # 200
 lr = 0.01
 b_size = 32
-max_epoch = 10
+max_epoch = 25
 
+patience = 4
+waited_for = 0
 hdlr = None
-for run in range(0, 5):
+for run in range(5):
     #
     my_seed = run
     random.seed(my_seed)
@@ -1425,13 +1427,19 @@ for run in range(0, 5):
         train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
+            waited_for = 0
             best_dev_map = epoch_dev_map
             test_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
             save_checkpoint(epoch, model, best_dev_map, optimizer,
                             filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
+        else:
+            waited_for += 1
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
                                                                                              best_dev_map, test_map))
         logger.info(
             'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
                                                                                            best_dev_map, test_map))
-
+        if (waited_for == patience):
+            print('early stopped in epoch {}'.format(epoch + 1))
+            logger.info('early stopped in epoch {}'.format(epoch + 1))
+            break
