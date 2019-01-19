@@ -1116,16 +1116,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def emit_one(self, doc1_embeds, question_embeds, q_idfs):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         doc1_embeds = autograd.Variable(torch.FloatTensor(doc1_embeds), requires_grad=False)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         # HANDLE QUESTION
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_weights = torch.cat([q_context, q_idfs], -1)
-        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights = F.softmax(q_weights, dim=-1)
+        # q_weights = torch.cat([q_context, ], -1)
+        # q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
+        # q_weights = F.softmax(q_weights, dim=-1)
+        q_weights = q_idfs
         # HANDLE DOCS
         good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
         #
@@ -1141,9 +1140,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_weights = torch.cat([q_context, q_idfs], -1)
-        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights = F.softmax(q_weights, dim=-1)
+        # q_weights = torch.cat([q_context, ], -1)
+        # q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
+        # q_weights = F.softmax(q_weights, dim=-1)
+        q_weights = q_idfs
         # HANDLE DOCS
         good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
         bad_out = self.emit_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
