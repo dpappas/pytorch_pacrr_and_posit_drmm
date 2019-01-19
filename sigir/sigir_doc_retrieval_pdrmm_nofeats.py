@@ -909,7 +909,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.embedding_dim = embedding_dim
         # to create q weights
         self.init_context_module()
-        self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
         # doc loss func
         self.margin_loss = nn.MarginRankingLoss(margin=1.0)
@@ -918,8 +917,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1)
         self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1)
-    def init_question_weight_module(self):
-        self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1 = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1 = torch.nn.LeakyReLU(negative_slope=0.1)
@@ -1079,8 +1076,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
         bad_out = self.emit_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
         #
-        final_good_output = self.final_layer(good_out)
-        final_bad_output = self.final_layer(bad_out)
+        final_good_output = good_out
+        final_bad_output = bad_out
         #
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output
