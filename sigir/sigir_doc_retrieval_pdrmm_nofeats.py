@@ -729,7 +729,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     return data_for_revision, ret_data, snips_res, snips_res_known
 
-
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     # pprint(bioasq_snip_res)
@@ -964,9 +963,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo = self.linear_per_q1(temp)
         lo = self.my_relu1(lo)
         lo = self.linear_per_q2(lo)
-        lo = lo.squeeze(-1)
-        print(lo.size())
-        print(weights.size())
+        lo = lo.view(-1)
+        weights = weights.view(-1)
         lo = lo * weights
         sr = lo.sum(-1) / lo.size(-1)
         return sr
