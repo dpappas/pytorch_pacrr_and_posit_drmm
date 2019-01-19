@@ -1130,7 +1130,6 @@ class Sent_AOA_Modeler(nn.Module):
         # to create q weights
         self.init_context_module()
         self.init_mlps_for_pooled_attention()
-        self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss = nn.MarginRankingLoss(margin=1.0)
@@ -1161,27 +1160,8 @@ class Sent_AOA_Modeler(nn.Module):
             self.linear_per_q2 = self.linear_per_q2.cuda()
             self.my_relu1 = self.my_relu1.cuda()
 
-    def init_sent_output_layer(self):
-        if (self.sentence_out_method == 'MLP'):
-            self.sent_out_layer_1 = nn.Linear(self.sent_add_feats + 1, 8, bias=False)
-            self.sent_out_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1)
-            self.sent_out_layer_2 = nn.Linear(8, 1, bias=False)
-            if (use_cuda):
-                self.sent_out_layer_1 = self.sent_out_layer_1.cuda()
-                self.sent_out_activ_1 = self.sent_out_activ_1.cuda()
-                self.sent_out_layer_2 = self.sent_out_layer_2.cuda()
-        else:
-            self.sent_res_h0 = autograd.Variable(torch.randn(2, 1, 5))
-            self.sent_res_bigru = nn.GRU(input_size=self.sent_add_feats + 1, hidden_size=5, bidirectional=True,
-                                         batch_first=False)
-            self.sent_res_mlp = nn.Linear(10, 1, bias=False)
-            if (use_cuda):
-                self.sent_res_h0 = self.sent_res_h0.cuda()
-                self.sent_res_bigru = self.sent_res_bigru.cuda()
-                self.sent_res_mlp = self.sent_res_mlp.cuda()
-
     def init_doc_out_layer(self):
-        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_for_maxpool, 8, bias=True)
+        self.final_layer_1 = nn.Linear(self.k_for_maxpool, 8, bias=True)
         self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1)
         self.final_layer_2 = nn.Linear(8, 1, bias=True)
         self.oo_layer = nn.Linear(2, 1, bias=True)
@@ -1299,7 +1279,8 @@ class Sent_AOA_Modeler(nn.Module):
         #
         good_out, gs_emits = self.do_for_one_doc_cnn(q_context, doc1_sents_embeds, sents_gaf)
         #
-        good_out_pp = torch.cat([good_out, doc_gaf], -1)
+        # good_out_pp = torch.cat([good_out, doc_gaf], -1)
+        good_out_pp = good_out
         #
         final_good_output = self.final_layer_1(good_out_pp)
         final_good_output = self.final_activ_1(final_good_output)
@@ -1355,35 +1336,34 @@ class Sent_AOA_Modeler(nn.Module):
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-
 use_cuda = torch.cuda.is_available()
 
-# # laptop
-# w2v_bin_path = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc = '/home/dpappas/for_ryan/'
-# eval_path = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# odd = '/home/dpappas/'
-# use_cuda = True
-# # get_embeds          = get_embeds_use_unk
-# # get_embeds          = get_embeds_use_only_unk
-
-# atlas , cslab243
-w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc = '/home/dpappas/for_ryan/'
+eval_path = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 odd = '/home/dpappas/'
 use_cuda = True
+# get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
+
+# # atlas , cslab243
+# w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd = '/home/dpappas/'
+# use_cuda = True
 # get_embeds          = get_embeds_use_unk
 # get_embeds          = get_embeds_use_only_unk
 
 k_for_maxpool = 5
 k_sent_maxpool = 5
 embedding_dim = 30  # 200
-lr = 0.001
+lr = 0.01
 b_size = 32
 max_epoch = 25
 
