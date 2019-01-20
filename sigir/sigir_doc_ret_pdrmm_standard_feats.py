@@ -970,16 +970,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
     def init_context_module(self):
         self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1)
         self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1)
 
     def init_question_weight_module(self):
         self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
 
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1 = nn.Linear(3 * 3, 8, bias=True)
-        self.my_relu1 = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2 = nn.Linear(8, 1, bias=True)
 
     def init_doc_out_layer(self):
@@ -1035,7 +1032,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         temp = torch.cat(input_list, -1)
         lo = self.linear_per_q1(temp)
         lo = self.my_relu1(lo)
+        lo = F.relu(lo)
         lo = self.linear_per_q2(lo)
+        lo = F.relu(lo)
         lo = lo.squeeze(-1)
         lo = lo * weights
         sr = lo.sum(-1) / lo.size(-1)
@@ -1051,8 +1050,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for i in range(len(doc_sents_embeds)):
             sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
+            conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, F.relu)
+            conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, F.relu)
             #
             sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
             sim_oh = (sim_insens > (1 - (1e-3))).float()
@@ -1084,16 +1083,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return the_concatenation
 
     def emit_doc_cnn(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
-        conv_res = self.apply_context_convolution(doc_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
-        sim_insens = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
-        sim_oh = (sim_insens > (1 - (1e-3))).float()
-        sim_sens = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-        insensitive_pooled = self.pooling_method(sim_insens)
-        sensitive_pooled = self.pooling_method(sim_sens)
-        oh_pooled = self.pooling_method(sim_oh)
-        doc_emit = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-        doc_emit = doc_emit.unsqueeze(-1)
+        conv_res        = self.apply_context_convolution(doc_embeds, self.trigram_conv_1, F.relu)
+        conv_res        = self.apply_context_convolution(conv_res, self.trigram_conv_2, F.relu)
+        sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
+        sim_oh              = (sim_insens > (1 - (1e-3))).float()
+        sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+        insensitive_pooled  = self.pooling_method(sim_insens)
+        sensitive_pooled    = self.pooling_method(sim_sens)
+        oh_pooled           = self.pooling_method(sim_oh)
+        doc_emit        = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+        doc_emit        = doc_emit.unsqueeze(-1)
         return doc_emit
 
     def emit_doc_bigru(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
@@ -1134,15 +1133,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc1_embeds = autograd.Variable(torch.FloatTensor(doc1_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         # HANDLE QUESTION
-        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
+        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, F.relu)
+        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, F.relu)
         #
-        # q_weights = torch.cat([q_context, q_idfs], -1)
-        # q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        # q_weights = F.softmax(q_weights, dim=-1)
-        q_weights = q_idfs.squeeze()
+        q_weights   = q_idfs.squeeze()
         # HANDLE DOCS
-        good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
+        good_out    = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
@@ -1159,8 +1155,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
         # HANDLE QUESTION
-        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
+        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, F.relu)
+        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, F.relu)
         #
         # q_weights = torch.cat([q_context, q_idfs], -1)
         # q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
