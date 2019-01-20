@@ -1217,3 +1217,7 @@ for run in range(5):
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir + 'best_checkpoint.pth.tar')
         print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        print(model.final_weights)
+        logger.info(model.final_weights)
+
+
