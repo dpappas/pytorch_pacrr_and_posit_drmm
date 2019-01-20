@@ -980,7 +980,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q2 = nn.Linear(8, 1, bias=True)
 
     def init_doc_out_layer(self):
-        self.final_layer = nn.Linear(self.doc_add_feats + 1, 1, bias=True)
+        # self.final_layer = nn.Linear(self.doc_add_feats + 1, 1, bias=True)
+        self.final_weights = torch.nn.Parameter(torch.randn(self.doc_add_feats + 1).uniform_(0.1, 0.3))
 
     def init_sent_output_layer(self):
         if (self.context_method == 'MLP'):
@@ -1031,7 +1032,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def get_output(self, input_list, weights):
         temp = torch.cat(input_list, -1)
         lo = self.linear_per_q1(temp)
-        lo = self.my_relu1(lo)
         lo = F.relu(lo)
         lo = self.linear_per_q2(lo)
         lo = F.relu(lo)
@@ -1044,31 +1044,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output, hn = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights):
-        res = []
-        for i in range(len(doc_sents_embeds)):
-            sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
-            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, F.relu)
-            conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, F.relu)
-            #
-            sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh = (sim_insens > (1 - (1e-3))).float()
-            sim_sens = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled = self.pooling_method(sim_insens)
-            sensitive_pooled = self.pooling_method(sim_sens)
-            oh_pooled = self.pooling_method(sim_oh)
-            #
-            sent_emit = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
-            res.append(sent_add_feats)
-        res = torch.stack(res)
-        res = self.sent_out_layer(res).squeeze(-1)
-        ret = self.get_max(res).unsqueeze(0)
-        res = torch.sigmoid(res)
-        return ret, res
 
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res = torch.sort(res)[0]
@@ -1169,6 +1144,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
         #
+        print(good_out_pp)
+        print(good_out_pp.size())
+        print(self.final_weights.size())
         final_good_output = self.final_layer(good_out_pp)
         final_bad_output = self.final_layer(bad_out_pp)
         #
