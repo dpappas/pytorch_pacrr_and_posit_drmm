@@ -1137,9 +1137,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_weights = torch.cat([q_context, q_idfs], -1)
-        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights = F.softmax(q_weights, dim=-1)
+        # q_weights = torch.cat([q_context, q_idfs], -1)
+        # q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
+        # q_weights = F.softmax(q_weights, dim=-1)
+        q_weights = q_idfs.squeeze()
         # HANDLE DOCS
         good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
         #
@@ -1161,9 +1162,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_weights = torch.cat([q_context, q_idfs], -1)
-        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights = F.softmax(q_weights, dim=-1)
+        # q_weights = torch.cat([q_context, q_idfs], -1)
+        # q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
+        # q_weights = F.softmax(q_weights, dim=-1)
+        q_weights = q_idfs.squeeze()
         # HANDLE DOCS
         good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
         bad_out = self.emit_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
@@ -1245,8 +1247,5 @@ for run in range(5):
             best_dev_map = epoch_dev_map
             test_map = get_one_map('test', test_data, test_docs, False)
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir + 'best_checkpoint.pth.tar')
-        print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map,
-                                                                             test_map))
-        logger.info(
-            'epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map,
-                                                                           test_map))
+        print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
