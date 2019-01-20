@@ -353,7 +353,7 @@ def GetScores(qtext, dtext, bm25, idf, max_idf):
     qwords, qw2 = get_words(qtext, idf, max_idf)
     dwords, dw2 = get_words(dtext, idf, max_idf)
     qd1 = query_doc_overlap(qwords, dwords, idf, max_idf)
-    bm25 = [bm25]
+    bm25 = [bm25+2]
     return qd1[0:3] + bm25
 
 def GetWords(data, doc_text, words):
@@ -1117,8 +1117,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
-        self.final_weights = F.relu(self.final_weights)
-        final_good_output   = sum(self.final_weights * good_out_pp)
+        final_good_output   = sum(F.relu(self.final_weights) * good_out_pp)
         return final_good_output
 
     def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf):
@@ -1134,9 +1133,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, F.relu)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, F.relu)
         #
-        # q_weights = torch.cat([q_context, q_idfs], -1)
-        # q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        # q_weights = F.softmax(q_weights, dim=-1)
         q_weights = q_idfs.squeeze()
         # HANDLE DOCS
         good_out = self.emit_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
@@ -1145,11 +1141,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
         #
-        # print(good_out_pp)
-        self.final_weights = F.relu(self.final_weights)
-        final_good_output   = sum(self.final_weights * good_out_pp)
-        final_bad_output    = sum(self.final_weights * bad_out_pp)
+        print(20*'=')
         print(self.final_weights)
+        print(good_out_pp)
+        print(20*'=')
+        final_good_output   = sum(F.relu(self.final_weights) * good_out_pp)
+        final_bad_output    = sum(F.relu(self.final_weights) * bad_out_pp)
         #
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output
