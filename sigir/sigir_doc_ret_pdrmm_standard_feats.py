@@ -1141,10 +1141,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
         #
-        print(20*'=')
-        print(self.final_weights)
-        print(good_out_pp)
-        print(20*'=')
         final_good_output   = sum(F.relu(self.final_weights) * good_out_pp)
         final_bad_output    = sum(F.relu(self.final_weights) * bad_out_pp)
         #
