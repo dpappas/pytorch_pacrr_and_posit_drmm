@@ -958,7 +958,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k = k_for_maxpool
         #
-        self.doc_add_feats = 11
+        self.doc_add_feats = 5
         self.embedding_dim = embedding_dim
         # to create q weights
         self.init_context_module()
