@@ -1227,16 +1227,12 @@ for run in range(5):
     logger.info('random seed: {}'.format(my_seed))
     #
     (
-        test_data, test_docs, dev_data, dev_docs, train_data,
-        train_docs, idf, max_idf, wv, bioasq6_data
+        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
     ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model = Sent_Posit_Drmm_Modeler(
-        embedding_dim=embedding_dim,
-        k_for_maxpool=k_for_maxpool,
-    )
+    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool,)
     params = model.parameters()
     print_params(model)
     optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
