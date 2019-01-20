@@ -19,6 +19,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from pprint import pprint
 # import  cPickle as pickle
+from torchsummary import summary
 import pickle
 import torch.autograd as autograd
 from tqdm import tqdm
@@ -189,6 +190,8 @@ def print_params(model):
     print(40 * '=')
     logger.info(40 * '=')
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
+    logger.info(40 * '=')
+    summary(model, input_size=None)
     logger.info(40 * '=')
 
 def dummy_test():
