@@ -1117,7 +1117,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
-        final_good_output   = sum(F.relu(self.final_weights) * good_out_pp)
+        self.final_weights = F.relu(self.final_weights)
+        final_good_output   = sum(self.final_weights * good_out_pp)
         return final_good_output
 
     def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf):
@@ -1144,10 +1145,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
         #
-        print(good_out_pp)
+        # print(good_out_pp)
+        self.final_weights = F.relu(self.final_weights)
+        final_good_output   = sum(self.final_weights * good_out_pp)
+        final_bad_output    = sum(self.final_weights * bad_out_pp)
         print(self.final_weights)
-        final_good_output   = sum(F.relu(self.final_weights) * good_out_pp)
-        final_bad_output    = sum(F.relu(self.final_weights) * bad_out_pp)
         #
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output
