@@ -19,7 +19,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 from pprint import pprint
 # import  cPickle as pickle
-from torchsummary import summary
 import pickle
 import torch.autograd as autograd
 from tqdm import tqdm
@@ -176,7 +175,7 @@ def print_params(model):
     trainable = 0
     untrainable = 0
     for parameter in model.parameters():
-        # print(parameter.size())
+        print(parameter.size())
         v = 1
         for s in parameter.size():
             v *= s
@@ -190,8 +189,6 @@ def print_params(model):
     print(40 * '=')
     logger.info(40 * '=')
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
-    logger.info(40 * '=')
-    summary(model, input_size=None)
     logger.info(40 * '=')
 
 def dummy_test():
@@ -973,7 +970,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
     def init_context_module(self):
         self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
 
     def init_question_weight_module(self):
         self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
@@ -1062,7 +1058,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
     def emit_doc_cnn(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
         conv_res        = self.apply_context_convolution(doc_embeds, self.trigram_conv_1, F.relu)
-        conv_res        = self.apply_context_convolution(conv_res, self.trigram_conv_2, F.relu)
         sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
         sim_oh              = (sim_insens > (1 - (1e-3))).float()
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
@@ -1112,7 +1107,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         # HANDLE QUESTION
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, F.relu)
-        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, F.relu)
         #
         q_weights   = q_idfs.squeeze()
         # HANDLE DOCS
@@ -1134,7 +1128,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
         # HANDLE QUESTION
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, F.relu)
-        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, F.relu)
         #
         q_weights = q_idfs.squeeze()
         # HANDLE DOCS
