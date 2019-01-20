@@ -34,7 +34,7 @@ from tqdm import tqdm
 from sklearn.decomposition import IncrementalPCA
 
 diri = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
-filename = '/home/dpappas/bioasq_all/pca_bert_transformer.sav'
+filename = '/home/dpappas/bioasq_all/pca_elmo_transformer.sav'
 transformer = pickle.load(open(filename, 'rb'))
 
 odiri = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
