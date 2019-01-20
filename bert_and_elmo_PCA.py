@@ -7,24 +7,24 @@ import os
 from tqdm import tqdm
 
 diri = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
+filename = '/home/dpappas/bioasq_all/pca_elmo_transformer.sav'
 mat, m = None, 0
 
-transformer = IncrementalPCA(n_components=50)
-for f in tqdm(os.listdir(diri), ascii=True):
-    m += 1
-    fpath = os.path.join(diri, f)
-    d = pickle.load(open(fpath, 'rb'))
-    #
-    if (mat is None):
-        mat = np.concatenate(d['title_sent_elmo_embeds'] + d['abs_sent_elmo_embeds'], axis=0)
-    else:
-        mat = np.concatenate([mat] + d['title_sent_elmo_embeds'] + d['abs_sent_elmo_embeds'], axis=0)
-    if (mat.shape[0] > 1000):
-        transformer.partial_fit(mat)
-        mat = None
-
-filename = '/home/dpappas/bioasq_all/pca_elmo_transformer.sav'
-pickle.dump(transformer, open(filename, 'wb'))
+if(not os.path.exists(filename)):
+    transformer = IncrementalPCA(n_components=50)
+    for f in tqdm(os.listdir(diri), ascii=True):
+        m += 1
+        fpath = os.path.join(diri, f)
+        d = pickle.load(open(fpath, 'rb'))
+        #
+        if (mat is None):
+            mat = np.concatenate(d['title_sent_elmo_embeds'] + d['abs_sent_elmo_embeds'], axis=0)
+        else:
+            mat = np.concatenate([mat] + d['title_sent_elmo_embeds'] + d['abs_sent_elmo_embeds'], axis=0)
+        if (mat.shape[0] > 1000):
+            transformer.partial_fit(mat)
+            mat = None
+    pickle.dump(transformer, open(filename, 'wb'))
 
 #####################
 
