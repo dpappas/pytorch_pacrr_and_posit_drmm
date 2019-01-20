@@ -1170,11 +1170,11 @@ retrieval_jar_path = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bi
 # eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
 # retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 
-k_for_maxpool = 5
-embedding_dim = 30  # 200
-lr = 0.01
-b_size = 32
-max_epoch = 10
+k_for_maxpool   = 5
+embedding_dim   = 30  # 200
+lr              = 0.01
+b_size          = 32
+max_epoch       = 10
 
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
 print(avgdl, mean, deviation)
