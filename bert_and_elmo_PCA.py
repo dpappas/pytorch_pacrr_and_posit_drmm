@@ -61,6 +61,8 @@ for quest in tqdm(all_qs.keys(), ascii=True):
 
 pickle.dump(all_qs_pca, open('/home/dpappas/bioasq_all/all_quest_elmo_embeds_after_pca.p', 'wb'), protocol=2)
 
+exit()
+
 from sklearn.decomposition import IncrementalPCA
 from pprint import pprint
 import numpy as np
