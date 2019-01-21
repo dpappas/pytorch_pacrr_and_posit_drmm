@@ -389,11 +389,7 @@ def get_words(s, idf, max_idf):
 
 
 def tokenize(x):
-    # return bioclean(x)
-    x_tokens = bert_tokenizer.tokenize(x)
-    x_tokens = fix_bert_tokens(x_tokens)
-    return x_tokens
-
+    return bioclean(x)
 
 def idf_val(w, idf, max_idf):
     if w in idf:
@@ -670,7 +666,7 @@ def create_one_hot_and_sim(tokens1, tokens2):
 def prep_data(quest, the_doc, pid, the_bm25, idf, max_idf):
     good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    bert_f = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
+    bert_f = os.path.join(elmo_embeds_dir, '{}.p'.format(pid))
     gemb = pickle.load(open(bert_f, 'rb'))
     # title_bert_average_embeds
     # abs_bert_average_embeds
@@ -1330,7 +1326,7 @@ bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-bert_embeds_dir = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
+elmo_embeds_dir = '/home/dpappas/bioasq_all/elmo_embeds_after_pca/'
 eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd = '/home/dpappas/'
