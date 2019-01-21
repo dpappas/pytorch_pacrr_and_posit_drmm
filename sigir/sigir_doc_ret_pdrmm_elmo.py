@@ -29,7 +29,6 @@ import nltk
 import math
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
-from pytorch_pretrained_bert.tokenization import BertTokenizer
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
                             t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
@@ -724,16 +723,6 @@ def train_data_step1(train_data):
     return ret
 
 
-def fix_bert_tokens(tokens):
-    ret = []
-    for t in tokens:
-        if (t.startswith('##')):
-            ret[-1] = ret[-1] + t[2:]
-        else:
-            ret.append(t)
-    return ret
-
-
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         # print(quest_text)
@@ -1347,7 +1336,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_dec_ret_pdrmm_bert_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_doc_ret_pdrmm_elmo_2L_no_mesh_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
