@@ -37,7 +37,7 @@ diri = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
 filename = '/home/dpappas/bioasq_all/pca_elmo_transformer.sav'
 transformer = pickle.load(open(filename, 'rb'))
 
-odiri = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
+odiri = '/home/dpappas/bioasq_all/elmo_embeds_after_pca/'
 if (not os.path.exists(odiri)):
     os.makedirs(odiri)
 
@@ -60,8 +60,6 @@ for quest in tqdm(all_qs.keys(), ascii=True):
     all_qs_pca[quest] = [transformer.transform(m) for m in all_qs[quest]['title_sent_elmo_embeds']]
 
 pickle.dump(all_qs_pca, open('/home/dpappas/bioasq_all/all_quest_elmo_embeds_after_pca.p', 'wb'), protocol=2)
-
-exit()
 
 from sklearn.decomposition import IncrementalPCA
 from pprint import pprint
