@@ -1,9 +1,5 @@
 
 import sys
-
-reload(sys)
-sys.setdefaultencoding("utf-8")
-
 import math
 import  os
 import  re
@@ -11,7 +7,7 @@ import  numpy as np
 import  torch
 import  torch.nn as nn
 import  torch.nn.functional as F
-import  cPickle as pickle
+import  pickle
 import  torch.autograd as autograd
 from    gensim.models.keyedvectors import KeyedVectors
 from    nltk.tokenize import sent_tokenize
