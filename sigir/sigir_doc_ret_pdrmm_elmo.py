@@ -665,20 +665,17 @@ def create_one_hot_and_sim(tokens1, tokens2):
 def prep_data(quest, the_doc, pid, the_bm25, idf, max_idf):
     good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    bert_f = os.path.join(elmo_embeds_dir, '{}.p'.format(pid))
-    gemb = pickle.load(open(bert_f, 'rb'))
-    # title_bert_average_embeds
-    # abs_bert_average_embeds
-    # mesh_bert_average_embeds
+    elmo_f = os.path.join(elmo_embeds_dir, '{}.p'.format(pid))
+    gemb = pickle.load(open(elmo_f, 'rb'))
     ####
     quest_toks = tokenize(quest)
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    all_bert_embeds = gemb['title_bert_average_embeds'] + gemb['abs_bert_average_embeds']
-    doc_embeds = np.concatenate(all_bert_embeds, axis=0)
+    all_elmo_embeds = gemb['title_elmo_average_embeds'] + gemb['abs_elmo_average_embeds']
+    doc_embeds = np.concatenate(all_elmo_embeds, axis=0)
     doc_toks = []
-    for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
+    for good_text, elmo_embeds in zip(good_sents, all_elmo_embeds):
         sent_toks = tokenize(good_text)
         doc_toks.extend(sent_toks)
     #
