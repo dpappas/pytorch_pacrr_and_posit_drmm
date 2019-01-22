@@ -651,9 +651,15 @@ def create_one_hot_and_sim(tokens1, tokens2):
 
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if (use_sent_tokenizer):
-        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+        title_sents = sent_tokenize(the_doc['title'])
+        title_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in title_sents]
+        title_sents = [s for s in title_sents if (len(s.strip()) > 0)]
+        abs_sents = sent_tokenize(the_doc['abstractText'])
+        abs_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in abs_sents]
+        abs_sents = [s for s in abs_sents if (len(s.strip()) > 0)]
+        good_sents = title_sents + abs_sents
     else:
-        good_sents = [the_doc['title'] + the_doc['abstractText']]
+        good_sents = [the_doc['title'] + ' ' + the_doc['abstractText']]
     ####
     elmo_f = os.path.join(elmo_embeds_dir, '{}.p'.format(pid))
     gemb = pickle.load(open(elmo_f, 'rb'))
@@ -1513,7 +1519,7 @@ b_size = 32
 max_epoch = 10
 
 hdlr = None
-for run in range(0, 5):
+for run in range(3, 5):
     #
     my_seed = run
     random.seed(my_seed)
