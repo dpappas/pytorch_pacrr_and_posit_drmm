@@ -29,7 +29,6 @@ import nltk
 import math
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
-from pytorch_pretrained_bert.tokenization import BertTokenizer
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
                             t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
@@ -656,11 +655,8 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     else:
         good_sents = [the_doc['title'] + the_doc['abstractText']]
     ####
-    bert_f = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
-    gemb = pickle.load(open(bert_f, 'rb'))
-    # title_bert_average_embeds
-    # abs_bert_average_embeds
-    # mesh_bert_average_embeds
+    elmo_f = os.path.join(elmo_embeds_dir, '{}.p'.format(pid))
+    gemb = pickle.load(open(elmo_f, 'rb'))
     ####
     quest_toks = tokenize(quest)
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -683,11 +679,10 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     ]
     good_doc_af.extend(features)
     #
-    all_bert_embeds = gemb['title_bert_average_embeds'] + gemb['abs_bert_average_embeds']
-    # print(pid, len(all_bert_embeds), len(good_sents))
+    all_elmo_embeds = gemb['title_elmo_average_embeds'] + gemb['abs_elmo_average_embeds']
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
-    for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
+    for good_text, elmo_embeds in zip(good_sents, all_elmo_embeds):
         sent_toks = tokenize(good_text)
         oh1, oh2, oh_sim = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
@@ -699,16 +694,9 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
         tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
         tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
         quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
-        features = [
-            len(quest) / 300.,
-            len(good_text) / 300.,
-            len(tomi_no_stop) / 100.,
-            BM25score,
-            sum(tomi_no_stop_idfs) / 100.,
-            sum(tomi_idfs) / sum(quest_idfs),
-        ]
+        features = [len(quest)/300., len(good_text)/300., len(tomi_no_stop)/100., BM25score, sum(tomi_no_stop_idfs)/100., sum(tomi_idfs)/sum(quest_idfs)]
         #
-        good_sents_embeds.append(bert_embeds)
+        good_sents_embeds.append(elmo_embeds)
         good_sents_escores.append(good_escores + features)
         held_out_sents.append(good_text)
         good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
@@ -1508,7 +1496,7 @@ use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
-all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
+all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_elmo_embeds_after_pca.p', 'rb'))
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
 elmo_embeds_dir = '/home/dpappas/bioasq_all/elmo_embeds_after_pca/'
@@ -1531,7 +1519,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_bert_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_joint_simple_elmo_2L_no_mesh_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
