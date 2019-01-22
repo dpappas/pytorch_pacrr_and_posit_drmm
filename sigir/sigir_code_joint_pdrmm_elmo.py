@@ -693,7 +693,9 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, elmo_embeds in zip(good_sents, all_elmo_embeds):
-        sent_toks = tokenize(good_text)
+        held_out    = good_text
+        good_text   = ' '.join(bioclean(good_text.replace('\ufeff', ' '))).strip()
+        sent_toks   = tokenize(good_text)
         oh1, oh2, oh_sim = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
         good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
@@ -708,8 +710,8 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
         #
         good_sents_embeds.append(elmo_embeds)
         good_sents_escores.append(good_escores + features)
-        held_out_sents.append(good_text)
-        good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+        held_out_sents.append(held_out)
+        good_sent_tags.append(snip_is_relevant(' '.join(bioclean(held_out)), good_snips))
     ####
     return {
         'sents_embeds': good_sents_embeds,
