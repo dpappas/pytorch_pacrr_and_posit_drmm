@@ -994,7 +994,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
     def init_doc_out_layer(self):
-        self.final_layer = nn.Linear(self.doc_add_feats+1, 1, bias=True)
+        self.final_layer = nn.Linear(self.doc_add_feats+2*self.embedding_dim+1, 1, bias=True)
     def init_sent_output_layer(self):
         if(self.context_method == 'MLP'):
             self.sent_out_layer = nn.Linear(4, 1, bias=False)
@@ -1083,15 +1083,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_concatenation       = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
         return the_concatenation
     def emit_doc_cnn(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
-        conv_res            = self.apply_context_convolution(doc_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        conv_res            = self.apply_context_convolution(conv_res,   self.trigram_conv_2, self.trigram_conv_activation_2)
-        max_conv_res = conv_res.max(0)[0]
-        max_q_conv_res_trigram = q_conv_res_trigram.max(0)[0]
-        print(conv_res.size())
-        print(max_conv_res.size())
-        print(q_conv_res_trigram.size())
-        print(max_q_conv_res_trigram.size())
-        exit()
+        conv_res                = self.apply_context_convolution(doc_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
+        conv_res                = self.apply_context_convolution(conv_res,   self.trigram_conv_2, self.trigram_conv_activation_2)
+        max_conv_res            = conv_res.max(0)[0]
+        max_q_conv_res_trigram  = q_conv_res_trigram.max(0)[0]
         sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
         sim_oh              = (sim_insens > (1 - (1e-3))).float()
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
@@ -1100,6 +1095,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         oh_pooled           = self.pooling_method(sim_oh)
         doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
         doc_emit            = doc_emit.unsqueeze(-1)
+        doc_emit            = torch.cat([doc_emit, max_conv_res, max_q_conv_res_trigram])
         return doc_emit
     def emit_doc_bigru(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
         conv_res, hn        = self.apply_context_gru(doc_embeds, self.context_h0)
