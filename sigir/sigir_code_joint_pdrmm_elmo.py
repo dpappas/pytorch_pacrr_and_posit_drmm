@@ -980,12 +980,12 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     emitions['documents'] = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
-    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-    extracted_snippets_known_rel_num = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
+    extracted_snippets                      = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+    extracted_snippets_known_rel_num        = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
     if (use_sent_tokenizer):
-        extracted_snippets_v1 = select_snippets_v1(extracted_snippets)
-        extracted_snippets_v2 = select_snippets_v2(extracted_snippets)
-        extracted_snippets_v3 = select_snippets_v3(extracted_snippets, the_doc_scores)
+        extracted_snippets_v1               = select_snippets_v1(extracted_snippets)
+        extracted_snippets_v2               = select_snippets_v2(extracted_snippets)
+        extracted_snippets_v3               = select_snippets_v3(extracted_snippets, the_doc_scores)
         extracted_snippets_known_rel_num_v1 = select_snippets_v1(extracted_snippets_known_rel_num)
         extracted_snippets_known_rel_num_v2 = select_snippets_v2(extracted_snippets_known_rel_num)
         extracted_snippets_known_rel_num_v3 = select_snippets_v3(extracted_snippets_known_rel_num, the_doc_scores)
