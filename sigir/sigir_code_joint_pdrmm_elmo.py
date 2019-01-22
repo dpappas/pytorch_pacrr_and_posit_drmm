@@ -652,12 +652,16 @@ def create_one_hot_and_sim(tokens1, tokens2):
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if (use_sent_tokenizer):
         title_sents = sent_tokenize(the_doc['title'])
-        title_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in title_sents]
-        title_sents = [s for s in title_sents if (len(s.strip()) > 0)]
-        abs_sents = sent_tokenize(the_doc['abstractText'])
-        abs_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in abs_sents]
-        abs_sents = [s for s in abs_sents if (len(s.strip()) > 0)]
-        good_sents = title_sents + abs_sents
+        # title_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in title_sents]
+        # title_sents = [s for s in title_sents if (len(s.strip()) > 0)]
+        abs_sents   = sent_tokenize(the_doc['abstractText'])
+        # abs_sents   = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in abs_sents]
+        # abs_sents   = [s for s in abs_sents if (len(s.strip()) > 0)]
+        good_sents  = title_sents + abs_sents
+        good_sents  = [
+            s for s in good_sents
+            if(len(' '.join(bioclean(s.replace('\ufeff', ' '))).strip())>0)
+        ]
     else:
         good_sents = [the_doc['title'] + ' ' + the_doc['abstractText']]
     ####
