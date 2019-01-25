@@ -18,6 +18,8 @@ for tt in zip(d1['questions'], d2['questions']):
 '''
 
 ask manolis how many epochs he trained elmo for
+ask manolis to train for more epochs
+use embeddings that ryan will give me
 
 
 '''
