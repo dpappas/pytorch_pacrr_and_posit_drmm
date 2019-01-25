@@ -1631,8 +1631,8 @@ print(avgdl, mean, deviation)
 # for model_type in ['BCNN_PDRMM', 'BCNN', 'PDRMM']:
 # for model_type in ['BCNN_PDRMM']:
 
-model_type = 'BCNN'
-# model_type          = 'ABCNN3'
+# model_type          = 'BCNN'
+model_type          = 'ABCNN3'
 # model_type          = 'PDRMM'
 # model_type          = 'BCNN_PDRMM'
 # model_type          = 'ABCNN3_PDRMM'
@@ -1645,7 +1645,7 @@ model, optimizer    = setup_optim_model()
 # print(model.out_conv.weight[0].sum())
 
 hdlr                = None
-for run in range(5):
+for run in range(4,5):
     setup_random(run)
     #
     odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
