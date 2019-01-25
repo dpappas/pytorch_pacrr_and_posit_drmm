@@ -15,7 +15,12 @@ for tt in zip(d1['questions'], d2['questions']):
     for doc in list(set(tt[1]['documents'])-set(tt[0]['documents'])):
         print(bod, doc, 'FP')
 
+'''
 
+ask manolis how many epochs he trained elmo for
+
+
+'''
 
 
 

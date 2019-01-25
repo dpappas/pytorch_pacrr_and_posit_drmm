@@ -289,11 +289,11 @@ def tokenize(x):
 def get_elmo_embeds(sentences):
     if (len(sentences) == 0):
         return []
-    sentences = [tokenize(s) for s in sentences if (len(s) > 0)]
-    character_ids = batch_to_ids(sentences)
-    embeddings = elmo(character_ids)
-    the_embeds = embeddings['elmo_representations'][0]
-    ret = [
+    sentences       = [tokenize(s) for s in sentences if (len(s) > 0)]
+    character_ids   = batch_to_ids(sentences)
+    embeddings      = elmo(character_ids)
+    the_embeds      = embeddings['elmo_representations'][0]
+    ret             = [
         the_embeds[i, :len(sentences[i]), :].data.numpy()
         for i in range(len(sentences))
     ]
