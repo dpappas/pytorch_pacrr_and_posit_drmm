@@ -93,6 +93,40 @@ class DataProcessor(object):
                 lines.append(line)
             return lines
 
+class BioProcessor(object):
+    """Processor for the BioASQ data set"""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        logger.info("LOOKING AT {}".format(os.path.join(data_dir, "train.tsv")))
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")),
+            "train"
+        )
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    def get_labels(self):
+        """See base class."""
+        return ["0", "1"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+            text_a = line[3]
+            text_b = line[4]
+            label = line[0]
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+
 class MrpcProcessor(DataProcessor):
     """Processor for the MRPC data set (GLUE version)."""
 
@@ -315,8 +349,18 @@ def main():
     parser.add_argument('--fp16', action='store_true', help="Whether to use 16-bit float precision instead of 32-bit")
     parser.add_argument('--loss_scale', type=float, default=0,help="Loss scaling to improve fp16 numeric stability. Only used when fp16 set to True.\n0 (default value): dynamic loss scaling.\nPositive power of 2: static loss scaling value.\n")
     args = parser.parse_args()
-    processors = {"cola": ColaProcessor, "mnli": MnliProcessor, "mrpc": MrpcProcessor,}
-    num_labels_task = {"cola": 2, "mnli": 3, "mrpc": 2,}
+    processors = {
+        "cola": ColaProcessor,
+        "mnli": MnliProcessor,
+        "mrpc": MrpcProcessor,
+        "bioasq": BioProcessor,
+    }
+    num_labels_task = {
+        "cola"  : 2,
+        "mnli"  : 3,
+        "mrpc"  : 2,
+        "bioasq": 2,
+    }
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
         n_gpu = torch.cuda.device_count()
@@ -535,7 +579,7 @@ python3.6 \
 /home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/final_models/bert_pretrained_classifier.py \
 --bert_model=bert-base-uncased \
 --task_name=bioasq \
---output_dir=/media/dpappas/dpappas_data/models_out/bert_pretrained_classifier/ \
+--output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
 --data_dir=./ \
 --do_train
 '''
