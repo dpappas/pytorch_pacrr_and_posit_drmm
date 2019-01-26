@@ -37,9 +37,13 @@ from    pytorch_pretrained_bert.tokenization import BertTokenizer
 from    pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from    pytorch_pretrained_bert.optimization import BertAdam
 from    pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
+import re
+from nltk.tokenize import sent_tokenize
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class InputExample(object):
     """A single training/test example for simple sequence classification."""
@@ -95,37 +99,56 @@ class DataProcessor(object):
                 lines.append(line)
             return lines
 
+def get_snips(quest_id, gid, bioasq6_data):
+    good_snips = []
+    if('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            if(sn['document'].endswith(gid)):
+                good_snips.extend(sent_tokenize(sn['text']))
+    return good_snips
+
+def train_data_step2(instances, docs):
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(instances):
+        # good_snips  = get_snips(quest_id, gid, bioasq6_data)
+        # good_snips  = [' '.join(bioclean(sn)) for sn in good_snips]
+        good_sents  = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
+        bad_sents   = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
+        #
+        yield {
+            'good_text' : ' '.join(good_sents),
+            'bad_text'  : ' '.join(bad_sents),
+            'quest_text': quest_text
+        }
+
 class BioProcessor(object):
     """Processor for the BioASQ data set"""
+
+    def __init__(self):
+        self.dev_examples = self._create_examples(dev_data, dev_docs)
 
     def get_train_examples(self, data_dir):
         """See base class."""
         logger.info("LOOKING AT {}".format(os.path.join(data_dir, "train.tsv")))
-        train_instances = train_data_step1(train_data)
-        random.shuffle(train_instances)
-        #
+        return self._create_examples(train_data, train_docs)
 
     def get_dev_examples(self, data_dir):
         """See base class."""
-        return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+        return self.dev_examples
+
+    def _create_examples(self, data, docs):
+        instances = train_data_step1(data)
+        random.shuffle(instances)
+        examples = []
+        i = 0
+        for datum in train_data_step2(instances, docs):
+            guid = "%s-%s" % ('train', i)
+            examples.append(InputExample(guid=guid, text_a=datum['quest_text'], text_b=datum['good_text'], label='1'))
+            examples.append(InputExample(guid=guid, text_a=datum['quest_text'], text_b=datum['bad_text'],  label='0'))
+        return examples
 
     def get_labels(self):
         """See base class."""
         return ["0", "1"]
-
-    def _create_examples(self, lines, set_type):
-        """Creates examples for the training and dev sets."""
-        examples = []
-        for (i, line) in enumerate(lines):
-            if i == 0:
-                continue
-            guid    = "%s-%s" % (set_type, i)
-            text_a  = line[3]
-            text_b  = line[4]
-            label   = line[0]
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
-        return examples
 
 class MrpcProcessor(DataProcessor):
     """Processor for the MRPC data set (GLUE version)."""
@@ -424,18 +447,8 @@ def main():
     parser.add_argument('--fp16', action='store_true', help="Whether to use 16-bit float precision instead of 32-bit")
     parser.add_argument('--loss_scale', type=float, default=0,help="Loss scaling to improve fp16 numeric stability. Only used when fp16 set to True.\n0 (default value): dynamic loss scaling.\nPositive power of 2: static loss scaling value.\n")
     args = parser.parse_args()
-    processors = {
-        "cola": ColaProcessor,
-        "mnli": MnliProcessor,
-        "mrpc": MrpcProcessor,
-        "bioasq": BioProcessor,
-    }
-    num_labels_task = {
-        "cola"  : 2,
-        "mnli"  : 3,
-        "mrpc"  : 2,
-        "bioasq": 2,
-    }
+    processors = {"cola": ColaProcessor, "mnli": MnliProcessor, "mrpc": MrpcProcessor, "bioasq": BioProcessor}
+    num_labels_task = {"cola"  : 2, "mnli"  : 3, "mrpc"  : 2, "bioasq": 2}
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
         n_gpu = torch.cuda.device_count()
