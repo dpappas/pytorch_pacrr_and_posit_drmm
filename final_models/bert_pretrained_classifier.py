@@ -95,22 +95,6 @@ class DataProcessor(object):
                 lines.append(line)
             return lines
 
-def train_data_step1(train_data):
-    ret = []
-    for dato in tqdm(train_data['queries']):
-        quest       = dato['query_text']
-        quest_id    = dato['query_id']
-        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-        if(len(bad_pmids)>0):
-            for gid in good_pmids:
-                bid = random.choice(bad_pmids)
-                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
-    # print('')
-    return ret
-
 class BioProcessor(object):
     """Processor for the BioASQ data set"""
 
@@ -235,6 +219,22 @@ class ColaProcessor(DataProcessor):
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
+
+def train_data_step1(train_data):
+    ret = []
+    for dato in tqdm(train_data['queries']):
+        quest       = dato['query_text']
+        quest_id    = dato['query_id']
+        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        if(len(bad_pmids)>0):
+            for gid in good_pmids:
+                bid = random.choice(bad_pmids)
+                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
+    # print('')
+    return ret
 
 def RemoveTrainLargeYears(data, doc_text):
   for i in range(len(data['queries'])):
