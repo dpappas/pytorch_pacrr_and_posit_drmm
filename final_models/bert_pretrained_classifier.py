@@ -19,6 +19,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import  json
+import  pickle
 import  csv
 import  os
 import  logging
@@ -93,16 +95,31 @@ class DataProcessor(object):
                 lines.append(line)
             return lines
 
+def train_data_step1(train_data):
+    ret = []
+    for dato in tqdm(train_data['queries']):
+        quest       = dato['query_text']
+        quest_id    = dato['query_id']
+        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        if(len(bad_pmids)>0):
+            for gid in good_pmids:
+                bid = random.choice(bad_pmids)
+                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
+    # print('')
+    return ret
+
 class BioProcessor(object):
     """Processor for the BioASQ data set"""
 
     def get_train_examples(self, data_dir):
         """See base class."""
         logger.info("LOOKING AT {}".format(os.path.join(data_dir, "train.tsv")))
-        return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "train.tsv")),
-            "train"
-        )
+        train_instances = train_data_step1(train_data)
+        random.shuffle(train_instances)
+        #
 
     def get_dev_examples(self, data_dir):
         """See base class."""
@@ -218,6 +235,76 @@ class ColaProcessor(DataProcessor):
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
+
+def RemoveTrainLargeYears(data, doc_text):
+  for i in range(len(data['queries'])):
+    hyear = 1900
+    for j in range(len(data['queries'][i]['retrieved_documents'])):
+      if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
+        doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+        year = doc_text[doc_id]['publicationDate'].split('-')[0]
+        if year[:1] == '1' or year[:1] == '2':
+          if int(year) > hyear:
+            hyear = int(year)
+    j = 0
+    while True:
+      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year = doc_text[doc_id]['publicationDate'].split('-')[0]
+      if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
+
+def RemoveBadYears(data, doc_text, train):
+  for i in range(len(data['queries'])):
+    j = 0
+    while True:
+      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
+      ##########################
+      # Skip 2017/2018 docs always. Skip 2016 docs for training.
+      # Need to change for final model - 2017 should be a train year only.
+      # Use only for testing.
+      if year == '2017' or year == '2018' or (train and year == '2016'):
+      #if year == '2018' or (train and year == '2017'):
+        del data['queries'][i]['retrieved_documents'][j]
+      else:
+        j += 1
+      ##########################
+      if j == len(data['queries'][i]['retrieved_documents']):
+        break
+  return data
+
+def load_all_data(dataloc):
+    print('loading pickle data')
+    #
+    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
+        bioasq6_data = json.load(f)
+        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
+    #
+    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
+        test_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
+        test_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+        dev_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+        dev_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+        train_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+        train_docs = pickle.load(f)
+    print('loading words')
+    #
+    train_data  = RemoveBadYears(train_data, train_docs, True)
+    train_data  = RemoveTrainLargeYears(train_data, train_docs)
+    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
+    test_data   = RemoveBadYears(test_data, test_docs, False)
+    #
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
 
 def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer):
     """Loads a data file into a list of `InputBatch`s."""
@@ -572,6 +659,10 @@ def main():
                 writer.write("%s = %s\n" % (key, str(result[key])))
 
 if __name__ == "__main__":
+    dataloc = '/home/dpappas/for_ryan/'
+    (
+        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
+    ) = load_all_data(dataloc=dataloc)
     main()
 
 '''
