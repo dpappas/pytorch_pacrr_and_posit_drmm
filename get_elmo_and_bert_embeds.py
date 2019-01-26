@@ -391,11 +391,11 @@ def work3(args):
 # weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
 
 # atlas , cslab243
-init_checkpoint_pt = "/home/dpappas/bioasq_all/uncased_L-12_H-768_A-12/"
-dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-options_file = "/home/dpappas/bioasq_all/elmo_weights/options.json"
-weight_file = "/home/dpappas/bioasq_all/elmo_weights/weights.hdf5"
-odir = "/home/dpappas/bioasq_all/bert_elmo_embeds/"
+init_checkpoint_pt  = "/home/dpappas/bioasq_all/uncased_L-12_H-768_A-12/"
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+options_file        = "/home/dpappas/bioasq_all/elmo_weights/options.json"
+weight_file         = "/home/dpappas/bioasq_all/elmo_weights/weights.hdf5"
+odir                = "/home/dpappas/bioasq_all/bert_elmo_embeds/"
 
 if (not os.path.exists(odir)):
     os.makedirs(odir)
