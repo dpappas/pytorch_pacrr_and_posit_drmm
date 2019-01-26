@@ -602,18 +602,17 @@ def main():
     ####
     if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
         eval_examples = processor.get_dev_examples(args.data_dir)
-        eval_features = convert_examples_to_features(
-            eval_examples, label_list, args.max_seq_length, tokenizer)
+        eval_features = convert_examples_to_features(eval_examples, label_list, args.max_seq_length, tokenizer)
         logger.info("***** Running evaluation *****")
         logger.info("  Num examples = %d", len(eval_examples))
         logger.info("  Batch size = %d", args.eval_batch_size)
-        all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+        all_input_ids   = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+        all_input_mask  = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
         all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
-        all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
-        eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+        all_label_ids   = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
+        eval_data       = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
         # Run prediction for full data
-        eval_sampler = SequentialSampler(eval_data)
+        eval_sampler    = SequentialSampler(eval_data)
         eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
         ####
         model.eval()
@@ -621,29 +620,29 @@ def main():
         nb_eval_steps, nb_eval_examples = 0, 0
         ####
         for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluating"):
-            input_ids = input_ids.to(device)
-            input_mask = input_mask.to(device)
+            input_ids   = input_ids.to(device)
+            input_mask  = input_mask.to(device)
             segment_ids = segment_ids.to(device)
-            label_ids = label_ids.to(device)
+            label_ids   = label_ids.to(device)
             ####
             with torch.no_grad():
-                tmp_eval_loss = model(input_ids, segment_ids, input_mask, label_ids)
-                logits = model(input_ids, segment_ids, input_mask)
+                tmp_eval_loss   = model(input_ids, segment_ids, input_mask, label_ids)
+                logits          = model(input_ids, segment_ids, input_mask)
             ####
-            logits = logits.detach().cpu().numpy()
-            label_ids = label_ids.to('cpu').numpy()
-            tmp_eval_accuracy = accuracy(logits, label_ids)
+            logits              = logits.detach().cpu().numpy()
+            label_ids           = label_ids.to('cpu').numpy()
+            tmp_eval_accuracy   = accuracy(logits, label_ids)
             ####
-            eval_loss += tmp_eval_loss.mean().item()
-            eval_accuracy += tmp_eval_accuracy
+            eval_loss           += tmp_eval_loss.mean().item()
+            eval_accuracy       += tmp_eval_accuracy
             ####
-            nb_eval_examples += input_ids.size(0)
-            nb_eval_steps += 1
+            nb_eval_examples    += input_ids.size(0)
+            nb_eval_steps       += 1
         ####
-        eval_loss = eval_loss / nb_eval_steps
-        eval_accuracy = eval_accuracy / nb_eval_examples
-        loss = tr_loss / nb_tr_steps if args.do_train else None
-        result = {
+        eval_loss       = eval_loss / nb_eval_steps
+        eval_accuracy   = eval_accuracy / nb_eval_examples
+        loss            = tr_loss / nb_tr_steps if args.do_train else None
+        result          = {
             'eval_loss': eval_loss,
             'eval_accuracy': eval_accuracy,
             'global_step': global_step,
@@ -658,7 +657,8 @@ def main():
                 writer.write("%s = %s\n" % (key, str(result[key])))
 
 if __name__ == "__main__":
-    dataloc = '/home/dpappas/for_ryan/'
+    # dataloc = '/home/dpappas/for_ryan/'
+    dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
     (
         test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
     ) = load_all_data(dataloc=dataloc)
@@ -667,6 +667,13 @@ if __name__ == "__main__":
 '''
 python3.6 \
 /home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/final_models/bert_pretrained_classifier.py \
+--bert_model=bert-base-uncased \
+--task_name=bioasq \
+--output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
+--data_dir=./ \
+--do_train
+
+python3.6 t.py \
 --bert_model=bert-base-uncased \
 --task_name=bioasq \
 --output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
