@@ -672,7 +672,8 @@ def prep_data(quest, the_doc, pid, the_bm25, idf, max_idf):
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    all_elmo_embeds = gemb['title_elmo_average_embeds'] + gemb['abs_elmo_average_embeds']
+    all_elmo_embeds = gemb['title_sent_elmo_embeds'] + gemb['abs_sent_elmo_embeds']
+    # all_elmo_embeds = gemb['title_elmo_average_embeds'] + gemb['abs_elmo_average_embeds']
     doc_embeds = np.concatenate(all_elmo_embeds, axis=0)
     doc_toks = []
     for good_text, elmo_embeds in zip(good_sents, all_elmo_embeds):
@@ -1309,21 +1310,22 @@ use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
-all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_elmo_embeds_after_pca.p', 'rb'))
-idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-elmo_embeds_dir = '/home/dpappas/bioasq_all/elmo_embeds_after_pca/'
-eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd = '/home/dpappas/'
-use_cuda = False
+all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_elmo_embeds_after_pca.p', 'rb'))
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# elmo_embeds_dir     = '/home/dpappas/bioasq_all/elmo_embeds_after_pca/'
+elmo_embeds_dir     = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
+use_cuda            = False
 
-k_for_maxpool = 5
-k_sent_maxpool = 5
-embedding_dim = 50  # 30  # 200
-lr = 0.01
-b_size = 32
-max_epoch = 10
+k_for_maxpool       = 5
+k_sent_maxpool      = 5
+embedding_dim       = 50  # 30  # 200
+lr                  = 0.01
+b_size              = 32
+max_epoch           = 10
 
 hdlr = None
 for run in range(0, 5):
@@ -1332,7 +1334,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_doc_ret_pdrmm_elmo_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_doc_ret_pdrmm_fullelmo_2L_no_mesh_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1372,3 +1374,6 @@ for run in range(0, 5):
         logger.info(
             'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
                                                                                            best_dev_map, test_map))
+
+
+
