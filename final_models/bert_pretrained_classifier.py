@@ -99,27 +99,6 @@ class DataProcessor(object):
                 lines.append(line)
             return lines
 
-def get_snips(quest_id, gid, bioasq6_data):
-    good_snips = []
-    if('snippets' in bioasq6_data[quest_id]):
-        for sn in bioasq6_data[quest_id]['snippets']:
-            if(sn['document'].endswith(gid)):
-                good_snips.extend(sent_tokenize(sn['text']))
-    return good_snips
-
-def train_data_step2(instances, docs):
-    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(instances):
-        # good_snips  = get_snips(quest_id, gid, bioasq6_data)
-        # good_snips  = [' '.join(bioclean(sn)) for sn in good_snips]
-        good_sents  = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
-        bad_sents   = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
-        #
-        yield {
-            'good_text' : ' '.join(good_sents),
-            'bad_text'  : ' '.join(bad_sents),
-            'quest_text': quest_text
-        }
-
 class BioProcessor(object):
     """Processor for the BioASQ data set"""
 
@@ -241,6 +220,27 @@ class ColaProcessor(DataProcessor):
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
+
+def get_snips(quest_id, gid, bioasq6_data):
+    good_snips = []
+    if('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            if(sn['document'].endswith(gid)):
+                good_snips.extend(sent_tokenize(sn['text']))
+    return good_snips
+
+def train_data_step2(instances, docs):
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(instances):
+        # good_snips  = get_snips(quest_id, gid, bioasq6_data)
+        # good_snips  = [' '.join(bioclean(sn)) for sn in good_snips]
+        good_sents  = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
+        bad_sents   = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
+        #
+        yield {
+            'good_text' : ' '.join(good_sents),
+            'bad_text'  : ' '.join(bad_sents),
+            'quest_text': quest_text
+        }
 
 def train_data_step1(train_data):
     ret = []
