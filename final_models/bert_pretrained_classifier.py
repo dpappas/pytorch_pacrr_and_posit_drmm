@@ -680,7 +680,8 @@ if __name__ == "__main__":
     cache_dir   = '/home/dpappas/bert_cache/'
     if(not os.path.exists(cache_dir)):
         os.makedirs(cache_dir)
-    setting     = 'title'
+    # setting     = 'title'
+    setting     = 'all'
     (
         test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
     ) = load_all_data(dataloc=dataloc)
@@ -702,11 +703,11 @@ python3.6 t.py \
 --data_dir=./ \
 --do_train
 
-    python3.6 /home/dpappas/bert.py \
-    --bert_model=bert-base-uncased \
-    --task_name=bioasq \
-    --output_dir=/home/dpappas/title_bert_pretrained_classifier_out/ \
-    --data_dir=./ \
-    --do_train
+python3.6 /home/dpappas/bert.py \
+--bert_model=bert-base-uncased \
+--task_name=bioasq \
+--output_dir=/home/dpappas/title_bert_pretrained_classifier_out/ \
+--data_dir=./ \
+--do_train
 
 '''
