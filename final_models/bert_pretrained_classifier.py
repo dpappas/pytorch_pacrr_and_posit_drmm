@@ -102,15 +102,16 @@ class DataProcessor(object):
 class BioProcessor(object):
     """Processor for the BioASQ data set"""
 
-    def __init__(self):
-        self.dev_examples = self._create_examples(dev_data, dev_docs)
+    def __init__(self, setting):
+        self.dev_examples   = self._create_examples(dev_data, dev_docs)
+        self.setting        = setting
 
     def get_train_examples(self, data_dir):
         """See base class."""
         logger.info("LOOKING AT {}".format(os.path.join(data_dir, "train.tsv")))
         return self._create_examples(train_data, train_docs)
 
-    def get_dev_examples(self, data_dir):
+    def get_dev_examples(self):
         """See base class."""
         return self.dev_examples
 
