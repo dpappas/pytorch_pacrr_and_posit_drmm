@@ -120,7 +120,7 @@ class BioProcessor(object):
         random.shuffle(instances)
         examples = []
         i = 0
-        for datum in train_data_step2(instances, docs):
+        for datum in train_data_step2(instances, docs, self.setting):
             guid = "%s-%s" % ('train', i)
             examples.append(InputExample(guid=guid, text_a=datum['quest_text'], text_b=datum['good_text'], label='1'))
             examples.append(InputExample(guid=guid, text_a=datum['quest_text'], text_b=datum['bad_text'],  label='0'))
@@ -230,12 +230,16 @@ def get_snips(quest_id, gid, bioasq6_data):
                 good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
 
-def train_data_step2(instances, docs):
+def train_data_step2(instances, docs, setting):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(instances):
         # good_snips  = get_snips(quest_id, gid, bioasq6_data)
         # good_snips  = [' '.join(bioclean(sn)) for sn in good_snips]
-        good_sents  = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
-        bad_sents   = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
+        if(setting.lower() == 'title'):
+            good_sents  = sent_tokenize(docs[gid]['title'])
+            bad_sents   = sent_tokenize(docs[gid]['title'])
+        else:
+            good_sents = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
+            bad_sents = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
         #
         yield {
             'good_text' : ' '.join(good_sents),
