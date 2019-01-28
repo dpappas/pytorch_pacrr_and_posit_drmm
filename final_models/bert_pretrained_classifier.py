@@ -102,9 +102,8 @@ class DataProcessor(object):
 class BioProcessor(object):
     """Processor for the BioASQ data set"""
 
-    def __init__(self, setting):
+    def __init__(self):
         self.dev_examples   = self._create_examples(dev_data, dev_docs)
-        self.setting        = setting
 
     def get_train_examples(self, data_dir):
         """See base class."""
@@ -120,7 +119,7 @@ class BioProcessor(object):
         random.shuffle(instances)
         examples = []
         i = 0
-        for datum in train_data_step2(instances, docs, self.setting):
+        for datum in train_data_step2(instances, docs, setting):
             guid = "%s-%s" % ('train', i)
             examples.append(InputExample(guid=guid, text_a=datum['quest_text'], text_b=datum['good_text'], label='1'))
             examples.append(InputExample(guid=guid, text_a=datum['quest_text'], text_b=datum['bad_text'],  label='0'))
@@ -664,6 +663,7 @@ def main():
 if __name__ == "__main__":
     # dataloc = '/home/dpappas/for_ryan/'
     dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
+    setting = 'title'
     (
         test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
     ) = load_all_data(dataloc=dataloc)
@@ -684,4 +684,12 @@ python3.6 t.py \
 --output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
 --data_dir=./ \
 --do_train
+
+    python3.6 /home/dpappas/bert.py \
+    --bert_model=bert-base-uncased \
+    --task_name=bioasq \
+    --output_dir=/home/dpappas/title_bert_pretrained_classifier_out/ \
+    --data_dir=./ \
+    --do_train
+
 '''
