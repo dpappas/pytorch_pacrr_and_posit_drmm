@@ -492,7 +492,11 @@ def main():
     num_labels  = num_labels_task[task_name]
     label_list  = processor.get_labels()
     ####
-    tokenizer   = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case)
+    tokenizer   = BertTokenizer.from_pretrained(
+        args.bert_model,
+        do_lower_case=args.do_lower_case,
+        cache_dir=cache_dir
+    )
     ####
     train_examples = None
     num_train_steps = None
@@ -501,7 +505,12 @@ def main():
         num_train_steps = int(len(train_examples) / args.train_batch_size / args.gradient_accumulation_steps * args.num_train_epochs)
         ####
     # Prepare model
-    model = BertForSequenceClassification.from_pretrained(args.bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(args.local_rank), num_labels=num_labels)
+    model = BertForSequenceClassification.from_pretrained(
+        args.bert_model,
+        cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(args.local_rank),
+        num_labels=num_labels
+        # , cache_dir =cache_dir
+    )
     ####
     if args.fp16:
         model.half()
@@ -601,7 +610,12 @@ def main():
     ####
     # Load a trained model that you have fine-tuned
     model_state_dict = torch.load(output_model_file)
-    model = BertForSequenceClassification.from_pretrained(args.bert_model, state_dict=model_state_dict, num_labels=num_labels)
+    model = BertForSequenceClassification.from_pretrained(
+        args.bert_model,
+        state_dict=model_state_dict,
+        num_labels=num_labels,
+        cache_dir =cache_dir
+    )
     model.to(device)
     ####
     if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
@@ -662,8 +676,11 @@ def main():
 
 if __name__ == "__main__":
     # dataloc = '/home/dpappas/for_ryan/'
-    dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-    setting = 'title'
+    dataloc     = '/home/dpappas/bioasq_all/bioasq_data/'
+    cache_dir   = '/home/dpappas/bert_cache/'
+    if(not os.path.exists(cache_dir)):
+        os.makedirs(cache_dir)
+    setting     = 'title'
     (
         test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
     ) = load_all_data(dataloc=dataloc)
