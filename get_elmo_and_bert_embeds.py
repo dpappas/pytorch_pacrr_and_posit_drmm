@@ -400,7 +400,11 @@ odir                = "/home/dpappas/bioasq_all/bert_elmo_embeds/"
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 
-tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
+cache_dir   = '/home/dpappas/bert_cache/'
+if(not os.path.exists(cache_dir)):
+    os.makedirs(cache_dir)
+
+tokenizer   = BertTokenizer.from_pretrained('bert-large-uncased', cache_dir=cache_dir)
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
 
@@ -412,7 +416,7 @@ if (not os.path.exists(os.path.join(init_checkpoint_pt, 'pytorch_model.bin'))):
                                      )
 
 elmo = Elmo(options_file, weight_file, 1, dropout=0)
-model = BertModel.from_pretrained(init_checkpoint_pt)
+model = BertModel.from_pretrained(init_checkpoint_pt, cache_dir=cache_dir)
 # model               = model.cuda()
 model.eval()
 
@@ -479,21 +483,21 @@ del (train_docs)
 print('\nDone train\n')
 print('total: {}'.format(total))
 
-all_qs = {}
-for t in tqdm(test_data['queries'] + train_data['queries'] + dev_data['queries'], ascii=True):
-    text = t['query_text']
-    quest_sents = sent_tokenize(text)
-    quest_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in quest_sents]
-    quest_sents = [s for s in quest_sents if (len(s.strip()) > 0)]
-    #
-    all_qs[text] = {}
-    all_qs[text]['title_sent_elmo_embeds'] = get_elmo_embeds(quest_sents)
-    all_ret_embeds, bert_split_tokens, bert_original_embeds = bert_embed_sents(quest_sents)
-    all_qs[text]['title_bert_average_embeds'] = all_ret_embeds
-    all_qs[text]['title_bert_original_embeds'] = bert_original_embeds
-    all_qs[text]['title_bert_original_tokens'] = bert_split_tokens
-
-pickle.dump(all_qs, open('/home/dpappas/bioasq_all/all_quest_embeds.p', 'wb'))
+if(not os.path.exists('/home/dpappas/bioasq_all/all_quest_embeds.p')):
+    all_qs = {}
+    for t in tqdm(test_data['queries'] + train_data['queries'] + dev_data['queries'], ascii=True):
+        text = t['query_text']
+        quest_sents = sent_tokenize(text)
+        quest_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in quest_sents]
+        quest_sents = [s for s in quest_sents if (len(s.strip()) > 0)]
+        #
+        all_qs[text] = {}
+        all_qs[text]['title_sent_elmo_embeds'] = get_elmo_embeds(quest_sents)
+        all_ret_embeds, bert_split_tokens, bert_original_embeds = bert_embed_sents(quest_sents)
+        all_qs[text]['title_bert_average_embeds'] = all_ret_embeds
+        all_qs[text]['title_bert_original_embeds'] = bert_original_embeds
+        all_qs[text]['title_bert_original_tokens'] = bert_split_tokens
+    pickle.dump(all_qs, open('/home/dpappas/bioasq_all/all_quest_embeds.p', 'wb'))
 
 print('Good to go!!!')
 
