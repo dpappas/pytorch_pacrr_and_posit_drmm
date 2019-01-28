@@ -699,7 +699,7 @@ python3.6 \
 python3.6 t.py \
 --bert_model=bert-base-uncased \
 --task_name=bioasq \
---output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
+--output_dir=/home/dpappas/bert_pretrained_classifier_out_2/ \
 --data_dir=./ \
 --do_train
 
