@@ -22,9 +22,7 @@ import codecs
 import collections
 import json
 import re
-
-import modeling
-import tokenization
+import modeling, tokenization
 import tensorflow as tf
 
 flags = tf.flags
@@ -347,8 +345,10 @@ def main(_):
 
   bert_config = modeling.BertConfig.from_json_file(FLAGS.bert_config_file)
 
-  tokenizer = tokenization.FullTokenizer(
-      vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
+  tokenizer = tokenization.BertTokenizer(
+      vocab_file=FLAGS.vocab_file,
+      do_lower_case=FLAGS.do_lower_case
+  )
 
   is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
   run_config = tf.contrib.tpu.RunConfig(
@@ -417,4 +417,18 @@ if __name__ == "__main__":
   flags.mark_flag_as_required("init_checkpoint")
   flags.mark_flag_as_required("output_file")
   tf.app.run()
+
+'''
+python3.6 \
+/home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/extract_features_bert_pretrained.py \
+--input_file=./input.txt \
+--output_file=./output.jsonl \
+--vocab_file=/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt \
+--bert_config_file=/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json \
+--init_checkpoint=/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt \
+--layers=-1,-2,-3,-4 \
+--max_seq_length=300 \
+--batch_size=8
+
+'''
 
