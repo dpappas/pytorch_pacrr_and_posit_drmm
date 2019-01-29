@@ -360,7 +360,10 @@ def main(_):
   examples = read_examples(FLAGS.input_file)
 
   features = convert_examples_to_features(
-      examples=examples, seq_length=FLAGS.max_seq_length, tokenizer=tokenizer)
+      examples      = examples,
+      seq_length    = FLAGS.max_seq_length,
+      tokenizer     = tokenizer
+  )
 
   unique_id_to_feature = {}
   for feature in features:
@@ -384,8 +387,7 @@ def main(_):
   input_fn = input_fn_builder(
       features=features, seq_length=FLAGS.max_seq_length)
 
-  with codecs.getwriter("utf-8")(tf.gfile.Open(FLAGS.output_file,
-                                               "w")) as writer:
+  with codecs.getwriter("utf-8")(tf.gfile.Open(FLAGS.output_file, "w")) as writer:
     for result in estimator.predict(input_fn, yield_single_examples=True):
       unique_id = int(result["unique_id"])
       feature = unique_id_to_feature[unique_id]
@@ -409,10 +411,9 @@ def main(_):
       output_json["features"] = all_features
       writer.write(json.dumps(output_json) + "\n")
 
-
 if __name__ == "__main__":
-  flags.mark_flag_as_required("input_file")
-  flags.mark_flag_as_required("vocab_file")
+  # flags.mark_flag_as_required("input_file")
+  # flags.mark_flag_as_required("vocab_file")
   flags.mark_flag_as_required("bert_config_file")
   flags.mark_flag_as_required("init_checkpoint")
   flags.mark_flag_as_required("output_file")
