@@ -22,7 +22,7 @@ import codecs
 import collections
 import json
 import re
-import modeling, tokenization
+from bert import modeling, tokenization
 import tensorflow as tf
 
 flags = tf.flags
@@ -345,7 +345,7 @@ def main(_):
 
   bert_config = modeling.BertConfig.from_json_file(FLAGS.bert_config_file)
 
-  tokenizer = tokenization.BertTokenizer(
+  tokenizer = tokenization.FullTokenizer(
       vocab_file=FLAGS.vocab_file,
       do_lower_case=FLAGS.do_lower_case
   )
