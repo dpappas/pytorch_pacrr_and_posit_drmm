@@ -972,8 +972,7 @@ def fix_bert_tokens(tokens):
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         # print(quest_text)
-        qemb = all_quest_embeds[quest_text]
-        qemb = np.concatenate(qemb, axis=0)
+        qemb, quest_tokens = get_bert_for_text(quest_text, 1)
         # pprint(qemb.keys())
         if (use_sent_tokenizer):
             good_snips = get_snips(quest_id, gid, bioasq6_data)
