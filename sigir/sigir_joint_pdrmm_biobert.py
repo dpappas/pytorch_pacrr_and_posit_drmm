@@ -1305,9 +1305,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     return data_for_revision, ret_data, snips_res, snips_res_known
 
-
-def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known,
-                      data_for_revision):
+def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
@@ -1777,6 +1775,22 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
+
+# atlas , cslab243
+bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
+all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
+idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
+bert_embeds_dir = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
+eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd = '/home/dpappas/'
+use_cuda = True
+bert_tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
+
+k_for_maxpool, k_sent_maxpool   = 5, 5
+lr, b_size, max_epoch           = 0.01, 32, 10
+embedding_dim                   = 768
 
 
 
