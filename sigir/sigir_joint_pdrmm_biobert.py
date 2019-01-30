@@ -261,10 +261,10 @@ bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/be
 init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
 vocab_file          = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
 do_lower_case       = True
-max_seq_length      = 100
+max_seq_length      = 300
 layer_indexes       = [i for i in range(12)]
 num_shards          = 8
-predict_batch_size  = 8
+predict_batch_size  = 1
 #
 bert_config         = modeling.BertConfig.from_json_file(bert_config_file)
 tokenizer           = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
