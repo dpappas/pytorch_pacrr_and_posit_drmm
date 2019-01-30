@@ -8,6 +8,7 @@ from __future__ import print_function
 from pprint import pprint
 from bert import modeling, tokenization
 import tensorflow as tf
+tf.logging.set_verbosity(tf.logging.ERROR)
 import pickle, os, re, nltk, math, json, time, random, logging, subprocess, collections, codecs
 import torch
 import torch.nn.functional         as F
@@ -237,7 +238,7 @@ def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu, use_o
     #   tf.logging.info("  name = %s, shape = %s%s", var.name, var.shape, init_string)
 
     all_layers = model.get_all_encoder_layers()
-    print('total_layers: {}'.format(len(all_layers)))
+    # print('total_layers: {}'.format(len(all_layers)))
     predictions = {
         "unique_id": unique_ids,
     }
@@ -621,7 +622,7 @@ def get_words(s, idf, max_idf):
     return sl, sl2
 
 def tokenize(x):
-    return tokenizer.tokenize(x)
+    return tokenizer.tokenize(x)[1:-1]
 
 def idf_val(w, idf, max_idf):
     if w in idf:
@@ -1664,8 +1665,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         return final_good_output, gs_emits
 
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
-                question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
@@ -1734,9 +1734,32 @@ stopwords   = nltk.corpus.stopwords.words("english")
 
 ##################
 
-bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
-init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-vocab_file          = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+# # laptop
+# biobert_all_words_path  = '/home/dpappas/for_ryan/biobert_all_words.pkl'
+# idf_pickle_path         = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc                 = '/home/dpappas/for_ryan/'
+# eval_path               = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path      = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# odd                     = '/home/dpappas/'
+# use_cuda                = torch.cuda.is_available()
+# bert_config_file        = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+# init_checkpoint         = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+# vocab_file              = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+
+# atlas , cslab243
+biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
+idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                     = '/home/dpappas/'
+use_cuda                = torch.cuda.is_available()
+bert_config_file        = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+init_checkpoint         = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+vocab_file              = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+
+##################
+
 do_lower_case       = True
 max_seq_length      = 300
 layer_indexes       = [i for i in range(12)]
@@ -1749,28 +1772,9 @@ model_fn            = model_fn_builder(bert_config=bert_config, init_checkpoint=
 is_per_host         = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
 run_config          = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=num_shards, per_host_input_for_training=is_per_host))
 estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=predict_batch_size)
-#
 # aver_embeds, tokens = get_bert_for_text('this is an example !', 1)
 
 ##################
-
-# laptop
-biobert_all_words_path  = '/home/dpappas/for_ryan/biobert_all_words.pkl'
-idf_pickle_path         = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc                 = '/home/dpappas/for_ryan/'
-eval_path               = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path      = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-odd                     = '/home/dpappas/'
-use_cuda                = torch.cuda.is_available()
-
-# # atlas , cslab243
-# biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
-# idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                     = '/home/dpappas/'
-# use_cuda                = torch.cuda.is_available()
 
 k_for_maxpool, k_sent_maxpool   = 5, 5
 lr, b_size, max_epoch           = 0.01, 32, 10
