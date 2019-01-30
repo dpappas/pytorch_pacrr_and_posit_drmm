@@ -426,27 +426,42 @@ def do_for_text(some_text, unique_id):
     tokenizer       = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
     ####
     ####
-    line        = tokenization.convert_to_unicode(some_text)
-    line        = line.strip()
-    m           = re.match(r"^(.*) \|\|\| (.*)$", line)
-    if m is None:
-        text_a  = line
-        text_b  = None
-    else:
-        text_a  = m.group(1)
-        text_b  = m.group(2)
-    example = InputExample(unique_id=unique_id, text_a=text_a, text_b=text_b)
+    line            = tokenization.convert_to_unicode(some_text).strip()
+    example         = InputExample(unique_id=unique_id, text_a=line, text_b=None)
     ####
-    features = convert_examples_to_features(examples=[example], seq_length=FLAGS.max_seq_length, tokenizer=tokenizer)
+    features = convert_examples_to_features(examples=[example], seq_length=max_seq_length, tokenizer=tokenizer)
+    unique_id_to_feature = {}
+    for feature in features:
+        unique_id_to_feature[feature.unique_id] = feature
     ####
-    input_fn    = input_fn_builder(features=features, seq_length=FLAGS.max_seq_length)
-    result      = estimator.predict(input_fn, yield_single_examples=True)
-    pprint(result.__next__())
-    return example
+    input_fn    = input_fn_builder(features=features, seq_length=max_seq_length)
+    ####
+    for result in estimator.predict(input_fn, yield_single_examples=True):
+      unique_id = int(result["unique_id"])
+      feature = unique_id_to_feature[unique_id]
+      output_json = collections.OrderedDict()
+      output_json["linex_index"] = unique_id
+      all_features = []
+      for (i, token) in enumerate(feature.tokens):
+        all_layers = []
+        for (j, layer_index) in enumerate(layer_indexes):
+          layer_output = result["layer_output_%d" % j]
+          layers = collections.OrderedDict()
+          layers["index"] = layer_index
+          layers["values"] = [
+              round(float(x), 6) for x in layer_output[i:(i + 1)].flat
+          ]
+          all_layers.append(layers)
+        features = collections.OrderedDict()
+        features["token"] = token
+        features["layers"] = all_layers
+        all_features.append(features)
+      output_json["features"] = all_features
 
 bert_config     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
 init_checkpoint = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
 max_seq_length  = 300
+layer_indexes   = [-1, -2]
 #
 model_fn = model_fn_builder(bert_config=bert_config, init_checkpoint=init_checkpoint, layer_indexes=[-1, -2], use_tpu=False, use_one_hot_embeddings=False)
 is_per_host     = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
