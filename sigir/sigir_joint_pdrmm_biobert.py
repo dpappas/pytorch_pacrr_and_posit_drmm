@@ -1176,22 +1176,15 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     quest_text = dato['query_text']
     #
-    qemb, quest_tokens = get_bert_for_text(quest_text, 1)
+    quest_tokens    = tokenize(quest_text)
+    qemb            = get_bert_for_text(quest_text)[0]
     q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips = get_gold_snips(dato['query_id'], bioasq6_data)
     #
     doc_res, extracted_snippets = {}, []
     extracted_snippets_known_rel_num = []
     for retr in retr_docs:
-        datum = prep_data(
-            quest_text,
-            docs[retr['doc_id']],
-            retr['norm_bm25_score'],
-            gold_snips,
-            idf,
-            max_idf,
-            use_sent_tokenizer
-        )
+        datum = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf, quest_tokens)
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds=datum['sents_embeds'],
             doc1_oh_sim=datum['oh_sims'],
