@@ -191,7 +191,7 @@ def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu,
                       init_string)
 
     all_layers = model.get_all_encoder_layers()
-
+    print('total_layers: {}'.format(len(all_layers)))
     predictions = {
         "unique_id": unique_ids,
     }
@@ -429,6 +429,8 @@ def do_for_text(some_text, unique_id):
     result      = estimator.predict(input_fn, yield_single_examples=True).__next__()
     pprint(result)
     pprint(result.keys())
+    print(result['layer_output_0'].shape)
+    print(result['layer_output_1'].shape)
     ####
     # for (i, token) in enumerate(features[0].tokens):
     #     all_layers = []
