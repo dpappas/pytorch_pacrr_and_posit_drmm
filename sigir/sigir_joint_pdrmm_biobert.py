@@ -243,7 +243,7 @@ def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu, use_o
     }
 
     for (i, layer_index) in enumerate(layer_indexes):
-      predictions["layer_output_%d" % i] = all_layers[layer_index]
+        predictions["layer_output_%d" % i] = all_layers[layer_index]
 
     output_spec = tf.contrib.tpu.TPUEstimatorSpec(
         mode=mode, predictions=predictions, scaffold_fn=scaffold_fn)
