@@ -428,7 +428,7 @@ def do_for_text(some_text, unique_id):
     ####
     result      = estimator.predict(input_fn, yield_single_examples=True).__next__()
     ####
-    for (i, token) in enumerate(feature.tokens):
+    for (i, token) in enumerate(features[0].tokens):
         all_layers = []
         for (j, layer_index) in enumerate(layer_indexes):
             layer_output        = result["layer_output_%d" % j]
@@ -436,7 +436,8 @@ def do_for_text(some_text, unique_id):
             layers["index"]     = layer_index
             layers["values"]    = [round(float(x), 6) for x in layer_output[i:(i + 1)].flat]
             all_layers.append(layers)
-
+    pprint(all_layers)
+    return all_layers
 
 
 
