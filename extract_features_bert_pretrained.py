@@ -427,17 +427,20 @@ def do_for_text(some_text, unique_id):
     input_fn    = input_fn_builder(features=features, seq_length=max_seq_length)
     ####
     result      = estimator.predict(input_fn, yield_single_examples=True).__next__()
+    pprint(result)
+    pprint(result.keys())
     ####
-    for (i, token) in enumerate(features[0].tokens):
-        all_layers = []
-        for (j, layer_index) in enumerate(layer_indexes):
-            layer_output        = result["layer_output_%d" % j]
-            layers              = collections.OrderedDict()
-            layers["index"]     = layer_index
-            layers["values"]    = [round(float(x), 6) for x in layer_output[i:(i + 1)].flat]
-            all_layers.append(layers)
-    pprint(all_layers)
-    return all_layers
+    # for (i, token) in enumerate(features[0].tokens):
+    #     all_layers = []
+    #     for (j, layer_index) in enumerate(layer_indexes):
+    #         layer_output        = result["layer_output_%d" % j]
+    #         layers              = collections.OrderedDict()
+    #         layers["index"]     = layer_index
+    #         layers["values"]    = [round(float(x), 6) for x in layer_output[i:(i + 1)].flat]
+    #         all_layers.append(layers)
+    # pprint(all_layers)
+    # return all_layers
+    return result
 
 
 
