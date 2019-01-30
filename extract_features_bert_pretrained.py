@@ -25,6 +25,7 @@ import json
 import re
 from bert import modeling, tokenization
 import tensorflow as tf
+from nltk.tokenize import sent_tokenize
 
 flags = tf.flags
 
@@ -337,9 +338,15 @@ def read_examples(input_file):
       unique_id += 1
   return examples
 
-def get_bert_for_text(some_text, unique_id):
-    line        = tokenization.convert_to_unicode(some_text).strip()
-    example     = InputExample(unique_id=unique_id, text_a=line, text_b=None)
+def get_bert_for_text(some_text):
+    examples = []
+    unique_id = 0
+    for sent in sent_tokenize(some_text):
+        line        = tokenization.convert_to_unicode(sent.strip()).strip()
+        example     = InputExample(unique_id=unique_id, text_a=line, text_b=None)
+        unique_id   += 1
+        examples.append(example)
+    ####
     features    = convert_examples_to_features(examples=[example], seq_length=max_seq_length, tokenizer=tokenizer)
     input_fn    = input_fn_builder(features=features, seq_length=max_seq_length)
     ####
@@ -354,7 +361,7 @@ bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/be
 init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
 vocab_file          = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
 do_lower_case       = True
-max_seq_length      = 300
+max_seq_length      = 500
 layer_indexes       = [i for i in range(12)]
 num_shards          = 8
 predict_batch_size  = 8
@@ -367,7 +374,7 @@ run_config          = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contri
 estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=predict_batch_size)
 #
 text = '''A sulfated glycoprotein was isolated from the culture media of Drosophila Kc cells and named papilin. Affinity purified antibodies against this protein localized it primarily to the basement membranes of embryos. The antibodies cross-reacted with another material which was not sulfated and appeared to be the core protein of papilin, which is proteoglycan-like. After reduction, papilin electrophoresed in sodium dodecyl sulfate-polyacrylamide gel electrophoresis as a broad band of about 900,000 apparent molecular weight and the core protein as a narrow band of approximately 400,000. The core protein was formed by some cell lines and by other cells on incubation with 1 mM 4-methylumbelliferyl xyloside, which inhibited formation of the proteoglycan-like form. The buoyant density of papilin in CsCl/4 M guanidine hydrochloride is 1.4 g/ml, that of the core protein is much less. Papilin forms oligomers linked by disulfide bridges, as shown by sodium dodecyl sulfate-agarose gel electrophoresis and electron microscopy. The protomer is a 225 +/- 15-nm thread which is disulfide-linked into a loop with fine, protruding thread ends. Oligomers form clover-leaf-like structures. The protein contains 22% combined serine and threonine residues and 25% combined aspartic and glutamic residues. 10 g of polypeptide has attached 6.4 g of glucosamine, 3.1 g of galactosamine, 6.1 g of uronic acid, and 2.7 g of neutral sugars. There are about 80 O-linked carbohydrate chains/core protein molecule. Sulfate is attached to these chains. The O-linkage is through an unidentified neutral sugar. Papilin is largely resistant to common glycosidases and several proteases. The degree of sulfation varies with the sulfate concentration of the incubation medium. This proteoglycan-like glycoprotein differs substantially from corresponding proteoglycans found in vertebrate basement membranes, in contrast to Drosophila basement membrane laminin and collagen IV which have been conserved evolutionarily.'''.strip()
-embs, tokens = get_bert_for_text(text, 1)
+embs, tokens        = get_bert_for_text(text, 1)
 print(len(tokens))
 print(embs.shape)
 
