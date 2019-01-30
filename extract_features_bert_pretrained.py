@@ -357,7 +357,7 @@ def get_bert_for_text(some_text):
     for result in estimator.predict(input_fn, yield_single_examples=True):
         unique_id   = int(result["unique_id"])
         feature     = unique_id_to_feature[unique_id]
-        tokens      = features[0].tokens
+        tokens      = feature.tokens
         aver_embeds = sum([result[k] for k in result.keys() if ('layer_' in k)])
         #
         print(tokens)
@@ -369,7 +369,7 @@ bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/be
 init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
 vocab_file          = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
 do_lower_case       = True
-max_seq_length      = 500
+max_seq_length      = 80
 layer_indexes       = [i for i in range(12)]
 num_shards          = 8
 predict_batch_size  = 8
