@@ -21,7 +21,6 @@ from nltk.tokenize import sent_tokenize
 from difflib import SequenceMatcher
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
-from pytorch_pretrained_bert.tokenization import BertTokenizer
 
 class InputFeatures(object):
   """A single set of features of data."""
@@ -262,11 +261,10 @@ def get_bert_for_text(some_text, unique_id):
     ####
     result      = estimator.predict(input_fn, yield_single_examples=True).__next__()
     aver_embeds = sum([result[k] for k in result.keys() if('layer_' in k)])
-    pprint(dir(features[0]))
-    exit()
-    print(aver_embeds.shape)
+    tokens      = features[0].tokens
+    aver_embeds = aver_embeds[:len(tokens), :]
     ####
-    return aver_embeds
+    return aver_embeds, tokens
 
 ##################
 
@@ -625,10 +623,7 @@ def get_words(s, idf, max_idf):
     return sl, sl2
 
 def tokenize(x):
-    # return bioclean(x)
-    x_tokens = bert_tokenizer.tokenize(x)
-    x_tokens = fix_bert_tokens(x_tokens)
-    return x_tokens
+    return tokenizer.tokenize(x)
 
 def idf_val(w, idf, max_idf):
     if w in idf:
@@ -801,8 +796,6 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             esnip_res["offsetInBeginSection"] = ind_from
             esnip_res["offsetInEndSection"] = ind_to
         except:
-            # print(the_text)
-            # pprint(docs[pid])
             ind_from = docs[pid]['abstractText'].index(the_text)
             ind_to = ind_from + len(the_text)
             esnip_res["beginSection"] = "abstract"
@@ -1181,11 +1174,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     quest_text = dato['query_text']
     #
-    qemb = all_quest_embeds[quest_text]
-    qemb = np.concatenate(qemb, axis=0)
-    quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-    #
-    quest_tokens = tokenize(quest_text)
+    qemb, quest_tokens = get_bert_for_text(quest_text, 1)
     q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips = get_gold_snips(dato['query_id'], bioasq6_data)
     #
@@ -1373,14 +1362,14 @@ def load_all_data(dataloc, idf_pickle_path):
     dev_data = RemoveBadYears(dev_data, dev_docs, False)
     test_data = RemoveBadYears(test_data, test_docs, False)
     #
-    if (os.path.exists(bert_all_words_path)):
-        words = pickle.load(open(bert_all_words_path, 'rb'))
+    if (os.path.exists(biobert_all_words_path)):
+        words = pickle.load(open(biobert_all_words_path, 'rb'))
     else:
         words = {}
         GetWords(train_data, train_docs, words)
         GetWords(dev_data, dev_docs, words)
         GetWords(test_data, test_docs, words)
-        pickle.dump(words, open(bert_all_words_path, 'wb'), protocol=2)
+        pickle.dump(words, open(biobert_all_words_path, 'wb'), protocol=2)
     #
     print('loading idfs')
     idf, max_idf = load_idfs(idf_pickle_path, words)
@@ -1771,25 +1760,19 @@ is_per_host         = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
 run_config          = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=num_shards, per_host_input_for_training=is_per_host))
 estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=predict_batch_size)
 #
-get_bert_for_text('this is an example !', 1)
-
-exit()
+# aver_embeds, tokens = get_bert_for_text('this is an example !', 1)
 
 ##################
 
 use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
-bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
-all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
-idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-bert_embeds_dir = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
-eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd = '/home/dpappas/'
-use_cuda = True
-bert_tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
+biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
+idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                     = '/home/dpappas/'
 
 k_for_maxpool, k_sent_maxpool   = 5, 5
 lr, b_size, max_epoch           = 0.01, 32, 10
