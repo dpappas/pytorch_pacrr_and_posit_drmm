@@ -421,48 +421,40 @@ def main(_):
 
 
 def do_for_text(some_text, unique_id):
-    line            = tokenization.convert_to_unicode(some_text).strip()
-    example         = InputExample(unique_id=unique_id, text_a=line, text_b=None)
-    ####
-    features = convert_examples_to_features(examples=[example], seq_length=max_seq_length, tokenizer=tokenizer)
-    unique_id_to_feature = {}
-    for feature in features:
-        unique_id_to_feature[feature.unique_id] = feature
-    ####
+    line        = tokenization.convert_to_unicode(some_text).strip()
+    example     = InputExample(unique_id=unique_id, text_a=line, text_b=None)
+    features    = convert_examples_to_features(examples=[example], seq_length=max_seq_length, tokenizer=tokenizer)
     input_fn    = input_fn_builder(features=features, seq_length=max_seq_length)
     ####
-    for result in estimator.predict(input_fn, yield_single_examples=True):
-        unique_id = int(result["unique_id"])
-        feature = unique_id_to_feature[unique_id]
-        output_json = collections.OrderedDict()
-        output_json["linex_index"] = unique_id
-        all_features = []
-        for (i, token) in enumerate(feature.tokens):
-            all_layers = []
-            for (j, layer_index) in enumerate(layer_indexes):
-                layer_output = result["layer_output_%d" % j]
-                layers = collections.OrderedDict()
-                layers["index"] = layer_index
-                layers["values"] = [round(float(x), 6) for x in layer_output[i:(i + 1)].flat]
-                all_layers.append(layers)
-            features = collections.OrderedDict()
-            features["token"] = token
-            features["layers"] = all_layers
-            all_features.append(features)
-        output_json["features"] = all_features
+    result      = estimator.predict(input_fn, yield_single_examples=True).__next__()
+    ####
+    for (i, token) in enumerate(feature.tokens):
+        all_layers = []
+        for (j, layer_index) in enumerate(layer_indexes):
+            layer_output        = result["layer_output_%d" % j]
+            layers              = collections.OrderedDict()
+            layers["index"]     = layer_index
+            layers["values"]    = [round(float(x), 6) for x in layer_output[i:(i + 1)].flat]
+            all_layers.append(layers)
 
-bert_config     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
-init_checkpoint = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-vocab_file      = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
-do_lower_case   = True
-max_seq_length  = 300
-layer_indexes   = [-1, -2]
+
+
+
+bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+vocab_file          = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+do_lower_case       = True
+max_seq_length      = 100
+layer_indexes       = [-1, -2]
+num_shards          = 8
+predict_batch_size  = 8
 #
-tokenizer       = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
-model_fn        = model_fn_builder(bert_config=bert_config, init_checkpoint=init_checkpoint, layer_indexes=[-1, -2], use_tpu=False, use_one_hot_embeddings=False)
-is_per_host     = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
-run_config      = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=8, per_host_input_for_training=is_per_host))
-estimator       = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=8)
+bert_config         = modeling.BertConfig.from_json_file(bert_config_file)
+tokenizer           = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+model_fn            = model_fn_builder(bert_config=bert_config, init_checkpoint=init_checkpoint, layer_indexes=layer_indexes, use_tpu=False, use_one_hot_embeddings=False)
+is_per_host         = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
+run_config          = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=num_shards, per_host_input_for_training=is_per_host))
+estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=predict_batch_size)
 #
 do_for_text('this is an example !', 1)
 
