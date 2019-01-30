@@ -879,13 +879,10 @@ def create_one_hot_and_sim(tokens1, tokens2):
     return oh1, oh2, ret
 
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
-    if (use_sent_tokenizer):
-        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-    else:
-        good_sents  = [the_doc['title'] + the_doc['abstractText']]
+    good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     quest_toks      = tokenize(quest)
-    good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    good_doc_af     = GetScores(quest, the_doc['title'] + ' ' + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
     doc_toks = tokenize(the_doc['title'] + the_doc['abstractText'])
@@ -1733,37 +1730,37 @@ stopwords   = nltk.corpus.stopwords.words("english")
 
 ##################
 
-# # laptop
-# biobert_all_words_path  = '/home/dpappas/for_ryan/biobert_all_words.pkl'
-# idf_pickle_path         = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc                 = '/home/dpappas/for_ryan/'
-# eval_path               = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path      = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# odd                     = '/home/dpappas/'
-# use_cuda                = torch.cuda.is_available()
-# bert_config_file        = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
-# init_checkpoint         = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-# vocab_file              = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
-
-# atlas , cslab243
-biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
-idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# laptop
+biobert_all_words_path  = '/home/dpappas/for_ryan/biobert_all_words.pkl'
+idf_pickle_path         = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc                 = '/home/dpappas/for_ryan/'
+eval_path               = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path      = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 odd                     = '/home/dpappas/'
 use_cuda                = torch.cuda.is_available()
-bert_config_file        = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
-init_checkpoint         = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-vocab_file              = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+bert_config_file        = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+init_checkpoint         = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+vocab_file              = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+
+# # atlas , cslab243
+# biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
+# idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                     = '/home/dpappas/'
+# use_cuda                = torch.cuda.is_available()
+# bert_config_file        = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+# init_checkpoint         = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+# vocab_file              = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
 
 ##################
 
 do_lower_case       = True
-max_seq_length      = 300
+max_seq_length      = 30
 layer_indexes       = [i for i in range(12)]
 num_shards          = 8
-predict_batch_size  = 1
+predict_batch_size  = 16
 #
 bert_config         = modeling.BertConfig.from_json_file(bert_config_file)
 tokenizer           = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
