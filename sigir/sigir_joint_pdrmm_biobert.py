@@ -641,6 +641,7 @@ def get_words(s, idf, max_idf):
 def tokenize(x):
     x       = tokenization.convert_to_unicode(x.strip()).strip()
     tokens  = ["[CLS]"] + tokenizer.tokenize(x) + ["[SEP]"]
+    tokens  = [ t for t in tokens if(not t.startswith('##'))]
     return tokens
 
 def idf_val(w, idf, max_idf):
@@ -904,14 +905,14 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
     good_doc_af     = GetScores(quest, the_doc['title'] + ' ' + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    doc_toks     = tokenize(the_doc['title'] +' '+ the_doc['abstractText'])
-    tomi         = (set(doc_toks) & set(quest_toks))
-    tomi_no_stop = tomi - set(stopwords)
-    BM25score    = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    doc_toks        = tokenize(the_doc['title'] +' '+ the_doc['abstractText'])
+    tomi            = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop    = tomi - set(stopwords)
+    BM25score       = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
     tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-    tomi_idfs    = [idf_val(w, idf, max_idf) for w in tomi]
-    quest_idfs   = [idf_val(w, idf, max_idf) for w in quest_toks]
-    features     = [
+    tomi_idfs       = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs      = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features        = [
         len(quest) / 300.,
         len(the_doc['title'] + the_doc['abstractText']) / 300.,
         len(tomi_no_stop) / 100.,
