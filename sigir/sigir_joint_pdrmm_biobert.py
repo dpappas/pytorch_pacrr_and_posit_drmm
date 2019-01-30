@@ -944,7 +944,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
             sum(tomi_idfs) / sum(quest_idfs),
         ]
         #
-        good_sents_embeds.append(bert_embeds[0])
+        good_sents_embeds.append(bert_embeds)
         good_sents_escores.append(good_escores + features)
         held_out_sents.append(good_text)
         good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
