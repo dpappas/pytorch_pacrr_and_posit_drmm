@@ -1792,6 +1792,50 @@ k_for_maxpool, k_sent_maxpool   = 5, 5
 lr, b_size, max_epoch           = 0.01, 32, 10
 embedding_dim                   = 768
 
+hdlr = None
+for run in range(0, 5):
+    #
+    my_seed = run
+    random.seed(my_seed)
+    torch.manual_seed(my_seed)
+    #
+    odir = 'sigir_joint_biobert_2L_0p01_run_{}/'.format(run)
+    odir = os.path.join(odd, odir)
+    print(odir)
+    if (not os.path.exists(odir)):
+        os.makedirs(odir)
+    #
+    logger, hdlr = init_the_logger(hdlr)
+    print('random seed: {}'.format(my_seed))
+    logger.info('random seed: {}'.format(my_seed))
+    #
+    (
+        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
+    ) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
+    #
+    avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
+    print(avgdl, mean, deviation)
+    #
+    print('Compiling model...')
+    logger.info('Compiling model...')
+    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
+    if (use_cuda):
+        model = model.cuda()
+    params = model.parameters()
+    print_params(model)
+    optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    #
+    best_dev_map, test_map = None, None
+    for epoch in range(max_epoch):
+        train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
+        if (best_dev_map is None or epoch_dev_map >= best_dev_map):
+            best_dev_map = epoch_dev_map
+            test_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
+            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
+        print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+
 
 
 
