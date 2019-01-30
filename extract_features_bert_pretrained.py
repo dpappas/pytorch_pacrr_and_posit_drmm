@@ -26,6 +26,8 @@ import re
 from bert import modeling, tokenization
 import tensorflow as tf
 from nltk.tokenize import sent_tokenize
+from tqdm import tqdm
+import os, random, pickle
 
 flags = tf.flags
 
@@ -77,14 +79,12 @@ flags.DEFINE_bool(
     "tf.nn.embedding_lookup will be used. On TPUs, this should be True "
     "since it is much faster.")
 
-
 class InputExample(object):
 
   def __init__(self, unique_id, text_a, text_b):
     self.unique_id = unique_id
     self.text_a = text_a
     self.text_b = text_b
-
 
 class InputFeatures(object):
   """A single set of features of data."""
@@ -95,7 +95,6 @@ class InputFeatures(object):
     self.input_ids = input_ids
     self.input_mask = input_mask
     self.input_type_ids = input_type_ids
-
 
 def input_fn_builder(features, seq_length):
   """Creates an `input_fn` closure to be passed to TPUEstimator."""
@@ -143,7 +142,6 @@ def input_fn_builder(features, seq_length):
     return d
 
   return input_fn
-
 
 def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu, use_one_hot_embeddings):
   """Returns `model_fn` closure for TPUEstimator."""
@@ -204,7 +202,6 @@ def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu, use_o
     return output_spec
 
   return model_fn
-
 
 def convert_examples_to_features(examples, seq_length, tokenizer):
   """Loads a data file into a list of `InputBatch`s."""
@@ -297,7 +294,6 @@ def convert_examples_to_features(examples, seq_length, tokenizer):
             input_type_ids=input_type_ids))
   return features
 
-
 def _truncate_seq_pair(tokens_a, tokens_b, max_length):
   """Truncates a sequence pair in place to the maximum length."""
 
@@ -313,7 +309,6 @@ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
       tokens_a.pop()
     else:
       tokens_b.pop()
-
 
 def read_examples(input_file):
   """Read a list of `InputExample`s from an input file."""
@@ -338,15 +333,15 @@ def read_examples(input_file):
       unique_id += 1
   return examples
 
-def get_bert_for_text(some_text):
+def get_bert_for_text(some_sents):
     examples = []
     unique_id = 0
     unique_id_to_text = {}
-    for sent in sent_tokenize(some_text):
+    for sent in some_sents:
         line                         = tokenization.convert_to_unicode(sent.strip()).strip()
         example                      = InputExample(unique_id=unique_id, text_a=line, text_b=None)
         unique_id_to_text[unique_id] = sent
-        unique_id   += 1
+        unique_id                    += 1
         examples.append(example)
     ####
     features    = convert_examples_to_features(examples=examples, seq_length=max_seq_length, tokenizer=tokenizer)
@@ -364,9 +359,78 @@ def get_bert_for_text(some_text):
         aver_embeds = sum([result[k] for k in result.keys() if ('layer_' in k)])
         inds        = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
         sent_text   = unique_id_to_text[unique_id]
-        ret.append((sent_text, aver_embeds[inds]))
+        ret.append(sent_text, tokens, inds, aver_embeds)
     ####
     return ret
+
+def RemoveTrainLargeYears(data, doc_text):
+    for i in range(len(data['queries'])):
+        hyear = 1900
+        for j in range(len(data['queries'][i]['retrieved_documents'])):
+            if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
+                doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+                year = doc_text[doc_id]['publicationDate'].split('-')[0]
+                if year[:1] == '1' or year[:1] == '2':
+                    if int(year) > hyear:
+                        hyear = int(year)
+        j = 0
+        while True:
+            doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+            year = doc_text[doc_id]['publicationDate'].split('-')[0]
+            if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
+                del data['queries'][i]['retrieved_documents'][j]
+            else:
+                j += 1
+            if j == len(data['queries'][i]['retrieved_documents']):
+                break
+    return data
+
+def RemoveBadYears(data, doc_text, train):
+    for i in range(len(data['queries'])):
+        j = 0
+        while True:
+            doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+            year = doc_text[doc_id]['publicationDate'].split('-')[0]
+            ##########################
+            # Skip 2017/2018 docs always. Skip 2016 docs for training.
+            # Need to change for final model - 2017 should be a train year only.
+            # Use only for testing.
+            if year == '2017' or year == '2018' or (train and year == '2016'):
+                # if year == '2018' or (train and year == '2017'):
+                del data['queries'][i]['retrieved_documents'][j]
+            else:
+                j += 1
+            ##########################
+            if j == len(data['queries'][i]['retrieved_documents']):
+                break
+    return data
+
+def load_all_data(dataloc):
+    print('loading pickle data')
+    #
+    with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
+        bioasq6_data = json.load(f)
+        bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
+    #
+    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
+        test_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
+        test_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+        dev_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+        dev_docs = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+        train_data = pickle.load(f)
+    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+        train_docs = pickle.load(f)
+    #
+    train_data = RemoveBadYears(train_data, train_docs, True)
+    train_data = RemoveTrainLargeYears(train_data, train_docs)
+    dev_data = RemoveBadYears(dev_data, dev_docs, False)
+    test_data = RemoveBadYears(test_data, test_docs, False)
+    #
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
 
 bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
 init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
@@ -386,6 +450,24 @@ estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_
 #
 text                = '''A sulfated glycoprotein was isolated from the culture media of Drosophila Kc cells and named papilin. Affinity purified antibodies against this protein localized it primarily to the basement membranes of embryos. The antibodies cross-reacted with another material which was not sulfated and appeared to be the core protein of papilin, which is proteoglycan-like. After reduction, papilin electrophoresed in sodium dodecyl sulfate-polyacrylamide gel electrophoresis as a broad band of about 900,000 apparent molecular weight and the core protein as a narrow band of approximately 400,000. The core protein was formed by some cell lines and by other cells on incubation with 1 mM 4-methylumbelliferyl xyloside, which inhibited formation of the proteoglycan-like form. The buoyant density of papilin in CsCl/4 M guanidine hydrochloride is 1.4 g/ml, that of the core protein is much less. Papilin forms oligomers linked by disulfide bridges, as shown by sodium dodecyl sulfate-agarose gel electrophoresis and electron microscopy. The protomer is a 225 +/- 15-nm thread which is disulfide-linked into a loop with fine, protruding thread ends. Oligomers form clover-leaf-like structures. The protein contains 22% combined serine and threonine residues and 25% combined aspartic and glutamic residues. 10 g of polypeptide has attached 6.4 g of glucosamine, 3.1 g of galactosamine, 6.1 g of uronic acid, and 2.7 g of neutral sugars. There are about 80 O-linked carbohydrate chains/core protein molecule. Sulfate is attached to these chains. The O-linkage is through an unidentified neutral sugar. Papilin is largely resistant to common glycosidases and several proteases. The degree of sulfation varies with the sulfate concentration of the incubation medium. This proteoglycan-like glycoprotein differs substantially from corresponding proteoglycans found in vertebrate basement membranes, in contrast to Drosophila basement membrane laminin and collagen IV which have been conserved evolutionarily.'''.strip()
 bert_data           = get_bert_for_text(text)
+
+
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+odir                = '/media/dpappas/dpappas_data/biobert_data/'
+if(not os.path.exists(odir)):
+    os.makedirs(odir)
+
+
+
+(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
+the_docs    = train_docs
+total       = len(the_docs.keys())
+for doc in tqdm(random.sample(the_docs.keys(), len(the_docs.keys()))):
+    opath = os.path.join(odir, doc + '.p')
+    if (not os.path.exists(opath)):
+        get_bert_for_text(sentences)
+
+
 
 '''
 python3.6 \
