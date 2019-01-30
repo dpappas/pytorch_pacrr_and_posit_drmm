@@ -921,11 +921,10 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
         sum(tomi_idfs) / sum(quest_idfs),
     ]
     good_doc_af.extend(features)
-    #
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
-        sent_toks = bert_embeds[1]
+        sent_toks = tokenize(good_text)
         oh1, oh2, oh_sim = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
         good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
