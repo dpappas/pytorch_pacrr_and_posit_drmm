@@ -230,13 +230,13 @@ def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu, use_o
     else:
       tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
 
-    ## LOGGING ##
-    tf.logging.info("**** Trainable Variables ****")
-    for var in tvars:
-      init_string = ""
-      if var.name in initialized_variable_names:
-        init_string = ", *INIT_FROM_CKPT*"
-      tf.logging.info("  name = %s, shape = %s%s", var.name, var.shape, init_string)
+    # ## LOGGING ##
+    # tf.logging.info("**** Trainable Variables ****")
+    # for var in tvars:
+    #   init_string = ""
+    #   if var.name in initialized_variable_names:
+    #     init_string = ", *INIT_FROM_CKPT*"
+    #   tf.logging.info("  name = %s, shape = %s%s", var.name, var.shape, init_string)
 
     all_layers = model.get_all_encoder_layers()
     print('total_layers: {}'.format(len(all_layers)))
