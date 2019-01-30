@@ -432,24 +432,24 @@ def do_for_text(some_text, unique_id):
     input_fn    = input_fn_builder(features=features, seq_length=max_seq_length)
     ####
     for result in estimator.predict(input_fn, yield_single_examples=True):
-      unique_id = int(result["unique_id"])
-      feature = unique_id_to_feature[unique_id]
-      output_json = collections.OrderedDict()
-      output_json["linex_index"] = unique_id
-      all_features = []
-      for (i, token) in enumerate(feature.tokens):
-        all_layers = []
-        for (j, layer_index) in enumerate(layer_indexes):
-          layer_output = result["layer_output_%d" % j]
-          layers = collections.OrderedDict()
-          layers["index"] = layer_index
-          layers["values"] = [round(float(x), 6) for x in layer_output[i:(i + 1)].flat]
-          all_layers.append(layers)
-        features = collections.OrderedDict()
-        features["token"] = token
-        features["layers"] = all_layers
-        all_features.append(features)
-      output_json["features"] = all_features
+        unique_id = int(result["unique_id"])
+        feature = unique_id_to_feature[unique_id]
+        output_json = collections.OrderedDict()
+        output_json["linex_index"] = unique_id
+        all_features = []
+        for (i, token) in enumerate(feature.tokens):
+            all_layers = []
+            for (j, layer_index) in enumerate(layer_indexes):
+                layer_output = result["layer_output_%d" % j]
+                layers = collections.OrderedDict()
+                layers["index"] = layer_index
+                layers["values"] = [round(float(x), 6) for x in layer_output[i:(i + 1)].flat]
+                all_layers.append(layers)
+            features = collections.OrderedDict()
+            features["token"] = token
+            features["layers"] = all_layers
+            all_features.append(features)
+        output_json["features"] = all_features
 
 bert_config     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
 init_checkpoint = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
