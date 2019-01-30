@@ -384,8 +384,7 @@ def main(_):
       config=run_config,
       predict_batch_size=FLAGS.batch_size)
 
-  input_fn = input_fn_builder(
-      features=features, seq_length=FLAGS.max_seq_length)
+  input_fn = input_fn_builder(features=features, seq_length=FLAGS.max_seq_length)
 
   with codecs.getwriter("utf-8")(tf.gfile.Open(FLAGS.output_file, "w")) as writer:
     for result in estimator.predict(input_fn, yield_single_examples=True):
@@ -411,13 +410,13 @@ def main(_):
       output_json["features"] = all_features
       writer.write(json.dumps(output_json) + "\n")
 
-if __name__ == "__main__":
-  # flags.mark_flag_as_required("input_file")
-  flags.mark_flag_as_required("vocab_file")
-  flags.mark_flag_as_required("bert_config_file")
-  flags.mark_flag_as_required("init_checkpoint")
-  flags.mark_flag_as_required("output_file")
-  tf.app.run()
+# if __name__ == "__main__":
+#   # flags.mark_flag_as_required("input_file")
+#   flags.mark_flag_as_required("vocab_file")
+#   flags.mark_flag_as_required("bert_config_file")
+#   flags.mark_flag_as_required("init_checkpoint")
+#   flags.mark_flag_as_required("output_file")
+#   tf.app.run()
 
 
 def do_for_text(some_text, unique_id):
@@ -440,6 +439,8 @@ def do_for_text(some_text, unique_id):
     features = convert_examples_to_features(examples=[example], seq_length=FLAGS.max_seq_length, tokenizer=tokenizer)
     return example
 
+
+do_for_text('this is an example !', '1')
 
 '''
 python3.6 \
