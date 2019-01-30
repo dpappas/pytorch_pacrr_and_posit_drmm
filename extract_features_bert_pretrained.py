@@ -453,8 +453,8 @@ def do_for_text(some_text, unique_id):
 
 bert_config     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
 init_checkpoint = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-vocab_file = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
-do_lower_case = True
+vocab_file      = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+do_lower_case   = True
 max_seq_length  = 300
 layer_indexes   = [-1, -2]
 #
