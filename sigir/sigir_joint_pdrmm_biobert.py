@@ -252,15 +252,15 @@ def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu, use_o
 
   return model_fn
 
-def get_bert_for_text(some_text):
+def get_bert_for_text(some_sents):
     examples = []
     unique_id = 0
     unique_id_to_text = {}
-    for sent in sent_tokenize(some_text):
+    for sent in some_sents:
         line                         = tokenization.convert_to_unicode(sent.strip()).strip()
         example                      = InputExample(unique_id=unique_id, text_a=line, text_b=None)
         unique_id_to_text[unique_id] = sent
-        unique_id   += 1
+        unique_id                    += 1
         examples.append(example)
     ####
     features    = convert_examples_to_features(examples=examples, seq_length=max_seq_length, tokenizer=tokenizer)
@@ -278,7 +278,7 @@ def get_bert_for_text(some_text):
         aver_embeds = sum([result[k] for k in result.keys() if ('layer_' in k)])
         inds        = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
         sent_text   = unique_id_to_text[unique_id]
-        ret.append((sent_text, aver_embeds[inds]))
+        ret.append(aver_embeds[inds])
     ####
     return ret
 
@@ -639,7 +639,9 @@ def get_words(s, idf, max_idf):
     return sl, sl2
 
 def tokenize(x):
-    return ["[CLS]"] + tokenizer.tokenize(x) + ["[SEP]"]
+    x       = tokenization.convert_to_unicode(x.strip()).strip()
+    tokens  = ["[CLS]"] + tokenizer.tokenize(x) + ["[SEP]"]
+    return tokens
 
 def idf_val(w, idf, max_idf):
     if w in idf:
@@ -895,21 +897,21 @@ def create_one_hot_and_sim(tokens1, tokens2):
     #
     return oh1, oh2, ret
 
-def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
+def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
     good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    all_bert_embeds = get_bert_for_text(good_sents)
     ####
-    quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + ' ' + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    doc_toks = tokenize(the_doc['title'] + the_doc['abstractText'])
-    tomi = (set(doc_toks) & set(quest_toks))
+    doc_toks     = tokenize(the_doc['title'] +' '+ the_doc['abstractText'])
+    tomi         = (set(doc_toks) & set(quest_toks))
     tomi_no_stop = tomi - set(stopwords)
-    BM25score = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    BM25score    = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
     tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-    tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
-    quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
-    features = [
+    tomi_idfs    = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs   = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features     = [
         len(quest) / 300.,
         len(the_doc['title'] + the_doc['abstractText']) / 300.,
         len(tomi_no_stop) / 100.,
@@ -919,7 +921,6 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     ]
     good_doc_af.extend(features)
     #
-    all_bert_embeds = [get_bert_for_text(sent, 1) for sent in good_sents]
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
