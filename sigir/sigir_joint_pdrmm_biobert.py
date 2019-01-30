@@ -905,11 +905,11 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     ]
     good_doc_af.extend(features)
     #
-    all_bert_embeds = [get_bert_for_text(sent, 1)[0] for sent in good_sents]
+    all_bert_embeds = [get_bert_for_text(sent, 1) for sent in good_sents]
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
-        sent_toks = tokenize(good_text)
+        sent_toks = bert_embeds[1]
         oh1, oh2, oh_sim = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
         good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
@@ -929,7 +929,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
             sum(tomi_idfs) / sum(quest_idfs),
         ]
         #
-        good_sents_embeds.append(bert_embeds)
+        good_sents_embeds.append(bert_embeds[0])
         good_sents_escores.append(good_escores + features)
         held_out_sents.append(good_text)
         good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
@@ -997,8 +997,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         bad_held_out_sents = datum['held_out_sents']
         bad_oh_sims = datum['oh_sims']
         #
-        quest_tokens = tokenize(quest_text)
-        q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        q_idfs       = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         # print(quest_tokens)
         # print(len(quest_tokens))
         # print(len(q_idfs))
@@ -1772,7 +1771,6 @@ model_fn            = model_fn_builder(bert_config=bert_config, init_checkpoint=
 is_per_host         = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
 run_config          = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=num_shards, per_host_input_for_training=is_per_host))
 estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=predict_batch_size)
-# aver_embeds, tokens = get_bert_for_text('this is an example !', 1)
 
 ##################
 
