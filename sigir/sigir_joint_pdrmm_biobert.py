@@ -1738,29 +1738,29 @@ stopwords   = nltk.corpus.stopwords.words("english")
 
 ##################
 
-# laptop
-biobert_all_words_path  = '/home/dpappas/for_ryan/biobert_all_words.pkl'
-idf_pickle_path         = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc                 = '/home/dpappas/for_ryan/'
-eval_path               = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path      = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-odd                     = '/home/dpappas/'
-use_cuda                = torch.cuda.is_available()
-bert_config_file        = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
-init_checkpoint         = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-vocab_file              = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
-
-# # atlas , cslab243
-# biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
-# idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# # laptop
+# biobert_all_words_path  = '/home/dpappas/for_ryan/biobert_all_words.pkl'
+# idf_pickle_path         = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc                 = '/home/dpappas/for_ryan/'
+# eval_path               = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path      = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 # odd                     = '/home/dpappas/'
 # use_cuda                = torch.cuda.is_available()
-# bert_config_file        = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
-# init_checkpoint         = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-# vocab_file              = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+# bert_config_file        = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+# init_checkpoint         = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+# vocab_file              = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+
+# atlas , cslab243
+biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
+idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                     = '/home/dpappas/'
+use_cuda                = torch.cuda.is_available()
+bert_config_file        = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+init_checkpoint         = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+vocab_file              = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
 
 ##################
 
@@ -1814,7 +1814,7 @@ for run in range(0, 5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
