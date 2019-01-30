@@ -622,7 +622,7 @@ def get_words(s, idf, max_idf):
     return sl, sl2
 
 def tokenize(x):
-    return tokenizer.tokenize(x)[1:-1]
+    return ["[CLS]"] + tokenizer.tokenize(x) + ["[SEP]"]
 
 def idf_val(w, idf, max_idf):
     if w in idf:
