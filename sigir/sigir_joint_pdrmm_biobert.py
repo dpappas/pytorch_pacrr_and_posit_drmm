@@ -230,13 +230,13 @@ def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu, use_o
     else:
       tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
 
+    ## LOGGING ##
     tf.logging.info("**** Trainable Variables ****")
     for var in tvars:
       init_string = ""
       if var.name in initialized_variable_names:
         init_string = ", *INIT_FROM_CKPT*"
-      tf.logging.info("  name = %s, shape = %s%s", var.name, var.shape,
-                      init_string)
+      tf.logging.info("  name = %s, shape = %s%s", var.name, var.shape, init_string)
 
     all_layers = model.get_all_encoder_layers()
     print('total_layers: {}'.format(len(all_layers)))
@@ -906,7 +906,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     ]
     good_doc_af.extend(features)
     #
-    all_bert_embeds = [get_bert_for_text(sent)[0] for sent in good_sents]
+    all_bert_embeds = [get_bert_for_text(sent, 1)[0] for sent in good_sents]
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
