@@ -413,11 +413,33 @@ def main(_):
 
 if __name__ == "__main__":
   # flags.mark_flag_as_required("input_file")
-  # flags.mark_flag_as_required("vocab_file")
+  flags.mark_flag_as_required("vocab_file")
   flags.mark_flag_as_required("bert_config_file")
   flags.mark_flag_as_required("init_checkpoint")
   flags.mark_flag_as_required("output_file")
   tf.app.run()
+
+
+def do_for_text(some_text, unique_id):
+    vocab_file      = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+    do_lower_case   = True
+    tokenizer       = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+    ####
+    ####
+    line        = tokenization.convert_to_unicode(some_text)
+    line        = line.strip()
+    m           = re.match(r"^(.*) \|\|\| (.*)$", line)
+    if m is None:
+        text_a  = line
+        text_b  = None
+    else:
+        text_a  = m.group(1)
+        text_b  = m.group(2)
+    example = InputExample(unique_id=unique_id, text_a=text_a, text_b=text_b)
+    ####
+    features = convert_examples_to_features(examples=[example], seq_length=FLAGS.max_seq_length, tokenizer=tokenizer)
+    return example
+
 
 '''
 python3.6 \
