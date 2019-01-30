@@ -1756,14 +1756,23 @@ estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_
 
 ##################
 
-# atlas , cslab243
-biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
-idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# laptop
+biobert_all_words_path  = '/home/dpappas/for_ryan/biobert_all_words.pkl'
+idf_pickle_path         = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc                 = '/home/dpappas/for_ryan/'
+eval_path               = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path      = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 odd                     = '/home/dpappas/'
 use_cuda                = torch.cuda.is_available()
+
+# # atlas , cslab243
+# biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
+# idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                     = '/home/dpappas/'
+# use_cuda                = torch.cuda.is_available()
 
 k_for_maxpool, k_sent_maxpool   = 5, 5
 lr, b_size, max_epoch           = 0.01, 32, 10
