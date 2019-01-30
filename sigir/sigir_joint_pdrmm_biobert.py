@@ -252,18 +252,35 @@ def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu, use_o
 
   return model_fn
 
-def get_bert_for_text(some_text, unique_id):
-    line        = tokenization.convert_to_unicode(some_text).strip()
-    example     = InputExample(unique_id=unique_id, text_a=line, text_b=None)
-    features    = convert_examples_to_features(examples=[example], seq_length=max_seq_length, tokenizer=tokenizer)
+def get_bert_for_text(some_text):
+    examples = []
+    unique_id = 0
+    unique_id_to_text = {}
+    for sent in sent_tokenize(some_text):
+        line                         = tokenization.convert_to_unicode(sent.strip()).strip()
+        example                      = InputExample(unique_id=unique_id, text_a=line, text_b=None)
+        unique_id_to_text[unique_id] = sent
+        unique_id   += 1
+        examples.append(example)
+    ####
+    features    = convert_examples_to_features(examples=examples, seq_length=max_seq_length, tokenizer=tokenizer)
+    unique_id_to_feature = {}
+    for feature in features:
+        unique_id_to_feature[feature.unique_id] = feature
+    ####
     input_fn    = input_fn_builder(features=features, seq_length=max_seq_length)
     ####
-    result      = estimator.predict(input_fn, yield_single_examples=True).__next__()
-    aver_embeds = sum([result[k] for k in result.keys() if('layer_' in k)])
-    tokens      = features[0].tokens
-    aver_embeds = aver_embeds[:len(tokens), :]
+    ret = []
+    for result in estimator.predict(input_fn, yield_single_examples=True):
+        unique_id   = int(result["unique_id"])
+        feature     = unique_id_to_feature[unique_id]
+        tokens      = feature.tokens
+        aver_embeds = sum([result[k] for k in result.keys() if ('layer_' in k)])
+        inds        = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
+        sent_text   = unique_id_to_text[unique_id]
+        ret.append((sent_text, aver_embeds[inds]))
     ####
-    return aver_embeds, tokens
+    return ret
 
 ##################
 
@@ -1756,12 +1773,8 @@ vocab_file              = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470
 
 ##################
 
-do_lower_case       = True
-max_seq_length      = 30
+do_lower_case, max_seq_length, num_shards, predict_batch_size = True, 80, 8, 16
 layer_indexes       = [i for i in range(12)]
-num_shards          = 8
-predict_batch_size  = 16
-#
 bert_config         = modeling.BertConfig.from_json_file(bert_config_file)
 tokenizer           = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
 model_fn            = model_fn_builder(bert_config=bert_config, init_checkpoint=init_checkpoint, layer_indexes=layer_indexes, use_tpu=False, use_one_hot_embeddings=False)
