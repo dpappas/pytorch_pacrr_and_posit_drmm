@@ -361,14 +361,6 @@ def get_bert_for_text(some_text):
         tokens      = feature.tokens
         aver_embeds = sum([result[k] for k in result.keys() if ('layer_' in k)])
         inds        = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
-        #
-        # print(tokens)
-        # print(len(tokens))
-        # print(aver_embeds[:len(tokens)].shape)
-        #
-        # print(len(inds))
-        # print([token for token in tokens if(not token.startswith('##'))])
-        # print(aver_embeds[inds].shape)
         ret.append((unique_id, tokens, inds, aver_embeds[inds]))
     ####
     return ret
