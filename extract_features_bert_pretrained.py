@@ -29,56 +29,6 @@ from nltk.tokenize import sent_tokenize
 from tqdm import tqdm
 import os, random, pickle
 
-flags = tf.flags
-
-FLAGS = flags.FLAGS
-
-flags.DEFINE_string("input_file", None, "")
-
-flags.DEFINE_string("output_file", None, "")
-
-flags.DEFINE_string("layers", "-1,-2,-3,-4", "")
-
-flags.DEFINE_string(
-    "bert_config_file", None,
-    "The config json file corresponding to the pre-trained BERT model. "
-    "This specifies the model architecture.")
-
-flags.DEFINE_integer(
-    "max_seq_length", 128,
-    "The maximum total input sequence length after WordPiece tokenization. "
-    "Sequences longer than this will be truncated, and sequences shorter "
-    "than this will be padded.")
-
-flags.DEFINE_string(
-    "init_checkpoint", None,
-    "Initial checkpoint (usually from a pre-trained BERT model).")
-
-flags.DEFINE_string("vocab_file", None,
-                    "The vocabulary file that the BERT model was trained on.")
-
-flags.DEFINE_bool(
-    "do_lower_case", True,
-    "Whether to lower case the input text. Should be True for uncased "
-    "models and False for cased models.")
-
-flags.DEFINE_integer("batch_size", 32, "Batch size for predictions.")
-
-flags.DEFINE_bool("use_tpu", False, "Whether to use TPU or GPU/CPU.")
-
-flags.DEFINE_string("master", None,
-                    "If using a TPU, the address of the master.")
-
-flags.DEFINE_integer(
-    "num_tpu_cores", 8,
-    "Only used if `use_tpu` is True. Total number of TPU cores to use.")
-
-flags.DEFINE_bool(
-    "use_one_hot_embeddings", False,
-    "If True, tf.one_hot will be used for embedding lookups, otherwise "
-    "tf.nn.embedding_lookup will be used. On TPUs, this should be True "
-    "since it is much faster.")
-
 class InputExample(object):
 
   def __init__(self, unique_id, text_a, text_b):
@@ -357,6 +307,7 @@ def get_bert_for_text(some_sents):
         feature     = unique_id_to_feature[unique_id]
         tokens      = feature.tokens
         aver_embeds = sum([result[k] for k in result.keys() if ('layer_' in k)])
+        aver_embeds = aver_embeds[:len(tokens)]
         inds        = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
         sent_text   = unique_id_to_text[unique_id]
         ret.append((sent_text, tokens, inds, aver_embeds))
@@ -432,11 +383,22 @@ def load_all_data(dataloc):
     #
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
 
-bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
-init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-vocab_file          = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
+                            t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
+                                                                                          '').strip().lower()).split()
+
+####
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+odir                = '/media/dpappas/dpappas_data/biobert_data/'
+bert_config_file    = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+init_checkpoint     = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+vocab_file          = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+####
+if(not os.path.exists(odir)):
+    os.makedirs(odir)
+
 do_lower_case       = True
-max_seq_length      = 80
+max_seq_length      = 100
 layer_indexes       = [i for i in range(12)]
 num_shards          = 8
 predict_batch_size  = 8
@@ -448,26 +410,33 @@ is_per_host         = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
 run_config          = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=num_shards, per_host_input_for_training=is_per_host))
 estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=predict_batch_size)
 #
-text                = '''A sulfated glycoprotein was isolated from the culture media of Drosophila Kc cells and named papilin. Affinity purified antibodies against this protein localized it primarily to the basement membranes of embryos. The antibodies cross-reacted with another material which was not sulfated and appeared to be the core protein of papilin, which is proteoglycan-like. After reduction, papilin electrophoresed in sodium dodecyl sulfate-polyacrylamide gel electrophoresis as a broad band of about 900,000 apparent molecular weight and the core protein as a narrow band of approximately 400,000. The core protein was formed by some cell lines and by other cells on incubation with 1 mM 4-methylumbelliferyl xyloside, which inhibited formation of the proteoglycan-like form. The buoyant density of papilin in CsCl/4 M guanidine hydrochloride is 1.4 g/ml, that of the core protein is much less. Papilin forms oligomers linked by disulfide bridges, as shown by sodium dodecyl sulfate-agarose gel electrophoresis and electron microscopy. The protomer is a 225 +/- 15-nm thread which is disulfide-linked into a loop with fine, protruding thread ends. Oligomers form clover-leaf-like structures. The protein contains 22% combined serine and threonine residues and 25% combined aspartic and glutamic residues. 10 g of polypeptide has attached 6.4 g of glucosamine, 3.1 g of galactosamine, 6.1 g of uronic acid, and 2.7 g of neutral sugars. There are about 80 O-linked carbohydrate chains/core protein molecule. Sulfate is attached to these chains. The O-linkage is through an unidentified neutral sugar. Papilin is largely resistant to common glycosidases and several proteases. The degree of sulfation varies with the sulfate concentration of the incubation medium. This proteoglycan-like glycoprotein differs substantially from corresponding proteoglycans found in vertebrate basement membranes, in contrast to Drosophila basement membrane laminin and collagen IV which have been conserved evolutionarily.'''.strip()
-bert_data           = get_bert_for_text(text)
-
-
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-odir                = '/media/dpappas/dpappas_data/biobert_data/'
-if(not os.path.exists(odir)):
-    os.makedirs(odir)
-
-
+# text                = '''A sulfated glycoprotein was isolated from the culture media of Drosophila Kc cells and named papilin. Affinity purified antibodies against this protein localized it primarily to the basement membranes of embryos. The antibodies cross-reacted with another material which was not sulfated and appeared to be the core protein of papilin, which is proteoglycan-like. After reduction, papilin electrophoresed in sodium dodecyl sulfate-polyacrylamide gel electrophoresis as a broad band of about 900,000 apparent molecular weight and the core protein as a narrow band of approximately 400,000. The core protein was formed by some cell lines and by other cells on incubation with 1 mM 4-methylumbelliferyl xyloside, which inhibited formation of the proteoglycan-like form. The buoyant density of papilin in CsCl/4 M guanidine hydrochloride is 1.4 g/ml, that of the core protein is much less. Papilin forms oligomers linked by disulfide bridges, as shown by sodium dodecyl sulfate-agarose gel electrophoresis and electron microscopy. The protomer is a 225 +/- 15-nm thread which is disulfide-linked into a loop with fine, protruding thread ends. Oligomers form clover-leaf-like structures. The protein contains 22% combined serine and threonine residues and 25% combined aspartic and glutamic residues. 10 g of polypeptide has attached 6.4 g of glucosamine, 3.1 g of galactosamine, 6.1 g of uronic acid, and 2.7 g of neutral sugars. There are about 80 O-linked carbohydrate chains/core protein molecule. Sulfate is attached to these chains. The O-linkage is through an unidentified neutral sugar. Papilin is largely resistant to common glycosidases and several proteases. The degree of sulfation varies with the sulfate concentration of the incubation medium. This proteoglycan-like glycoprotein differs substantially from corresponding proteoglycans found in vertebrate basement membranes, in contrast to Drosophila basement membrane laminin and collagen IV which have been conserved evolutionarily.'''.strip()
+# bert_data           = get_bert_for_text(text)
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
-the_docs    = train_docs
-total       = len(the_docs.keys())
-for doc in tqdm(random.sample(the_docs.keys(), len(the_docs.keys()))):
-    opath = os.path.join(odir, doc + '.p')
-    if (not os.path.exists(opath)):
-        get_bert_for_text(sentences)
 
-
+for the_docs in [test_docs, dev_docs, train_docs]:
+    total       = len(the_docs.keys())
+    for doc in tqdm(random.sample(the_docs.keys(), len(the_docs.keys()))):
+        opath = os.path.join(odir, doc + '.p')
+        if (not os.path.exists(opath)):
+            datum       = the_docs[doc]
+            #
+            title_sents = sent_tokenize(datum['title'])
+            title_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in title_sents]
+            title_sents = [s for s in title_sents if (len(s.strip()) > 0)]
+            #
+            abs_sents = sent_tokenize(datum['abstractText'])
+            abs_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in abs_sents]
+            abs_sents = [s for s in abs_sents if (len(s.strip()) > 0)]
+            #
+            ret = {}
+            ret['abs_sents']                    = abs_sents
+            ret['title_sents']                  = title_sents
+            ret['title_bert_original_embeds']   = get_bert_for_text(title_sents)
+            ret['abs_bert_original_embeds']     = get_bert_for_text(abs_sents)
+            #
+            pickle.dump(ret, open(opath, 'wb'), protocol=2)
 
 '''
 python3.6 \
