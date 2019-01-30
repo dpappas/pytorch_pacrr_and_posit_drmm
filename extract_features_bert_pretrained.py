@@ -354,16 +354,24 @@ def get_bert_for_text(some_text):
     ####
     input_fn    = input_fn_builder(features=features, seq_length=max_seq_length)
     ####
+    ret = []
     for result in estimator.predict(input_fn, yield_single_examples=True):
         unique_id   = int(result["unique_id"])
         feature     = unique_id_to_feature[unique_id]
         tokens      = feature.tokens
         aver_embeds = sum([result[k] for k in result.keys() if ('layer_' in k)])
+        inds        = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
         #
-        print(tokens)
-        print(len(tokens))
-        print(aver_embeds.shape)
+        # print(tokens)
+        # print(len(tokens))
+        # print(aver_embeds[:len(tokens)].shape)
+        #
+        # print(len(inds))
+        # print([token for token in tokens if(not token.startswith('##'))])
+        # print(aver_embeds[inds].shape)
+        ret.append((unique_id, tokens, inds, aver_embeds[inds]))
     ####
+    return ret
 
 bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
 init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
@@ -381,8 +389,8 @@ is_per_host         = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
 run_config          = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=num_shards, per_host_input_for_training=is_per_host))
 estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=predict_batch_size)
 #
-text = '''A sulfated glycoprotein was isolated from the culture media of Drosophila Kc cells and named papilin. Affinity purified antibodies against this protein localized it primarily to the basement membranes of embryos. The antibodies cross-reacted with another material which was not sulfated and appeared to be the core protein of papilin, which is proteoglycan-like. After reduction, papilin electrophoresed in sodium dodecyl sulfate-polyacrylamide gel electrophoresis as a broad band of about 900,000 apparent molecular weight and the core protein as a narrow band of approximately 400,000. The core protein was formed by some cell lines and by other cells on incubation with 1 mM 4-methylumbelliferyl xyloside, which inhibited formation of the proteoglycan-like form. The buoyant density of papilin in CsCl/4 M guanidine hydrochloride is 1.4 g/ml, that of the core protein is much less. Papilin forms oligomers linked by disulfide bridges, as shown by sodium dodecyl sulfate-agarose gel electrophoresis and electron microscopy. The protomer is a 225 +/- 15-nm thread which is disulfide-linked into a loop with fine, protruding thread ends. Oligomers form clover-leaf-like structures. The protein contains 22% combined serine and threonine residues and 25% combined aspartic and glutamic residues. 10 g of polypeptide has attached 6.4 g of glucosamine, 3.1 g of galactosamine, 6.1 g of uronic acid, and 2.7 g of neutral sugars. There are about 80 O-linked carbohydrate chains/core protein molecule. Sulfate is attached to these chains. The O-linkage is through an unidentified neutral sugar. Papilin is largely resistant to common glycosidases and several proteases. The degree of sulfation varies with the sulfate concentration of the incubation medium. This proteoglycan-like glycoprotein differs substantially from corresponding proteoglycans found in vertebrate basement membranes, in contrast to Drosophila basement membrane laminin and collagen IV which have been conserved evolutionarily.'''.strip()
-get_bert_for_text(text)
+text                = '''A sulfated glycoprotein was isolated from the culture media of Drosophila Kc cells and named papilin. Affinity purified antibodies against this protein localized it primarily to the basement membranes of embryos. The antibodies cross-reacted with another material which was not sulfated and appeared to be the core protein of papilin, which is proteoglycan-like. After reduction, papilin electrophoresed in sodium dodecyl sulfate-polyacrylamide gel electrophoresis as a broad band of about 900,000 apparent molecular weight and the core protein as a narrow band of approximately 400,000. The core protein was formed by some cell lines and by other cells on incubation with 1 mM 4-methylumbelliferyl xyloside, which inhibited formation of the proteoglycan-like form. The buoyant density of papilin in CsCl/4 M guanidine hydrochloride is 1.4 g/ml, that of the core protein is much less. Papilin forms oligomers linked by disulfide bridges, as shown by sodium dodecyl sulfate-agarose gel electrophoresis and electron microscopy. The protomer is a 225 +/- 15-nm thread which is disulfide-linked into a loop with fine, protruding thread ends. Oligomers form clover-leaf-like structures. The protein contains 22% combined serine and threonine residues and 25% combined aspartic and glutamic residues. 10 g of polypeptide has attached 6.4 g of glucosamine, 3.1 g of galactosamine, 6.1 g of uronic acid, and 2.7 g of neutral sugars. There are about 80 O-linked carbohydrate chains/core protein molecule. Sulfate is attached to these chains. The O-linkage is through an unidentified neutral sugar. Papilin is largely resistant to common glycosidases and several proteases. The degree of sulfation varies with the sulfate concentration of the incubation medium. This proteoglycan-like glycoprotein differs substantially from corresponding proteoglycans found in vertebrate basement membranes, in contrast to Drosophila basement membrane laminin and collagen IV which have been conserved evolutionarily.'''.strip()
+bert_data           = get_bert_for_text(text)
 
 '''
 python3.6 \
