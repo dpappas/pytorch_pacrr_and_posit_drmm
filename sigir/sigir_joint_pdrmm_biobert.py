@@ -987,7 +987,8 @@ def fix_bert_tokens(tokens):
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         # print(quest_text)
-        qemb, quest_tokens = get_bert_for_text(quest_text, 1)
+        quest_toks = tokenize(quest_text)
+        qemb = get_bert_for_text([quest_text])[0]
         # pprint(qemb.keys())
         if (use_sent_tokenizer):
             good_snips = get_snips(quest_id, gid, bioasq6_data)
@@ -997,7 +998,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         #
         quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
         #
-        datum = prep_data(quest_text, docs[gid], gid, bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer)
+        datum = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf, quest_toks)
         good_sents_embeds = datum['sents_embeds']
         good_sents_escores = datum['sents_escores']
         good_doc_af = datum['doc_af']
@@ -1005,7 +1006,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         good_held_out_sents = datum['held_out_sents']
         good_oh_sims = datum['oh_sims']
         #
-        datum = prep_data(quest_text, docs[bid], bid, bm25s_bid, [], idf, max_idf, use_sent_tokenizer)
+        datum = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf, quest_toks)
         bad_sents_embeds = datum['sents_embeds']
         bad_sents_escores = datum['sents_escores']
         bad_doc_af = datum['doc_af']
@@ -1013,11 +1014,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         bad_held_out_sents = datum['held_out_sents']
         bad_oh_sims = datum['oh_sims']
         #
-        q_idfs       = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        # print(quest_tokens)
-        # print(len(quest_tokens))
-        # print(len(q_idfs))
-        # print(qemb.shape)
+        q_idfs       = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_toks], 'float')
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
             yield {
@@ -1190,7 +1187,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         datum = prep_data(
             quest_text,
             docs[retr['doc_id']],
-            retr['doc_id'],
             retr['norm_bm25_score'],
             gold_snips,
             idf,
