@@ -341,9 +341,11 @@ def read_examples(input_file):
 def get_bert_for_text(some_text):
     examples = []
     unique_id = 0
+    unique_id_to_text = {}
     for sent in sent_tokenize(some_text):
-        line        = tokenization.convert_to_unicode(sent.strip()).strip()
-        example     = InputExample(unique_id=unique_id, text_a=line, text_b=None)
+        line                         = tokenization.convert_to_unicode(sent.strip()).strip()
+        example                      = InputExample(unique_id=unique_id, text_a=line, text_b=None)
+        unique_id_to_text[unique_id] = sent
         unique_id   += 1
         examples.append(example)
     ####
@@ -361,7 +363,8 @@ def get_bert_for_text(some_text):
         tokens      = feature.tokens
         aver_embeds = sum([result[k] for k in result.keys() if ('layer_' in k)])
         inds        = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
-        ret.append((unique_id, tokens, inds, aver_embeds[inds]))
+        sent_text   = unique_id_to_text[unique_id]
+        ret.append((sent_text, aver_embeds[inds]))
     ####
     return ret
 
