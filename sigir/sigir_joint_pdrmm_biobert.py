@@ -6,13 +6,9 @@ from __future__ import division
 from __future__ import print_function
 
 from pprint import pprint
-import codecs
-import collections
-import json
-import re
 from bert import modeling, tokenization
 import tensorflow as tf
-import pickle, os, re, nltk, math, json, time, random, logging, subprocess
+import pickle, os, re, nltk, math, json, time, random, logging, subprocess, collections, codecs
 import torch
 import torch.nn.functional         as F
 import torch.nn                    as nn
@@ -21,13 +17,11 @@ import torch.optim                 as optim
 import torch.autograd              as autograd
 from tqdm import tqdm
 from pprint import pprint
-from gensim.models.keyedvectors import KeyedVectors
 from nltk.tokenize import sent_tokenize
 from difflib import SequenceMatcher
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from pytorch_pretrained_bert.tokenization import BertTokenizer
-
 
 class InputFeatures(object):
   """A single set of features of data."""
@@ -267,35 +261,14 @@ def get_bert_for_text(some_text, unique_id):
     input_fn    = input_fn_builder(features=features, seq_length=max_seq_length)
     ####
     result      = estimator.predict(input_fn, yield_single_examples=True).__next__()
-    pprint(result)
-    pprint(list(result.keys()))
-    print(sum([result[k] for k in result.keys() if('layer_' in k)]).shape)
-    # print(result['layer_output_0'].shape)
-    # print(result['layer_output_1'].shape)
+    aver_embeds = sum([result[k] for k in result.keys() if('layer_' in k)])
+    pprint(dir(features[0]))
+    exit()
+    print(aver_embeds.shape)
     ####
-    return result
+    return aver_embeds
 
-bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
-init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-vocab_file          = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
-do_lower_case       = True
-max_seq_length      = 300
-layer_indexes       = [i for i in range(12)]
-num_shards          = 8
-predict_batch_size  = 1
-#
-bert_config         = modeling.BertConfig.from_json_file(bert_config_file)
-tokenizer           = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
-model_fn            = model_fn_builder(bert_config=bert_config, init_checkpoint=init_checkpoint, layer_indexes=layer_indexes, use_tpu=False, use_one_hot_embeddings=False)
-is_per_host         = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
-run_config          = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=num_shards, per_host_input_for_training=is_per_host))
-estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=predict_batch_size)
-#
-# get_bert_for_text('this is an example !', 1)
-
-bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
-softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
-stopwords   = nltk.corpus.stopwords.words("english")
+##################
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
@@ -338,7 +311,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     return avgdl, mean, deviation
 
 # Compute the term frequency of a word for a specific document
-def tf(term, document):
+def term_freq(term, document):
     tf = 0
     for word in document:
         if word == term:
@@ -361,15 +334,15 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
     for query_term in query:
         if query_term not in idf_scores:
             score += rare_word * (
-                    (tf(query_term, document) * (k1 + 1)) /
+                    (term_freq(query_term, document) * (k1 + 1)) /
                     (
-                            tf(query_term, document) +
+                            term_freq(query_term, document) +
                             k1 * (1 - b + b * (len(document) / avgdl))
                     )
             )
         else:
-            score += idf_scores[query_term] * ((tf(query_term, document) * (k1 + 1)) / (
-                        tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+            score += idf_scores[query_term] * ((term_freq(query_term, document) * (k1 + 1)) / (
+                    term_freq(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
     if normalize:
         return ((score - mean) / deviation)
     else:
@@ -1773,6 +1746,36 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+
+##################
+
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
+stopwords   = nltk.corpus.stopwords.words("english")
+
+##################
+
+bert_config_file    = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+init_checkpoint     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+vocab_file          = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+do_lower_case       = True
+max_seq_length      = 300
+layer_indexes       = [i for i in range(12)]
+num_shards          = 8
+predict_batch_size  = 1
+#
+bert_config         = modeling.BertConfig.from_json_file(bert_config_file)
+tokenizer           = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+model_fn            = model_fn_builder(bert_config=bert_config, init_checkpoint=init_checkpoint, layer_indexes=layer_indexes, use_tpu=False, use_one_hot_embeddings=False)
+is_per_host         = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
+run_config          = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=num_shards, per_host_input_for_training=is_per_host))
+estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=predict_batch_size)
+#
+get_bert_for_text('this is an example !', 1)
+
+exit()
+
+##################
 
 use_cuda = torch.cuda.is_available()
 
