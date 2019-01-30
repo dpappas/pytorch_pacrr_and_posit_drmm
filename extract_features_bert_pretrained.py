@@ -359,7 +359,7 @@ def get_bert_for_text(some_sents):
         aver_embeds = sum([result[k] for k in result.keys() if ('layer_' in k)])
         inds        = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
         sent_text   = unique_id_to_text[unique_id]
-        ret.append(sent_text, tokens, inds, aver_embeds)
+        ret.append((sent_text, tokens, inds, aver_embeds))
     ####
     return ret
 
