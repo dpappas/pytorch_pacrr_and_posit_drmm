@@ -881,18 +881,12 @@ def create_one_hot_and_sim(tokens1, tokens2):
 
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if (use_sent_tokenizer):
-        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     else:
-        good_sents = [the_doc['title'] + the_doc['abstractText']]
+        good_sents  = [the_doc['title'] + the_doc['abstractText']]
     ####
-    bert_f = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
-    gemb = pickle.load(open(bert_f, 'rb'))
-    # title_bert_average_embeds
-    # abs_bert_average_embeds
-    # mesh_bert_average_embeds
-    ####
-    quest_toks = tokenize(quest)
-    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    quest_toks      = tokenize(quest)
+    good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
     doc_toks = tokenize(the_doc['title'] + the_doc['abstractText'])
@@ -912,8 +906,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     ]
     good_doc_af.extend(features)
     #
-    all_bert_embeds = gemb['title_bert_average_embeds'] + gemb['abs_bert_average_embeds']
-    # print(pid, len(all_bert_embeds), len(good_sents))
+    all_bert_embeds = [get_bert_for_text(sent)[0] for sent in good_sents]
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
@@ -1764,8 +1757,6 @@ estimator           = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_
 
 ##################
 
-use_cuda = torch.cuda.is_available()
-
 # atlas , cslab243
 biobert_all_words_path  = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
 idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1773,6 +1764,7 @@ dataloc                 = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                     = '/home/dpappas/'
+use_cuda                = torch.cuda.is_available()
 
 k_for_maxpool, k_sent_maxpool   = 5, 5
 lr, b_size, max_epoch           = 0.01, 32, 10
