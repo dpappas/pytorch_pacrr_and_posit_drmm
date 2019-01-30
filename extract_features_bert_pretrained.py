@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from pprint import pprint
 import codecs
 import collections
 import json
@@ -437,9 +438,23 @@ def do_for_text(some_text, unique_id):
     example = InputExample(unique_id=unique_id, text_a=text_a, text_b=text_b)
     ####
     features = convert_examples_to_features(examples=[example], seq_length=FLAGS.max_seq_length, tokenizer=tokenizer)
+    ####
+    input_fn    = input_fn_builder(features=features, seq_length=FLAGS.max_seq_length)
+    result      = estimator.predict(input_fn, yield_single_examples=True)
+    pprint(result.__next__())
     return example
 
-
+bert_config     = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
+init_checkpoint = '/home/dpappas/Downloads/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
+max_seq_length  = 300
+#
+model_fn = model_fn_builder(
+    bert_config=bert_config, init_checkpoint=init_checkpoint,
+    layer_indexes=[-1, -2], use_tpu=False, use_one_hot_embeddings=False
+)
+is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
+run_config = tf.contrib.tpu.RunConfig(master=None, tpu_config=tf.contrib.tpu.TPUConfig(num_shards=8, per_host_input_for_training=is_per_host))
+estimator = tf.contrib.tpu.TPUEstimator(use_tpu=False, model_fn=model_fn, config=run_config, predict_batch_size=8)
 do_for_text('this is an example !', '1')
 
 '''
