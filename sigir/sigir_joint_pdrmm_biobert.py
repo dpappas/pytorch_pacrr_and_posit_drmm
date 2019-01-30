@@ -905,7 +905,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
     good_doc_af     = GetScores(quest, the_doc['title'] + ' ' + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    doc_toks        = tokenize(the_doc['title'] +' '+ the_doc['abstractText'])
+    doc_toks        = tokenize(the_doc['title'])+tokenize(the_doc['abstractText'])
     tomi            = (set(doc_toks) & set(quest_toks))
     tomi_no_stop    = tomi - set(stopwords)
     BM25score       = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
