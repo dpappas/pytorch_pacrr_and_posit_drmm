@@ -18,6 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os, random, pickle
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 from pprint import pprint
 import codecs
 import collections
@@ -27,7 +29,6 @@ from bert import modeling, tokenization
 import tensorflow as tf
 from nltk.tokenize import sent_tokenize
 from tqdm import tqdm
-import os, random, pickle
 
 class InputExample(object):
 
