@@ -146,6 +146,8 @@ def load_model_from_checkpoint(resume_from):
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+    else:
+        print('You know there is not such file, wright ?')
 
 def JsonPredsAppend(preds, data, i, top):
   pref = "http://www.ncbi.nlm.nih.gov/pubmed/"
