@@ -1184,11 +1184,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 # retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
 
 # atlas , cslab243
-w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 
 # w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'

@@ -540,7 +540,8 @@ print('Making preds')
 json_preds = {}
 json_preds['questions'] = []
 num_docs = 0
-for i in tqdm(range(len(data['queries']))):
+pbar = tqdm(range(len(data['queries'])), ascii=False)
+for i in pbar:
   num_docs += 1
   model.eval()
   #########
@@ -550,7 +551,8 @@ for i in tqdm(range(len(data['queries']))):
   q_idfs                        = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
   #########
   rel_scores            = {}
-  for j in tqdm(range(len(dato['retrieved_documents']))):
+  for j in range(len(dato['retrieved_documents'])):
+    pbar.set_description('{} from {}'.format(j , len(dato['retrieved_documents'])))
     retr                = dato['retrieved_documents'][j]
     doc_id              = retr['doc_id']
     dtext               = (docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText'])
