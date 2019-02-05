@@ -8,6 +8,7 @@ import numpy as np
 from gensim.models.keyedvectors import KeyedVectors
 from   nltk.tokenize import sent_tokenize
 import nltk
+from tqdm import tqdm
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 stopwords   = nltk.corpus.stopwords.words("english")
@@ -539,7 +540,7 @@ print('Making preds')
 json_preds = {}
 json_preds['questions'] = []
 num_docs = 0
-for i in range(len(data['queries'])):
+for i in tqdm(range(len(data['queries']))):
   num_docs += 1
   model.eval()
   #########
@@ -549,7 +550,7 @@ for i in range(len(data['queries'])):
   q_idfs                        = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
   #########
   rel_scores            = {}
-  for j in range(len(dato['retrieved_documents'])):
+  for j in tqdm(range(len(dato['retrieved_documents']))):
     retr                = dato['retrieved_documents'][j]
     doc_id              = retr['doc_id']
     dtext               = (docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText'])
