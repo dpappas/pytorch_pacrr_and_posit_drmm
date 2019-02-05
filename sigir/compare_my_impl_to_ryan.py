@@ -506,8 +506,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 ##################
 
-model = Sent_Posit_Drmm_Modeler()
-resume_from = '/home/dpappas/best_checkpoint.pth.tar'
+model           = Sent_Posit_Drmm_Modeler()
+resume_from     = '/home/dpappas/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 
 ##################
@@ -570,4 +570,12 @@ for i in pbar:
 DumpJson(json_preds, outf)
 print('Done')
 
+'''
 
+java -Xmx10G -cp /home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/PycharmProjects/aueb-bioasq6-master/bioasq6_data/test_batch_1/bioasq6_bm25_top100.test.bioasq.oracle.json \
+./abel_test_preds_batch1.json \
+| head -3| tail -1
+
+'''
