@@ -1597,13 +1597,13 @@ class ABCNN3_PDRMM(nn.Module):
 # # get_embeds          = get_embeds_use_only_unk
 
 # atlas , cslab243
-w2v_bin_path = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-use_cuda = True
-odd = '/home/dpappas/'
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+use_cuda            = True
+odd                 = '/home/dpappas/'
 # get_embeds          = get_embeds_use_unk
 # get_embeds          = get_embeds_use_only_unk
 
