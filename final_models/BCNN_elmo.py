@@ -513,10 +513,12 @@ def data_step2(instances, docs):
         good_snips                              = get_snips(quest_id, gid, bioasq6_data)
         good_snips                              = [' '.join(bioclean(sn)) for sn in good_snips]
         #
+        elmo_f                                  = os.path.join(elmo_embeds_dir, '{}.p'.format(gid))
+        gemb                                    = pickle.load(open(elmo_f, 'rb'))
+        all_elmo_embeds                         = gemb['title_sent_elmo_embeds'] + gemb['abs_sent_elmo_embeds']
         good_sents_embeds, good_sents_escores, good_sent_tags = [], [], []
-        for good_text in good_sents:
+        for good_text, good_embeds in zip(good_sents, all_elmo_embeds):
             sent_toks                           = tokenize(good_text)
-            good_tokens, good_embeds            = get_embeds(sent_toks, wv)
             good_escores                        = GetScores(quest, good_text, bm25s_gid, idf, max_idf)[:-1]
             good_escores.append(len(sent_toks) / 342.)
             if(len(good_embeds)>0):
