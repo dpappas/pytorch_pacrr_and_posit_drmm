@@ -198,45 +198,20 @@ def GetScores(qtext, dtext, bm25, idf, max_idf):
     bm25        = [bm25]
     return qd1[0:3] + bm25
 
-def get_embeds(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        if(tok in wv):
-            ret1.append(tok)
-            ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
-
-def get_embeds_use_unk(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        if(tok in wv):
-            ret1.append(tok)
-            ret2.append(wv[tok])
-        else:
-            wv[tok] = np.random.randn(embedding_dim)
-            ret1.append(tok)
-            ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
-
-def get_embeds_use_only_unk(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        wv[tok] = np.random.randn(embedding_dim)
-        ret1.append(tok)
-        ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
-
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
-    good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+def prep_data(quest, pid, the_doc, the_bm25, good_snips, idf, max_idf):
+    good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    quest_toks      = tokenize(quest)
-    good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    elmo_f      = os.path.join(elmo_embeds_dir, '{}.p'.format(pid))
+    gemb        = pickle.load(open(elmo_f, 'rb'))
+    ####
+    quest_toks  = tokenize(quest)
+    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     ####
+    all_elmo_embeds = gemb['title_sent_elmo_embeds'] + gemb['abs_sent_elmo_embeds']
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
-    for good_text in good_sents:
-        sent_toks                   = tokenize(good_text)
-        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
+    for good_text, good_embeds in zip(good_sents, all_elmo_embeds):
+        sent_toks       = tokenize(good_text)
         # qwords_in_sent + qwords_bigrams_in_sent + idf_qwords_in_sent + doc_bm25
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
@@ -384,12 +359,12 @@ def GetWords(data, doc_text, words):
       for w in dwds:
         words[w] = 1
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
+def load_all_data(dataloc, idf_pickle_path):
     print('loading pickle data')
     #
-    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
+    with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
         bioasq6_data = json.load(f)
-        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
+        bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
     #
     with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
         test_data = pickle.load(f)
@@ -405,25 +380,23 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
         train_docs = pickle.load(f)
     print('loading words')
     #
-    train_data  = RemoveBadYears(train_data, train_docs, True)
-    train_data  = RemoveTrainLargeYears(train_data, train_docs)
-    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
-    test_data   = RemoveBadYears(test_data, test_docs, False)
+    train_data = RemoveBadYears(train_data, train_docs, True)
+    train_data = RemoveTrainLargeYears(train_data, train_docs)
+    dev_data = RemoveBadYears(dev_data, dev_docs, False)
+    test_data = RemoveBadYears(test_data, test_docs, False)
     #
-    words           = {}
-    GetWords(train_data, train_docs, words)
-    GetWords(dev_data,   dev_docs,   words)
-    GetWords(test_data,  test_docs,  words)
-    print('TOTAL WORDS FOUND IN DATASET: {}'.format(len(words)))
+    if (os.path.exists(bert_all_words_path)):
+        words = pickle.load(open(bert_all_words_path, 'rb'))
+    else:
+        words = {}
+        GetWords(train_data, train_docs, words)
+        GetWords(dev_data, dev_docs, words)
+        GetWords(test_data, test_docs, words)
+        pickle.dump(words, open(bert_all_words_path, 'wb'), protocol=2)
     #
     print('loading idfs')
-    idf, max_idf    = load_idfs(idf_pickle_path, words)
-    print('loading w2v')
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    print('TOTAL EMBEDDINGS OFFERED IN PRETRAINED EMBEDS: {}'.format(len(wv.vocab.keys())))
-    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    print('COMMON WORDS FOUND IN DATASET AND PRETRAINED EMBEDS: {}'.format(len(wv.keys())))
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    idf, max_idf = load_idfs(idf_pickle_path, words)
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 def train_data_step1(train_data):
     ret = []
@@ -441,25 +414,26 @@ def train_data_step1(train_data):
     # print('')
     return ret
 
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
+def train_data_step2(instances, docs, bioasq6_data, idf, max_idf):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(instances):
     # for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         good_snips                  = get_snips(quest_id, gid, bioasq6_data)
         good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
         #
-        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf)
+        datum                       = prep_data(quest_text, gid, docs[gid], bm25s_gid, good_snips, idf, max_idf)
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         #
-        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
+        datum                       = prep_data(quest_text, bid, docs[bid], bm25s_bid, [], idf, max_idf)
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
         #
-        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+        quest_tokens                = tokenize(quest_text)
+        quest_embeds                = np.concatenate(all_quest_embeds[quest_text], axis=0)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         if(sum(good_sent_tags)>0):
@@ -529,8 +503,8 @@ def data_step1(data):
 
 def data_step2(instances, docs):
     for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        quest_toks                              = tokenize(quest)
-        quest_tokens, quest_embeds              = get_embeds(quest_toks, wv)
+        quest_tokens                            = tokenize(quest)
+        quest_embeds                            = np.concatenate(all_quest_embeds[quest], axis=0)
         q_idfs                                  = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         good_sents_title                        = sent_tokenize(docs[gid]['title'])
@@ -546,12 +520,12 @@ def data_step2(instances, docs):
             good_escores                        = GetScores(quest, good_text, bm25s_gid, idf, max_idf)[:-1]
             good_escores.append(len(sent_toks) / 342.)
             if(len(good_embeds)>0):
-                tomi                            = (set(sent_toks) & set(quest_toks))
+                tomi                            = (set(sent_toks) & set(quest_tokens))
                 tomi_no_stop                    = tomi - set(stopwords)
-                BM25score                       = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+                BM25score                       = similarity_score(quest_tokens, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
                 tomi_no_stop_idfs               = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
                 tomi_idfs                       = [idf_val(w, idf, max_idf) for w in tomi]
-                quest_idfs                      = [idf_val(w, idf, max_idf) for w in quest_toks]
+                quest_idfs                      = [idf_val(w, idf, max_idf) for w in quest_tokens]
                 features            = [
                     # already have it
                     # already have it
@@ -586,7 +560,7 @@ def train_one():
     start_time                              = time.time()
     train_instances                         = train_data_step1(train_data)
     random.shuffle(train_instances)
-    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
+    for datum in train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf):
         gcost_, gemits_                     = model(
             sents_embeds                    = datum['good_sents_embeds'],
             question_embeds                 = datum['quest_embeds'],
@@ -637,7 +611,7 @@ def train_one_only_positive():
     start_time                              = time.time()
     train_instances                         = train_data_step1(train_data)
     random.shuffle(train_instances)
-    for datum in train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf):
+    for datum in train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf):
         if (model_type in ['BCNN', 'ABCNN3']):
             gcost_, gemits_                     = model(
                 sents_embeds                    = datum['good_sents_embeds'],
@@ -1625,7 +1599,9 @@ embedding_dim       = 30
 additional_feats    = 10
 b_size              = 32
 
-(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+(
+    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
+) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
 
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
 print(avgdl, mean, deviation)
