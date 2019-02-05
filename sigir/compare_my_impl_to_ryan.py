@@ -580,4 +580,11 @@ evaluation.EvaluatorTask1b -phaseA -e 5 \
 ./abel_test_preds_batch1.json \
 | head -3| tail -1
 
+
+java -Xmx10G -cp /home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/PycharmProjects/aueb-bioasq6-master/bioasq6_data/test_batch_1/bioasq6_bm25_top100.test.bioasq.oracle.json \
+/home/dpappas/PycharmProjects/aueb-bioasq6-master/bioasq6_data/test_batch_1/bioasq6_bm25_top100.test.bioasq.json \
+| head -3| tail -1
+
 '''
