@@ -3,8 +3,9 @@ import torch
 import torch.nn as nn
 import torch.autograd as autograd
 import torch.nn.functional as F
-import pickle, random, sys, re, os
+import pickle, random, sys, re, os, json
 import numpy as np
+from gensim.models.keyedvectors import KeyedVectors
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -31,6 +32,10 @@ def GetWords(data, doc_text, words):
       for w in dwds:
         words[w] = 1
 
+def DumpJson(data, fname):
+  with open(fname, 'w') as fw:
+    json.dump(data, fw, indent=4)
+
 def load_model_from_checkpoint(resume_from):
     global start_epoch, optimizer
     if os.path.isfile(resume_from):
@@ -38,6 +43,118 @@ def load_model_from_checkpoint(resume_from):
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
+def JsonPredsAppend(preds, data, i, top):
+  pref = "http://www.ncbi.nlm.nih.gov/pubmed/"
+  qid = data['queries'][i]['query_id']
+  query = data['queries'][i]['query_text']
+  qdict = {}
+  qdict['body'] = query
+  qdict['id'] = qid
+  doc_list = []
+  for j in top:
+    doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+    doc_list.append(pref + doc_id)
+  qdict['documents'] = doc_list
+  preds['questions'].append(qdict)
+
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
+    if(use_sent_tokenizer):
+        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    else:
+        good_sents  = [the_doc['title'] + the_doc['abstractText']]
+    ####
+    quest_toks      = tokenize(quest)
+    good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    good_doc_af.append(len(good_sents) / 60.)
+    doc_toks                = tokenize(the_doc['title'] + the_doc['abstractText'])
+    doc_tokens, doc_embeds  = get_embeds(doc_toks, wv)
+    #
+    doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
+    tomi                = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop        = tomi - set(stopwords)
+    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features            = [
+        len(quest)                                      / 300.,
+        len(the_doc['title'] + the_doc['abstractText']) / 300.,
+        len(tomi_no_stop)                               / 100.,
+        BM25score,
+        sum(tomi_no_stop_idfs)                          / 100.,
+        sum(tomi_idfs)                                  / sum(quest_idfs),
+    ]
+    good_doc_af.extend(features)
+    ####
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    for good_text in good_sents:
+        sent_toks                   = tokenize(good_text)
+        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
+        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores.append(len(sent_toks)/ 342.)
+        if (len(good_embeds) > 0):
+            #
+            tomi                = (set(sent_toks) & set(quest_toks))
+            tomi_no_stop        = tomi - set(stopwords)
+            BM25score           = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+            tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+            tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+            quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+            features            = [
+                len(quest)              / 300.,
+                len(good_text)          / 300.,
+                len(tomi_no_stop)       / 100.,
+                BM25score,
+                sum(tomi_no_stop_idfs)  / 100.,
+                sum(tomi_idfs)          / sum(quest_idfs),
+            ]
+            #
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores+features)
+            held_out_sents.append(good_text)
+            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    ####
+    return {
+        'sents_embeds'      : good_sents_embeds,
+        'sents_escores'     : good_sents_escores,
+        'doc_af'            : good_doc_af,
+        'sent_tags'         : good_sent_tags,
+        'held_out_sents'    : held_out_sents,
+        'doc_embeds'        : doc_embeds,
+    }
+
+def get_embeds(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        if(tok in wv):
+            ret1.append(tok)
+            ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
+def idf_val(w, idf, max_idf):
+    if w in idf:
+        return idf[w]
+    return max_idf
+
+def load_idfs(idf_path, words):
+    print('Loading IDF tables')
+    # logger.info('Loading IDF tables')
+    # with open(dataloc + 'idf.pkl', 'rb') as f:
+    with open(idf_path, 'rb') as f:
+        idf = pickle.load(f)
+    ret = {}
+    for w in words:
+        if w in idf:
+            ret[w] = idf[w]
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    idf = None
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    # logger.info('Loaded idf tables with max idf {}'.format(max_idf))
+    return ret, max_idf
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim= 30, k_for_maxpool= 5):
@@ -260,33 +377,48 @@ GetWords(data, docs, words)
 
 ##################
 
+w2v_bin_path    = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
+wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
+idf, max_idf    = load_idfs(idf_pickle_path, words)
+
+##################
+
 print('Making preds')
 json_preds = {}
 json_preds['questions'] = []
 num_docs = 0
 for i in range(len(data['queries'])):
   num_docs += 1
-  dy.renew_cg()
+  model.eval()
   #########
-  qtext = data['queries'][i]['query_text']
-  qwds, qvecs, qconv = model.MakeInputs(qtext)
+  dato                          = data['queries'][i]
+  quest_text                    = dato['query_text']
+  quest_tokens, quest_embeds    = get_embeds(tokenize(quest_text), wv)
+  q_idfs                        = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
   #########
-  rel_scores = {}
+  rel_scores            = {}
   for j in range(len(data['queries'][i]['retrieved_documents'])):
     doc_id              = data['queries'][i]['retrieved_documents'][j]['doc_id']
     dtext               = (docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText'])
-    dwds, dvecs, dconv  = model.MakeInputs(dtext)
-    bm25                = data['queries'][i]['retrieved_documents'][j]['norm_bm25_score']
-    efeats              = model.GetExtraFeatures(qtext, dtext, bm25)
-    efeats_vec          = dy.inputVector(efeats)
-    score               = model.GetQDScore(qwds, qconv, dwds, dconv, efeats_vec)
+    #
+    datum = prep_data(
+        quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, [], idf, max_idf, use_sent_tokenizer=False
+    )
+    doc_emit_ = model.emit_one(
+        doc1_embeds=datum['doc_embeds'],
+        question_embeds=quest_embeds,
+        q_idfs=q_idfs,
+        doc_gaf=datum['doc_af']
+    )
+    score               = doc_emit_.cpu().item()
     rel_scores[j]       = score.value()
   #########
   top = heapq.nlargest(10, rel_scores, key=rel_scores.get)
-  utils.JsonPredsAppend(json_preds, data, i, top)
-  dy.renew_cg()
+  JsonPredsAppend(json_preds, data, i, top)
 
-utils.DumpJson(json_preds, 'abel_test_preds_batch' + sys.argv[2] + '.json')
+DumpJson(json_preds, 'abel_test_preds_batch' + sys.argv[2] + '.json')
 print('Done')
 
 
