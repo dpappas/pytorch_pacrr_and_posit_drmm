@@ -6,8 +6,110 @@ import torch.nn.functional as F
 import pickle, random, sys, re, os, json
 import numpy as np
 from gensim.models.keyedvectors import KeyedVectors
+from   nltk.tokenize import sent_tokenize
+import nltk
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+stopwords   = nltk.corpus.stopwords.words("english")
+
+def get_words(s, idf, max_idf):
+    sl  = tokenize(s)
+    sl  = [s for s in sl]
+    sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
+    return sl, sl2
+
+def uwords(words):
+  uw = {}
+  for w in words:
+    uw[w] = 1
+  return [w for w in uw]
+
+def ubigrams(words):
+  uw = {}
+  prevw = "<pw>"
+  for w in words:
+    uw[prevw + '_' + w] = 1
+    prevw = w
+  return [w for w in uw]
+
+def query_doc_overlap(qwords, dwords, idf, max_idf):
+    # % Query words in doc.
+    qwords_in_doc = 0
+    idf_qwords_in_doc = 0.0
+    idf_qwords = 0.0
+    for qword in uwords(qwords):
+      idf_qwords += idf_val(qword, idf, max_idf)
+      for dword in uwords(dwords):
+        if qword == dword:
+          idf_qwords_in_doc += idf_val(qword, idf, max_idf)
+          qwords_in_doc     += 1
+          break
+    if len(qwords) <= 0:
+      qwords_in_doc_val = 0.0
+    else:
+      qwords_in_doc_val = (float(qwords_in_doc) /
+                           float(len(uwords(qwords))))
+    if idf_qwords <= 0.0:
+      idf_qwords_in_doc_val = 0.0
+    else:
+      idf_qwords_in_doc_val = float(idf_qwords_in_doc) / float(idf_qwords)
+    # % Query bigrams  in doc.
+    qwords_bigrams_in_doc = 0
+    idf_qwords_bigrams_in_doc = 0.0
+    idf_bigrams = 0.0
+    for qword in ubigrams(qwords):
+      wrds = qword.split('_')
+      idf_bigrams += idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf)
+      for dword in ubigrams(dwords):
+        if qword == dword:
+          qwords_bigrams_in_doc += 1
+          idf_qwords_bigrams_in_doc += (idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf))
+          break
+    if len(qwords) <= 0:
+      qwords_bigrams_in_doc_val = 0.0
+    else:
+      qwords_bigrams_in_doc_val = (float(qwords_bigrams_in_doc) / float(len(ubigrams(qwords))))
+    if idf_bigrams <= 0.0:
+      idf_qwords_bigrams_in_doc_val = 0.0
+    else:
+      idf_qwords_bigrams_in_doc_val = (float(idf_qwords_bigrams_in_doc) / float(idf_bigrams))
+    return [
+        qwords_in_doc_val,
+        qwords_bigrams_in_doc_val,
+        idf_qwords_in_doc_val,
+        idf_qwords_bigrams_in_doc_val
+    ]
+
+def GetScores(qtext, dtext, bm25, idf, max_idf):
+    qwords, qw2 = get_words(qtext, idf, max_idf)
+    dwords, dw2 = get_words(dtext, idf, max_idf)
+    qd1         = query_doc_overlap(qwords, dwords, idf, max_idf)
+    bm25        = [bm25]
+    return qd1[0:3] + bm25
+
+def get_the_mesh(the_doc):
+    good_meshes = []
+    if('meshHeadingsList' in the_doc):
+        for t in the_doc['meshHeadingsList']:
+            t = t.split(':', 1)
+            t = t[1].strip()
+            t = t.lower()
+            good_meshes.append(t)
+    elif('MeshHeadings' in the_doc):
+        for mesh_head_set in the_doc['MeshHeadings']:
+            for item in mesh_head_set:
+                good_meshes.append(item['text'].strip().lower())
+    if('Chemicals' in the_doc):
+        for t in the_doc['Chemicals']:
+            t = t['NameOfSubstance'].strip().lower()
+            good_meshes.append(t)
+    good_mesh = sorted(good_meshes)
+    good_mesh = ['mgmx'] + good_mesh
+    # good_mesh = ' # '.join(good_mesh)
+    # good_mesh = good_mesh.split()
+    # good_mesh = [gm.split() for gm in good_mesh]
+    good_mesh = [gm for gm in good_mesh]
+    return good_mesh
 
 def tokenize(x):
   return bioclean(x)
@@ -57,6 +159,50 @@ def JsonPredsAppend(preds, data, i, top):
     doc_list.append(pref + doc_id)
   qdict['documents'] = doc_list
   preds['questions'].append(qdict)
+
+def tf(term, document):
+    tf = 0
+    for word in document:
+        if word == term:
+            tf += 1
+    if len(document) == 0:
+        return tf
+    else:
+        return tf/len(document)
+
+def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
+    score = 0
+    for query_term in query:
+        if query_term not in idf_scores:
+            score += rare_word * (
+                    (tf(query_term, document) * (k1 + 1)) /
+                    (
+                            tf(query_term, document) +
+                            k1 * (1 - b + b * (len(document) / avgdl))
+                    )
+            )
+        else:
+            score += idf_scores[query_term] * ((tf(query_term, document) * (k1 + 1)) / (tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+    if normalize:
+        return ((score - mean)/deviation)
+    else:
+        return score
+
+def snip_is_relevant(one_sent, gold_snips):
+    return any(
+        [
+            (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
+            or
+            (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
+            for gold_snip in gold_snips
+        ]
+    )
+    # return max(
+    #     [
+    #         similar(one_sent, gold_snip)
+    #         for gold_snip in gold_snips
+    #     ]
+    # )
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     if(use_sent_tokenizer):
@@ -367,6 +513,7 @@ load_model_from_checkpoint(resume_from)
 
 print('Loading Data')
 dataloc = '/home/dpappas/PycharmProjects/aueb-bioasq6-master/bioasq6_data/'
+outf    = 'abel_test_preds_batch1.json'
 with open(dataloc + 'test_batch_1/bioasq6_bm25_top100.test.pkl', 'rb') as f:
   data = pickle.load(f)
 with open(dataloc + 'test_batch_1/bioasq6_bm25_docset_top100.test.pkl', 'rb') as f:
@@ -382,6 +529,9 @@ idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
 wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
 idf, max_idf    = load_idfs(idf_pickle_path, words)
+avgdl           = 21.2508
+mean            = 0.5973
+deviation       = 0.5926
 
 ##################
 
@@ -399,26 +549,27 @@ for i in range(len(data['queries'])):
   q_idfs                        = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
   #########
   rel_scores            = {}
-  for j in range(len(data['queries'][i]['retrieved_documents'])):
-    doc_id              = data['queries'][i]['retrieved_documents'][j]['doc_id']
+  for j in range(len(dato['retrieved_documents'])):
+    retr                = dato['retrieved_documents'][j]
+    doc_id              = retr['doc_id']
     dtext               = (docs[doc_id]['title'] + ' <title> ' + docs[doc_id]['abstractText'])
     #
-    datum = prep_data(
-        quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, [], idf, max_idf, use_sent_tokenizer=False
-    )
+    doc_toks                = tokenize(dtext)
+    doc_tokens, doc_embeds  = get_embeds(doc_toks, wv)
+    #
+    datum = prep_data(quest_text, docs[doc_id], retr['norm_bm25_score'], wv, [], idf, max_idf, use_sent_tokenizer=False)
     doc_emit_ = model.emit_one(
         doc1_embeds=datum['doc_embeds'],
         question_embeds=quest_embeds,
         q_idfs=q_idfs,
         doc_gaf=datum['doc_af']
     )
-    score               = doc_emit_.cpu().item()
-    rel_scores[j]       = score.value()
+    rel_scores[j]       = doc_emit_.cpu().item()
   #########
   top = heapq.nlargest(10, rel_scores, key=rel_scores.get)
   JsonPredsAppend(json_preds, data, i, top)
 
-DumpJson(json_preds, 'abel_test_preds_batch' + sys.argv[2] + '.json')
+DumpJson(json_preds, outf)
 print('Done')
 
 
