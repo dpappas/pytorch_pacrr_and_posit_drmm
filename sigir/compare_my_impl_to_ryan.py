@@ -558,13 +558,8 @@ for i in tqdm(range(len(data['queries']))):
     doc_toks                = tokenize(dtext)
     doc_tokens, doc_embeds  = get_embeds(doc_toks, wv)
     #
-    datum = prep_data(quest_text, docs[doc_id], retr['norm_bm25_score'], wv, [], idf, max_idf, use_sent_tokenizer=False)
-    doc_emit_ = model.emit_one(
-        doc1_embeds=datum['doc_embeds'],
-        question_embeds=quest_embeds,
-        q_idfs=q_idfs,
-        doc_gaf=datum['doc_af']
-    )
+    datum               = prep_data(quest_text, docs[doc_id], retr['norm_bm25_score'], wv, [], idf, max_idf, use_sent_tokenizer=False)
+    doc_emit_           = model.emit_one(doc1_embeds=datum['doc_embeds'], question_embeds=quest_embeds, q_idfs=q_idfs, doc_gaf=datum['doc_af'])
     rel_scores[j]       = doc_emit_.cpu().item()
   #########
   top = heapq.nlargest(10, rel_scores, key=rel_scores.get)
