@@ -1597,7 +1597,9 @@ class ABCNN3_PDRMM(nn.Module):
 # # get_embeds          = get_embeds_use_only_unk
 
 # atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
+all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_elmo_embeds_after_pca.p', 'rb'))
+elmo_embeds_dir     = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
@@ -1648,7 +1650,7 @@ hdlr                = None
 for run in range(4,5):
     setup_random(run)
     #
-    odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
+    odir            = '/home/dpappas/ELMO_{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
     logger, hdlr    = init_the_logger(hdlr)
     if (not os.path.exists(odir)):
         os.makedirs(odir)
