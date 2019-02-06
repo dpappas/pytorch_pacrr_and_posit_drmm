@@ -384,10 +384,7 @@ def load_all_data(dataloc):
     #
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
-                            t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
-                                                                                          '').strip().lower()).split()
-
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 ####
 dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
 odir                = '/media/dpappas/dpappas_data/biobert_data/'

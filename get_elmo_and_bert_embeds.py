@@ -12,9 +12,7 @@ from allennlp.modules.elmo import Elmo, batch_to_ids
 from joblib import Parallel, delayed
 import random
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
-                            t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
-                                                                                          '').strip().lower()).split()
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class InputExample(object):
 
@@ -408,12 +406,12 @@ tokenizer   = BertTokenizer.from_pretrained('bert-large-uncased', cache_dir=cach
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
 
-
 if (not os.path.exists(os.path.join(init_checkpoint_pt, 'pytorch_model.bin'))):
-    convert_tf_checkpoint_to_pytorch(os.path.join(init_checkpoint_pt, 'bert_model.ckpt'),
-                                     os.path.join(init_checkpoint_pt, 'bert_config.json'),
-                                     os.path.join(init_checkpoint_pt, 'pytorch_model.bin')
-                                     )
+    convert_tf_checkpoint_to_pytorch(
+        os.path.join(init_checkpoint_pt, 'bert_model.ckpt'),
+        os.path.join(init_checkpoint_pt, 'bert_config.json'),
+        os.path.join(init_checkpoint_pt, 'pytorch_model.bin')
+    )
 
 elmo = Elmo(options_file, weight_file, 1, dropout=0)
 model = BertModel.from_pretrained(init_checkpoint_pt, cache_dir=cache_dir)
