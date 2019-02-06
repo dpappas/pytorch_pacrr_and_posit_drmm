@@ -19,7 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os, random, pickle
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 from pprint import pprint
 import codecs
 import collections
