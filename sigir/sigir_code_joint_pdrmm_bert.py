@@ -31,11 +31,9 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
-                            t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
-                                                                                          '').strip().lower()).split()
-softmax = lambda z: np.exp(z) / np.sum(np.exp(z))
-stopwords = nltk.corpus.stopwords.words("english")
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
+stopwords   = nltk.corpus.stopwords.words("english")
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
@@ -1045,9 +1043,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     return data_for_revision, ret_data, snips_res, snips_res_known
 
-
-def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known,
-                      data_for_revision):
+def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
