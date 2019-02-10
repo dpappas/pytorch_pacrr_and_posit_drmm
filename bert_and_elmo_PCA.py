@@ -161,10 +161,13 @@ for f in tqdm(os.listdir(diri), ascii=True):
     fpath = os.path.join(diri, f)
     d = pickle.load(open(fpath, 'rb'))
     #
+    t1 = [temp[-1] for temp in d['title_bert_original_embeds']]
+    t2 = [temp[-1] for temp in d['abs_bert_original_embeds']]
+    mat_list = t1+t2
     if (mat is None):
-        mat = np.concatenate(d['title_bert_original_embeds'] + d['abs_bert_original_embeds'], axis=0)
+        mat = np.concatenate(mat_list, axis=0)
     else:
-        mat = np.concatenate([mat] + d['title_bert_original_embeds'] + d['abs_bert_original_embeds'], axis=0)
+        mat = np.concatenate([mat] + mat_list, axis=0)
     if (mat.shape[0] > 1000):
         transformer.partial_fit(mat)
         mat = None
@@ -182,7 +185,7 @@ diri        = '/media/dpappas/dpappas_data/biobert_data/'
 filename    = '/home/dpappas/bioasq_all/pca_biobert_transformer.sav'
 transformer = pickle.load(open(filename, 'rb'))
 
-odiri = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
+odiri       = '/media/dpappas/dpappas_data/biobert_embeds_after_pca/'
 if (not os.path.exists(odiri)):
     os.makedirs(odiri)
 
