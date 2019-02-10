@@ -436,6 +436,22 @@ for the_docs in [test_docs, dev_docs, train_docs]:
             #
             pickle.dump(ret, open(opath, 'wb'), protocol=2)
 
+oqf = '/media/dpappas/dpappas_data/biobert_data/all_quest_embeds.p'
+if(not os.path.exists(oqf)):
+    all_qs = {}
+    for t in tqdm(test_data['queries'] + train_data['queries'] + dev_data['queries'], ascii=True):
+        text        = t['query_text']
+        quest_sents = sent_tokenize(text)
+        quest_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in quest_sents]
+        quest_sents = [s for s in quest_sents if (len(s.strip()) > 0)]
+        #
+        all_qs[text] = {}
+        all_qs[text]['title_bert_original_embeds'] = get_bert_for_text(quest_sents)
+    pickle.dump(all_qs, open(oqf, 'wb'))
+
+print('Good to go!!!')
+
+
 '''
 python3.6 \
 /home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/extract_features_bert_pretrained.py \

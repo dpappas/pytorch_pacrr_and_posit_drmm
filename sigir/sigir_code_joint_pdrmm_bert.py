@@ -1516,19 +1516,19 @@ use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
-all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
-idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-bert_embeds_dir = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
-eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd = '/home/dpappas/'
-use_cuda = True
-bert_tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
+all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+bert_embeds_dir     = '/home/dpappas/bioasq_all/bert_embeds_after_pca/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
+use_cuda            = True
+bert_tokenizer      = BertTokenizer.from_pretrained('bert-large-uncased')
 
-k_for_maxpool = 5
-k_sent_maxpool = 5
-embedding_dim = 50  # 30  # 200
+k_for_maxpool       = 5
+k_sent_maxpool      = 5
+embedding_dim       = 50  # 30  # 200
 lr = 0.01
 b_size = 32
 max_epoch = 10
