@@ -946,11 +946,12 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         'documents': []
     }
     #
-    quest_text  = dato['query_text']
+    quest_text      = dato['query_text']
     #
-    qemb        = all_quest_embeds[quest_text]
-    qemb        = np.concatenate(qemb, axis=0)
-    quest_text  = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
+    qemb            = all_quest_embeds[quest_text]
+    qemb            = [t[-1][t[-2]] for t in qemb]
+    qemb            = np.concatenate(qemb, axis=0)
+    quest_text      = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
     #
     quest_tokens    = tokenize(quest_text)
     q_idfs          = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
