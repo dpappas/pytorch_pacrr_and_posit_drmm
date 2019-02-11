@@ -664,21 +664,14 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    doc_toks = tokenize(the_doc['title'] + the_doc['abstractText'])
-    tomi = (set(doc_toks) & set(quest_toks))
-    tomi_no_stop = tomi - set(stopwords)
-    BM25score = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-    tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-    tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
-    quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
-    features = [
-        len(quest) / 300.,
-        len(the_doc['title'] + the_doc['abstractText']) / 300.,
-        len(tomi_no_stop) / 100.,
-        BM25score,
-        sum(tomi_no_stop_idfs) / 100.,
-        sum(tomi_idfs) / sum(quest_idfs),
-    ]
+    doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
+    tomi                = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop        = tomi - set(stopwords)
+    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features            = [len(quest) / 300., len(the_doc['title'] + the_doc['abstractText']) / 300., len(tomi_no_stop) / 100., BM25score, sum(tomi_no_stop_idfs) / 100., sum(tomi_idfs) / sum(quest_idfs)]
     good_doc_af.extend(features)
     #
     all_bert_embeds = [t[-1][t[-2]] for t in gemb['title_bert_original_embeds']]
@@ -688,6 +681,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
         sent_toks           = tokenize(good_text)
+        print(len(sent_toks), bert_embeds.shape)
         oh1, oh2, oh_sim    = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
         good_escores        = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
@@ -750,6 +744,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         # print(quest_text)
         qemb = all_quest_embeds[quest_text]
+        qemb = [t[-1][t[-2]] for t in qemb]
         qemb = np.concatenate(qemb, axis=0)
         # pprint(qemb.keys())
         if (use_sent_tokenizer):
