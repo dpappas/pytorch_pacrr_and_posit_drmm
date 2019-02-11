@@ -654,7 +654,8 @@ def create_one_hot_and_sim(tokens1, tokens2):
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     good_sents          = []
     for s in sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText']):
-        if (len(' '.join(bioclean(s.replace('\ufeff', ' '))).strip()) > 0):
+        sent_toks       = tokenize(' '.join(bioclean(s.replace('\ufeff', ' '))).strip())
+        if (len(sent_toks) > 0):
             good_sents.append(s)
     ####
     bert_f              = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
@@ -674,14 +675,11 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     features            = [len(quest) / 300., len(the_doc['title'] + the_doc['abstractText']) / 300., len(tomi_no_stop) / 100., BM25score, sum(tomi_no_stop_idfs) / 100., sum(tomi_idfs) / sum(quest_idfs)]
     good_doc_af.extend(features)
     #
-    # all_bert_embeds     = [t[-1][t[-2][1:-1]] for t in gemb['title_bert_original_embeds']]
-    # all_bert_embeds     = all_bert_embeds + [t[-1][t[-2][1:-1]] for t in gemb['abs_bert_original_embeds']]
     all_bert_embeds     = gemb['title_bert_original_embeds']+ gemb['abs_bert_original_embeds']
-    # print(pid, len(all_bert_embeds), len(good_sents))
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
-        sent_toks           = tokenize(' '.join(bioclean(s.replace('\ufeff', ' '))).strip())
+        sent_toks           = tokenize(' '.join(bioclean(good_text.replace('\ufeff', ' '))).strip())
         bert_embeds         = bert_embeds[-1][bert_embeds[-2][1:-1]]
         #
         oh1, oh2, oh_sim    = create_one_hot_and_sim(quest_toks, sent_toks)
