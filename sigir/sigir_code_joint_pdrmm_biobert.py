@@ -391,6 +391,7 @@ def get_words(s, idf, max_idf):
 
 def tokenize(x):
     # return bioclean(x)
+    x        = ' '.join(bioclean(x.replace('\ufeff', ' '))).strip()
     x_tokens = bert_tokenizer.tokenize(x)
     x_tokens = fix_bert_tokens(x_tokens)
     return x_tokens
@@ -654,8 +655,7 @@ def create_one_hot_and_sim(tokens1, tokens2):
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     good_sents          = []
     for s in sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText']):
-        sent_toks       = tokenize(' '.join(bioclean(s.replace('\ufeff', ' '))).strip())
-        if (len(sent_toks) > 0):
+        if (len(tokenize(s)) > 0):
             good_sents.append(s)
     ####
     bert_f              = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
@@ -676,10 +676,11 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     good_doc_af.extend(features)
     #
     all_bert_embeds     = gemb['title_bert_original_embeds']+ gemb['abs_bert_original_embeds']
+    # print(len(good_sents), len(all_bert_embeds))
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
-        sent_toks           = tokenize(' '.join(bioclean(good_text.replace('\ufeff', ' '))).strip())
+        sent_toks           = tokenize(good_text)
         bert_embeds         = bert_embeds[-1][bert_embeds[-2][1:-1]]
         #
         oh1, oh2, oh_sim    = create_one_hot_and_sim(quest_toks, sent_toks)
@@ -698,6 +699,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
         good_sents_escores.append(good_escores + features)
         held_out_sents.append(good_text)
         good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    # print(good_sent_tags)
     ####
     return {
         'sents_embeds': good_sents_embeds,
@@ -744,8 +746,6 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
             good_snips = [' '.join(bioclean(sn)) for sn in good_snips]
         else:
             good_snips = []
-        #
-        quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
         #
         datum = prep_data(quest_text, docs[gid], gid, bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds = datum['sents_embeds']
@@ -934,7 +934,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     qemb            = all_quest_embeds[quest_text]
     qemb            = [t[-1][t[-2]][1:-1] for t in qemb]
     qemb            = np.concatenate(qemb, axis=0)
-    quest_text      = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
     #
     quest_tokens    = tokenize(quest_text)
     q_idfs          = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
@@ -1535,7 +1534,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_bert_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_joint_simple_biobert_2L_no_mesh_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1570,11 +1569,16 @@ for run in range(0, 5):
             test_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
             save_checkpoint(epoch, model, best_dev_map, optimizer,
                             filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
-        print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
-                                                                                             best_dev_map, test_map))
+        print(
+            'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(
+                epoch + 1, epoch_dev_map, best_dev_map, test_map
+            )
+        )
         logger.info(
-            'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
-                                                                                           best_dev_map, test_map))
+            'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(
+                epoch + 1, epoch_dev_map, best_dev_map, test_map
+            )
+        )
 
 '''
 python
