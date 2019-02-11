@@ -692,14 +692,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
         tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
         tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
         quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
-        features            = [
-            len(quest) / 300.,
-            len(good_text) / 300.,
-            len(tomi_no_stop) / 100.,
-            BM25score,
-            sum(tomi_no_stop_idfs) / 100.,
-            sum(tomi_idfs) / sum(quest_idfs),
-        ]
+        features            = [len(quest) / 300., len(good_text) / 300., len(tomi_no_stop) / 100., BM25score, sum(tomi_no_stop_idfs) / 100., sum(tomi_idfs) / sum(quest_idfs)]
         #
         good_sents_embeds.append(bert_embeds)
         good_sents_escores.append(good_escores + features)
