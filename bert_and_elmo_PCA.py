@@ -172,7 +172,7 @@ for f in tqdm(os.listdir(diri), ascii=True):
         transformer.partial_fit(mat)
         mat = None
 
-pickle.dump(transformer, open(filename, 'wb'))
+pickle.dump(transformer, open(filename, 'wb'), protocol=2)
 
 #####################
 
@@ -195,18 +195,26 @@ for f in tqdm(os.listdir(diri), ascii=True):
     if (not os.path.exists(opath)):
         d = pickle.load(open(fpath, 'rb'))
         od = {
-            'title_bert_original_embeds' : [transformer.transform(m) for m in d['title_bert_original_embeds']],
-            'abs_bert_original_embeds'   : [transformer.transform(m) for m in d['abs_bert_original_embeds']],
+            'title_bert_original_embeds' : [
+                [m[0],m[1],m[2],transformer.transform(m[3])]
+                for m in d['title_bert_original_embeds']
+            ],
+            'abs_bert_original_embeds'   : [
+                [m[0], m[1], m[2], transformer.transform(m[3])]
+                for m in d['abs_bert_original_embeds']
+            ],
             'abs_sents'                  : d['abs_sents'],
             'title_sents'                : d['title_sents']
         }
         pickle.dump(od, open(opath, 'wb'), protocol=2)
 
-all_qs = pickle.load(open('/home/dpappas/bioasq_all/all_quest_embeds.p', 'rb'))
-all_qs_pca = {}
-
+all_qs      = pickle.load(open('/home/dpappas/bioasq_all/all_quest_embeds.p', 'rb'))
+all_qs_pca  = {}
 for quest in tqdm(all_qs.keys(), ascii=True):
-    all_qs_pca[quest] = [transformer.transform(m) for m in all_qs[quest]['title_bert_original_embeds']]
+    all_qs_pca[quest] = [
+        [m[0], m[1], m[2], transformer.transform(m[3])]
+        for m in all_qs[quest]['title_bert_original_embeds']
+    ]
 
 pickle.dump(all_qs_pca, open('/home/dpappas/bioasq_all/all_quest_biobert_embeds_after_pca.p', 'wb'), protocol=2)
 
