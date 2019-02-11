@@ -953,7 +953,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         if(use_cuda):
             self.margin_loss    = self.margin_loss.cuda()
     def init_mesh_module(self):
-        self.mesh_h0    = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
+        self.mesh_h0    = nn.Parameter(torch.randn(1, 1, self.embedding_dim), requires_grad=True)
         self.mesh_gru   = nn.GRU(self.embedding_dim, self.embedding_dim)
         if(use_cuda):
             self.mesh_h0    = self.mesh_h0.cuda()
