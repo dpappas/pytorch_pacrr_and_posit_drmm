@@ -652,10 +652,10 @@ def create_one_hot_and_sim(tokens1, tokens2):
     return oh1, oh2, ret
 
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
-    if (use_sent_tokenizer):
-        good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-    else:
-        good_sents      = [the_doc['title'] + the_doc['abstractText']]
+    good_sents          = []
+    for s in sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText']):
+        if (len(' '.join(bioclean(s.replace('\ufeff', ' '))).strip()) > 0):
+            good_sents.append(s)
     ####
     bert_f              = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
     gemb                = pickle.load(open(bert_f, 'rb'))
@@ -664,7 +664,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
+    doc_toks            = tokenize(the_doc['title'] + ' ' + the_doc['abstractText'])
     tomi                = (set(doc_toks) & set(quest_toks))
     tomi_no_stop        = tomi - set(stopwords)
     BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
@@ -674,14 +674,16 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     features            = [len(quest) / 300., len(the_doc['title'] + the_doc['abstractText']) / 300., len(tomi_no_stop) / 100., BM25score, sum(tomi_no_stop_idfs) / 100., sum(tomi_idfs) / sum(quest_idfs)]
     good_doc_af.extend(features)
     #
-    all_bert_embeds     = [t[-1][t[-2]] for t in gemb['title_bert_original_embeds']]
-    all_bert_embeds     = all_bert_embeds + [t[-1][t[-2]] for t in gemb['abs_bert_original_embeds']]
+    # all_bert_embeds     = [t[-1][t[-2][1:-1]] for t in gemb['title_bert_original_embeds']]
+    # all_bert_embeds     = all_bert_embeds + [t[-1][t[-2][1:-1]] for t in gemb['abs_bert_original_embeds']]
+    all_bert_embeds     = gemb['title_bert_original_embeds']+ gemb['abs_bert_original_embeds']
     # print(pid, len(all_bert_embeds), len(good_sents))
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
-        sent_toks           = tokenize(good_text)
-        print(len(sent_toks), bert_embeds.shape)
+        sent_toks           = tokenize(' '.join(bioclean(s.replace('\ufeff', ' '))).strip())
+        bert_embeds         = bert_embeds[-1][bert_embeds[-2][1:-1]]
+        #
         oh1, oh2, oh_sim    = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
         good_escores        = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
@@ -737,9 +739,8 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         # print(quest_text)
         qemb = all_quest_embeds[quest_text]
-        qemb = [t[-1][t[-2]] for t in qemb]
+        qemb = [t[-1][t[-2]][1:-1] for t in qemb]
         qemb = np.concatenate(qemb, axis=0)
-        # pprint(qemb.keys())
         if (use_sent_tokenizer):
             good_snips = get_snips(quest_id, gid, bioasq6_data)
             good_snips = [' '.join(bioclean(sn)) for sn in good_snips]
@@ -766,10 +767,6 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         #
         quest_tokens = tokenize(quest_text)
         q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        # print(quest_tokens)
-        # print(len(quest_tokens))
-        # print(len(q_idfs))
-        # print(qemb.shape)
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
             yield {
@@ -937,7 +934,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     quest_text      = dato['query_text']
     #
     qemb            = all_quest_embeds[quest_text]
-    qemb            = [t[-1][t[-2]] for t in qemb]
+    qemb            = [t[-1][t[-2]][1:-1] for t in qemb]
     qemb            = np.concatenate(qemb, axis=0)
     quest_text      = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
     #
@@ -1607,6 +1604,7 @@ len([
 python3.6
 import pickle
 from pprint import pprint
+from pprint import pprint
 d = pickle.load(open('/home/dpappas/bioasq_all/bert_elmo_embeds/25423562.p','rb'))
 pprint(list(d.keys()))
 
@@ -1621,5 +1619,19 @@ pprint(d['abs_bert_original_tokens'])
 ['[CLS]', 'however', 'the', 'bid', '##ire', '##ction', '##al', 'link', 'between', 'sleep', 'and', 'certain', 'como', '##rb', '##idi', '##ties', 'may', 'encourage', 'development', 'of', 'specific', 'drugs', 'for', 'como', '##rb', '##id', 'ins', '##om', '##nia', '[SEP]'], 
 ['[CLS]', 'new', 'ins', '##om', '##nia', 'the', '##ra', '##pies', 'will', 'most', 'likely', 'move', 'away', 'from', 'ga', '##ba', '##ar', 'receptors', 'modulation', 'to', 'more', 'subtle', 'neurological', 'pathways', 'that', 'regulate', 'the', 'sleep', '-', 'wake', 'cycle', '[SEP]']
 ]
+
+
+[
+t for t in ['[CLS]', 'the', 'drugs', 'covered', 'target', 'g', '##aba', '##a', 'z', '##ale', '##p', '##lon', '-', 'c', '##r', 'lo', '##red', '##ip', '##lon', 'e', '##v', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tamine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'se', '##rot', '##oni', '##n', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'me', '##lat', '##oni', '##nse', '##rot', '##oni', '##n', '##5', '-', 'h', '##t', '##1', '##a', 'p', '##iro', '##mel', '##ati', '##ne', 'and', 'me', '##lat', '##oni', '##n', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'me', '##lat', '##oni', '##n', 'and', 'ta', '##si', '##mel', '##te', '##on', '[SEP]']
+if(not t.startswith('##'))
+]
+
+['the', 'drugs', 'covered', 'target', 'gabaa', 'zaleplon', '-', 'cr', 'lorediplon', 'evt', '-', '201', 'orexin', 'filorexant', 'min', '-', '202', 'histamine', '-', 'h1', 'ly2624803', 'serotonin', '5', '-', 'ht2a', 'iti', '-', '007', 'melatoninserotonin5', '-', 'ht1a', 'piromelatine', 'and', 'melatonin', 'indication', 'expansions', 'of', 'prolonged', '-', 'release', 'melatonin', 'and', 'tasimelteon', 'for', 'pediatric', 'sleep', 'and', 'circadian', 'rhythm', 'disorders', 'receptors']
+the drugs covered target gabaa zaleplon-cr lorediplon evt-201 orexin filorexant min-202 histamine-h1 ly2624803 serotonin 5-ht2a iti-007 melatoninserotonin5-ht1a piromelatine and melatonin indication expansions of prolonged-release melatonin and tasimelteon for pediatric sleep and circadian rhythm disorders receptors
+['[CLS]', 'the', 'drugs', 'covered', 'target', 'g', '##aba', '##a', 'z', '##ale', '##p', '##lon', '-', 'c', '##r', 'lo', '##red', '##ip', '##lon', 'e', '##v', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tamine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'se', '##rot', '##oni', '##n', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'me', '##lat', '##oni', '##nse', '##rot', '##oni', '##n', '##5', '-', 'h', '##t', '##1', '##a', 'p', '##iro', '##mel', '##ati', '##ne', 'and', 'me', '##lat', '##oni', '##n', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'me', '##lat', '##oni', '##n', 'and', 'ta', '##si', '##mel', '##te', '##on', '[SEP]']
+51
+(43, 50)
+
+
 
 '''
