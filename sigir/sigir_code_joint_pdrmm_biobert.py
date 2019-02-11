@@ -653,15 +653,15 @@ def create_one_hot_and_sim(tokens1, tokens2):
 
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if (use_sent_tokenizer):
-        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+        good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     else:
-        good_sents = [the_doc['title'] + the_doc['abstractText']]
+        good_sents      = [the_doc['title'] + the_doc['abstractText']]
     ####
-    bert_f = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
-    gemb = pickle.load(open(bert_f, 'rb'))
+    bert_f              = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
+    gemb                = pickle.load(open(bert_f, 'rb'))
     ####
-    quest_toks = tokenize(quest)
-    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    quest_toks          = tokenize(quest)
+    good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
     doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
@@ -674,8 +674,8 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     features            = [len(quest) / 300., len(the_doc['title'] + the_doc['abstractText']) / 300., len(tomi_no_stop) / 100., BM25score, sum(tomi_no_stop_idfs) / 100., sum(tomi_idfs) / sum(quest_idfs)]
     good_doc_af.extend(features)
     #
-    all_bert_embeds = [t[-1][t[-2]] for t in gemb['title_bert_original_embeds']]
-    all_bert_embeds = all_bert_embeds + [t[-1][t[-2]] for t in gemb['abs_bert_original_embeds']]
+    all_bert_embeds     = [t[-1][t[-2]] for t in gemb['title_bert_original_embeds']]
+    all_bert_embeds     = all_bert_embeds + [t[-1][t[-2]] for t in gemb['abs_bert_original_embeds']]
     # print(pid, len(all_bert_embeds), len(good_sents))
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
