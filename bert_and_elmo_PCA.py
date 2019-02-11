@@ -190,25 +190,26 @@ if (not os.path.exists(odiri)):
     os.makedirs(odiri)
 
 for f in tqdm(os.listdir(diri), ascii=True):
-    fpath = os.path.join(diri, f)
-    opath = os.path.join(odiri, f)
-    if (not os.path.exists(opath)):
-        d = pickle.load(open(fpath, 'rb'))
-        od = {
-            'title_bert_original_embeds' : [
-                [m[0],m[1],m[2],transformer.transform(m[3])]
-                for m in d['title_bert_original_embeds']
-            ],
-            'abs_bert_original_embeds'   : [
-                [m[0], m[1], m[2], transformer.transform(m[3])]
-                for m in d['abs_bert_original_embeds']
-            ],
-            'abs_sents'                  : d['abs_sents'],
-            'title_sents'                : d['title_sents']
-        }
-        pickle.dump(od, open(opath, 'wb'), protocol=2)
+    if('all_quest_embeds' not in f):
+        fpath = os.path.join(diri, f)
+        opath = os.path.join(odiri, f)
+        if (not os.path.exists(opath)):
+            d = pickle.load(open(fpath, 'rb'))
+            od = {
+                'title_bert_original_embeds' : [
+                    [m[0],m[1],m[2],transformer.transform(m[3])]
+                    for m in d['title_bert_original_embeds']
+                ],
+                'abs_bert_original_embeds'   : [
+                    [m[0], m[1], m[2], transformer.transform(m[3])]
+                    for m in d['abs_bert_original_embeds']
+                ],
+                'abs_sents'                  : d['abs_sents'],
+                'title_sents'                : d['title_sents']
+            }
+            pickle.dump(od, open(opath, 'wb'), protocol=2)
 
-all_qs      = pickle.load(open('/home/dpappas/bioasq_all/all_quest_embeds.p', 'rb'))
+all_qs      = pickle.load(open('/media/dpappas/dpappas_data/biobert_data/all_quest_embeds.p', 'rb'))
 all_qs_pca  = {}
 for quest in tqdm(all_qs.keys(), ascii=True):
     all_qs_pca[quest] = [
