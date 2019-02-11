@@ -948,9 +948,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     quest_text = dato['query_text']
     #
-    qemb = all_quest_embeds[quest_text]
-    qemb = np.concatenate(qemb, axis=0)
-    quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
+    qemb        = all_quest_embeds[quest_text]
+    qemb        = np.concatenate(qemb, axis=0)
+    quest_text  = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
     #
     quest_tokens = tokenize(quest_text)
     q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
@@ -1517,7 +1517,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
-all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_bert_embeds_after_pca.p', 'rb'))
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
@@ -1530,6 +1529,7 @@ vocab_file          = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/v
 bert_tokenizer      = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
 bert_all_words_path = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
 bert_embeds_dir     = '/media/dpappas/dpappas_data/biobert_embeds_after_pca/'
+all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_biobert_embeds_after_pca.p', 'rb'))
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
@@ -1589,7 +1589,8 @@ for run in range(0, 5):
 '''
 python
 import pickle
-d = pickle.load(open('/media/dpappas/dpappas_data/biobert_data/10021341.p', 'rb'))
+d   = pickle.load(open('/media/dpappas/dpappas_data/biobert_data/10021341.p', 'rb'))
+dd  = pickle.load(open('/home/dpappas/bioasq_all/all_quest_biobert_embeds_after_pca.p', 'rb'))
 
 
 
