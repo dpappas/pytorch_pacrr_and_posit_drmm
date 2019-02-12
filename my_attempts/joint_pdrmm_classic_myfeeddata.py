@@ -741,16 +741,44 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     #
-    for datum in train_data:
-        # print(datum.keys())
-        # dict_keys(['query_id', 'query_text', 'relevant_documents', 'num_rel', 'retrieved_documents', 'num_ret', 'num_rel_ret'])
-        qtext           = datum['query_text']
-        relevant_ids    = datum['relevant_documents']
-        retrieved_ids   = [t['doc_id'] for t in test_data['queries'][0]['retrieved_documents']]
-        rel_retr_ids    = [t for t in retrieved_ids if t in relevant_ids]
-        irel_retr_ids   = [t for t in retrieved_ids if t not in relevant_ids]
+    for datum in train_data['queries']:
+        qid, qtext                      = datum['query_id'], datum['query_text']
+        quest_tokens, quest_embeds      = get_embeds(tokenize(qtext), wv)
+        q_idfs                          = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        gold_snips                      = get_gold_snips(qid, bioasq6_data)
+        #
+        for retr_doc in datum['retrieved_documents']:
+            pmid        = retr_doc['doc_id']
+            the_bm25    = retr_doc['norm_bm25_score']
+            is_relevant = retr_doc['norm_bm25_score']
+            ##########
+            title       = train_docs[pmid]['title']
+            abs         = train_docs[pmid]['abstractText']
+            all_sents   = [title] + sent_tokenize(abs)
+            ##########
+            doc_af      = GetScores(qtext, ' '.join(all_sents), the_bm25, idf, max_idf)
+            doc_af.append(len(all_sents) / 60.)
+            doc_af.append(len(' '.join(all_sents)) / 800.)
+            sents_embeds, sents_escores, held_out_sents, sent_tags = [], [], [], []
+            for sent in all_sents:
+                sent_toks                = tokenize(sent)
+                good_tokens, good_embeds = get_embeds(sent_toks, wv)
+                good_escores = GetScores(qtext, sent, the_bm25, idf, max_idf)[:-1]
+                good_escores.append(len(sent_toks) / 342.)
+                if (len(good_tokens) > 0):
+                    sents_embeds.append(good_embeds)
+                    sents_escores.append(good_escores)
+                    held_out_sents.append(sent)
+                    sent_tags.append(snip_is_relevant(' '.join(bioclean(sent)), gold_snips))
+            doc_emit_, gs_emits_ = model.emit_one(
+                doc1_sents_embeds   = sents_embeds,
+                question_embeds     = quest_embeds,
+                q_idfs              = q_idfs,
+                sents_gaf           = sents_escores,
+                doc_gaf             = doc_af
+            )
+            print(doc_emit_)
         exit()
-
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
     #
@@ -1061,8 +1089,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         self.k_sent_maxpool                         = k_sent_maxpool
-        self.doc_add_feats                          = 11
-        self.sent_add_feats                         = 10
+        self.doc_add_feats                          = 6
+        self.sent_add_feats                         = 4
         #
         self.embedding_dim                          = embedding_dim
         self.sentence_out_method                    = sentence_out_method
