@@ -751,6 +751,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         sent_results    = []
         for retr_doc in datum['retrieved_documents']:
             pmid        = retr_doc['doc_id']
+            # gold_snips  = [t for t in bioasq6_data[qid]['snippets'] if(t['document'].endswith(pmid))]
             the_bm25    = retr_doc['norm_bm25_score']
             is_relevant = retr_doc['is_relevant']
             ##########
@@ -786,6 +787,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         good_sent_results   = sorted([t for t in sent_results if(t[1]==1)], key=lambda x: x[0], reverse=True)
         bad_sent_results    = sorted([t for t in sent_results if(t[1]==0)], key=lambda x: x[0], reverse=True)
         bad_sent_results    = bad_sent_results[:len(good_sent_results)]
+        pprint(gold_snips)
+        pprint(all_sents)
         pprint(doc_results)
         pprint(sent_results)
         pprint(good_sent_results)
