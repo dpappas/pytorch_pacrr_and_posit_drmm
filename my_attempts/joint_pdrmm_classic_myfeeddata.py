@@ -747,10 +747,12 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         q_idfs                          = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         gold_snips                      = get_gold_snips(qid, bioasq6_data)
         #
+        doc_results     = []
+        sent_results    = []
         for retr_doc in datum['retrieved_documents']:
             pmid        = retr_doc['doc_id']
             the_bm25    = retr_doc['norm_bm25_score']
-            is_relevant = retr_doc['norm_bm25_score']
+            is_relevant = retr_doc['is_relevant']
             ##########
             title       = train_docs[pmid]['title']
             abs         = train_docs[pmid]['abstractText']
@@ -770,14 +772,24 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
                     sents_escores.append(good_escores)
                     held_out_sents.append(sent)
                     sent_tags.append(snip_is_relevant(' '.join(bioclean(sent)), gold_snips))
-            doc_emit_, gs_emits_ = model.emit_one(
+            ##########
+            doc_emit_, gs_emits_    = model.emit_one(
                 doc1_sents_embeds   = sents_embeds,
                 question_embeds     = quest_embeds,
                 q_idfs              = q_idfs,
                 sents_gaf           = sents_escores,
                 doc_gaf             = doc_af
             )
-            print(doc_emit_)
+            ##########
+            doc_results.append((doc_emit_ , is_relevant))
+            sent_results.extend(list(zip(gs_emits_, sent_tags)))
+        good_sent_results   = sorted([t for t in sent_results if(t[1]==1)], key=lambda x: x[0], reverse=True)
+        bad_sent_results    = sorted([t for t in sent_results if(t[1]==0)], key=lambda x: x[0], reverse=True)
+        bad_sent_results    = bad_sent_results[:len(good_sent_results)]
+        pprint(doc_results)
+        pprint(sent_results)
+        pprint(good_sent_results)
+        pprint(bad_sent_results)
         exit()
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
