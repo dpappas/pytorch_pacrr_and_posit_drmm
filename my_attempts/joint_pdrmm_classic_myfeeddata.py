@@ -747,8 +747,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         q_idfs                          = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         gold_snips                      = get_gold_snips(qid, bioasq6_data)
         #
-        doc_results     = []
-        sent_results    = []
+        doc_results, sent_results       = [], []
         for retr_doc in datum['retrieved_documents']:
             pmid        = retr_doc['doc_id']
             # gold_snips  = [t for t in bioasq6_data[qid]['snippets'] if(t['document'].endswith(pmid))]
