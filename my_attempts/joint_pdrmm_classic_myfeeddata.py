@@ -343,12 +343,20 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
-    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
-    wrong  = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
-    wrong  = torch.cat(wrong + [bs_emits_.squeeze(-1)])
-    losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
-    return sum(losses) / float(len(losses))
+def get_snippets_loss(gs_emits_, bs_emits_):
+    gs_emits_       = gs_emits_.squeeze(-1)
+    tags_1          = torch.ones_like(gs_emits_)
+    bs_emits_       = bs_emits_.squeeze(-1)
+    tags_2          = torch.zeros_like(bs_emits_)
+    if(use_cuda):
+        tags_1 = tags_1.cuda()
+        tags_2 = tags_2.cuda()
+    #
+    # sn_d1_l         = F.binary_cross_entropy(gs_emits_, tags_1, size_average=False, reduce=True)
+    # sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
+    sn_d1_l         = F.binary_cross_entropy(gs_emits_, tags_1, reduction='sum')
+    sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
+    return sn_d1_l + sn_d2_l
 
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     bs_emits_       = bs_emits_.squeeze(-1)
@@ -531,7 +539,7 @@ def get_gold_snips(quest_id, bioasq6_data):
     gold_snips                  = []
     if ('snippets' in bioasq6_data[quest_id]):
         for sn in bioasq6_data[quest_id]['snippets']:
-            gold_snips.extend(sent_tokenize(sn['text']))
+            gold_snips.extend(sent_tokenize(sn['text'].strip()))
     return list(set(gold_snips))
 
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
@@ -603,15 +611,10 @@ def get_the_mesh(the_doc):
 def snip_is_relevant(one_sent, gold_snips):
     # print one_sent
     # pprint(gold_snips)
+    one_sent    = ' '.join(bioclean(one_sent)).strip()
+    gold_snips  = [' '.join(bioclean(t)).strip() for t in gold_snips]
     return int(
-        any(
-            [
-                (one_sent.encode('ascii','ignore')  in gold_snip.encode('ascii','ignore'))
-                or
-                (gold_snip.encode('ascii','ignore') in one_sent.encode('ascii','ignore'))
-                for gold_snip in gold_snips
-            ]
-        )
+        any([(one_sent in gold_snip) or (gold_snip in one_sent) for gold_snip in gold_snips])
     )
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
@@ -745,20 +748,17 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         qid, qtext                      = datum['query_id'], datum['query_text']
         quest_tokens, quest_embeds      = get_embeds(tokenize(qtext), wv)
         q_idfs                          = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        gold_snips                      = get_gold_snips(qid, bioasq6_data)
-        #
         doc_results, sent_results       = [], []
         for retr_doc in datum['retrieved_documents']:
             pmid        = retr_doc['doc_id']
-            # gold_snips  = [t for t in bioasq6_data[qid]['snippets'] if(t['document'].endswith(pmid))]
             the_bm25    = retr_doc['norm_bm25_score']
             is_relevant = retr_doc['is_relevant']
             ##########
             title       = train_docs[pmid]['title']
             abs         = train_docs[pmid]['abstractText']
             all_sents   = [title] + sent_tokenize(abs)
-            if(is_relevant):
-                pprint(all_sents)
+            ##########
+            gold_snips  = [t['text'].strip() for t in bioasq6_data[qid]['snippets'] if(t['document'].endswith(pmid))]
             ##########
             doc_af      = GetScores(qtext, ' '.join(all_sents), the_bm25, idf, max_idf)
             doc_af.append(len(all_sents) / 60.)
@@ -773,7 +773,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
                     sents_embeds.append(good_embeds)
                     sents_escores.append(good_escores)
                     held_out_sents.append(sent)
-                    sent_tags.append(snip_is_relevant(' '.join(bioclean(sent)), gold_snips))
+                    sent_tags.append(snip_is_relevant(sent, gold_snips))
             ##########
             doc_emit_, gs_emits_    = model.emit_one(
                 doc1_sents_embeds   = sents_embeds,
@@ -786,13 +786,16 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             doc_results.append((doc_emit_ , is_relevant))
             sent_results.extend(list(zip(gs_emits_, sent_tags)))
         good_sent_results   = sorted([t for t in sent_results if(t[1]==1)], key=lambda x: x[0], reverse=True)
+        good_sent_results   = torch.cat([t[0].unsqueeze(-1) for t in good_sent_results])
         bad_sent_results    = sorted([t for t in sent_results if(t[1]==0)], key=lambda x: x[0], reverse=True)
-        bad_sent_results    = bad_sent_results[:len(good_sent_results)]
-        pprint(gold_snips)
+        bad_sent_results    = bad_sent_results[:2*len(good_sent_results)]
+        bad_sent_results    = torch.cat([t[0].unsqueeze(-1) for t in bad_sent_results])
         pprint(doc_results)
-        pprint(sent_results)
+        # pprint(sent_results)
         pprint(good_sent_results)
         pprint(bad_sent_results)
+        snip_loss = get_snippets_loss(good_sent_results, bad_sent_results)
+        print(snip_loss)
         exit()
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
