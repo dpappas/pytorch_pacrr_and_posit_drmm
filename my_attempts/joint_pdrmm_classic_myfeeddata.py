@@ -757,6 +757,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             title       = train_docs[pmid]['title']
             abs         = train_docs[pmid]['abstractText']
             all_sents   = [title] + sent_tokenize(abs)
+            if(is_relevant):
+                pprint(all_sents)
             ##########
             doc_af      = GetScores(qtext, ' '.join(all_sents), the_bm25, idf, max_idf)
             doc_af.append(len(all_sents) / 60.)
@@ -787,7 +789,6 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         bad_sent_results    = sorted([t for t in sent_results if(t[1]==0)], key=lambda x: x[0], reverse=True)
         bad_sent_results    = bad_sent_results[:len(good_sent_results)]
         pprint(gold_snips)
-        pprint(all_sents)
         pprint(doc_results)
         pprint(sent_results)
         pprint(good_sent_results)
