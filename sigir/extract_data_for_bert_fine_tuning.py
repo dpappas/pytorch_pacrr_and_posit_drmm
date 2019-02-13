@@ -310,14 +310,14 @@ def load_all_data(dataloc, idf_pickle_path):
     #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 # laptop
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/'
 
 (
-    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 ) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
 
 # Question_ID \t Doc_ID \t Question \t Snippet \t 0/1 (not-relevant/relevant)
@@ -353,7 +353,9 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
 
 def extract_data(ofpath, data, docs):
     of      = open(ofpath, 'w')
-    of.write('{}\t{}\t{}\t{}\t{}\t{}\n'.format('QUERY_ID', 'pmid', 'DOC_IS_RELEVANT', 'QUERY_TEXT', 'SENTENCE_TEXT', "SENT_IS_RELEVANT"))
+    of.write(
+        '{}\t{}\t{}\t{}\t{}\t{}\n'.format('QUERY_ID', 'pmid', 'DOC_IS_RELEVANT', 'QUERY_TEXT', 'SENTENCE_TEXT', "SENT_IS_RELEVANT")
+    )
     pbar    = tqdm(data['queries'])
     for datum in pbar:
         qid, qtext = datum['query_id'], datum['query_text']
@@ -376,6 +378,7 @@ def extract_data(ofpath, data, docs):
             doc_af = GetScores(qtext, ' '.join(all_sents), the_bm25, idf, max_idf)
             doc_af.append(len(all_sents))
             doc_af.append(len(' '.join(all_sents)))
+            print(len(doc_af))
             ##########
             for sent in all_sents:
                 sent_toks       = bioclean(sent)
@@ -385,6 +388,8 @@ def extract_data(ofpath, data, docs):
                 good_escores    = GetScores(qtext, sent, the_bm25, idf, max_idf)[:-1]
                 good_escores.append(sentence_bm25)
                 good_escores.append(len(sent_toks))
+                print(len(good_escores))
+                exit()
                 #
                 of.write(
                     '{}\t{}\t{}\t{}\t{}\t{}\n'.format(
