@@ -351,25 +351,19 @@ def get_snippets_loss(gs_emits_, bs_emits_):
     if(use_cuda):
         tags_1 = tags_1.cuda()
         tags_2 = tags_2.cuda()
-    #
-    # sn_d1_l         = F.binary_cross_entropy(gs_emits_, tags_1, size_average=False, reduce=True)
-    # sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
     sn_d1_l         = F.binary_cross_entropy(gs_emits_, tags_1, reduction='sum')
     sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
     return sn_d1_l + sn_d2_l
 
-def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
-    bs_emits_       = bs_emits_.squeeze(-1)
-    gs_emits_       = gs_emits_.squeeze(-1)
-    good_sent_tags  = torch.FloatTensor(good_sent_tags)
-    tags_2          = torch.zeros_like(bs_emits_)
+def get_doc_loss(pos_score, many_neg_scores):
+    ret     = 0.0
+    target  = autograd.Variable(torch.FloatTensor([1]), requires_grad=False)
     if(use_cuda):
-        good_sent_tags  = good_sent_tags.cuda()
-        tags_2          = tags_2.cuda()
-    #
-    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
-    sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2,         size_average=False, reduce=True)
-    return sn_d1_l, sn_d2_l
+        target = target.cuda()
+    for neg_score in many_neg_scores:
+        hl      = model.margin_loss(pos_score.unsqueeze(0), neg_score.unsqueeze(0), target)
+        ret     += hl
+    return ret
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
@@ -744,11 +738,19 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     #
-    for datum in train_data['queries']:
+    start_time = time.time()
+    for datum in tqdm(train_data['queries'][99:]):
         qid, qtext                      = datum['query_id'], datum['query_text']
+        #
         quest_tokens, quest_embeds      = get_embeds(tokenize(qtext), wv)
         q_idfs                          = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         doc_results, sent_results       = [], []
+        if(
+            len(datum['retrieved_documents']) == 0
+            or
+            'snippets' not in bioasq6_data[qid]
+        ):
+            continue
         for retr_doc in datum['retrieved_documents']:
             pmid        = retr_doc['doc_id']
             the_bm25    = retr_doc['norm_bm25_score']
@@ -774,6 +776,9 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
                     sents_escores.append(good_escores)
                     held_out_sents.append(sent)
                     sent_tags.append(snip_is_relevant(sent, gold_snips))
+            if(len(gold_snips)>0):
+                pprint(gold_snips)
+                pprint(list(zip(held_out_sents, sent_tags)))
             ##########
             doc_emit_, gs_emits_    = model.emit_one(
                 doc1_sents_embeds   = sents_embeds,
@@ -785,70 +790,35 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             ##########
             doc_results.append((doc_emit_ , is_relevant))
             sent_results.extend(list(zip(gs_emits_, sent_tags)))
+        doc_results         = sorted([t for t in doc_results], key=lambda x: x[0], reverse=True)
         good_sent_results   = sorted([t for t in sent_results if(t[1]==1)], key=lambda x: x[0], reverse=True)
         good_sent_results   = torch.cat([t[0].unsqueeze(-1) for t in good_sent_results])
         bad_sent_results    = sorted([t for t in sent_results if(t[1]==0)], key=lambda x: x[0], reverse=True)
         bad_sent_results    = bad_sent_results[:2*len(good_sent_results)]
         bad_sent_results    = torch.cat([t[0].unsqueeze(-1) for t in bad_sent_results])
-        pprint(doc_results)
-        # pprint(sent_results)
-        pprint(good_sent_results)
-        pprint(bad_sent_results)
-        snip_loss = get_snippets_loss(good_sent_results, bad_sent_results)
-        print(snip_loss)
-        exit()
-    train_instances = train_data_step1(train_data)
-    random.shuffle(train_instances)
-    #
-    start_time      = time.time()
-    pbar = tqdm(
-        iterable=train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer),
-        total=9684,
-        # total=12114
-    )
-    for datum in pbar:
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = datum['good_sents_embeds'],
-            doc2_sents_embeds   = datum['bad_sents_embeds'],
-            question_embeds     = datum['quest_embeds'],
-            q_idfs              = datum['q_idfs'],
-            sents_gaf           = datum['good_sents_escores'],
-            sents_baf           = datum['bad_sents_escores'],
-            doc_gaf             = datum['good_doc_af'],
-            doc_baf             = datum['bad_doc_af']
-        )
         #
-        good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
-        if(two_losses):
-            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            # snip_loss                       = sn_d1_l + sn_d2_l
-            snip_loss = sn_d1_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
+        doc_loss            = 0.0
+        for i in range(len(doc_results)):
+            if(doc_results[i][1]):
+                pos_score       = doc_results[i][0]
+                many_neg_scores = [doc_results[j][0] for j in range(i) if(not doc_results[j][1])]
+                doc_loss        += get_doc_loss(pos_score, many_neg_scores)
+        snip_loss           = get_snippets_loss(good_sent_results, bad_sent_results)
         #
-        batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_costs.append(cost_.cpu().item())
-        batch_costs.append(cost_)
+        total_loss = doc_loss + snip_loss
+        batch_costs.append(total_loss)
+        epoch_costs.append(total_loss)
         if (len(batch_costs) == b_size):
-            batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+            batch_counter   += 1
+            batch_cost      = sum(batch_costs) / float(len(batch_costs))
+            print(batch_cost)
+            batch_cost.backward()
+            optimizer.step()
+            optimizer.zero_grad()
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            pbar.set_description(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            batch_costs, batch_acc = [], []
-    if (len(batch_costs) > 0):
-        batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-        elapsed_time = time.time() - start_time
-        start_time = time.time()
-        print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-        logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-    print('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+            batch_costs     = []
+            batch_acc       = []
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition                 = doc_emit_.cpu().item()
