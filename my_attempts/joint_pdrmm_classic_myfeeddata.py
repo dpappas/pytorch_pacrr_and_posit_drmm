@@ -777,6 +777,33 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
 
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
+    good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    ####
+    good_doc_af     = GetScores(quest, ' '.join(good_sents), the_bm25, idf, max_idf)
+    good_doc_af.append(len(good_sents) / 60.)
+    good_doc_af.append(len(' '.join(good_sents)) / 800.)
+    ####
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    for good_text in good_sents:
+        sent_toks                   = tokenize(good_text)
+        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
+        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores.append(len(sent_toks)/ 342.)
+        if (len(good_embeds) > 0):
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores)
+            held_out_sents.append(good_text)
+            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    ####
+    return {
+        'sents_embeds'     : good_sents_embeds,
+        'sents_escores'    : good_sents_escores,
+        'doc_af'           : good_doc_af,
+        'sent_tags'        : good_sent_tags,
+        'held_out_sents'   : held_out_sents,
+    }
+
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions                    = {
         'body': dato['query_text'],
