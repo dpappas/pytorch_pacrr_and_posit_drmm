@@ -627,7 +627,9 @@ def train_one(epoch, bioasq6_data):
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     #
     start_time = time.time()
-    for datum in tqdm(train_data['queries']):
+    random.shuffle(train_data['queries'])
+    pbar = tqdm(train_data['queries'])
+    for datum in pbar:
         # get querry id and text
         qid, qtext                      = datum['query_id'], datum['query_text']
         # get the embeds and idf of querry tokens
@@ -717,7 +719,7 @@ def train_one(epoch, bioasq6_data):
             batch_acc       = []
         aver_epoch_cost = sum(epoch_costs) / float(len(epoch_costs))
         aver_epoch_cost = aver_epoch_cost.cpu().item()
-        print(aver_epoch_cost)
+        pbar.set_description('{}'.format(aver_epoch_cost))
     if (len(batch_costs) > 0):
         batch_counter += 1
         batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -730,7 +732,7 @@ def train_one(epoch, bioasq6_data):
         batch_acc = []
     aver_epoch_cost = sum(epoch_costs) / float(len(epoch_costs))
     aver_epoch_cost = aver_epoch_cost.cpu().item()
-    print(aver_epoch_cost)
+    pbar.set_description('{}'.format(aver_epoch_cost))
     print('Done epoch {}'.format(epoch))
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
