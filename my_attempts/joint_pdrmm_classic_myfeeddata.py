@@ -747,6 +747,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         doc_results, sent_results       = [], []
         if(len(datum['retrieved_documents']) == 0 or 'snippets' not in bioasq6_data[qid]):
             continue
+        found_rel_snippet_flag          = False
         for retr_doc in datum['retrieved_documents']:
             pmid        = retr_doc['doc_id']
             the_bm25    = retr_doc['norm_bm25_score']
@@ -776,8 +777,9 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
                     held_out_sents.append(sent)
                     sent_tags.append(snip_is_relevant(sent, gold_snips))
             if(len(gold_snips)>0):
-                pprint(gold_snips)
-                pprint(list(zip(held_out_sents, sent_tags)))
+                found_rel_snippet_flag = True
+                # pprint(gold_snips)
+                # pprint(list(zip(held_out_sents, sent_tags)))
             ##########
             doc_emit_, gs_emits_    = model.emit_one(
                 doc1_sents_embeds   = sents_embeds,
@@ -789,6 +791,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             ##########
             doc_results.append((doc_emit_ , is_relevant))
             sent_results.extend(list(zip(gs_emits_, sent_tags)))
+        if not found_rel_snippet_flag:
+            continue
         doc_results         = sorted([t for t in doc_results], key=lambda x: x[0], reverse=True)
         good_sent_results   = sorted([t for t in sent_results if(t[1]==1)], key=lambda x: x[0], reverse=True)
         good_sent_results   = torch.cat([t[0].unsqueeze(-1) for t in good_sent_results])
