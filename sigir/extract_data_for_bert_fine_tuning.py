@@ -328,11 +328,11 @@ def extract_data(ofpath, data, docs):
             all_sents   = [title] + sent_tokenize(abs)
             ##########
             gold_snips = []
-            for snip in bioasq6_data[qid]['snippets']:
-                if (snip['document'].endswith(pmid)):
-                    gold_snips.extend([s.strip() for s in sent_tokenize(snip['text'].strip())])
+            if('snippets' in bioasq6_data[qid]):
+                for snip in bioasq6_data[qid]['snippets']:
+                    if (snip['document'].endswith(pmid)):
+                        gold_snips.extend([s.strip() for s in sent_tokenize(snip['text'].strip())])
             ##########
-            #
             for sent in all_sents:
                 of.write(
                     '{}\t{}\t{}\t{}\t{}\n'.format(
