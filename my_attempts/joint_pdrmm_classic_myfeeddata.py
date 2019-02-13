@@ -344,15 +344,25 @@ def get_pseudo_retrieved(dato):
     return pseudo_retrieved
 
 def get_snippets_loss(gs_emits_, bs_emits_):
-    gs_emits_       = gs_emits_.squeeze(-1)
-    tags_1          = torch.ones_like(gs_emits_)
-    bs_emits_       = bs_emits_.squeeze(-1)
-    tags_2          = torch.zeros_like(bs_emits_)
-    if(use_cuda):
-        tags_1 = tags_1.cuda()
-        tags_2 = tags_2.cuda()
-    sn_d1_l         = F.binary_cross_entropy(gs_emits_, tags_1, reduction='sum')
-    sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
+    if(len(gs_emits_)>0):
+        gs_emits_       = torch.cat([t[0].unsqueeze(-1) for t in gs_emits_])
+        gs_emits_       = gs_emits_.squeeze(-1)
+        tags_1          = torch.ones_like(gs_emits_)
+        if(use_cuda):
+            tags_1 = tags_1.cuda()
+        sn_d1_l = F.binary_cross_entropy(gs_emits_, tags_1, reduction='sum')
+    else:
+        sn_d1_l = 0.0
+        #
+    if(len(bs_emits_)>0):
+        bs_emits_       = torch.cat([t[0].unsqueeze(-1) for t in bs_emits_])
+        bs_emits_       = bs_emits_.squeeze(-1)
+        tags_2          = torch.zeros_like(bs_emits_)
+        if(use_cuda):
+            tags_2 = tags_2.cuda()
+        sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
+    else:
+        sn_d2_l = 0.0
     return sn_d1_l + sn_d2_l
 
 def get_doc_loss(pos_score, many_neg_scores):
@@ -679,11 +689,9 @@ def train_one(epoch, bioasq6_data):
         doc_results         = sorted([t for t in doc_results], key=lambda x: x[0], reverse=True)
         # sort the positive snippets results
         good_sent_results   = sorted([t for t in sent_results if(t[1]==1)], key=lambda x: x[0], reverse=True)
-        good_sent_results   = torch.cat([t[0].unsqueeze(-1) for t in good_sent_results])
         # sort the negative snippets results
         bad_sent_results    = sorted([t for t in sent_results if(t[1]==0)], key=lambda x: x[0], reverse=True)
         bad_sent_results    = bad_sent_results[:2*len(good_sent_results)]
-        bad_sent_results    = torch.cat([t[0].unsqueeze(-1) for t in bad_sent_results])
         # compute the doc_ret loss and the snip_extr loss
         doc_loss            = 0.0
         for i in range(len(doc_results)):
@@ -1361,7 +1369,7 @@ for run in range(0, 5):
     my_seed = run
     random.seed(my_seed)
     torch.manual_seed(my_seed)
-    #
+    #0
     odir = 'sigir_joint_classic_myfeed_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
