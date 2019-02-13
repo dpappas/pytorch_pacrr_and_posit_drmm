@@ -303,11 +303,6 @@ def load_all_data(dataloc):
     dev_data    = RemoveBadYears(dev_data, dev_docs, False)
     test_data   = RemoveBadYears(test_data, test_docs, False)
     #
-    words           = {}
-    GetWords(train_data, train_docs, words)
-    GetWords(dev_data,   dev_docs,   words)
-    GetWords(test_data,  test_docs,  words)
-    #
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
 
 # laptop
