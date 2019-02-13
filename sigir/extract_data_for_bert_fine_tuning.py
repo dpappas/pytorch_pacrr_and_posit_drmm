@@ -277,7 +277,7 @@ def get_norm_doc_scores(the_doc_scores):
         norm_doc_scores[ks[i]] = vs[i]
     return norm_doc_scores
 
-def load_all_data(dataloc):
+def load_all_data(dataloc, idf_pickle_path):
     print('loading pickle data')
     #
     with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
@@ -303,28 +303,68 @@ def load_all_data(dataloc):
     dev_data    = RemoveBadYears(dev_data, dev_docs, False)
     test_data   = RemoveBadYears(test_data, test_docs, False)
     #
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
+    words           = {}
+    GetWords(train_data, train_docs, words)
+    GetWords(dev_data,   dev_docs,   words)
+    GetWords(test_data,  test_docs,  words)
+    #
+    print('loading idfs')
+    idf, max_idf    = load_idfs(idf_pickle_path, words)
+    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 # laptop
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/'
 
-# # atlas , cslab243
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-
-(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
+(
+    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
 
 # Question_ID \t Doc_ID \t Question \t Snippet \t 0/1 (not-relevant/relevant)
 
+def tf(term, document):
+    tf = 0
+    for word in document:
+        if word == term:
+            tf += 1
+    if len(document) == 0:
+        return tf
+    else:
+        return tf / len(document)
+
+def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
+    score = 0
+    for query_term in query:
+        if query_term not in idf_scores:
+            score += rare_word * (
+                    (tf(query_term, document) * (k1 + 1)) /
+                    (
+                            tf(query_term, document) +
+                            k1 * (1 - b + b * (len(document) / avgdl))
+                    )
+            )
+        else:
+            score += idf_scores[query_term] * ((tf(query_term, document) * (k1 + 1)) / (
+                        tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+    if normalize:
+        return ((score - mean) / deviation)
+    else:
+        return score
+
 def extract_data(ofpath, data, docs):
     of      = open(ofpath, 'w')
+    of.write('{}\t{}\t{}\t{}\t{}\t{}\n'.format('QUERY_ID', 'pmid', 'DOC_IS_RELEVANT', 'QUERY_TEXT', 'SENTENCE_TEXT', "SENT_IS_RELEVANT"))
     pbar    = tqdm(data['queries'])
     for datum in pbar:
         qid, qtext = datum['query_id'], datum['query_text']
+        quest_toks = bioclean(qtext)
         # get the embeds and idf of querry tokens
         for retr_doc in datum['retrieved_documents']:
+            the_bm25    = retr_doc['norm_bm25_score']
             pmid        = retr_doc['doc_id']
             title       = docs[pmid]['title']
             abs         = docs[pmid]['abstractText']
+            is_relevant = retr_doc['is_relevant']
             all_sents   = [title] + sent_tokenize(abs)
             ##########
             gold_snips = []
@@ -333,13 +373,29 @@ def extract_data(ofpath, data, docs):
                     if (snip['document'].endswith(pmid)):
                         gold_snips.extend([s.strip() for s in sent_tokenize(snip['text'].strip())])
             ##########
+            doc_af = GetScores(qtext, ' '.join(all_sents), the_bm25, idf, max_idf)
+            doc_af.append(len(all_sents))
+            doc_af.append(len(' '.join(all_sents)))
+            ##########
             for sent in all_sents:
+                sent_toks       = bioclean(sent)
+                sentence_bm25   = similarity_score(
+                    quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf
+                )
+                good_escores    = GetScores(qtext, sent, the_bm25, idf, max_idf)[:-1]
+                good_escores.append(sentence_bm25)
+                good_escores.append(len(sent_toks))
+                #
                 of.write(
-                    '{}\t{}\t{}\t{}\t{}\n'.format(
-                        qid, pmid, qtext, sent, int(snip_is_relevant(sent, gold_snips))
+                    '{}\t{}\t{}\t{}\t{}\t{}\n'.format(
+                        qid, pmid, is_relevant, qtext, sent, int(snip_is_relevant(sent, gold_snips))
                     )
                 )
     of.close()
+
+avgdl       = 21.2508
+mean        = 0.5973
+deviation   = 0.5926
 
 extract_data('bert_fine_tune_snippets.train.txt',   train_data, train_docs)
 extract_data('bert_fine_tune_snippets.dev.txt',     dev_data,   dev_docs)
