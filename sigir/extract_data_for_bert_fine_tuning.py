@@ -354,7 +354,11 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
 def extract_data(ofpath, data, docs):
     of      = open(ofpath, 'w')
     of.write(
-        '{}\t{}\t{}\t{}\t{}\t{}\n'.format('QUERY_ID', 'pmid', 'DOC_IS_RELEVANT', 'QUERY_TEXT', 'SENTENCE_TEXT', "SENT_IS_RELEVANT")
+        '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
+            'QUERY_ID', 'pmid', 'DOC_IS_RELEVANT', 'QUERY_TEXT', 'SENTENCE_TEXT', "SENT_IS_RELEVANT",
+            '\t'.join(['DOC_FEAT_{}'.format(t+1) for t in range(6)]),
+            '\t'.join(['DOC_FEAT_{}'.format(t + 1) for t in range(6)]),
+        )
     )
     pbar    = tqdm(data['queries'])
     for datum in pbar:
@@ -378,7 +382,6 @@ def extract_data(ofpath, data, docs):
             doc_af = GetScores(qtext, ' '.join(all_sents), the_bm25, idf, max_idf)
             doc_af.append(len(all_sents))
             doc_af.append(len(' '.join(all_sents)))
-            print(len(doc_af))
             ##########
             for sent in all_sents:
                 sent_toks       = bioclean(sent)
@@ -388,12 +391,13 @@ def extract_data(ofpath, data, docs):
                 good_escores    = GetScores(qtext, sent, the_bm25, idf, max_idf)[:-1]
                 good_escores.append(sentence_bm25)
                 good_escores.append(len(sent_toks))
-                print(len(good_escores))
-                exit()
+                good_escores.append(len(sent))
                 #
                 of.write(
-                    '{}\t{}\t{}\t{}\t{}\t{}\n'.format(
-                        qid, pmid, is_relevant, qtext, sent, int(snip_is_relevant(sent, gold_snips))
+                    '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
+                        'QUERY_ID', 'pmid', 'DOC_IS_RELEVANT', 'QUERY_TEXT', 'SENTENCE_TEXT', "SENT_IS_RELEVANT",
+                        '\t'.join([str(t) for t in doc_af]),
+                        '\t'.join([str(t) for t in good_escores])
                     )
                 )
     of.close()
