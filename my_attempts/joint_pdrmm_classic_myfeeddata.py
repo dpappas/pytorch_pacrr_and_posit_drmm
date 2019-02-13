@@ -611,7 +611,7 @@ def snip_is_relevant(one_sent, gold_snips):
         any([(one_sent in gold_snip) or (gold_snip in one_sent) for gold_snip in gold_snips])
     )
 
-def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
+def train_one(epoch, bioasq6_data):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
@@ -1390,7 +1390,7 @@ for run in range(0, 5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        train_one(epoch+1, bioasq6_data)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
