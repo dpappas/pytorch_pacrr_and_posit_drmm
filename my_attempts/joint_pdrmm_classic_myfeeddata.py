@@ -611,143 +611,24 @@ def snip_is_relevant(one_sent, gold_snips):
         any([(one_sent in gold_snip) or (gold_snip in one_sent) for gold_snip in gold_snips])
     )
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
-    if(use_sent_tokenizer):
-        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-    else:
-        good_sents  = [the_doc['title'] + the_doc['abstractText']]
-    ####
-    quest_toks      = tokenize(quest)
-    good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
-    good_doc_af.append(len(good_sents) / 60.)
-    #
-    doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
-    tomi                = (set(doc_toks) & set(quest_toks))
-    tomi_no_stop        = tomi - set(stopwords)
-    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
-    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
-    features            = [
-        len(quest)                                      / 300.,
-        len(the_doc['title'] + the_doc['abstractText']) / 300.,
-        len(tomi_no_stop)                               / 100.,
-        BM25score,
-        sum(tomi_no_stop_idfs)                          / 100.,
-        sum(tomi_idfs)                                  / sum(quest_idfs),
-    ]
-    good_doc_af.extend(features)
-    ####
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
-    for good_text in good_sents:
-        sent_toks                   = tokenize(good_text)
-        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
-        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
-        good_escores.append(len(sent_toks)/ 342.)
-        if (len(good_embeds) > 0):
-            #
-            tomi                = (set(sent_toks) & set(quest_toks))
-            tomi_no_stop        = tomi - set(stopwords)
-            BM25score           = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-            tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-            tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
-            quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
-            features            = [
-                len(quest)              / 300.,
-                len(good_text)          / 300.,
-                len(tomi_no_stop)       / 100.,
-                BM25score,
-                sum(tomi_no_stop_idfs)  / 100.,
-                sum(tomi_idfs)          / sum(quest_idfs),
-            ]
-            #
-            good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores+features)
-            held_out_sents.append(good_text)
-            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
-    ####
-    return {
-        'sents_embeds'     : good_sents_embeds,
-        'sents_escores'    : good_sents_escores,
-        'doc_af'           : good_doc_af,
-        'sent_tags'        : good_sent_tags,
-        'held_out_sents'   : held_out_sents,
-    }
-
-def train_data_step1(train_data):
-    ret = []
-    for dato in tqdm(train_data['queries']):
-        quest       = dato['query_text']
-        quest_id    = dato['query_id']
-        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-        if(len(bad_pmids)>0):
-            for gid in good_pmids:
-                bid = random.choice(bad_pmids)
-                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
-    print('')
-    return ret
-
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
-    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        if(use_sent_tokenizer):
-            good_snips              = get_snips(quest_id, gid, bioasq6_data)
-            good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
-        else:
-            good_snips              = []
-        #
-        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
-        good_sents_embeds           = datum['sents_embeds']
-        good_sents_escores          = datum['sents_escores']
-        good_doc_af                 = datum['doc_af']
-        good_sent_tags              = datum['sent_tags']
-        good_held_out_sents         = datum['held_out_sents']
-        #
-        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
-        bad_sents_embeds            = datum['sents_embeds']
-        bad_sents_escores           = datum['sents_escores']
-        bad_doc_af                  = datum['doc_af']
-        bad_sent_tags               = [0] * len(datum['sent_tags'])
-        bad_held_out_sents          = datum['held_out_sents']
-        #
-        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        #
-        if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
-            yield {
-                'good_sents_embeds'     : good_sents_embeds,
-                'good_sents_escores'    : good_sents_escores,
-                'good_doc_af'           : good_doc_af,
-                'good_sent_tags'        : good_sent_tags,
-                'good_held_out_sents'   : good_held_out_sents,
-                #
-                'bad_sents_embeds'      : bad_sents_embeds,
-                'bad_sents_escores'     : bad_sents_escores,
-                'bad_doc_af'            : bad_doc_af,
-                'bad_sent_tags'         : bad_sent_tags,
-                'bad_held_out_sents'    : bad_held_out_sents,
-                #
-                'quest_embeds'          : quest_embeds,
-                'q_idfs'                : q_idfs,
-            }
-
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     #
     start_time = time.time()
-    for datum in tqdm(train_data['queries'][100:]):
+    for datum in tqdm(train_data['queries']):
+        # get querry id and text
         qid, qtext                      = datum['query_id'], datum['query_text']
-        #
+        # get the embeds and idf of querry tokens
         quest_tokens, quest_embeds      = get_embeds(tokenize(qtext), wv)
         q_idfs                          = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        doc_results, sent_results       = [], []
+        # ignore if you cannot find an retrieved_document or any relevant snippet overall
         if(len(datum['retrieved_documents']) == 0 or 'snippets' not in bioasq6_data[qid]):
             continue
+        # ignore if you cannot find a retrieved_document or any relevant snippet
         found_rel_snippet_flag          = False
+        doc_results, sent_results       = [], []
         for retr_doc in datum['retrieved_documents']:
             pmid        = retr_doc['doc_id']
             the_bm25    = retr_doc['norm_bm25_score']
@@ -791,30 +672,34 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             ##########
             doc_results.append((doc_emit_ , is_relevant))
             sent_results.extend(list(zip(gs_emits_, sent_tags)))
+        # ignore if you cannot find any relevant snippets in the retrieved documents
         if not found_rel_snippet_flag:
             continue
+        # sort the document results
         doc_results         = sorted([t for t in doc_results], key=lambda x: x[0], reverse=True)
+        # sort the positive snippets results
         good_sent_results   = sorted([t for t in sent_results if(t[1]==1)], key=lambda x: x[0], reverse=True)
         good_sent_results   = torch.cat([t[0].unsqueeze(-1) for t in good_sent_results])
+        # sort the negative snippets results
         bad_sent_results    = sorted([t for t in sent_results if(t[1]==0)], key=lambda x: x[0], reverse=True)
         bad_sent_results    = bad_sent_results[:2*len(good_sent_results)]
         bad_sent_results    = torch.cat([t[0].unsqueeze(-1) for t in bad_sent_results])
-        #
+        # compute the doc_ret loss and the snip_extr loss
         doc_loss            = 0.0
         for i in range(len(doc_results)):
             if(doc_results[i][1]):
                 pos_score       = doc_results[i][0]
                 many_neg_scores = [doc_results[j][0] for j in range(i) if(not doc_results[j][1])]
                 doc_loss        += get_doc_loss(pos_score, many_neg_scores)
-        snip_loss           = get_snippets_loss(good_sent_results, bad_sent_results)
-        #
-        total_loss = doc_loss + snip_loss
+        snip_loss               = get_snippets_loss(good_sent_results, bad_sent_results)
+        # add all losses to one and add the result to batch losses and epoch losses
+        total_loss              = 0.5 * doc_loss + 0.5 * snip_loss
         batch_costs.append(total_loss)
         epoch_costs.append(total_loss)
+        # if reached batch size then back propagate
         if (len(batch_costs) == b_size):
             batch_counter   += 1
             batch_cost      = sum(batch_costs) / float(len(batch_costs))
-            print(batch_cost)
             batch_cost.backward()
             optimizer.step()
             optimizer.zero_grad()
@@ -822,6 +707,9 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             start_time      = time.time()
             batch_costs     = []
             batch_acc       = []
+        aver_epoch_cost = sum(epoch_costs) / float(len(epoch_costs))
+        aver_epoch_cost = aver_epoch_cost.cpu().item()
+        print(aver_epoch_cost)
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition                 = doc_emit_.cpu().item()
