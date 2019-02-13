@@ -719,7 +719,7 @@ def train_one(epoch, bioasq6_data):
             batch_acc       = []
             aver_epoch_cost = sum(epoch_costs) / float(len(epoch_costs))
             aver_epoch_cost = aver_epoch_cost.cpu().item()
-            pbar.set_description('{}'.format(aver_epoch_cost))
+            pbar.set_description('{} || {}'.format(batch_cost.cpu().item(), aver_epoch_cost))
     if (len(batch_costs) > 0):
         batch_counter += 1
         batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -732,7 +732,7 @@ def train_one(epoch, bioasq6_data):
         batch_acc = []
         aver_epoch_cost = sum(epoch_costs) / float(len(epoch_costs))
         aver_epoch_cost = aver_epoch_cost.cpu().item()
-        pbar.set_description('{}'.format(aver_epoch_cost))
+        pbar.set_description('{} || {}'.format(batch_cost.cpu().item(), aver_epoch_cost))
         print('Done epoch {}'.format(epoch))
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
