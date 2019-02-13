@@ -760,7 +760,10 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             abs         = train_docs[pmid]['abstractText']
             all_sents   = [title] + sent_tokenize(abs)
             ##########
-            gold_snips  = [t['text'].strip() for t in bioasq6_data[qid]['snippets'] if(t['document'].endswith(pmid))]
+            gold_snips  = []
+            for snip in bioasq6_data[qid]['snippets']:
+                if (snip['document'].endswith(pmid)):
+                    gold_snips.extend([s.strip() for s in sent_tokenize(snip['text'].strip())])
             ##########
             doc_af      = GetScores(qtext, ' '.join(all_sents), the_bm25, idf, max_idf)
             doc_af.append(len(all_sents) / 60.)
