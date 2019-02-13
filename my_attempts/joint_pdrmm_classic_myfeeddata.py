@@ -739,17 +739,13 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     #
     start_time = time.time()
-    for datum in tqdm(train_data['queries'][99:]):
+    for datum in tqdm(train_data['queries'][100:]):
         qid, qtext                      = datum['query_id'], datum['query_text']
         #
         quest_tokens, quest_embeds      = get_embeds(tokenize(qtext), wv)
         q_idfs                          = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         doc_results, sent_results       = [], []
-        if(
-            len(datum['retrieved_documents']) == 0
-            or
-            'snippets' not in bioasq6_data[qid]
-        ):
+        if(len(datum['retrieved_documents']) == 0 or 'snippets' not in bioasq6_data[qid]):
             continue
         for retr_doc in datum['retrieved_documents']:
             pmid        = retr_doc['doc_id']
