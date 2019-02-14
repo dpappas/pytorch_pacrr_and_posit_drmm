@@ -1517,6 +1517,7 @@ do_lower_case       = True
 vocab_file          = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
 bert_tokenizer      = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
 bert_all_words_path = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
+#
 bert_embeds_dir     = '/media/dpappas/dpappas_data/biobert_embeds_after_pca/'
 all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_biobert_embeds_after_pca.p', 'rb'))
 

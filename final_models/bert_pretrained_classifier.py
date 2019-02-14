@@ -41,8 +41,7 @@ import re
 from nltk.tokenize import sent_tokenize
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+logger      = logging.getLogger(__name__)
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class InputExample(object):
