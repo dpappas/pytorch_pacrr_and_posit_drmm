@@ -312,9 +312,13 @@ def load_all_data(dataloc, idf_pickle_path):
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
-# laptop
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
+# # laptop
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+
+# cslab241
+idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
+dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
 
 (
     test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
@@ -357,7 +361,7 @@ def extract_data(ofpath, data, docs):
         '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
             'QUERY_ID', 'pmid', 'DOC_IS_RELEVANT', 'QUERY_TEXT', 'SENTENCE_TEXT', "SENT_IS_RELEVANT",
             '\t'.join(['DOC_FEAT_{}'.format(t+1) for t in range(6)]),
-            '\t'.join(['DOC_FEAT_{}'.format(t + 1) for t in range(6)]),
+            '\t'.join(['SENT_FEAT_{}'.format(t + 1) for t in range(6)]),
         )
     )
     pbar    = tqdm(data['queries'])
@@ -395,7 +399,7 @@ def extract_data(ofpath, data, docs):
                 #
                 of.write(
                     '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
-                        'QUERY_ID', 'pmid', 'DOC_IS_RELEVANT', 'QUERY_TEXT', 'SENTENCE_TEXT', "SENT_IS_RELEVANT",
+                        qid, pmid, is_relevant, qtext, sent, snip_is_relevant(sent, gold_snips),
                         '\t'.join([str(t) for t in doc_af]),
                         '\t'.join([str(t) for t in good_escores])
                     )
