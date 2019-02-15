@@ -719,9 +719,10 @@ def init_the_logger(hdlr):
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.embedding_dim   = embedding_dim
+        self.embedding_dim  = embedding_dim
+        self.k              = 5
         ######################################
-        self.birnn           = nn.LSTM(
+        self.birnn          = nn.LSTM(
             input_size      = self.embedding_dim,
             hidden_size     = self.embedding_dim,
             num_layers      = 2,
@@ -784,19 +785,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def get_output(self, input_list, weights):
         temp    = torch.cat(input_list, -1)
         lo      = self.linear_per_q1(temp)
-        lo      = self.my_relu1(lo)
+        lo      = F.leaky_relu(lo, negative_slope=0.1)
         lo      = self.linear_per_q2(lo)
         lo      = lo.squeeze(-1)
-        lo      = lo * weights
-        sr      = lo.sum(-1) / lo.size(-1)
+        sr      = torch.dot(lo, weights)
         return sr
     def do_for_one_doc_bigru(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
         conv_res, hn, cn    = self.apply_context_lstm(doc_embeds, self.h0, self.c0)
         #
         sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
-        sim_oh              = (sim_insens > (1 - (1e-3))).float()
+        sim_oh              = (sim_insens > (1 - (1e-2))).float()
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-        #
         insensitive_pooled  = self.pooling_method(sim_insens)
         sensitive_pooled    = self.pooling_method(sim_sens)
         oh_pooled           = self.pooling_method(sim_oh)
