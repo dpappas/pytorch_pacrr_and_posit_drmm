@@ -717,51 +717,35 @@ def init_the_logger(hdlr):
     return logger, hdlr
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim=30, k_for_maxpool=5, context_method='CNN', use_mesh=True):
+    def __init__(self, embedding_dim=30):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.k                                      = k_for_maxpool
-        #
-        self.embedding_dim                          = embedding_dim
-        self.use_mesh                               = use_mesh
-        self.context_method                         = context_method
-        # to create q weights
-        self.init_context_module()
-        self.init_question_weight_module()
-        self.init_mlps_for_pooled_attention()
-        self.init_doc_out_layer()
+        self.embedding_dim   = embedding_dim
+        ######################################
+        self.birnn           = nn.LSTM(
+            input_size      = self.embedding_dim,
+            hidden_size     = self.embedding_dim,
+            num_layers      = 1,
+            bias            = True,
+            batch_first     = False,
+            dropout         = 0.3,
+            bidirectional   = True
+        )
+        # h0 : num_layers * num_directions,  batch, hidden_size
+        h0 = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
+        # c0 : num_layers * num_directions,  batch,  hidden_size
+        c0 = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
+        ######################################
+        self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
+        # then apply Softmax
+        ######################################
+        self.linear_per_q1      = nn.Linear(6, 8, bias=True)
+        # then apply Leaky Relu slop:0.1
+        self.linear_per_q2      = nn.Linear(8, 1, bias=True)
+        ######################################
+        self.final_layer        = nn.Linear(5, 1, bias=False)
+        ######################################
         # doc loss func
         self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
-    #
-    def init_mesh_module(self):
-        self.mesh_h0    = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
-        self.mesh_gru   = nn.GRU(self.embedding_dim, self.embedding_dim)
-    def init_context_module(self):
-        if(self.context_method == 'CNN'):
-            self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-            self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
-            self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-            self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
-        else:
-            self.context_h0     = autograd.Variable(torch.randn(2, 1, self.embedding_dim))
-            self.context_gru    = nn.GRU(
-                input_size      = self.embedding_dim,
-                hidden_size     = self.embedding_dim,
-                bidirectional   = True
-            )
-            self.context_gru_activation = torch.nn.LeakyReLU(negative_slope=0.1)
-    def init_question_weight_module(self):
-        self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
-    def init_mlps_for_pooled_attention(self):
-        self.linear_per_q1      = nn.Linear(6, 8, bias=True)
-        self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.linear_per_q2      = nn.Linear(8, 1, bias=True)
-    def init_doc_out_layer(self):
-        if(self.use_mesh):
-            self.init_mesh_module()
-            self.final_layer = nn.Linear(5 + 30, 1, bias=True)
-        else:
-            self.final_layer = nn.Linear(5, 1, bias=True)
-    #
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
@@ -774,17 +758,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output          = out_forward + out_backward
         res             = output + the_input
         return res, hn
-    def apply_context_convolution(self, the_input, the_filters, activation):
-        conv_res        = the_filters(the_input.transpose(0,1).unsqueeze(0))
-        if(activation is not None):
-            conv_res    = activation(conv_res)
-        pad             = the_filters.padding[0]
-        ind_from        = int(np.floor(pad/2.0))
-        ind_to          = ind_from + the_input.size(0)
-        conv_res        = conv_res[:, :, ind_from:ind_to]
-        conv_res        = conv_res.transpose(1, 2)
-        conv_res        = conv_res + the_input
-        return conv_res.squeeze(0)
     def my_cosine_sim(self, A, B):
         A           = A.unsqueeze(0)
         B           = B.unsqueeze(0)
@@ -942,29 +915,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output
 
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-#
-w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/idf.pkl'
-dataloc             = '/home/DATA/Biomedical/document_ranking/bioasq_data/'
-eval_path           = '/home/DATA/Biomedical/document_ranking/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_eval/dist/my_bioasq_eval_2.jar'
-
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-#
-# w2v_bin_path        = '/home/cave/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/cave/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/cave/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+use_cuda            = torch.cuda.is_available()
+odd                 = '/home/dpappas/'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
@@ -973,64 +931,53 @@ lr              = 0.01
 b_size          = 32
 max_epoch       = 10
 
-
-models = [
-['Model_01', 'CNN',     False],
-['Model_02', 'CNN',     True],
-# ['Model_03', 'CNN',     False],
-# ['Model_04', 'CNN',     True],
-['Model_05', 'BIGRU',   False],
-['Model_06', 'BIGRU',   True],
-# ['Model_07', 'BIGRU',   False],
-# ['Model_08', 'BIGRU',   True],
-]
-
-models = dict(
-    [
-        (item[0], item[1:])
-        for item in models
-    ]
-)
-
-which_model = 'Model_05'
-
 hdlr = None
-for run in range(5):
+for run in range(0, 5):
     #
-    my_seed = random.randint(1, 2000000)
+    my_seed = run
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir            = '/home/dpappas/{}_run_{}/'.format(which_model, run)
+    odir = 'sigir_joint_simple_elmo_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = os.path.join(odd, odir)
+    print(odir)
+    if (not os.path.exists(odir)):
+        os.makedirs(odir)
     #
-    logger, hdlr    = init_the_logger(hdlr)
+    logger, hdlr = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
     #
-    (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
+    (
+        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
+    ) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
+    #
+    avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
+    print(avgdl, mean, deviation)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model       = Sent_Posit_Drmm_Modeler(
-        embedding_dim       = embedding_dim,
-        k_for_maxpool       = k_for_maxpool,
-        context_method      = models[which_model][0],
-        use_mesh            = models[which_model][1]
-    )
-    params      = model.parameters()
+    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
+    if (use_cuda):
+        model = model.cuda()
+    params = model.parameters()
     print_params(model)
-    optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
-        if(best_dev_map is None or epoch_dev_map>=best_dev_map):
-            best_dev_map    = epoch_dev_map
-            test_map        = get_one_map('test', test_data, test_docs)
-            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=odir+'best_checkpoint.pth.tar')
-        print('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
-        logger.info('epoch:{} epoch_dev_map:{} best_dev_map:{} test_map:{}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
+        if (best_dev_map is None or epoch_dev_map >= best_dev_map):
+            best_dev_map = epoch_dev_map
+            test_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
+            save_checkpoint(epoch, model, best_dev_map, optimizer,
+                            filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
+        print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
+                                                                                             best_dev_map, test_map))
+        logger.info(
+            'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
+                                                                                           best_dev_map, test_map))
 
 
 '''
