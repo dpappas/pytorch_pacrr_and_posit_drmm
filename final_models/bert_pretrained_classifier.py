@@ -494,11 +494,7 @@ def main():
     num_labels  = num_labels_task[task_name]
     label_list  = processor.get_labels()
     ####
-    tokenizer   = BertTokenizer.from_pretrained(
-        args.bert_model,
-        do_lower_case=args.do_lower_case,
-        cache_dir=cache_dir
-    )
+    tokenizer   = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case, cache_dir=cache_dir)
     ####
     train_examples = None
     num_train_steps = None
@@ -543,16 +539,13 @@ def main():
         except ImportError:
             raise ImportError(
                 "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
-        optimizer = FusedAdam(optimizer_grouped_parameters,
-                              lr=args.learning_rate,
-                              bias_correction=False,
-                              max_grad_norm=1.0)
+        optimizer       = FusedAdam(optimizer_grouped_parameters, lr=args.learning_rate, bias_correction=False, max_grad_norm=1.0)
         if args.loss_scale == 0:
-            optimizer = FP16_Optimizer(optimizer, dynamic_loss_scale=True)
+            optimizer   = FP16_Optimizer(optimizer, dynamic_loss_scale=True)
         else:
-            optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.loss_scale)
+            optimizer   = FP16_Optimizer(optimizer, static_loss_scale=args.loss_scale)
     else:
-        optimizer = BertAdam(optimizer_grouped_parameters, lr=args.learning_rate, warmup=args.warmup_proportion, t_total=t_total)
+        optimizer       = BertAdam(optimizer_grouped_parameters, lr=args.learning_rate, warmup=args.warmup_proportion, t_total=t_total)
     ####
     global_step = 0
     nb_tr_steps = 0
