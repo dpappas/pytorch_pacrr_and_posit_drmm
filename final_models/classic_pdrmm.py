@@ -743,7 +743,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # then apply Leaky Relu slop:0.1
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
         ######################################
-        self.final_layer        = nn.Linear(5, 1, bias=False)
+        self.final_layer        = nn.Linear(6, 1, bias=False)
         ######################################
         # # doc loss func
         # self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
@@ -854,7 +854,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         bad_out         = self.do_for_one_doc_bigru(doc2_embeds, question_embeds, q_context, q_weights)
         #
         good_out_pp     = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
+        bad_out_pp      = torch.cat([bad_out,  doc_baf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
