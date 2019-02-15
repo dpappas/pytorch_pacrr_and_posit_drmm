@@ -732,18 +732,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             bidirectional   = True
         )
         # h0 : num_layers * num_directions,  batch, hidden_size
-        self.h0 = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
+        self.h0             = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
         # c0 : num_layers * num_directions,  batch,  hidden_size
-        self.c0 = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
+        self.c0             = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
         ######################################
-        self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
+        self.q_weights_mlp  = nn.Linear(self.embedding_dim + 1, 1, bias=True)
         # then apply Softmax
         ######################################
-        self.linear_per_q1      = nn.Linear(6, 8, bias=True)
+        self.linear_per_q1  = nn.Linear(6, 8, bias=True)
         # then apply Leaky Relu slop:0.1
-        self.linear_per_q2      = nn.Linear(8, 1, bias=True)
+        self.linear_per_q2  = nn.Linear(8, 1, bias=True)
         ######################################
-        self.final_layer        = nn.Linear(6, 1, bias=False)
+        self.final_layer    = nn.Linear(6, 1, bias=False)
         ######################################
         # # doc loss func
         # self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
