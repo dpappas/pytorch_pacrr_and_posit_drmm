@@ -739,7 +739,10 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         # print(quest_text)
         qemb = all_quest_embeds[quest_text]
-        qemb = [t[-1][t[-2]][1:-1] for t in qemb]
+        try:
+            qemb = [t[-1][t[-2]][1:-1] for t in qemb]
+        except:
+            qemb = [t[-1][t[-2]][1:-1] for t in qemb['title_bert_original_embeds']]
         qemb = np.concatenate(qemb, axis=0)
         if (use_sent_tokenizer):
             good_snips = get_snips(quest_id, gid, bioasq6_data)
@@ -1504,6 +1507,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
+use_cuda = False
 
 # atlas , cslab243
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1511,19 +1515,20 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
-use_cuda            = True
 #
 do_lower_case       = True
 vocab_file          = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
 bert_tokenizer      = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
 bert_all_words_path = '/home/dpappas/bioasq_all/biobert_all_words.pkl'
 #
-bert_embeds_dir     = '/media/dpappas/dpappas_data/biobert_embeds_after_pca/'
-all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_biobert_embeds_after_pca.p', 'rb'))
+# bert_embeds_dir     = '/media/dpappas/dpappas_data/biobert_embeds_after_pca/'
+# all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_biobert_embeds_after_pca.p', 'rb'))
+bert_embeds_dir     = '/media/dpappas/dpappas_data/biobert_data/'
+all_quest_embeds    = pickle.load(open('/media/dpappas/dpappas_data/biobert_data/all_quest_embeds.p', 'rb'))
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
-embedding_dim       = 50  # 30  # 200
+embedding_dim       = 768 # 50  # 30  # 200
 lr = 0.01
 b_size = 32
 max_epoch = 10

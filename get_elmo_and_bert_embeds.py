@@ -402,7 +402,11 @@ cache_dir   = '/home/dpappas/bert_cache/'
 if(not os.path.exists(cache_dir)):
     os.makedirs(cache_dir)
 
-tokenizer   = BertTokenizer.from_pretrained('bert-large-uncased', cache_dir=cache_dir)
+tokenizer   = BertTokenizer.from_pretrained(
+    # pretrained_model_name='bert-large-uncased',
+    pretrained_model_name='/home/dpappas/bert_cache/bert-large-uncased-vocab.txt',
+    cache_dir=cache_dir
+)
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
 
@@ -413,8 +417,8 @@ if (not os.path.exists(os.path.join(init_checkpoint_pt, 'pytorch_model.bin'))):
         os.path.join(init_checkpoint_pt, 'pytorch_model.bin')
     )
 
-elmo = Elmo(options_file, weight_file, 1, dropout=0)
-model = BertModel.from_pretrained(init_checkpoint_pt, cache_dir=cache_dir)
+elmo    = Elmo(options_file, weight_file, 1, dropout=0)
+model   = BertModel.from_pretrained(init_checkpoint_pt, cache_dir=cache_dir)
 # model               = model.cuda()
 model.eval()
 
@@ -456,8 +460,8 @@ nof_threads = 16
 
 #######################################################
 
-the_docs = dev_docs
-total = len(the_docs.keys())
+the_docs    = dev_docs
+total       = len(the_docs.keys())
 for doc in tqdm(random.sample(the_docs.keys(), len(the_docs.keys()))):
     work3((doc, the_docs[doc], odir))
 
