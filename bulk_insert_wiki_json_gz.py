@@ -46,12 +46,13 @@ def send_to_elk(actions):
                 flag = False
 
 es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
-index       = 'wikipedia_json_gz'
+index       = 'el_wikipedia_json_gz'
 doc_type    = "wiki_page"
 b_size      = 200
 actions     = []
-fpath       = '/media/dpappas/dpappas_data/enwiki-20181112-cirrussearch-content.json.gz'
-proc        = subprocess.Popen(["zcat",fpath], stdout=subprocess.PIPE)
+# fpath       = '/media/dpappas/dpappas_data/enwiki-20181112-cirrussearch-content.json.gz'
+fpath       = '/media/dpappas/dpappas_data/elwiki-20190211-cirrussearch-content.json.gz'
+proc        = subprocess.Popen(["zcat", fpath], stdout=subprocess.PIPE)
 
 for line in iter(proc.stdout.readline,''):
     line    = line.rstrip()
