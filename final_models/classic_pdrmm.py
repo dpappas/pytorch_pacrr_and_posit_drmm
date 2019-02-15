@@ -394,7 +394,7 @@ def get_the_mesh(the_doc):
     return good_mesh
 
 def train_data_step2(train_instances):
-    for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in train_instances:
+    for quest, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(train_instances):
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
         q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         #
@@ -450,10 +450,7 @@ def prep_data(quest, the_doc, the_bm25):
     good_doc_text               = the_doc['title'] + the_doc['abstractText']
     good_doc_af                 = GetScores(quest, good_doc_text, the_bm25)
     good_tokens, good_embeds    = get_embeds(tokenize(good_doc_text), wv)
-    good_meshes                 = get_the_mesh(the_doc)
-    good_mesh_embeds            = [get_embeds(good_mesh, wv)    for good_mesh           in good_meshes]
-    good_mesh_embeds            = [good_mesh[1] for good_mesh   in  good_mesh_embeds    if(len(good_mesh[0])>0)]
-    return good_embeds, good_doc_af, good_mesh_embeds
+    return good_embeds, good_doc_af
 
 def get_gold_snips(quest_id):
     gold_snips                  = []
@@ -548,14 +545,13 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             ret[k]  = float(v)
     return ret
 
-def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips):
-    (good_embeds, good_doc_af, good_mesh_embeds) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
+def do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res):
+    (good_embeds, good_doc_af) = prep_data(quest, docs[retr['doc_id']], bm25s[retr['doc_id']])
     doc_emit_ = model.emit_one(
         doc1_embeds         = good_embeds,
         question_embeds     = quest_embeds,
         q_idfs              = q_idfs,
-        doc_gaf             = good_doc_af,
-        good_meshes_embeds  = good_mesh_embeds
+        doc_gaf             = good_doc_af
     )
     emition                 = doc_emit_.cpu().item()
     doc_res[retr['doc_id']] = float(emition)
@@ -663,19 +659,14 @@ def train_one(epoch):
     epoch_aver_cost, epoch_aver_acc                 = 0., 0.
     random.shuffle(train_instances)
     start_time                                      = time.time()
-    for (
-            good_embeds, bad_embeds, quest_embeds, q_idfs,
-            good_doc_af, bad_doc_af, good_mesh_embeds, bad_mesh_embeds
-        ) in train_data_step2(train_instances):
+    for (good_embeds, bad_embeds, quest_embeds, q_idfs, good_doc_af, bad_doc_af, good_mesh_embeds, bad_mesh_embeds) in train_data_step2(train_instances):
         cost_, doc1_emit_, doc2_emit_ = model(
             doc1_embeds         = good_embeds,
             doc2_embeds         = bad_embeds,
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
             doc_gaf             = good_doc_af,
-            doc_baf             = bad_doc_af,
-            good_meshes_embeds  = good_mesh_embeds,
-            bad_meshes_embeds   = bad_mesh_embeds
+            doc_baf             = bad_doc_af
         )
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -690,7 +681,7 @@ def train_one(epoch):
             print('{} {} {} {} {} {}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             logger.info('{} {} {} {} {} {}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             batch_costs, batch_acc = [], []
-    if (len(batch_costs) > 0):
+    if(len(batch_costs) > 0):
         batch_counter += 1
         batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
         elapsed_time = time.time() - start_time
@@ -800,35 +791,26 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
         return doc_emit.unsqueeze(0)
-    def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf, good_meshes_embeds):
+    def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc1_embeds         = autograd.Variable(torch.FloatTensor(doc1_embeds),         requires_grad=False)
+        if(use_cuda):
+            q_idfs          = q_idfs.cuda()
+            question_embeds = question_embeds.cuda()
+            doc_gaf         = doc_gaf.cuda()
+            doc1_embeds     = doc1_embeds.cuda()
         #
-        if(self.context_method=='CNN'):
-            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        else:
-            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
+        q_context, _, _     = self.apply_context_lstm(question_embeds, self.h0, self.c0)
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        #
-        if(self.context_method=='CNN'):
-            good_out        = self.do_for_one_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
-        else:
-            good_out        = self.do_for_one_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
-        #
-        if(self.use_mesh):
-            good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
-            good_out_pp     = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-        else:
-            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
-        #
+        good_out            = self.do_for_one_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         final_good_output   = self.final_layer(good_out_pp)
         return final_good_output
-    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds):
+    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf):
         q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
