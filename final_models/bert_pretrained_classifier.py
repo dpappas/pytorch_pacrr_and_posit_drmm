@@ -19,6 +19,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
+
 import  json
 import  pickle
 import  csv
@@ -236,8 +239,8 @@ def train_data_step2(instances, docs, setting):
             good_sents  = sent_tokenize(docs[gid]['title'])
             bad_sents   = sent_tokenize(docs[gid]['title'])
         else:
-            good_sents = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
-            bad_sents = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
+            good_sents  = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
+            bad_sents   = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
         #
         yield {
             'good_text' : ' '.join(good_sents),
@@ -500,7 +503,7 @@ def main():
     train_examples = None
     num_train_steps = None
     if args.do_train:
-        train_examples = processor.get_train_examples(args.data_dir)
+        train_examples  = processor.get_train_examples(args.data_dir)
         num_train_steps = int(len(train_examples) / args.train_batch_size / args.gradient_accumulation_steps * args.num_train_epochs)
         ####
     # Prepare model
@@ -706,6 +709,13 @@ python3.6 /home/dpappas/bert.py \
 --bert_model=bert-base-uncased \
 --task_name=bioasq \
 --output_dir=/home/dpappas/title_bert_pretrained_classifier_out/ \
+--data_dir=./ \
+--do_train
+
+python3.6 /home/dpappas/bert_fine_tune.py \
+--bert_model=bert-base-uncased \
+--task_name=bioasq \
+--output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
 --data_dir=./ \
 --do_train
 

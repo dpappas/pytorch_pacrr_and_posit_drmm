@@ -1511,15 +1511,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 use_cuda = torch.cuda.is_available()
 
 # atlas , cslab243
-bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
-all_quest_embeds = pickle.load(open('/home/dpappas/bioasq_all/all_quest_elmo_embeds_after_pca.p', 'rb'))
-idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc = '/home/dpappas/bioasq_all/bioasq_data/'
-elmo_embeds_dir = '/home/dpappas/bioasq_all/elmo_embeds_after_pca/'
-eval_path = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd = '/home/dpappas/'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
 use_cuda = True
+
+bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
+# elmo_embeds_dir     = '/home/dpappas/bioasq_all/elmo_embeds_after_pca/'
+# all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_elmo_embeds_after_pca.p', 'rb'))
+elmo_embeds_dir     = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
+all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_embeds.p', 'rb'))
 
 k_for_maxpool = 5
 k_sent_maxpool = 5
