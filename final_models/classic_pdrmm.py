@@ -950,14 +950,11 @@ for run in range(0, 5):
     #
     (
         test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
-    ) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
-    #
-    avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
-    print(avgdl, mean, deviation)
+    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
+    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim)
     if (use_cuda):
         model = model.cuda()
     params = model.parameters()

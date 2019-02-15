@@ -98,7 +98,7 @@ mapping = {
     }
 }
 
-print elastic_con.indices.create(index = index, ignore=400, body=mapping)
+print(elastic_con.indices.create(index = index, ignore=400, body=mapping))
 
 '''
 mkdir /media/dpappas/Maxtor/ELK_DATA/
