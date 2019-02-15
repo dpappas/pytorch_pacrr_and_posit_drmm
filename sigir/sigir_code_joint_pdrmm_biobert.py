@@ -935,7 +935,10 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     quest_text      = dato['query_text']
     #
     qemb            = all_quest_embeds[quest_text]
-    qemb            = [t[-1][t[-2]][1:-1] for t in qemb]
+    try:
+        qemb = [t[-1][t[-2]][1:-1] for t in qemb]
+    except:
+        qemb = [t[-1][t[-2]][1:-1] for t in qemb['title_bert_original_embeds']]
     qemb            = np.concatenate(qemb, axis=0)
     #
     quest_tokens    = tokenize(quest_text)
