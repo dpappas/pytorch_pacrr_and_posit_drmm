@@ -724,16 +724,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.birnn           = nn.LSTM(
             input_size      = self.embedding_dim,
             hidden_size     = self.embedding_dim,
-            num_layers      = 1,
+            num_layers      = 2,
             bias            = True,
             batch_first     = False,
             dropout         = 0.3,
             bidirectional   = True
         )
         # h0 : num_layers * num_directions,  batch, hidden_size
-        h0 = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
+        self.h0 = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
         # c0 : num_layers * num_directions,  batch,  hidden_size
-        c0 = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
+        self.c0 = autograd.Variable(torch.randn(2 * 2, 1, self.embedding_dim))
         ######################################
         self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
         # then apply Softmax
@@ -744,20 +744,27 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         ######################################
         self.final_layer        = nn.Linear(5, 1, bias=False)
         ######################################
-        # doc loss func
-        self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
+        # # doc loss func
+        # self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
+        if(use_cuda):
+            self.birnn          = self.birnn.cuda()
+            self.h0             = self.h0.cuda()
+            self.c0             = self.c0.cuda()
+            self.q_weights_mlp  = self.q_weights_mlp.cuda()
+            self.linear_per_q1  = self.linear_per_q1.cuda()
+            self.linear_per_q2  = self.linear_per_q2.cuda()
+            self.final_layer    = self.final_layer.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
-    def apply_context_gru(self, the_input, h0):
-        output, hn      = self.context_gru(the_input.unsqueeze(1), h0)
-        output          = self.context_gru_activation(output)
-        out_forward     = output[:, 0, :self.embedding_dim]
-        out_backward    = output[:, 0, self.embedding_dim:]
-        output          = out_forward + out_backward
-        res             = output + the_input
-        return res, hn
+    def apply_context_lstm(self, the_input, h0, c0):
+        output, (hn, cn)    = self.birnn(the_input.unsqueeze(1), (h0, c0))
+        out_forward         = output[:, 0, :self.embedding_dim]
+        out_backward        = output[:, 0, self.embedding_dim:]
+        output              = out_forward + out_backward
+        res                 = output + the_input
+        return res, hn, cn
     def my_cosine_sim(self, A, B):
         A           = A.unsqueeze(0)
         B           = B.unsqueeze(0)
@@ -783,24 +790,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo      = lo * weights
         sr      = lo.sum(-1) / lo.size(-1)
         return sr
-    def apply_sent_res_bigru(self, the_input):
-        output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
-        output          = self.sent_res_mlp(output)
-        return output.squeeze(-1).squeeze(-1)
-    def do_for_one_doc_cnn(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
-        conv_res            = self.apply_context_convolution(doc_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        conv_res            = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
-        sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
-        sim_oh              = (sim_insens > (1 - (1e-3))).float()
-        sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-        insensitive_pooled  = self.pooling_method(sim_insens)
-        sensitive_pooled    = self.pooling_method(sim_sens)
-        oh_pooled           = self.pooling_method(sim_oh)
-        doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-        return doc_emit.unsqueeze(0)
     def do_for_one_doc_bigru(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
-        hn                  = self.context_h0
-        conv_res, hn        = self.apply_context_gru(doc_embeds, hn)
+        conv_res, hn, cn    = self.apply_context_lstm(doc_embeds, self.h0, self.c0)
+        #
         sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
         sim_oh              = (sim_insens > (1 - (1e-3))).float()
         sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
@@ -811,43 +803,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
         return doc_emit.unsqueeze(0)
-    def get_max_and_average_of_k_max(self, res, k):
-        sorted_res              = torch.sort(res)[0]
-        k_max_pooled            = sorted_res[-k:]
-        average_k_max_pooled    = k_max_pooled.sum()/float(k)
-        the_maximum             = k_max_pooled[-1]
-        # print(the_maximum)
-        # print(the_maximum.size())
-        # print(average_k_max_pooled)
-        # print(average_k_max_pooled.size())
-        the_concatenation       = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
-        return the_concatenation
-    def get_max(self, res):
-        return torch.max(res)
-    def get_kmax(self, res):
-        res     = torch.sort(res,0)[0]
-        res     = res[-self.k2:].squeeze(-1)
-        if(res.size()[0] < self.k2):
-            res         = torch.cat([res, torch.zeros(self.k2 - res.size()[0])], -1)
-        return res
-    def get_average(self, res):
-        res = torch.sum(res) / float(res.size()[0])
-        return res
-    def get_maxmin_max(self, res):
-        res = self.min_max_norm(res)
-        res = torch.max(res)
-        return res
-    def apply_mesh_gru(self, mesh_embeds):
-        mesh_embeds     = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-        output, hn      = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
-        return output[-1,0,:]
-    def get_mesh_rep(self, meshes_embeds, q_context):
-        meshes_embeds   = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
-        meshes_embeds   = torch.stack(meshes_embeds)
-        sim_matrix      = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
-        max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
-        output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
-        return output
     def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf, good_meshes_embeds):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -877,37 +832,30 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_layer(good_out_pp)
         return final_good_output
     def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf, good_meshes_embeds, bad_meshes_embeds):
-        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
-        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
-        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
-        doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
-        doc1_embeds         = autograd.Variable(torch.FloatTensor(doc1_embeds),         requires_grad=False)
-        doc2_embeds         = autograd.Variable(torch.FloatTensor(doc2_embeds),         requires_grad=False)
+        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
+        question_embeds = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
+        doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
+        doc_baf         = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
+        doc1_embeds     = autograd.Variable(torch.FloatTensor(doc1_embeds),         requires_grad=False)
+        doc2_embeds     = autograd.Variable(torch.FloatTensor(doc2_embeds),         requires_grad=False)
+        if(use_cuda):
+            q_idfs = q_idfs.cuda()
+            question_embeds = question_embeds.cuda()
+            doc_baf = doc_baf.cuda()
+            doc_gaf = doc_gaf.cuda()
+            doc1_embeds = doc1_embeds.cuda()
+            doc2_embeds = doc2_embeds.cuda()
         #
-        if(self.context_method=='CNN'):
-            q_context       = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            q_context       = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        else:
-            q_context, _    = self.apply_context_gru(question_embeds, self.context_h0)
-        q_weights           = torch.cat([q_context, q_idfs], -1)
-        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights           = F.softmax(q_weights, dim=-1)
+        q_context, _, _ = self.apply_context_lstm(question_embeds, self.h0, self.c0)
+        q_weights       = torch.cat([q_context, q_idfs], -1)
+        q_weights       = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights       = F.softmax(q_weights, dim=-1)
         #
-        if(self.context_method=='CNN'):
-            good_out        = self.do_for_one_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
-            bad_out         = self.do_for_one_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
-        else:
-            good_out        = self.do_for_one_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
-            bad_out         = self.do_for_one_doc_bigru(doc2_embeds, question_embeds, q_context, q_weights)
+        good_out        = self.do_for_one_doc_bigru(doc1_embeds, question_embeds, q_context, q_weights)
+        bad_out         = self.do_for_one_doc_bigru(doc2_embeds, question_embeds, q_context, q_weights)
         #
-        if(self.use_mesh):
-            good_meshes_out = self.get_mesh_rep(good_meshes_embeds, q_context)
-            bad_meshes_out  = self.get_mesh_rep(bad_meshes_embeds, q_context)
-            good_out_pp     = torch.cat([good_out, doc_gaf, good_meshes_out], -1)
-            bad_out_pp      = torch.cat([bad_out, doc_baf, bad_meshes_out], -1)
-        else:
-            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
-            bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
+        good_out_pp     = torch.cat([good_out, doc_gaf], -1)
+        bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
         #
         final_good_output   = self.final_layer(good_out_pp)
         final_bad_output    = self.final_layer(bad_out_pp)
@@ -963,11 +911,11 @@ for run in range(0, 5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
-        epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
+        train_one(epoch + 1)
+        epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
-            test_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
+            test_map = get_one_map('test', test_data, test_docs)
             save_checkpoint(epoch, model, best_dev_map, optimizer,
                             filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
