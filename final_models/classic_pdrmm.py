@@ -871,10 +871,10 @@ odd                 = '/home/dpappas/'
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 2
-embedding_dim   = 30 #200
+embedding_dim   = 30
 lr              = 0.01
-b_size          = 32
-max_epoch       = 10
+b_size          = 64
+max_epoch       = 40
 
 hdlr = None
 for run in range(0, 5):
