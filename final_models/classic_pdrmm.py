@@ -869,12 +869,11 @@ retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_b
 use_cuda            = torch.cuda.is_available()
 odd                 = '/home/dpappas/'
 
-k_for_maxpool   = 5
-k_sent_maxpool  = 2
-embedding_dim   = 30
-lr              = 0.01
-b_size          = 64
-max_epoch       = 40
+k_for_maxpool       = 5
+embedding_dim       = 30
+lr                  = 0.01
+b_size              = 64
+max_epoch           = 40
 
 hdlr = None
 for run in range(0, 5):
