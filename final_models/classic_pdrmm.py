@@ -599,10 +599,9 @@ def get_one_map(prefix, data, docs):
             'documents' : []
         }
         bm25s                       = { t['doc_id'] : t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        gold_snips                  = get_gold_snips(dato['query_id'])
         doc_res = {}
         for retr in dato['retrieved_documents']:
-            doc_res = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res, gold_snips)
+            doc_res                 = do_for_one_retrieved(quest, q_idfs, quest_embeds, bm25s, docs, retr, doc_res)
             if (dato['query_id'] not in data_for_revision):
                 data_for_revision[dato['query_id']] = {
                     'query_text': dato['query_text'],
@@ -889,7 +888,7 @@ for run in range(0, 5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch + 1)
+        train_one(epoch + 1)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map    = epoch_dev_map
