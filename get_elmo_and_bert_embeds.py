@@ -259,8 +259,10 @@ def bert_embed_sents(sentences):
         input_ids = input_ids[:, :input_mask.sum()]
         input_mask = input_mask[:, :input_mask.sum()]
         #
-        all_encoder_layers, _ = model(input_ids=input_ids, token_type_ids=None, attention_mask=input_mask,
-                                      output_all_encoded_layers=True)
+        all_encoder_layers, _ = model(
+            input_ids=input_ids, token_type_ids=None,
+            attention_mask=input_mask, output_all_encoded_layers=True
+        )
         my_embeddings = all_encoder_layers[-2].squeeze(0)
         #
         bert_split_tokens.append(tokens)
