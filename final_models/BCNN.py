@@ -426,7 +426,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('TOTAL TOKENS FOUND IN DATASET: {}'.format(sum(words.values())))
     print('TOTAL UNKNOWN WORDS: {}'.format(len([w for w in words if(w not in wv)])))
     print('TOTAL DISTINCT WORDS FOUND IN DATASET: {}'.format(len(words)))
-    exit()
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 def train_data_step1(train_data):
