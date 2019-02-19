@@ -821,20 +821,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             padding                     = self.convolution_size-1,
             bias                        = True
         )
-        if(use_cuda):
-            self.trigram_conv_1             = self.trigram_conv_1.cuda()
-            self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
-            self.trigram_conv_2             = self.trigram_conv_2.cuda()
-            self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
-            self.q_weights_mlp              = self.q_weights_mlp.cuda()
-            self.out_conv                   = self.out_conv.cuda()
     def init_context_module(self):
         self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         # self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.trigram_conv_activation_1 = torch.nn.Sigmoid()
+        self.trigram_conv_activation_1  = torch.nn.Sigmoid()
         self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         # self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.trigram_conv_activation_2 = torch.nn.Sigmoid()
+        self.trigram_conv_activation_2  = torch.nn.Sigmoid()
         if(use_cuda):
             self.trigram_conv_1             = self.trigram_conv_1.cuda()
             self.trigram_conv_2             = self.trigram_conv_2.cuda()
