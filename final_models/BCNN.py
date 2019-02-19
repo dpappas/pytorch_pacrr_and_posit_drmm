@@ -230,8 +230,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
     good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     quest_toks      = tokenize(quest)
-    good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
-    good_doc_af.append(len(good_sents) / 60.)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
@@ -414,7 +412,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
-    print('TOTAL WORDS FOUND IN DATASET: {}'.format(len(words)))
     #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
@@ -423,6 +420,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('TOTAL EMBEDDINGS OFFERED IN PRETRAINED EMBEDS: {}'.format(len(wv.vocab.keys())))
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     print('COMMON WORDS FOUND IN DATASET AND PRETRAINED EMBEDS: {}'.format(len(wv.keys())))
+    print('TOTAL WORDS FOUND IN DATASET: {}'.format(len(words)))
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 def train_data_step1(train_data):
@@ -809,13 +807,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         self.embedding_dim              = embedding_dim
         self.k                          = 5
-        # to create q weights
-        self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
-        # init_question_weight_module
-        self.q_weights_mlp              = nn.Linear(self.embedding_dim+1, 1, bias=True)
+        #
+        self.init_context_module()
+        self.init_question_weight_module()
+        self.init_mlps_for_pooled_attention()
+        self.init_sent_output_layer()
         #
         self.convolution_size           = 3
         self.out_conv                   = nn.Conv1d(
@@ -825,7 +821,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             padding                     = self.convolution_size-1,
             bias                        = True
         )
-        self.init_mlps_for_pooled_attention()
         if(use_cuda):
             self.trigram_conv_1             = self.trigram_conv_1.cuda()
             self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
@@ -833,14 +828,38 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
             self.q_weights_mlp              = self.q_weights_mlp.cuda()
             self.out_conv                   = self.out_conv.cuda()
+    def init_context_module(self):
+        self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        # self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_activation_1 = torch.nn.Sigmoid()
+        self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        # self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.trigram_conv_activation_2 = torch.nn.Sigmoid()
+        if(use_cuda):
+            self.trigram_conv_1             = self.trigram_conv_1.cuda()
+            self.trigram_conv_2             = self.trigram_conv_2.cuda()
+            self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
+            self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
+    def init_question_weight_module(self):
+        self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
+        if(use_cuda):
+            self.q_weights_mlp  = self.q_weights_mlp.cuda()
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
         if(use_cuda):
             self.linear_per_q1  = self.linear_per_q1.cuda()
-            self.my_relu1       = self.my_relu1.cuda()
             self.linear_per_q2  = self.linear_per_q2.cuda()
+            self.my_relu1       = self.my_relu1.cuda()
+    def init_sent_output_layer(self):
+        self.sent_out_layer_1       = nn.Linear(self.sent_add_feats + 1, 8, bias=False)
+        self.sent_out_activ_1       = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.sent_out_layer_2       = nn.Linear(8, 1, bias=False)
+        if (use_cuda):
+            self.sent_out_layer_1   = self.sent_out_layer_1.cuda()
+            self.sent_out_activ_1   = self.sent_out_activ_1.cuda()
+            self.sent_out_layer_2   = self.sent_out_layer_2.cuda()
     def apply_context_convolution(self, the_input, the_filters, activation):
         conv_res        = the_filters(the_input.transpose(0,1).unsqueeze(0))
         if(activation is not None):
@@ -902,8 +921,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_add_feats)
         # self.out_conv
         res = torch.stack(res)
-        # res = self.sent_out_layer(res)
-        res = self.out_conv(res.transpose(-1,-2).unsqueeze(0))[:,:,1:res.size(0)+1]
+        res = self.sent_out_layer(res)
+        # res = self.out_conv(res.transpose(-1,-2).unsqueeze(0))[:,:,1:res.size(0)+1]
         res = res.squeeze(0).transpose(-1,-2)
         return res
     def get_max_and_average_of_k_max(self, res, k):
@@ -1585,25 +1604,25 @@ class ABCNN3_PDRMM(nn.Module):
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
-# # laptop
-# w2v_bin_path = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc = '/home/dpappas/for_ryan/'
-# eval_path = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# use_cuda = True
-# odd = '/home/dpappas/'
-# # get_embeds          = get_embeds_use_unk
-# # get_embeds          = get_embeds_use_only_unk
-
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 use_cuda            = True
 odd                 = '/home/dpappas/'
+# get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
+
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# use_cuda            = True
+# odd                 = '/home/dpappas/'
 # get_embeds          = get_embeds_use_unk
 # get_embeds          = get_embeds_use_only_unk
 
@@ -1645,7 +1664,7 @@ model, optimizer    = setup_optim_model()
 # print(model.out_conv.weight[0].sum())
 
 hdlr                = None
-for run in range(4,5):
+for run in range(0, 5):
     setup_random(run)
     #
     odir            = '/home/dpappas/{}_{}_{}_run_{}/'.format(model_type, optim_type, str(lr).replace('.',''), run)
