@@ -368,15 +368,10 @@ def GetWords(data, doc_text, words):
     for w in qwds:
       words[w] = 1
     for j in range(len(data['queries'][i]['retrieved_documents'])):
-      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      dtext = (
-              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
-              ' '.join(
-                  [
-                      ' '.join(mm) for mm in
-                      get_the_mesh(doc_text[doc_id])
-                  ]
-              )
+      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      dtext     = (
+          doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
+          ' '.join([' '.join(mm) for mm in get_the_mesh(doc_text[doc_id])])
       )
       dwds = tokenize(dtext)
       for w in dwds:
@@ -408,6 +403,9 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     dev_data    = RemoveBadYears(dev_data, dev_docs, False)
     test_data   = RemoveBadYears(test_data, test_docs, False)
     #
+    print('loading w2v')
+    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+    #
     words           = {}
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
@@ -415,8 +413,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
-    print('loading w2v')
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     print('TOTAL EMBEDDINGS OFFERED IN PRETRAINED EMBEDS: {}'.format(len(wv.vocab.keys())))
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     print('COMMON WORDS FOUND IN DATASET AND PRETRAINED EMBEDS: {}'.format(len(wv.keys())))
@@ -1589,27 +1585,27 @@ class ABCNN3_PDRMM(nn.Module):
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-use_cuda            = True
-odd                 = '/home/dpappas/'
-# get_embeds          = get_embeds_use_unk
-# get_embeds          = get_embeds_use_only_unk
-
-# # atlas , cslab243
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 # use_cuda            = True
 # odd                 = '/home/dpappas/'
-# get_embeds          = get_embeds_use_unk
-# get_embeds          = get_embeds_use_only_unk
+# # get_embeds          = get_embeds_use_unk
+# # get_embeds          = get_embeds_use_only_unk
+
+# atlas , cslab243
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+use_cuda            = True
+odd                 = '/home/dpappas/'
+get_embeds          = get_embeds_use_unk
+get_embeds          = get_embeds_use_only_unk
 
 # # cslab241
 # w2v_bin_path = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
