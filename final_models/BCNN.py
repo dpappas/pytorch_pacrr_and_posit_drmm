@@ -366,7 +366,10 @@ def GetWords(data, doc_text, words):
   for i in range(len(data['queries'])):
     qwds = tokenize(data['queries'][i]['query_text'])
     for w in qwds:
-      words[w] = 1
+        try:
+            words[w] += 1
+        except:
+            words[w] = 1
     for j in range(len(data['queries'][i]['retrieved_documents'])):
       doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
       dtext     = (
@@ -374,8 +377,10 @@ def GetWords(data, doc_text, words):
           ' '.join([' '.join(mm) for mm in get_the_mesh(doc_text[doc_id])])
       )
       dwds = tokenize(dtext)
-      for w in dwds:
-        words[w] = 1
+      try:
+          words[w] += 1
+      except:
+          words[w] = 1
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
@@ -411,12 +416,14 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
     #
+    print('TOTAL TOKENS FOUND IN DATASET: {}'.format(sum(words.values())))
+    print('TOTAL DISTINCT WORDS FOUND IN DATASET: {}'.format(len(words)))
+    #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('TOTAL EMBEDDINGS OFFERED IN PRETRAINED EMBEDS: {}'.format(len(wv.vocab.keys())))
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     print('COMMON WORDS FOUND IN DATASET AND PRETRAINED EMBEDS: {}'.format(len(wv.keys())))
-    print('TOTAL WORDS FOUND IN DATASET: {}'.format(len(words)))
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 def train_data_step1(train_data):
@@ -1585,27 +1592,27 @@ class ABCNN3_PDRMM(nn.Module):
         emit                = F.softmax(mlp_out, dim=-1)[:,1]
         return cost, emit
 
-# # laptop
-# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-# use_cuda            = True
-# odd                 = '/home/dpappas/'
-# # get_embeds          = get_embeds_use_unk
-# # get_embeds          = get_embeds_use_only_unk
-
-# atlas , cslab243
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# laptop
+w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+dataloc             = '/home/dpappas/for_ryan/'
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 use_cuda            = True
 odd                 = '/home/dpappas/'
-get_embeds          = get_embeds_use_unk
-get_embeds          = get_embeds_use_only_unk
+# get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
+
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# use_cuda            = True
+# odd                 = '/home/dpappas/'
+# get_embeds          = get_embeds_use_unk
+# get_embeds          = get_embeds_use_only_unk
 
 # # cslab241
 # w2v_bin_path = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
