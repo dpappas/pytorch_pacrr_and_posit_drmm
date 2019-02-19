@@ -416,9 +416,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(dev_data,   dev_docs,   words)
     GetWords(test_data,  test_docs,  words)
     #
-    print('TOTAL TOKENS FOUND IN DATASET: {}'.format(sum(words.values())))
-    print('TOTAL DISTINCT WORDS FOUND IN DATASET: {}'.format(len(words)))
-    #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('TOTAL EMBEDDINGS OFFERED IN PRETRAINED EMBEDS: {}'.format(len(wv.vocab.keys())))
@@ -426,7 +423,10 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('COMMON WORDS FOUND IN DATASET AND PRETRAINED EMBEDS: {}'.format(len(wv.keys())))
     #
     print('TOTAL UNKNOWN TOKENS: {}'.format(sum([words[w] for w in words if(w not in wv)])))
+    print('TOTAL TOKENS FOUND IN DATASET: {}'.format(sum(words.values())))
     print('TOTAL UNKNOWN WORDS: {}'.format(sum([w for w in words if(w not in wv)])))
+    print('TOTAL DISTINCT WORDS FOUND IN DATASET: {}'.format(len(words)))
+    exit()
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 def train_data_step1(train_data):
