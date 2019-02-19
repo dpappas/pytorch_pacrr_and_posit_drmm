@@ -909,8 +909,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = self.sent_out_layer_1(res)
         res = self.sent_out_activ_1(res)
         res = self.sent_out_layer_2(res)
-        res = res.transpose(-1, -2)
-        print(res.size())
         return res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
