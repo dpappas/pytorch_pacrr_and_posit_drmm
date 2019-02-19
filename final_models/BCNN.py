@@ -805,6 +805,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim= 30):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         #
+        self.sent_add_feats             = 10
         self.embedding_dim              = embedding_dim
         self.k                          = 5
         #
@@ -812,15 +813,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
         self.init_sent_output_layer()
-        #
-        self.convolution_size           = 3
-        self.out_conv                   = nn.Conv1d(
-            in_channels                 = 11,
-            out_channels                = 2,
-            kernel_size                 = self.convolution_size,
-            padding                     = self.convolution_size-1,
-            bias                        = True
-        )
     def init_context_module(self):
         self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         # self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
@@ -848,7 +840,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def init_sent_output_layer(self):
         self.sent_out_layer_1       = nn.Linear(self.sent_add_feats + 1, 8, bias=False)
         self.sent_out_activ_1       = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.sent_out_layer_2       = nn.Linear(8, 1, bias=False)
+        self.sent_out_layer_2       = nn.Linear(8, 2, bias=False)
         if (use_cuda):
             self.sent_out_layer_1   = self.sent_out_layer_1.cuda()
             self.sent_out_activ_1   = self.sent_out_activ_1.cuda()
@@ -914,9 +906,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res.append(sent_add_feats)
         # self.out_conv
         res = torch.stack(res)
-        res = self.sent_out_layer(res)
-        # res = self.out_conv(res.transpose(-1,-2).unsqueeze(0))[:,:,1:res.size(0)+1]
-        res = res.squeeze(0).transpose(-1,-2)
+        res = self.sent_out_layer_1(res)
+        res = self.sent_out_activ_1(res)
+        res = self.sent_out_layer_2(res)
+        res = res.transpose(-1, -2)
+        print(res.size())
         return res
     def get_max_and_average_of_k_max(self, res, k):
         sorted_res              = torch.sort(res)[0]
