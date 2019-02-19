@@ -424,6 +424,9 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('TOTAL EMBEDDINGS OFFERED IN PRETRAINED EMBEDS: {}'.format(len(wv.vocab.keys())))
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     print('COMMON WORDS FOUND IN DATASET AND PRETRAINED EMBEDS: {}'.format(len(wv.keys())))
+    #
+    print('TOTAL UNKNOWN TOKENS: {}'.format(sum([words[w] for w in words if(w not in wv)])))
+    print('TOTAL UNKNOWN WORDS: {}'.format(sum([w for w in words if(w not in wv)])))
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
 
 def train_data_step1(train_data):
