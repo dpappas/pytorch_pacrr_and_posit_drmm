@@ -193,48 +193,6 @@ def get_gold_snips(quest_id, bioasq6_data):
             gold_snips.extend(sent_tokenize(sn['text'].strip()))
     return list(set(gold_snips))
 
-def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
-    ret = {
-        'body'      : quest_body,
-        'documents' : top10docs,
-        'id'        : qid,
-        'snippets'  : [],
-    }
-    for esnip in extracted_snippets:
-        pid         = esnip[2].split('/')[-1]
-        the_text    = esnip[3]
-        esnip_res = {
-            # 'score'     : esnip[1],
-            "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
-            "text"      : the_text
-        }
-        try:
-            ind_from                            = docs[pid]['title'].index(the_text)
-            ind_to                              = ind_from + len(the_text)
-            esnip_res["beginSection"]           = "title"
-            esnip_res["endSection"]             = "title"
-            esnip_res["offsetInBeginSection"]   = ind_from
-            esnip_res["offsetInEndSection"]     = ind_to
-        except:
-            # print(the_text)
-            # pprint(docs[pid])
-            ind_from                            = docs[pid]['abstractText'].index(the_text)
-            ind_to                              = ind_from + len(the_text)
-            esnip_res["beginSection"]           = "abstract"
-            esnip_res["endSection"]             = "abstract"
-            esnip_res["offsetInBeginSection"]   = ind_from
-            esnip_res["offsetInEndSection"]     = ind_to
-        ret['snippets'].append(esnip_res)
-    return ret
-
-def get_snips(quest_id, gid, bioasq6_data):
-    good_snips = []
-    if('snippets' in bioasq6_data[quest_id]):
-        for sn in bioasq6_data[quest_id]['snippets']:
-            if(sn['document'].endswith(gid)):
-                good_snips.extend(sent_tokenize(sn['text']))
-    return good_snips
-
 def get_the_mesh(the_doc):
     good_meshes = []
     if('meshHeadingsList' in the_doc):
@@ -366,8 +324,9 @@ def extract_data(ofpath, data, docs):
     )
     pbar    = tqdm(data['queries'])
     for datum in pbar:
-        qid, qtext = datum['query_id'], datum['query_text']
-        quest_toks = bioclean(qtext)
+        qid, qtext  = datum['query_id'], datum['query_text']
+        qtext       = qtext.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+        quest_toks  = bioclean(qtext)
         # get the embeds and idf of querry tokens
         for retr_doc in datum['retrieved_documents']:
             the_bm25    = retr_doc['norm_bm25_score']
@@ -388,6 +347,7 @@ def extract_data(ofpath, data, docs):
             doc_af.append(len(' '.join(all_sents)))
             ##########
             for sent in all_sents:
+                sent            = sent.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
                 sent_toks       = bioclean(sent)
                 sentence_bm25   = similarity_score(
                     quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf
