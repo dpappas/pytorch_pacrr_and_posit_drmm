@@ -193,29 +193,6 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def dummy_test():
-    doc1_embeds         = np.random.rand(40, 200)
-    doc2_embeds         = np.random.rand(30, 200)
-    question_embeds     = np.random.rand(20, 200)
-    q_idfs              = np.random.rand(20, 1)
-    gaf                 = np.random.rand(4)
-    baf                 = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds     = doc1_embeds,
-            doc2_embeds     = doc2_embeds,
-            question_embeds = question_embeds,
-            q_idfs          = q_idfs,
-            gaf             = gaf,
-            baf             = baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -560,6 +537,7 @@ def prep_data(quest, the_doc, pid, the_bm25, idf, max_idf):
     bert_f              = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
     gemb                = pickle.load(open(bert_f, 'rb'))
     all_bert_embeds     = gemb['title_bert_original_embeds'] + gemb['abs_bert_original_embeds']
+    all_bert_embeds     = [t[-1][t[-2]][1:-1] for t in all_bert_embeds]
     ####
     quest_toks          = tokenize(quest)
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -731,7 +709,7 @@ def get_pseudo_retrieved(dato):
     ]
     return pseudo_retrieved
 
-def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data):
     emitions                    = {
         'body': dato['query_text'],
         'id': dato['query_id'],
@@ -739,17 +717,23 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text                  = dato['query_text']
-    quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+    #
+    qemb                        = all_quest_embeds[quest_text]
+    qemb                        = [t[-1][t[-2]][1:-1] for t in qemb]
+    qemb                        = np.concatenate(qemb, axis=0)
+    quest_tokens = tokenize(quest_text)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    gold_snips                  = get_gold_snips(dato['query_id'], bioasq6_data)
+    #
+    gold_snips      = get_gold_snips(dato['query_id'], bioasq6_data)
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['doc_id'], retr['norm_bm25_score'], idf, max_idf)
         doc_emit_               = model.emit_one(
             doc1_embeds         = datum['doc_embeds'],
-            question_embeds     = quest_embeds,
+            doc1_oh_sims        = datum['oh_sims'],
+            question_embeds     = qemb,
             q_idfs              = q_idfs,
             doc_gaf             = datum['doc_af']
         )
@@ -835,7 +819,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     #
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data)
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
@@ -916,14 +900,14 @@ def train_one(epoch, bioasq6_data):
     start_time      = time.time()
     pbar            = tqdm(
         iterable    = train_data_step2(train_instances, train_docs, idf, max_idf),
-        total       = 378
+        total       = 12114
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_ = model(
             doc1_embeds         = datum['good_doc_embeds'],
             doc2_embeds         = datum['bad_doc_embeds'],
-            doc1_oh_sim         = datum['good_oh_sims'],
-            doc2_oh_sim         = datum['bad_oh_sims'],
+            doc1_oh_sims        = datum['good_oh_sims'],
+            doc2_oh_sims        = datum['bad_oh_sims'],
             question_embeds     = datum['quest_embeds'],
             q_idfs              = datum['q_idfs'],
             doc_gaf             = datum['good_doc_af'],
@@ -1195,7 +1179,7 @@ avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=
 print(avgdl, mean, deviation)
 #
 hdlr = None
-for run in range(5):
+for run in range(0, 1):
     #
     my_seed                 = run
     random.seed(my_seed)
