@@ -668,7 +668,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
         emitss = gs_emits_
     else:
         emitss = gs_emits_.tolist()
-    mmax                    = max(emitss)
+    mmax                    = max(emitss) if(len(emitss)!=0) else 0.
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
         t = (
@@ -737,9 +737,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data):
             q_idfs              = q_idfs,
             doc_gaf             = datum['doc_af']
         )
-        gs_emits_               = [0]
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
-            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
+            doc_emit_, [], [], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
@@ -1207,7 +1206,7 @@ for run in range(0, 1):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq6_data)
+        # train_one(epoch+1, bioasq6_data)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, False)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
