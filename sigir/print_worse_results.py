@@ -68,21 +68,3 @@ with open(opath, 'w') as f:
     f.close()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
