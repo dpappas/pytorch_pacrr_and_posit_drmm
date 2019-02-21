@@ -4,18 +4,6 @@ import json
 from pprint import pprint
 from tqdm import tqdm
 
-fpath = '/home/dpappas/v3 dev_data_for_revision.json'
-gpath = '/home/dpappas/v3 dev_gold_bioasq.json'
-opath = '/home/dpappas/some_data_for_revision.json'
-
-edata = json.load(open(fpath))
-
-data    = json.load(open(gpath))
-gdata  = {}
-for item in tqdm(data['questions']):
-    all_snips           = [sn['text'] for sn in item['snippets']]
-    gdata[item['id']]   = all_snips
-
 def snip_is_relevant(one_sent, gold_snips):
     # print one_sent
     # pprint(gold_snips)
@@ -35,7 +23,7 @@ def get_one_bad():
         gold_truth = snip[0]
         emit = snip[1]
         sent = snip[-1]
-        if(emit-gold_truth>.80):
+        if(emit-gold_truth>.70):
             return {
                     'question_text': qtext,
                     'pmid': pmid,
@@ -44,16 +32,24 @@ def get_one_bad():
                     'sent': sent,
                     'gold_snip': 'NONE FOUND'
                 }
+            # pprint({
+            #         'question_text': qtext,
+            #         'pmid': pmid,
+            #         'gold_truth': gold_truth,
+            #         'emit': emit,
+            #         'sent': sent,
+            #         'gold_snip': 'NONE FOUND'
+            #     })
     return None
 
 def get_one_good():
     for snip in val['snippets'][pmid]:
-        gold_truth = snip[0]
-        emit = snip[1]
-        sent = snip[-1]
+        gold_truth  = snip[0]
+        emit        = snip[1]
+        sent        = snip[-1]
         if(gold_truth-emit>.90):
             for gold_snip in gdata[qid]:
-                if(sent in snip or snip in sent):
+                if(sent in gold_snip or gold_snip in sent):
                     return(
                         {
                             'question_text' : qtext,
@@ -65,6 +61,18 @@ def get_one_good():
                         }
                     )
     return None
+
+fpath = '/home/dpappas/v3 dev_data_for_revision.json'
+gpath = '/home/dpappas/v3 dev_gold_bioasq.json'
+opath = '/home/dpappas/some_data_for_revision.json'
+
+edata = json.load(open(fpath))
+
+data    = json.load(open(gpath))
+gdata  = {}
+for item in tqdm(data['questions']):
+    all_snips           = [sn['text'] for sn in item['snippets']]
+    gdata[item['id']]   = all_snips
 
 all_out_data_good = []
 all_out_data_bad = []
@@ -79,6 +87,8 @@ for qid, val in tqdm(edata.items()):
         g           = get_one_good()
         if(g is not None):
             all_out_data_good.append(g)
+
+# exit()
 
 with open(opath, 'w') as f:
     all_out_data = {

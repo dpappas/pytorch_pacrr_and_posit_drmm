@@ -243,7 +243,6 @@ def get_one_output(quest, good_doc_text):
         q_idfs
     ) = prep_data(quest, good_doc_text, the_bm25=7.45)
     doc_emit_, gs_emits_ = model.emit_one(
-
         doc1_sents_embeds=good_sents_embeds,
         question_embeds=quest_embeds,
         q_idfs=q_idfs,
@@ -255,7 +254,12 @@ def get_one_output(quest, good_doc_text):
     sent_ret                = [
         (
             sent,
-            int(math.floor(emitss[held_out_sents.index(sent)]*100)) if(sent in held_out_sents) else 0
+            int(
+                math.floor(
+                    emitss[held_out_sents.index(sent)]*100
+                )
+            )
+            if(sent in held_out_sents) else 0
         )
         for sent in good_sents
     ]
@@ -640,9 +644,9 @@ def get_quest_results():
     # add the scored sentences
     ret_html += '<h2>Document:</h2>'
     for res in sent_res:
-        score   = res[1] if (res[1]>0) else 0
-        sent    = res[0]
-        ret_html += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
+        score       = res[1] if (res[1]>0) else 0
+        sent        = res[0]
+        ret_html    += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
     ret_html += '</br></br>'
     # add the scored mesh terms
     ret_html += '<h2>Mesh Terms:</h2>'
