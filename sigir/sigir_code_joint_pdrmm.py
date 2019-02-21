@@ -765,8 +765,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
         if(two_losses):
             sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            # snip_loss                       = sn_d1_l + sn_d2_l
-            snip_loss = sn_d1_l
+            snip_loss                       = sn_d1_l + sn_d2_l
+            # snip_loss = sn_d1_l
             l                               = 0.5
             cost_                           = ((1 - l) * snip_loss) + (l * cost_)
         #
@@ -1418,7 +1418,8 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_2L_only_positive_sents_0p01_run_{}/'.format(run)
+    # odir = 'sigir_joint_simple_2L_only_positive_sents_0p01_run_{}/'.format(run)
+    odir = 'sigir_joint_simple_2L_no_mesh_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):

@@ -13,13 +13,16 @@ from    gensim.models.keyedvectors import KeyedVectors
 from    nltk.tokenize import sent_tokenize
 from    difflib import SequenceMatcher
 from    pprint import pprint
+import  nltk
 
-bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
+stopwords   = nltk.corpus.stopwords.words("english")
 
 def tokenize(x):
   return bioclean(x)
 
-def idf_val(w):
+def idf_val(w, idf, max_idf):
     if w in idf:
         return idf[w]
     return max_idf
@@ -112,34 +115,145 @@ def query_doc_overlap(qwords, dwords):
             idf_qwords_in_doc_val,
             idf_qwords_bigrams_in_doc_val]
 
-def GetScores(qtext, dtext, bm25):
-    qwords, qw2 = get_words(qtext)
-    dwords, dw2 = get_words(dtext)
-    qd1         = query_doc_overlap(qwords, dwords)
+def GetScores(qtext, dtext, bm25, idf, max_idf):
+    qwords, qw2 = get_words(qtext, idf, max_idf)
+    dwords, dw2 = get_words(dtext, idf, max_idf)
+    qd1         = query_doc_overlap(qwords, dwords, idf, max_idf)
     bm25        = [bm25]
     return qd1[0:3] + bm25
 
-def prep_data(quest, good_doc_text, good_mesh, the_bm25=7.45):
-    quest_tokens, quest_embeds  = get_embeds(tokenize(quest), wv)
-    q_idfs                      = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-    good_doc_af                 = GetScores(quest, good_doc_text, the_bm25)
-    good_sents                  = sent_tokenize(good_doc_text)
+def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
+    if(avgdl == 0):
+        total_words = 0
+        total_docs  = 0
+        for dic in tqdm(train_docs):
+            sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
+            for s in sents:
+                total_words += len(tokenize(s))
+                total_docs  += 1.
+        avgdl = float(total_words) / float(total_docs)
+    else:
+        print('avgdl {} provided'.format(avgdl))
+    #
+    if(mean == 0 and deviation==0):
+        BM25scores  = []
+        k1, b       = 1.2, 0.75
+        not_found   = 0
+        for qid in tqdm(bioasq6_data):
+            qtext           = bioasq6_data[qid]['body']
+            all_retr_ids    = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
+            for dic in all_retr_ids:
+                try:
+                    sents   = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
+                    q_toks  = tokenize(qtext)
+                    for sent in sents:
+                        BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
+                        BM25scores.append(BM25score)
+                except KeyError:
+                    not_found += 1
+        #
+        mean        = sum(BM25scores)/float(len(BM25scores))
+        nominator   = 0
+        for score in BM25scores:
+            nominator += ((score - mean) ** 2)
+        deviation   = math.sqrt((nominator) / float(len(BM25scores) - 1))
+    else:
+        print('mean {} provided'.format(mean))
+        print('deviation {} provided'.format(deviation))
+    return avgdl, mean, deviation
+
+# Compute the term frequency of a word for a specific document
+def tf(term, document):
+    tf = 0
+    for word in document:
+        if word == term:
+            tf += 1
+    if len(document) == 0:
+        return tf
+    else:
+        return tf/len(document)
+
+# Use BM25 ranking function in order to cimpute the similarity score between a question anda snippet
+# query: the given question
+# document: the snippet
+# k1, b: parameters
+# idf_scores: list with the idf scores
+# avddl: average document length
+# nomalize: in case we want to use Z-score normalization (Boolean)
+# mean, deviation: variables used for Z-score normalization
+def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
+    score = 0
+    for query_term in query:
+        if query_term not in idf_scores:
+            score += rare_word * (
+                    (tf(query_term, document) * (k1 + 1)) /
+                    (
+                            tf(query_term, document) +
+                            k1 * (1 - b + b * (len(document) / avgdl))
+                    )
+            )
+        else:
+            score += idf_scores[query_term] * ((tf(query_term, document) * (k1 + 1)) / (tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+    if normalize:
+        return ((score - mean)/deviation)
+    else:
+        return score
+
+def prep_data(quest, good_doc_text, the_bm25=7.45):
+    good_sents      = sent_tokenize(good_doc_text)
+    ####
+    quest_toks      = tokenize(quest)
+    good_doc_af     = GetScores(quest, good_doc_text, the_bm25, idf, max_idf)
+    good_doc_af.append(len(good_sents) / 60.)
+    #
+    doc_toks            = tokenize(good_doc_text)
+    tomi                = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop        = tomi - set(stopwords)
+    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features            = [
+        len(quest)                                      / 300.,
+        len(good_doc_text) / 300.,
+        len(tomi_no_stop)                               / 100.,
+        BM25score,
+        sum(tomi_no_stop_idfs)                          / 100.,
+        sum(tomi_idfs)                                  / sum(quest_idfs),
+    ]
+    good_doc_af.extend(features)
+    ####
     good_sents_embeds, good_sents_escores, held_out_sents = [], [], []
     for good_text in good_sents:
-        good_tokens, good_embeds = get_embeds(tokenize(good_text), wv)
-        good_escores = GetScores(quest, good_text, the_bm25)[:-1]
+        sent_toks                   = tokenize(good_text)
+        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
+        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores.append(len(sent_toks)/ 342.)
         if (len(good_embeds) > 0):
+            #
+            tomi                = (set(sent_toks) & set(quest_toks))
+            tomi_no_stop        = tomi - set(stopwords)
+            BM25score           = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+            tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+            tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+            quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+            features            = [
+                len(quest)              / 300.,
+                len(good_text)          / 300.,
+                len(tomi_no_stop)       / 100.,
+                BM25score,
+                sum(tomi_no_stop_idfs)  / 100.,
+                sum(tomi_idfs)          / sum(quest_idfs),
+            ]
+            #
             good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores)
+            good_sents_escores.append(good_escores+features)
             held_out_sents.append(good_text)
-    good_mesh_embeds    = []
-    held_out_mesh       = []
-    for gm in ['mgmx']+good_mesh:
-        mtoks, membs = get_embeds(gm.lower().split(), wv)
-        if(len(mtoks)>0):
-            good_mesh_embeds.append(membs)
-            held_out_mesh.append(gm)
-    return good_sents, good_sents_embeds, good_sents_escores, good_doc_af, good_mesh_embeds, held_out_mesh, held_out_sents, quest_tokens, quest_embeds, q_idfs
+    ####
+    quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
+    q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    ####
+    return good_sents, good_sents_embeds, good_sents_escores, good_doc_af, held_out_sents, quest_tokens, quest_embeds, q_idfs
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
@@ -506,8 +620,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-resume_from         = '/media/dpappas/dpappas_data/models_out/sigir_joint_simple_2L_only_positive_sents_0p01_run_0/best_checkpoint.pth.tar'
+resume_from         = '/media/dpappas/dpappas_data/models_out/sigir_joint_simple_2L_no_mesh_0p01_run_0/best_checkpoint.pth.tar'
 # resume_from         = './best_checkpoint.pth.tar'
+
+avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
 
 idf, max_idf        = load_idfs(idf_pickle_path)
 print('loading w2v')
