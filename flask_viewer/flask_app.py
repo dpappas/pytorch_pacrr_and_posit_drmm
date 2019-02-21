@@ -161,9 +161,8 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
     else:
         return score
 
-def prep_data(quest, good_doc_text, the_bm25=7.45):
+def prep_data(quest, good_doc_text, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     good_sents      = sent_tokenize(good_doc_text)
-    ####
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, good_doc_text, the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
@@ -185,7 +184,7 @@ def prep_data(quest, good_doc_text, the_bm25=7.45):
     ]
     good_doc_af.extend(features)
     ####
-    good_sents_embeds, good_sents_escores, held_out_sents = [], [], []
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
         sent_toks                   = tokenize(good_text)
         good_tokens, good_embeds    = get_embeds(sent_toks, wv)
@@ -211,11 +210,15 @@ def prep_data(quest, good_doc_text, the_bm25=7.45):
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores+features)
             held_out_sents.append(good_text)
+            good_sent_tags.append(0)
     ####
-    quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
-    q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    ####
-    return good_sents, good_sents_embeds, good_sents_escores, good_doc_af, held_out_sents, quest_tokens, quest_embeds, q_idfs
+    return {
+        'sents_embeds'     : good_sents_embeds,
+        'sents_escores'    : good_sents_escores,
+        'doc_af'           : good_doc_af,
+        'sent_tags'        : good_sent_tags,
+        'held_out_sents'   : held_out_sents,
+    }
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
@@ -238,16 +241,15 @@ def load_model_from_checkpoint(resume_from):
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
 def get_one_output(quest, good_doc_text):
-    (
-        good_sents, good_sents_embeds, good_sents_escores, good_doc_af, held_out_sents, quest_tokens,
-        quest_embeds, q_idfs
-    ) = prep_data(quest, good_doc_text, the_bm25=0.04020516146562146)
-    doc_emit_, gs_emits_    = model.emit_one(
-        doc1_sents_embeds   = good_sents_embeds,
-        question_embeds     = quest_embeds,
-        q_idfs              = q_idfs,
-        sents_gaf           = good_sents_escores,
-        doc_gaf             = good_doc_af
+    quest_tokens, quest_embeds = get_embeds(tokenize(quest), wv)
+    q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    datum = prep_data(quest, good_doc_text, 0.04020516146562146, wv, [], idf, max_idf, True)
+    doc_emit_, gs_emits_ = model.emit_one(
+        doc1_sents_embeds=datum['sents_embeds'],
+        question_embeds=quest_embeds,
+        q_idfs=q_idfs,
+        sents_gaf=datum['sents_escores'],
+        doc_gaf=datum['doc_af']
     )
     # emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()

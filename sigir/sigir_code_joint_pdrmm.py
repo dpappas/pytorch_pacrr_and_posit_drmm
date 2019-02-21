@@ -883,7 +883,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
         )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
+            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
+        )
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
@@ -1452,7 +1454,10 @@ for run in range(0, 5):
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
             test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
-            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir,'best_checkpoint.pth.tar'))
+            save_checkpoint(
+                epoch, model, best_dev_map, optimizer,
+                filename=os.path.join(odir,'best_checkpoint.pth.tar')
+            )
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
