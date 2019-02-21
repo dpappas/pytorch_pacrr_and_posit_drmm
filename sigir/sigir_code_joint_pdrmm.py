@@ -1456,7 +1456,7 @@ for run in range(0, 5):
             test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
             save_checkpoint(
                 epoch, model, best_dev_map, optimizer,
-                filename=os.path.join(odir,'best_checkpoint.pth.tar')
+                filename=os.path.join(odir, 'best_checkpoint.pth.tar')
             )
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
