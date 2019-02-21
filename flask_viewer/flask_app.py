@@ -239,8 +239,8 @@ def load_model_from_checkpoint(resume_from):
 
 def get_one_output(quest, good_doc_text):
     (
-        good_sents, good_sents_embeds, good_sents_escores, good_doc_af, held_out_sents, quest_tokens, quest_embeds,
-        q_idfs
+        good_sents, good_sents_embeds, good_sents_escores, good_doc_af, held_out_sents, quest_tokens,
+        quest_embeds, q_idfs
     ) = prep_data(quest, good_doc_text, the_bm25=0.04020516146562146)
     doc_emit_, gs_emits_    = model.emit_one(
         doc1_sents_embeds   = good_sents_embeds,
