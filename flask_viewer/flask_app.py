@@ -251,6 +251,7 @@ def get_one_output(quest, good_doc_text):
     )
     # emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
+    app.logger.info(emitss)
     sent_ret                = [
         (
             sent,
@@ -645,6 +646,7 @@ def get_quest_results():
     ret_html += '<h2>Document:</h2>'
     for res in sent_res:
         score       = res[1] if (res[1]>0) else 0
+        print(score)
         sent        = res[0]
         ret_html    += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
     ret_html += '</br></br>'
