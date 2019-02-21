@@ -1293,8 +1293,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
 
-    def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights,
-                           k2):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
             sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False)
