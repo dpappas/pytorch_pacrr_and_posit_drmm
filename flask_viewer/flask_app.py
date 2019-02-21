@@ -27,10 +27,10 @@ def idf_val(w, idf, max_idf):
         return idf[w]
     return max_idf
 
-def get_words(s):
+def get_words(s, idf, max_idf):
     sl  = tokenize(s)
     sl  = [s for s in sl]
-    sl2 = [s for s in sl if idf_val(s) >= 2.0]
+    sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
     return sl, sl2
 
 def get_embeds(tokens, wv):
@@ -69,16 +69,16 @@ def ubigrams(words):
     prevw = w
   return [w for w in uw]
 
-def query_doc_overlap(qwords, dwords):
+def query_doc_overlap(qwords, dwords, idf, max_idf):
     # % Query words in doc.
     qwords_in_doc = 0
     idf_qwords_in_doc = 0.0
     idf_qwords = 0.0
     for qword in uwords(qwords):
-      idf_qwords += idf_val(qword)
+      idf_qwords += idf_val(qword, idf, max_idf)
       for dword in uwords(dwords):
         if qword == dword:
-          idf_qwords_in_doc += idf_val(qword)
+          idf_qwords_in_doc += idf_val(qword, idf, max_idf)
           qwords_in_doc     += 1
           break
     if len(qwords) <= 0:
@@ -96,11 +96,11 @@ def query_doc_overlap(qwords, dwords):
     idf_bigrams = 0.0
     for qword in ubigrams(qwords):
       wrds = qword.split('_')
-      idf_bigrams += idf_val(wrds[0]) * idf_val(wrds[1])
+      idf_bigrams += idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf)
       for dword in ubigrams(dwords):
         if qword == dword:
           qwords_bigrams_in_doc += 1
-          idf_qwords_bigrams_in_doc += (idf_val(wrds[0]) * idf_val(wrds[1]))
+          idf_qwords_bigrams_in_doc += (idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf))
           break
     if len(qwords) <= 0:
       qwords_bigrams_in_doc_val = 0.0
@@ -110,10 +110,12 @@ def query_doc_overlap(qwords, dwords):
       idf_qwords_bigrams_in_doc_val = 0.0
     else:
       idf_qwords_bigrams_in_doc_val = (float(idf_qwords_bigrams_in_doc) / float(idf_bigrams))
-    return [qwords_in_doc_val,
-            qwords_bigrams_in_doc_val,
-            idf_qwords_in_doc_val,
-            idf_qwords_bigrams_in_doc_val]
+    return [
+        qwords_in_doc_val,
+        qwords_bigrams_in_doc_val,
+        idf_qwords_in_doc_val,
+        idf_qwords_bigrams_in_doc_val
+    ]
 
 def GetScores(qtext, dtext, bm25, idf, max_idf):
     qwords, qw2 = get_words(qtext, idf, max_idf)
