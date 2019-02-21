@@ -213,6 +213,7 @@ def prep_data(quest, good_doc_text, the_bm25, wv, good_snips, idf, max_idf, use_
             good_sent_tags.append(0)
     ####
     return {
+        'good_sents'       : good_sents,
         'sents_embeds'     : good_sents_embeds,
         'sents_escores'    : good_sents_escores,
         'doc_af'           : good_doc_af,
@@ -254,6 +255,8 @@ def get_one_output(quest, good_doc_text):
     # emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
     app.logger.info(emitss)
+    held_out_sents          = datum['held_out_sents']
+    good_sents              = datum['held_out_sents']
     sent_ret                = [
         (
             sent,
