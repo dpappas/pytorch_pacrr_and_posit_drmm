@@ -122,46 +122,6 @@ def GetScores(qtext, dtext, bm25, idf, max_idf):
     bm25        = [bm25]
     return qd1[0:3] + bm25
 
-def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
-    if(avgdl == 0):
-        total_words = 0
-        total_docs  = 0
-        for dic in tqdm(train_docs):
-            sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-            for s in sents:
-                total_words += len(tokenize(s))
-                total_docs  += 1.
-        avgdl = float(total_words) / float(total_docs)
-    else:
-        print('avgdl {} provided'.format(avgdl))
-    #
-    if(mean == 0 and deviation==0):
-        BM25scores  = []
-        k1, b       = 1.2, 0.75
-        not_found   = 0
-        for qid in tqdm(bioasq6_data):
-            qtext           = bioasq6_data[qid]['body']
-            all_retr_ids    = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
-            for dic in all_retr_ids:
-                try:
-                    sents   = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-                    q_toks  = tokenize(qtext)
-                    for sent in sents:
-                        BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
-                        BM25scores.append(BM25score)
-                except KeyError:
-                    not_found += 1
-        #
-        mean        = sum(BM25scores)/float(len(BM25scores))
-        nominator   = 0
-        for score in BM25scores:
-            nominator += ((score - mean) ** 2)
-        deviation   = math.sqrt((nominator) / float(len(BM25scores) - 1))
-    else:
-        print('mean {} provided'.format(mean))
-        print('deviation {} provided'.format(deviation))
-    return avgdl, mean, deviation
-
 # Compute the term frequency of a word for a specific document
 def tf(term, document):
     tf = 0
@@ -275,14 +235,11 @@ def load_model_from_checkpoint(resume_from):
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
-def get_one_output(quest, good_doc_text, good_meshes):
+def get_one_output(quest, good_doc_text):
     (
-        good_sents,         good_sents_embeds,
-        good_sents_escores, good_doc_af,
-        good_mesh_embeds,   held_out_mesh,
-        held_out_sents,     quest_tokens,
-        quest_embeds,       q_idfs
-    ) = prep_data(quest, good_doc_text, good_meshes, the_bm25=7.45)
+        good_sents, good_sents_embeds, good_sents_escores, good_doc_af, held_out_sents, quest_tokens, quest_embeds,
+        q_idfs
+    ) = prep_data(quest, good_doc_text, the_bm25=7.45)
     doc_emit_, gs_emits_ = model.emit_one(
 
         doc1_sents_embeds=good_sents_embeds,
@@ -623,7 +580,9 @@ idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 resume_from         = '/media/dpappas/dpappas_data/models_out/sigir_joint_simple_2L_no_mesh_0p01_run_0/best_checkpoint.pth.tar'
 # resume_from         = './best_checkpoint.pth.tar'
 
-avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
+avgdl       = 21.2508
+mean        = 0.5973
+deviation   = 0.5926
 
 idf, max_idf        = load_idfs(idf_pickle_path)
 print('loading w2v')
@@ -668,9 +627,9 @@ def get_news():
 def get_quest_results():
     q = request.form.get("the_quest").strip()
     d = request.form.get("the_doc").strip()
-    m = request.form.get("the_mesh").strip()
-    m = [t.strip() for t in m.split('||')]
-    sent_res = get_one_output(q, d, m)
+    # m = request.form.get("the_mesh").strip()
+    # m = [t.strip() for t in m.split('||')]
+    sent_res = get_one_output(q, d)
     # return render_template("home.html")
     # add the question as header
     ret_html = '<h2>Question: </h2>'
