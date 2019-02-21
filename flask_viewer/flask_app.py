@@ -608,13 +608,6 @@ lr              = 0.01
 b_size          = 32
 max_epoch       = 10
 
-use_cuda    = False
-model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
-
-# resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
-load_model_from_checkpoint(resume_from)
-print('LOADED model')
-
 # quest                       = 'What is my name?'
 # good_doc_text               = 'my name is tilalop'
 # good_meshes                 = ['A B', 'C']
@@ -630,6 +623,12 @@ colors  = list(red.range_to(Color("yellow"), 100))
 colors  = [c.get_hex_l() for c in colors]
 
 app = Flask(__name__)
+
+use_cuda    = False
+model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
+# resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
+load_model_from_checkpoint(resume_from)
+print('LOADED model')
 
 @app.route("/")
 def get_news():
