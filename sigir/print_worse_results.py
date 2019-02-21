@@ -30,40 +30,61 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-all_out_data = []
+def get_one_bad():
+    for snip in val['snippets'][pmid]:
+        gold_truth = snip[0]
+        emit = snip[1]
+        sent = snip[-1]
+        if(emit-gold_truth>.80):
+            return {
+                    'question_text': qtext,
+                    'pmid': pmid,
+                    'gold_truth': gold_truth,
+                    'emit': emit,
+                    'sent': sent,
+                    'gold_snip': 'NONE FOUND'
+                }
+    return None
+
+def get_one_good():
+    for snip in val['snippets'][pmid]:
+        gold_truth = snip[0]
+        emit = snip[1]
+        sent = snip[-1]
+        if(gold_truth-emit>.90):
+            for gold_snip in gdata[qid]:
+                if(sent in snip or snip in sent):
+                    return(
+                        {
+                            'question_text' : qtext,
+                            'pmid'          : pmid,
+                            'gold_truth'    : gold_truth,
+                            'emit'          : emit,
+                            'sent'          : sent,
+                            'gold_snip'     : gold_snip
+                        }
+                    )
+    return None
+
+all_out_data_good = []
+all_out_data_bad = []
 for qid, val in tqdm(edata.items()):
     qtext = val['query_text']
     for pmid in val['snippets']:
-        for snip in val['snippets'][pmid]:
-            gold_truth = snip[0]
-            emit = snip[1]
-            sent = snip[-1]
-            if(gold_truth-emit>.90):
-                for gold_snip in gdata[qid]:
-                    if(sent in snip or snip in sent):
-                        all_out_data.append(
-                            {
-                                'question_text' : qtext,
-                                'pmid'          : pmid,
-                                'gold_truth'    : gold_truth,
-                                'emit'          : emit,
-                                'sent'          : sent,
-                                'gold_snip'     : gold_snip
-                            }
-                        )
-            elif(emit-gold_truth>.80):
-                all_out_data.append(
-                    {
-                        'question_text': qtext,
-                        'pmid': pmid,
-                        'gold_truth': gold_truth,
-                        'emit': emit,
-                        'sent': sent,
-                        'gold_snip': 'NONE FOUND'
-                    }
-                )
+        found_good  = False
+        found_bad   = False
+        b           = get_one_bad()
+        if(b is not None):
+            all_out_data_bad.append(b)
+        g           = get_one_good()
+        if(g is not None):
+            all_out_data_good.append(g)
 
 with open(opath, 'w') as f:
+    all_out_data = {
+        'GT_1': all_out_data_good,
+        'GT_0': all_out_data_bad
+    }
     f.write(json.dumps(all_out_data, indent=4, sort_keys=True))
     f.close()
 
