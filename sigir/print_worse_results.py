@@ -62,6 +62,19 @@ def get_one_good():
                     )
     return None
 
+import pickle
+dataloc = '/home/dpappas/for_ryan/'
+with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+    dev_data = pickle.load(f)
+
+pprint(
+    [
+        d for d in dev_data['queries']
+        if(d['query_id'] == '58a93877ee23e0236b000001')
+    ]
+)
+exit()
+
 fpath = '/home/dpappas/v3 dev_data_for_revision.json'
 gpath = '/home/dpappas/v3 dev_gold_bioasq.json'
 opath = '/home/dpappas/some_data_for_revision.json'
