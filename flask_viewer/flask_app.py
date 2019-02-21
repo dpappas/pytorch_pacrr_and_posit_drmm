@@ -580,9 +580,9 @@ idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 resume_from         = '/media/dpappas/dpappas_data/models_out/sigir_joint_simple_2L_no_mesh_0p01_run_0/best_checkpoint.pth.tar'
 # resume_from         = './best_checkpoint.pth.tar'
 
-avgdl       = 21.2508
-mean        = 0.5973
-deviation   = 0.5926
+avgdl               = 21.2508
+mean                = 0.5973
+deviation           = 0.5926
 
 idf, max_idf        = load_idfs(idf_pickle_path)
 print('loading w2v')
