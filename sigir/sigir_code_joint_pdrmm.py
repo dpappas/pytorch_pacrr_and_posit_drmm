@@ -1383,8 +1383,8 @@ idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd = '/home/dpappas/'
-use_cuda = True
+odd                 = '/home/dpappas/'
+use_cuda            = True
 # get_embeds          = get_embeds_use_unk
 # get_embeds          = get_embeds_use_only_unk
 
@@ -1419,7 +1419,7 @@ for run in range(0, 5):
     torch.manual_seed(my_seed)
     #
     # odir = 'sigir_joint_simple_2L_only_positive_sents_0p01_run_{}/'.format(run)
-    odir = 'sigir_joint_simple_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_joint_2L_no_mesh_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
