@@ -254,7 +254,7 @@ def get_one_output(quest, good_doc_text):
     )
     # emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
-    app.logger.info(emitss)
+    # app.logger.info(emitss)
     held_out_sents          = datum['held_out_sents']
     good_sents              = datum['held_out_sents']
     sent_ret                = [
@@ -629,6 +629,7 @@ model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool
 # resume_from = '/home/dpappas/model_18_run_3/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 print('LOADED model')
+model.eval()
 
 @app.route("/")
 def get_news():
