@@ -709,7 +709,7 @@ if __name__ == "__main__":
 
 python3.6 test2.py \
 --bert_model=bert-base-uncased \
---train_batch_size=16 \
+--train_batch_size=32 \
 --max_seq_length=50 \
 --num_train_epochs=8.0 \
 --task_name=bioasq \
