@@ -20,7 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 import  json
 import  pickle
@@ -129,7 +129,7 @@ class BioProcessor(object):
                 examples.append(
                     InputExample(guid=guid, text_a=datum['quest_text'], text_b=sent[0], label=str(sent[1]))
                 )
-            i += 1
+                i += 1
         return examples
 
     def get_labels(self):
@@ -709,7 +709,7 @@ if __name__ == "__main__":
 
 python3.6 test2.py \
 --bert_model=bert-base-uncased \
---train_batch_size=32 \
+--train_batch_size=16 \
 --max_seq_length=50 \
 --num_train_epochs=8.0 \
 --task_name=bioasq \
