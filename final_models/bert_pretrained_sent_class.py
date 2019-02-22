@@ -122,9 +122,14 @@ class BioProcessor(object):
         examples = []
         i = 0
         for datum in train_data_step2(instances, docs, setting):
-            guid = "%s-%s" % ('train', i)
-            examples.append(InputExample(guid=guid, text_a=datum['quest_text'], text_b=datum['good_text'], label='1'))
-            examples.append(InputExample(guid=guid, text_a=datum['quest_text'], text_b=datum['bad_text'],  label='0'))
+            all_sents = datum['good_sents'] + datum['bad_sents']
+            random.shuffle(all_sents)
+            for sent in all_sents:
+                guid = "%s-%s" % ('train', i)
+                examples.append(
+                    InputExample(guid=guid, text_a=datum['quest_text'], text_b=sent[0], label=str(sent[1]))
+                )
+            i += 1
         return examples
 
     def get_labels(self):
@@ -231,10 +236,24 @@ def get_snips(quest_id, gid, bioasq6_data):
                 good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
 
+def snip_is_relevant(one_sent, gold_snips):
+    # print one_sent
+    # pprint(gold_snips)
+    return int(
+        any(
+            [
+                (one_sent.encode('ascii', 'ignore')  in gold_snip.encode('ascii','ignore'))
+                or
+                (gold_snip.encode('ascii', 'ignore') in one_sent.encode('ascii','ignore'))
+                for gold_snip in gold_snips
+            ]
+        )
+    )
+
 def train_data_step2(instances, docs, setting):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in tqdm(instances):
-        # good_snips  = get_snips(quest_id, gid, bioasq6_data)
-        # good_snips  = [' '.join(bioclean(sn)) for sn in good_snips]
+        good_snips  = get_snips(quest_id, gid, bioasq6_data)
+        good_snips  = [' '.join(bioclean(sn)) for sn in good_snips]
         if(setting.lower() == 'title'):
             good_sents  = sent_tokenize(docs[gid]['title'])
             bad_sents   = sent_tokenize(docs[gid]['title'])
@@ -242,10 +261,12 @@ def train_data_step2(instances, docs, setting):
             good_sents  = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
             bad_sents   = sent_tokenize(docs[gid]['title']) + sent_tokenize(docs[gid]['abstractText'])
         #
+        good_sents      = [(some_text, snip_is_relevant(' '.join(bioclean(some_text)), good_snips)) for some_text in good_sents]
+        bad_sents       = [(some_text, 0) for some_text in bad_sents]
         yield {
-            'good_text' : ' '.join(good_sents),
-            'bad_text'  : ' '.join(bad_sents),
-            'quest_text': quest_text
+            'good_sents'    : good_sents,
+            'bad_sents'     : bad_sents,
+            'quest_text'    : quest_text
         }
 
 def train_data_step1(train_data):
