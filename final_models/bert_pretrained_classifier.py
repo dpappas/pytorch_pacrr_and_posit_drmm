@@ -712,4 +712,11 @@ python3.6 /home/dpappas/bert_fine_tune.py \
 --data_dir=./ \
 --do_train
 
+python3.6 test.py \
+--bert_model=bert-base-uncased \
+--task_name=bioasq \
+--output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
+--data_dir=./ \
+--do_train
+
 '''
