@@ -145,11 +145,8 @@ model.to(device)
 
 tokenizer = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 
-eval_examples   = [
-InputExample(guid='example_dato_1', text_a='what is your name?', text_b='my name is kostakis', label='1')
-]
+eval_examples   = [InputExample(guid='example_dato_1', text_a='what is your name?', text_b='my name is kostakis', label='1')]
 eval_features   = convert_examples_to_features(eval_examples, label_list, max_seq_length, tokenizer)
-
 all_input_ids   = torch.tensor([f.input_ids     for f in eval_features], dtype=torch.long)
 all_input_mask  = torch.tensor([f.input_mask    for f in eval_features], dtype=torch.long)
 all_segment_ids = torch.tensor([f.segment_ids   for f in eval_features], dtype=torch.long)
