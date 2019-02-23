@@ -630,10 +630,7 @@ def main():
     # Load a trained model that you have fine-tuned
     model_state_dict = torch.load(output_model_file)
     model = BertForSequenceClassification.from_pretrained(
-        args.bert_model,
-        state_dict=model_state_dict,
-        num_labels=num_labels,
-        cache_dir =cache_dir
+        args.bert_model, state_dict=model_state_dict, num_labels=num_labels, cache_dir =cache_dir
     )
     model.to(device)
     ####
