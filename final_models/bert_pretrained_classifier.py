@@ -657,10 +657,10 @@ def main():
         eval_accuracy   = eval_accuracy / nb_eval_examples
         loss            = tr_loss / nb_tr_steps if args.do_train else None
         result          = {
-            'eval_loss': eval_loss,
-            'eval_accuracy': eval_accuracy,
-            'global_step': global_step,
-            'loss': loss
+            'eval_loss'     : eval_loss,
+            'eval_accuracy' : eval_accuracy,
+            'global_step'   : global_step,
+            'loss'          : loss
         }
         ####
         output_eval_file = os.path.join(args.output_dir, "eval_results.txt")
