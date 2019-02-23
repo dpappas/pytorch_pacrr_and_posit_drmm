@@ -112,9 +112,10 @@ class BioProcessor(object):
         logger.info("LOOKING AT {}".format(os.path.join(data_dir, "train.tsv")))
         return self._create_examples(train_data, train_docs)
 
-    def get_dev_examples(self):
+    def get_dev_examples(self, data_dir):
         """See base class."""
-        return self.dev_examples
+        logger.info("LOOKING AT {}".format(os.path.join(data_dir, "dev.tsv")))
+        return self._create_examples(dev_data, dev_docs)
 
     def _create_examples(self, data, docs):
         instances = train_data_step1(data)
@@ -713,8 +714,19 @@ python3.6 test2.py \
 --max_seq_length=50 \
 --num_train_epochs=8.0 \
 --task_name=bioasq \
---output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
+--output_dir=/home/dpappas/bert_pretrained_classifier_out_sent/ \
 --data_dir=./ \
 --do_train
+
+
+python3.6 test2.py \
+--bert_model=bert-base-uncased \
+--eval_batch_size=32 \
+--max_seq_length=50 \
+--task_name=bioasq \
+--output_dir=/home/dpappas/bert_pretrained_classifier_out_sent/ \
+--data_dir=./ \
+--do_eval
+
 
 '''

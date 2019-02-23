@@ -683,34 +683,6 @@ if __name__ == "__main__":
     main()
 
 '''
-python3.6 \
-/home/dpappas/PycharmProjects/pytorch_pacrr_and_posit_drmm/final_models/bert_pretrained_classifier.py \
---bert_model=bert-base-uncased \
---task_name=bioasq \
---output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
---data_dir=./ \
---do_train
-
-python3.6 t.py \
---bert_model=bert-base-uncased \
---task_name=bioasq \
---output_dir=/home/dpappas/bert_pretrained_classifier_out_2/ \
---data_dir=./ \
---do_train
-
-python3.6 /home/dpappas/bert.py \
---bert_model=bert-base-uncased \
---task_name=bioasq \
---output_dir=/home/dpappas/title_bert_pretrained_classifier_out/ \
---data_dir=./ \
---do_train
-
-python3.6 /home/dpappas/bert_fine_tune.py \
---bert_model=bert-base-uncased \
---task_name=bioasq \
---output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
---data_dir=./ \
---do_train
 
 python3.6 test.py \
 --bert_model=bert-base-uncased \
@@ -718,7 +690,7 @@ python3.6 test.py \
 --max_seq_length=250 \
 --num_train_epochs=8.0 \
 --task_name=bioasq \
---output_dir=/home/dpappas/bert_pretrained_classifier_out/ \
+--output_dir=/home/dpappas/bert_pretrained_classifier_out_doc/ \
 --data_dir=./ \
 --do_train
 
