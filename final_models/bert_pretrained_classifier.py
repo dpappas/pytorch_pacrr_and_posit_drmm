@@ -112,9 +112,10 @@ class BioProcessor(object):
         logger.info("LOOKING AT {}".format(os.path.join(data_dir, "train.tsv")))
         return self._create_examples(train_data, train_docs)
 
-    def get_dev_examples(self):
+    def get_dev_examples(self, data_dir):
         """See base class."""
-        return self.dev_examples
+        logger.info("LOOKING AT {}".format(os.path.join(data_dir, "dev.tsv")))
+        return self._create_examples(dev_data, dev_docs)
 
     def _create_examples(self, data, docs):
         instances = train_data_step1(data)
@@ -452,6 +453,7 @@ def main():
     parser.add_argument('--gradient_accumulation_steps', type=int, default=1, help="Number of updates steps to accumulate before performing a backward/update pass.")
     parser.add_argument('--fp16', action='store_true', help="Whether to use 16-bit float precision instead of 32-bit")
     parser.add_argument('--loss_scale', type=float, default=0,help="Loss scaling to improve fp16 numeric stability. Only used when fp16 set to True.\n0 (default value): dynamic loss scaling.\nPositive power of 2: static loss scaling value.\n")
+    parser.add_argument("--eval_file_to_load", default=None, type=str, help="which model file to load for eval.")
     args = parser.parse_args()
     processors = {"cola": ColaProcessor, "mnli": MnliProcessor, "mrpc": MrpcProcessor, "bioasq": BioProcessor}
     num_labels_task = {"cola"  : 2, "mnli"  : 3, "mrpc"  : 2, "bioasq": 2}
@@ -605,6 +607,8 @@ def main():
         ####
     ####
     # Load a trained model that you have fine-tuned
+    if(args.eval_file_to_load is not None):
+        output_model_file   = args.eval_file_to_load
     model_state_dict = torch.load(output_model_file)
     model = BertForSequenceClassification.from_pretrained(
         args.bert_model,
@@ -631,6 +635,7 @@ def main():
         ####
         model.eval()
         eval_loss, eval_accuracy = 0, 0
+        eval_accuracy2                  = 0
         nb_eval_steps, nb_eval_examples = 0, 0
         ####
         for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluating"):
@@ -646,21 +651,25 @@ def main():
             logits              = logits.detach().cpu().numpy()
             label_ids           = label_ids.to('cpu').numpy()
             tmp_eval_accuracy   = accuracy(logits, label_ids)
+            tmp_eval_accuracy2  = accuracy(np.zeros_like(logits), label_ids)
             ####
             eval_loss           += tmp_eval_loss.mean().item()
             eval_accuracy       += tmp_eval_accuracy
+            eval_accuracy2      += tmp_eval_accuracy2
             ####
             nb_eval_examples    += input_ids.size(0)
             nb_eval_steps       += 1
         ####
         eval_loss       = eval_loss / nb_eval_steps
         eval_accuracy   = eval_accuracy / nb_eval_examples
+        eval_accuracy2  = eval_accuracy2 / nb_eval_examples
         loss            = tr_loss / nb_tr_steps if args.do_train else None
         result          = {
-            'eval_loss'     : eval_loss,
-            'eval_accuracy' : eval_accuracy,
-            'global_step'   : global_step,
-            'loss'          : loss
+            'eval_loss'         : eval_loss,
+            'eval_accuracy'     : eval_accuracy,
+            'eval_accuracy2'    : eval_accuracy2,
+            'global_step'       : global_step,
+            'loss'              : loss
         }
         ####
         output_eval_file = os.path.join(args.output_dir, "eval_results.txt")
@@ -694,5 +703,16 @@ python3.6 test.py \
 --output_dir=/home/dpappas/bert_pretrained_classifier_out_doc/ \
 --data_dir=./ \
 --do_train
+
+
+python3.6 test.py \
+--bert_model=bert-base-uncased \
+--eval_batch_size=32 \
+--max_seq_length=250 \
+--task_name=bioasq \
+--output_dir=/home/dpappas/bert_pretrained_classifier_out_doc/ \
+--data_dir=./ \
+--do_eval \
+--eval_file_to_load=/home/dpappas/bert_pretrained_classifier_out_doc/pytorch_model_7.bin
 
 '''
