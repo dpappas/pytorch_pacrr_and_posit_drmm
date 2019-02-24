@@ -474,6 +474,7 @@ def main():
     parser.add_argument('--gradient_accumulation_steps', type=int, default=1, help="Number of updates steps to accumulate before performing a backward/update pass.")
     parser.add_argument('--fp16', action='store_true', help="Whether to use 16-bit float precision instead of 32-bit")
     parser.add_argument('--loss_scale', type=float, default=0,help="Loss scaling to improve fp16 numeric stability. Only used when fp16 set to True.\n0 (default value): dynamic loss scaling.\nPositive power of 2: static loss scaling value.\n")
+    parser.add_argument("--eval_file_to_load", default=None, type=str, help="which model file to load for eval.")
     args = parser.parse_args()
     processors = {
         "cola": ColaProcessor, "mnli": MnliProcessor, "mrpc": MrpcProcessor, "bioasq": BioProcessor
@@ -629,8 +630,9 @@ def main():
         ####
     ####
     # Load a trained model that you have fine-tuned
-    model_state_dict = torch.load(output_model_file)
-    model = BertForSequenceClassification.from_pretrained(
+    output_model_file   = args.eval_file_to_load
+    model_state_dict    = torch.load(output_model_file)
+    model               = BertForSequenceClassification.from_pretrained(
         args.bert_model, state_dict=model_state_dict, num_labels=num_labels, cache_dir =cache_dir
     )
     model.to(device)
@@ -724,7 +726,18 @@ python3.6 test2.py \
 --task_name=bioasq \
 --output_dir=/home/dpappas/bert_pretrained_classifier_out_sent/ \
 --data_dir=./ \
---do_eval
+--do_eval \
+--eval_file_to_load=/home/dpappas/bert_pretrained_classifier_out_sent/pytorch_model_2.bin
+
+0
+02/24/2019 20:17:42 - INFO - __main__ -     eval_accuracy = 0.9395338102930995
+02/24/2019 20:17:42 - INFO - __main__ -     eval_loss = 0.21033369475542618
+2
+02/24/2019 20:20:28 - INFO - __main__ -     eval_accuracy = 0.9396492037849066
+02/24/2019 20:20:28 - INFO - __main__ -     eval_loss = 0.21460652776488628
+7 
+02/24/2019 20:15:02 - INFO - __main__ -     eval_accuracy = 0.9396492037849066
+02/24/2019 20:15:02 - INFO - __main__ -     eval_loss = 0.3254905976148879
 
 
 '''
