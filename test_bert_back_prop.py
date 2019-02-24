@@ -163,12 +163,9 @@ for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc=
     label_ids   = label_ids.to(device)
     ####
     with torch.no_grad():
-        tmp_eval_loss   = model(input_ids, segment_ids, input_mask, label_ids)
-        logits          = model(input_ids, segment_ids, input_mask)
-        tt, pooled_output = model.bert(
-            input_ids, segment_ids, input_mask,
-            output_all_encoded_layers=False
-        )
+        tmp_eval_loss       = model(input_ids, segment_ids, input_mask, label_ids)
+        logits              = model(input_ids, segment_ids, input_mask)
+        tt, pooled_output   = model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
 
 
 
