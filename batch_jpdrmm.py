@@ -61,16 +61,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.mesh_gru   = self.mesh_gru.cuda()
     def init_context_module(self):
         self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        # self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.trigram_conv_activation_1 = torch.nn.Sigmoid()
-        self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        # self.trigram_conv_activation_2  = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.trigram_conv_activation_2 = torch.nn.Sigmoid()
+        self.trigram_conv_activation_1  = torch.nn.Sigmoid()
         if(use_cuda):
             self.trigram_conv_1             = self.trigram_conv_1.cuda()
-            self.trigram_conv_2             = self.trigram_conv_2.cuda()
             self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
-            self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
     def init_question_weight_module(self):
         self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
         if(use_cuda):
@@ -123,24 +117,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res             = output + the_input
         return res, hn
     def apply_context_convolution(self, the_input, the_filters, activation):
-        conv_res        = the_filters(the_input.transpose(0,1).unsqueeze(0))
+        conv_res        = the_filters(the_input.transpose(-2,-1))
         if(activation is not None):
             conv_res    = activation(conv_res)
-        pad             = the_filters.padding[0]
-        ind_from        = int(np.floor(pad/2.0))
-        ind_to          = ind_from + the_input.size(0)
-        conv_res        = conv_res[:, :, ind_from:ind_to]
-        conv_res        = conv_res.transpose(1, 2)
-        # residual
-        conv_res = conv_res + the_input
+        conv_res        = F.avg_pool1d(conv_res, kernel_size=3, stride=1)
+        conv_res        = conv_res.transpose(-1, -2)
+        conv_res        = conv_res + the_input
         return conv_res.squeeze(0)
     def my_cosine_sim(self, A, B):
-        A           = A.unsqueeze(0)
-        B           = B.unsqueeze(0)
-        A_mag       = torch.norm(A, 2, dim=2)
-        B_mag       = torch.norm(B, 2, dim=2)
-        num         = torch.bmm(A, B.transpose(-1,-2))
-        den         = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
+        Ar          = A.reshape(-1, A.size()[-1])
+        Br          = B.reshape(-1, B.size()[-1])
+        A_mag       = torch.norm(Ar, 2, dim=-1)
+        B_mag       = torch.norm(Br, 2, dim=-1)
+        num         = torch.mm(Ar, Br.transpose(-1, -2))
+        den         = torch.mm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1,-2))
         dist_mat    = num / den
         return dist_mat
     def pooling_method(self, sim_matrix):
@@ -173,7 +163,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 sent_embeds     = sent_embeds.cuda()
                 gaf             = gaf.cuda()
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
             #
             sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
             sim_oh              = (sim_insens > (1 - (1e-3))).float()
@@ -288,13 +277,26 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             question_embeds     = question_embeds.cuda()
             doc_sents_embeds    = doc_sents_embeds.cuda()
         #
-        print(question_embeds.size())
+        # print(question_embeds.size())
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        # print(q_context.size())
         #
-        q_weights           = torch.cat([q_context, q_idfs], -1)
+        q_weights           = torch.cat([q_context, q_idfs.unsqueeze(-1)], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
+        # print(q_weights.size())
+        #
+        print(question_embeds.size())
+        print(doc_sents_embeds.size())
+        reshaped            = doc_sents_embeds.reshape(-1, doc_sents_embeds.size()[-2], doc_sents_embeds.size()[-1])
+        print(reshaped.size())
+        s_context           = self.apply_context_convolution(reshaped, self.trigram_conv_1, self.trigram_conv_activation_1)
+        print(q_context.size())
+        print(s_context.size())
+        similarity          = self.my_cosine_sim(q_context, s_context)
+        print(similarity.size())
+        # s_context           = s_context.reshape_as(doc_sents_embeds)
+        # print(s_context.size())
         #
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
