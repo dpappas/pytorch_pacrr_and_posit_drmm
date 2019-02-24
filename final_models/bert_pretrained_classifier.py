@@ -713,6 +713,23 @@ python3.6 test.py \
 --output_dir=/home/dpappas/bert_pretrained_classifier_out_doc/ \
 --data_dir=./ \
 --do_eval \
---eval_file_to_load=/home/dpappas/bert_pretrained_classifier_out_doc/pytorch_model_7.bin
+--eval_file_to_load=/home/dpappas/bert_pretrained_classifier_out_doc/pytorch_model_2.bin
+
+0
+02/24/2019 20:51:33 - INFO - __main__ -     eval_accuracy = 0.5
+02/24/2019 20:51:33 - INFO - __main__ -     eval_accuracy2 = 0.5
+02/24/2019 20:51:33 - INFO - __main__ -     eval_loss = 0.6931527742633113
+
+2
+02/24/2019 20:53:25 - INFO - __main__ -     eval_accuracy = 0.5
+02/24/2019 20:53:25 - INFO - __main__ -     eval_accuracy2 = 0.5
+02/24/2019 20:53:25 - INFO - __main__ -     eval_loss = 0.6931503304728756
+
+7
+02/24/2019 20:46:50 - INFO - __main__ -     eval_accuracy = 0.5
+02/24/2019 20:46:50 - INFO - __main__ -     eval_accuracy2 = 0.5
+02/24/2019 20:46:50 - INFO - __main__ -     eval_loss = 0.693147232135137
+
+
 
 '''
