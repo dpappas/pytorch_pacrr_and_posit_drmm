@@ -630,7 +630,8 @@ def main():
         ####
     ####
     # Load a trained model that you have fine-tuned
-    output_model_file   = args.eval_file_to_load
+    if(args.eval_file_to_load is not None):
+        output_model_file   = args.eval_file_to_load
     model_state_dict    = torch.load(output_model_file)
     model               = BertForSequenceClassification.from_pretrained(
         args.bert_model, state_dict=model_state_dict, num_labels=num_labels, cache_dir =cache_dir
@@ -653,7 +654,8 @@ def main():
         eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
         ####
         model.eval()
-        eval_loss, eval_accuracy = 0, 0
+        eval_loss, eval_accuracy        = 0, 0
+        eval_accuracy2                  = 0
         nb_eval_steps, nb_eval_examples = 0, 0
         ####
         for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluating"):
@@ -669,19 +671,23 @@ def main():
             logits              = logits.detach().cpu().numpy()
             label_ids           = label_ids.to('cpu').numpy()
             tmp_eval_accuracy   = accuracy(logits, label_ids)
+            tmp_eval_accuracy2  = accuracy(np.zeros_like(logits), label_ids)
             ####
             eval_loss           += tmp_eval_loss.mean().item()
             eval_accuracy       += tmp_eval_accuracy
+            eval_accuracy2      += tmp_eval_accuracy2
             ####
             nb_eval_examples    += input_ids.size(0)
             nb_eval_steps       += 1
         ####
         eval_loss       = eval_loss / nb_eval_steps
         eval_accuracy   = eval_accuracy / nb_eval_examples
+        eval_accuracy2  = eval_accuracy2 / nb_eval_examples
         loss            = tr_loss / nb_tr_steps if args.do_train else None
         result          = {
             'eval_loss': eval_loss,
             'eval_accuracy': eval_accuracy,
+            'all_zero_accuracy': eval_accuracy2,
             'global_step': global_step,
             'loss': loss
         }
