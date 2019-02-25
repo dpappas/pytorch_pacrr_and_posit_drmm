@@ -78,10 +78,7 @@ def load_all_data(dataloc):
 # idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/'
 
-(
-    test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
-) = load_all_data(dataloc=dataloc)
-
+(test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
 
 # print(test_data.keys())
 bioasq6_data_2 = {}
@@ -101,3 +98,4 @@ for doc_id in tqdm(bioasq6_data):
 print(len(bioasq6_data))
 print(len(bioasq6_data_2))
 
+pprint(test_data['queries'][0])
