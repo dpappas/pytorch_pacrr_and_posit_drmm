@@ -108,6 +108,7 @@ for qid in tqdm(bioasq6_data):
         for d in bioasq6_data[qid]['documents']
         if(d in ret_pmids)
     ]
+    bioasq6_data[qid]['snippets']   = ret_pmids
     if(len(bioasq6_data[qid]['documents']) != 0):
         bioasq6_data_2[qid] = bioasq6_data[qid]
     else:
