@@ -141,6 +141,7 @@ def embed_the_sent(sent):
     with torch.no_grad():
         token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
         tok_inds                    = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
+        token_embeds                = token_embeds.squeeze(0)
         embs                        = token_embeds[tok_inds,:]
     fixed_tokens = fix_bert_tokens(tokens)
     return fixed_tokens, embs
@@ -750,14 +751,13 @@ def create_one_hot_and_sim(tokens1, tokens2):
     #
     return oh1, oh2, ret
 
-def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
+def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
     good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    quest_toks          = tokenize(' '.join(bioclean(quest)))
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
+    doc_toks            = tokenize(the_doc['title'] + ' ' + the_doc['abstractText'])
     tomi                = (set(doc_toks) & set(quest_toks))
     tomi_no_stop        = tomi - set(stopwords)
     BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
@@ -832,8 +832,10 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         good_snips          = get_snips(quest_id, gid, bioasq6_data)
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
+        quest_tokens, qemb  = embed_the_sent(quest_text)
+        q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         ####
-        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf)
+        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf, quest_tokens)
         good_sents_embeds   = datum['sents_embeds']
         good_sents_escores  = datum['sents_escores']
         good_doc_af         = datum['doc_af']
@@ -841,16 +843,13 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         good_held_out_sents = datum['held_out_sents']
         good_oh_sims        = datum['oh_sims']
         #
-        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf)
+        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf, quest_tokens)
         bad_sents_embeds    = datum['sents_embeds']
         bad_sents_escores   = datum['sents_escores']
         bad_doc_af          = datum['doc_af']
         bad_sent_tags       = [0] * len(datum['sent_tags'])
         bad_held_out_sents  = datum['held_out_sents']
         bad_oh_sims         = datum['oh_sims']
-        #
-        quest_tokens, qemb  = embed_the_sent(quest_text)
-        q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
             yield {
@@ -1021,7 +1020,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf, quest_tokens)
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             doc1_oh_sim         = datum['oh_sims'],
@@ -1356,24 +1355,24 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = []
         for i in range(len(doc_sents_embeds)):
             sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False)
-            sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
+            sent_embeds = doc_sents_embeds[i]
             gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if (use_cuda):
-                sent_embeds = sent_embeds.cuda()
                 sim_oh = sim_oh.cuda()
                 gaf = gaf.cuda()
-            conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
             #
-            sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_sens = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+            conv_res            = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
+            conv_res            = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
             #
-            insensitive_pooled = self.pooling_method(sim_insens)
-            sensitive_pooled = self.pooling_method(sim_sens)
-            oh_pooled = self.pooling_method(sim_oh)
+            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
+            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
             #
-            sent_emit = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            insensitive_pooled  = self.pooling_method(sim_insens)
+            sensitive_pooled    = self.pooling_method(sim_sens)
+            oh_pooled           = self.pooling_method(sim_oh)
+            #
+            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
         if (self.sentence_out_method == 'MLP'):
@@ -1467,12 +1466,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return output
 
     def emit_one(self, doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf):
-        q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
+        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
+        doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         if (use_cuda):
             q_idfs = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
             doc_gaf = doc_gaf.cuda()
         #
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -1508,12 +1505,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
                 question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
         if (use_cuda):
             q_idfs = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
             doc_gaf = doc_gaf.cuda()
             doc_baf = doc_baf.cuda()
         #
@@ -1587,7 +1582,7 @@ bert_model.to(device)
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
-embedding_dim       = 50  # 30  # 200
+embedding_dim       = 768 # 50  # 30  # 200
 lr = 0.01
 b_size = 32
 max_epoch = 10
