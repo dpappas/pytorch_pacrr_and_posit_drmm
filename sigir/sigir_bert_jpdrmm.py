@@ -93,9 +93,8 @@ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
         else:
             tokens_b.pop()
 
-def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer):
+def convert_examples_to_features(examples, max_seq_length, tokenizer):
     """Loads a data file into a list of `InputBatch`s."""
-    label_map = {label: i for i, label in enumerate(label_list)}
     features = []
     for (ex_index, example) in enumerate(examples):
         tokens_a = tokenizer.tokenize(example.text_a)
@@ -126,17 +125,14 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         assert len(input_mask)  == max_seq_length
         assert len(segment_ids) == max_seq_length
         ####
-        label_id    = label_map[example.label]
-        in_f        = InputFeatures(
-            input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=label_id
-        )
+        in_f        = InputFeatures(input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=0)
         in_f.tokens = tokens
         features.append(in_f)
     return features
 
 def embed_the_sent(sent):
     eval_examples   = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
-    eval_features   = convert_examples_to_features(eval_examples, label_list, max_seq_length, tokenizer)
+    eval_features   = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
     eval_feat       = eval_features[0]
     input_ids       = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
     input_mask      = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
@@ -756,29 +752,20 @@ def create_one_hot_and_sim(tokens1, tokens2):
     return oh1, oh2, ret
 
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
-    if (use_sent_tokenizer):
-        good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-    else:
-        good_sents = [the_doc['title'] + the_doc['abstractText']]
+    good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    bert_f = os.path.join(bert_embeds_dir, '{}.p'.format(pid))
-    gemb = pickle.load(open(bert_f, 'rb'))
-    # title_bert_average_embeds
-    # abs_bert_average_embeds
-    # mesh_bert_average_embeds
-    ####
-    quest_toks = tokenize(quest)
-    good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    quest_toks          = tokenize(quest)
+    good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    doc_toks = tokenize(the_doc['title'] + the_doc['abstractText'])
-    tomi = (set(doc_toks) & set(quest_toks))
-    tomi_no_stop = tomi - set(stopwords)
-    BM25score = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-    tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-    tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
-    quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
-    features = [
+    doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
+    tomi                = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop        = tomi - set(stopwords)
+    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features            = [
         len(quest) / 300.,
         len(the_doc['title'] + the_doc['abstractText']) / 300.,
         len(tomi_no_stop) / 100.,
@@ -787,24 +774,21 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
         sum(tomi_idfs) / sum(quest_idfs),
     ]
     good_doc_af.extend(features)
-    #
-    all_bert_embeds = gemb['title_bert_average_embeds'] + gemb['abs_bert_average_embeds']
-    # print(pid, len(all_bert_embeds), len(good_sents))
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
-    for good_text, bert_embeds in zip(good_sents, all_bert_embeds):
-        sent_toks = tokenize(good_text)
-        oh1, oh2, oh_sim = create_one_hot_and_sim(quest_toks, sent_toks)
+    for good_text in good_sents:
+        sent_toks, sent_embeds  = embed_the_sent(good_text)
+        oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
-        good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores            = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
-        tomi = (set(sent_toks) & set(quest_toks))
-        tomi_no_stop = tomi - set(stopwords)
-        BM25score = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-        tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-        tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
-        quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
-        features = [
+        tomi                    = (set(sent_toks) & set(quest_toks))
+        tomi_no_stop            = tomi - set(stopwords)
+        BM25score               = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+        tomi_no_stop_idfs       = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+        tomi_idfs               = [idf_val(w, idf, max_idf) for w in tomi]
+        quest_idfs              = [idf_val(w, idf, max_idf) for w in quest_toks]
+        features                = [
             len(quest) / 300.,
             len(good_text) / 300.,
             len(tomi_no_stop) / 100.,
@@ -813,7 +797,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
             sum(tomi_idfs) / sum(quest_idfs),
         ]
         #
-        good_sents_embeds.append(bert_embeds)
+        good_sents_embeds.append(sent_embeds)
         good_sents_escores.append(good_escores + features)
         held_out_sents.append(good_text)
         good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
@@ -841,15 +825,6 @@ def train_data_step1(train_data):
                 bid = random.choice(bad_pmids)
                 ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
     print('')
-    return ret
-
-def fix_bert_tokens(tokens):
-    ret = []
-    for t in tokens:
-        if (t.startswith('##')):
-            ret[-1] = ret[-1] + t[2:]
-        else:
-            ret.append(t)
     return ret
 
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
@@ -1629,7 +1604,7 @@ max_seq_length      = 50
 device              = torch.device("cuda")
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
-tokenizer           = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
+bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
