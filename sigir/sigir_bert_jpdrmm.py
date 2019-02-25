@@ -710,9 +710,16 @@ def get_the_mesh(the_doc):
     return good_mesh
 
 def snip_is_relevant(one_sent, gold_snips):
-    one_sent    = ' '.join(bioclean(one_sent)).strip()
-    gold_snips  = [' '.join(bioclean(snip)).strip() for snip in gold_snips]
-    return int(one_sent in gold_snips)
+    return int(
+        any(
+            [
+                (one_sent.encode('ascii', 'ignore') in gold_snip.encode('ascii', 'ignore'))
+                or
+                (gold_snip.encode('ascii', 'ignore') in one_sent.encode('ascii', 'ignore'))
+                for gold_snip in gold_snips
+            ]
+        )
+    )
 
 def create_one_hot_and_sim(tokens1, tokens2):
     '''
