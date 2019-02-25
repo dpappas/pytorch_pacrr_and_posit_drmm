@@ -29,7 +29,13 @@ from    sklearn.preprocessing import OneHotEncoder
 import  re
 import  logging
 import  torch
-from bert import modeling, tokenization
+from    pytorch_pretrained_bert.tokenization import BertTokenizer
+from    torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
+from    torch.utils.data.distributed import DistributedSampler
+from    pytorch_pretrained_bert.tokenization import BertTokenizer
+from    pytorch_pretrained_bert.modeling import BertForSequenceClassification, BertModel
+from    pytorch_pretrained_bert.optimization import BertAdam
+from    pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords   = nltk.corpus.stopwords.words("english")
@@ -61,66 +67,6 @@ class InputFeatures(object):
         self.input_mask = input_mask
         self.segment_ids = segment_ids
         self.label_id = label_id
-
-def model_fn_builder(bert_config, init_checkpoint, layer_indexes, use_tpu, use_one_hot_embeddings):
-  """Returns `model_fn` closure for TPUEstimator."""
-
-  def model_fn(features, labels, mode, params):  # pylint: disable=unused-argument
-    """The `model_fn` for TPUEstimator."""
-
-    unique_ids = features["unique_ids"]
-    input_ids = features["input_ids"]
-    input_mask = features["input_mask"]
-    input_type_ids = features["input_type_ids"]
-
-    model = modeling.BertModel(
-        config=bert_config,
-        is_training=False,
-        input_ids=input_ids,
-        input_mask=input_mask,
-        token_type_ids=input_type_ids,
-        use_one_hot_embeddings=use_one_hot_embeddings)
-
-    if mode != tf.estimator.ModeKeys.PREDICT:
-      raise ValueError("Only PREDICT modes are supported: %s" % (mode))
-
-    tvars = tf.trainable_variables()
-    scaffold_fn = None
-    (assignment_map,
-     initialized_variable_names) = modeling.get_assignment_map_from_checkpoint(
-         tvars, init_checkpoint)
-    if use_tpu:
-
-      def tpu_scaffold():
-        tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
-        return tf.train.Scaffold()
-
-      scaffold_fn = tpu_scaffold
-    else:
-      tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
-
-    tf.logging.info("**** Trainable Variables ****")
-    for var in tvars:
-      init_string = ""
-      if var.name in initialized_variable_names:
-        init_string = ", *INIT_FROM_CKPT*"
-      tf.logging.info("  name = %s, shape = %s%s", var.name, var.shape,
-                      init_string)
-
-    all_layers = model.get_all_encoder_layers()
-    print('total_layers: {}'.format(len(all_layers)))
-    predictions = {
-        "unique_id": unique_ids,
-    }
-
-    for (i, layer_index) in enumerate(layer_indexes):
-      predictions["layer_output_%d" % i] = all_layers[layer_index]
-
-    output_spec = tf.contrib.tpu.TPUEstimatorSpec(
-        mode=mode, predictions=predictions, scaffold_fn=scaffold_fn)
-    return output_spec
-
-  return model_fn
 
 def fix_bert_tokens(tokens):
     ret = []
@@ -1628,14 +1574,13 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 use_cuda            = True
 max_seq_length      = 50
-device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
-
-bert_config_file    = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/bert_config.json'
-init_checkpoint     = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/biobert_model.ckpt'
-vocab_file          = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
-bert_config         = modeling.BertConfig.from_json_file(bert_config_file)
-tokenizer           = tokenization.FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
-model_fn            = model_fn_builder(bert_config=bert_config, init_checkpoint=init_checkpoint, layer_indexes=layer_indexes, use_tpu=False, use_one_hot_embeddings=False)
+device              = torch.device("cuda:1") if(use_cuda) else torch.device("cpu")
+cache_dir           = '/home/dpappas/bert_cache/'
+bert_tokenizer_file = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/vocab.txt'
+bert_tokenizer      = BertTokenizer.from_pretrained(bert_tokenizer_file, do_lower_case=True, cache_dir=cache_dir)
+bert_directory      = '/home/dpappas/bioasq_all/F_BERT/Biobert/pubmed_pmc_470k/'
+bert_model          = BertForSequenceClassification.from_pretrained(bert_directory, cache_dir=cache_dir / 'distributed_{}'.format(-1), num_labels=2)
+bert_model.to(device)
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
