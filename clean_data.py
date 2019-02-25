@@ -98,6 +98,10 @@ for qid in tqdm(bioasq6_data):
         for snip in bioasq6_data[qid]['snippets']
         if (len(sent_tokenize(snip['text']))>max_sent_len)
     ]
+    ret_snips                       = [
+        snip for snip in bioasq6_data[qid]['snippets']
+        if(len(sent_tokenize(snip['text']))<=max_sent_len)
+    ]
     ret_pmids                       = [
         snip['document'] for snip in bioasq6_data[qid]['snippets']
         if(len(sent_tokenize(snip['text']))<=max_sent_len)
@@ -108,7 +112,7 @@ for qid in tqdm(bioasq6_data):
         for d in bioasq6_data[qid]['documents']
         if(d in ret_pmids)
     ]
-    bioasq6_data[qid]['snippets']   = ret_pmids
+    bioasq6_data[qid]['snippets']   = ret_snips
     if(len(bioasq6_data[qid]['documents']) != 0):
         bioasq6_data_2[qid] = bioasq6_data[qid]
     else:
