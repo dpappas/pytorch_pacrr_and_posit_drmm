@@ -103,7 +103,11 @@ for qid in tqdm(bioasq6_data):
         if(len(sent_tokenize(snip['text']))<=max_sent_len)
     ]
     deleted_pmids.extend(del_pmids)
-    bioasq6_data[qid]['documents']  = [d for d in bioasq6_data[qid]['documents'] if(d in ret_pmids)]
+    bioasq6_data[qid]['documents']  = [
+        d
+        for d in bioasq6_data[qid]['documents']
+        if(d in ret_pmids)
+    ]
     if(len(bioasq6_data[qid]['documents']) != 0):
         bioasq6_data_2[qid] = bioasq6_data[qid]
     else:
