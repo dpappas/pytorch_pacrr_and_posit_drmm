@@ -55,11 +55,9 @@ def load_all_data(dataloc):
     #
     with open(dataloc+'bioasq.test.json', 'r') as f:
         bioasq6_test_data   = json.load(f)
-        bioasq6_test_data   = dict((q['id'], q) for q in bioasq6_test_data['questions'] )
     #
     with open(dataloc+'bioasq.dev.json', 'r') as f:
         bioasq6_dev_data    = json.load(f)
-        bioasq6_dev_data    = dict((q['id'], q) for q in bioasq6_dev_data['questions'] )
     #
     with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
         test_data = pickle.load(f)
@@ -146,21 +144,11 @@ if not os.path.exists(out_dataloc):
 
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_dev_data, bioasq6_test_data, bioasq6_train_data) = load_all_data(dataloc=dataloc)
 
-deleted_pmids   = []
-deleted_qids    = []
-bioasq6_dev_data_2,     t1, t2 = handle_bioasq_data(bioasq6_dev_data)
-deleted_pmids.extend(t1)
-deleted_qids.extend(t2)
-bioasq6_test_data_2,    t1, t2 = handle_bioasq_data(bioasq6_test_data)
-deleted_pmids.extend(t1)
-deleted_qids.extend(t2)
-bioasq6_train_data_2,   t1, t2 = handle_bioasq_data(bioasq6_train_data)
-deleted_pmids.extend(t1)
-deleted_qids.extend(t2)
+############
+
+bioasq6_train_data_2,   deleted_pmids, deleted_qids = handle_bioasq_data(bioasq6_train_data)
 print('')
 print(len(bioasq6_train_data),  len(bioasq6_train_data_2['questions']))
-print(len(bioasq6_test_data),   len(bioasq6_test_data_2['questions']))
-print(len(bioasq6_dev_data),    len(bioasq6_dev_data_2['questions']))
 print(len(list(set(deleted_pmids))))
 print(len(list(set(deleted_qids))))
 print('')
@@ -169,9 +157,29 @@ with open(os.path.join(out_dataloc, 'BioASQ-trainingDataset6b.json'), 'w') as f:
     f.write(json.dumps(bioasq6_train_data_2, indent=4, sort_keys=True))
     f.close()
 
+############
+
+bioasq6_test_data_2 = {'questions':[]}
+for q in bioasq6_test_data['questions']:
+    q['documents'] = [d.split('/')[-1] not in deleted_pmids for d in q['documents']]
+    if(len(q['documents'])>0):
+        bioasq6_test_data_2['questions'].append(q)
+
+print(len(bioasq6_test_data['questions']), len(bioasq6_test_data_2['questions']))
+
 with open(os.path.join(out_dataloc, 'bioasq.test.json'), 'w') as f:
     f.write(json.dumps(bioasq6_test_data_2, indent=4, sort_keys=True))
     f.close()
+
+############
+
+bioasq6_dev_data_2 = {'questions':[]}
+for q in bioasq6_dev_data['questions']:
+    q['documents'] = [d.split('/')[-1] not in deleted_pmids for d in q['documents']]
+    if(len(q['documents'])>0):
+        bioasq6_dev_data_2['questions'].append(q)
+
+print(len(bioasq6_dev_data['questions']), len(bioasq6_dev_data_2['questions']))
 
 with open(os.path.join(out_dataloc, 'bioasq.dev.json'), 'w') as f:
     f.write(json.dumps(bioasq6_dev_data_2, indent=4, sort_keys=True))
