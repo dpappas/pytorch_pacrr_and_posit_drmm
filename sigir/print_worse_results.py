@@ -104,10 +104,10 @@ fpath = '/home/dpappas/v3 dev_data_for_revision.json'
 gpath = '/home/dpappas/v3 dev_gold_bioasq.json'
 opath = '/home/dpappas/some_data_for_revision.json'
 
-edata = json.load(open(fpath))
+edata   = json.load(open(fpath))
 
 data    = json.load(open(gpath))
-gdata  = {}
+gdata   = {}
 for item in tqdm(data['questions']):
     all_snips           = [sn['text'] for sn in item['snippets']]
     gdata[item['id']]   = all_snips
@@ -152,3 +152,30 @@ with open(opath, 'w') as f:
     }
     f.write(json.dumps(all_out_data, indent=4, sort_keys=True))
     f.close()
+
+'''
+
+import torch 
+# data                        = torch.randn(3, 40)
+data                        = torch.tensor([
+[1, 2, 20, 3, 40, 5, 4, 10, 0],
+[1, 2, 3, 4, 5, 6, 7, 8, 9],
+[1, 2, 20, 3, 40, 5, 4, 10, 11]
+])
+def get_distance_feature(data):
+    sorted_data, sorted_indices = torch.sort(data, -1)
+    print(sorted_data[:,-5:])
+    print(sorted_indices[:,-5:])
+    maxk_inds                   = sorted_indices[:, -5:].float()
+    maxk_inds                   /= sorted_indices.max(dim=-1)[0].float().unsqueeze(-1).expand_as(maxk_inds) 
+    sorted_maxk_inds            = torch.sort(maxk_inds, -1)[0]
+    print(sorted_maxk_inds)
+    dist_feat = None
+    for i in range(sorted_maxk_inds.size(-1)-1):
+        temp        = sorted_maxk_inds[:,i+1] - sorted_maxk_inds[:,i] 
+        dist_feat   = (dist_feat+temp) if(dist_feat is not None) else temp 
+    return dist_feat
+
+print(get_distance_feature(data))
+
+'''
