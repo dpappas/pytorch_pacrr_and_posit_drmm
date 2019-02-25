@@ -119,7 +119,7 @@ for qid in tqdm(bioasq6_data):
         deleted_qids.append(qid)
 
 print('')
-print(len(bioasq6_data), len(bioasq6_data_2))
+print(len(bioasq6_data), len(bioasq6_data_2['questions']))
 print(len(list(set(deleted_pmids))))
 print(len(list(set(deleted_qids))))
 print('')
