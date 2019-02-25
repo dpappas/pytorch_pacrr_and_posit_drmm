@@ -164,6 +164,14 @@ print(len(train_docs), len(train_docs_2))
 print(len(dev_docs), len(dev_docs_2))
 print(len(test_docs), len(test_docs_2))
 
-pickle.dump(dev_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.dev.pkl'), 'wb'))
-pickle.dump(test_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.test.pkl'), 'wb'))
-pickle.dump(train_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.train.pkl'), 'wb'))
+pickle.dump(dev_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.dev.pkl'), 'wb'), protocol=2)
+pickle.dump(test_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.test.pkl'), 'wb'), protocol=2)
+pickle.dump(train_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.train.pkl'), 'wb'), protocol=2)
+#
+pickle.dump(dev_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.dev.pkl'), 'wb'), protocol=2)
+pickle.dump(test_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.test.pkl'), 'wb'), protocol=2)
+pickle.dump(train_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.train.pkl'), 'wb'), protocol=2)
+#
+with open(os.path.join(out_dataloc, 'BioASQ-trainingDataset6b.json'), 'w') as f:
+    f.write(json.dumps(bioasq6_data_2, indent=4, sort_keys=True))
+    f.close()
