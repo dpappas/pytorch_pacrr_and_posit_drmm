@@ -139,9 +139,9 @@ def embed_the_sent(sent):
     segment_ids     = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
     tokens          = eval_feat.tokens
     with torch.no_grad():
-        token_embeds, pooled_output = model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
+        token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
         tok_inds                    = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
-        embs                        = pooled_output[tok_inds,:]
+        embs                        = token_embeds[tok_inds,:]
     fixed_tokens = fix_bert_tokens(tokens)
     return fixed_tokens, embs
 
@@ -1578,10 +1578,12 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 use_cuda            = True
 max_seq_length      = 50
-device              = torch.device("cuda")
+device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
+bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
+bert_model.to(device)
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
