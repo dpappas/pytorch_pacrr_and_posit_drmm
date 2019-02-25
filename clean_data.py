@@ -161,7 +161,11 @@ with open(os.path.join(out_dataloc, 'BioASQ-trainingDataset6b.json'), 'w') as f:
 
 bioasq6_test_data_2 = {'questions':[]}
 for q in bioasq6_test_data['questions']:
-    q['documents'] = [d.split('/')[-1] not in deleted_pmids for d in q['documents']]
+    q['documents'] = [
+        d
+        for d in q['documents']
+        if(d.split('/')[-1] not in deleted_pmids)
+    ]
     if(len(q['documents'])>0):
         bioasq6_test_data_2['questions'].append(q)
 
@@ -175,7 +179,11 @@ with open(os.path.join(out_dataloc, 'bioasq.test.json'), 'w') as f:
 
 bioasq6_dev_data_2 = {'questions':[]}
 for q in bioasq6_dev_data['questions']:
-    q['documents'] = [d.split('/')[-1] not in deleted_pmids for d in q['documents']]
+    q['documents'] = [
+        d
+        for d in q['documents']
+        if(d.split('/')[-1] not in deleted_pmids)
+    ]
     if(len(q['documents'])>0):
         bioasq6_dev_data_2['questions'].append(q)
 
