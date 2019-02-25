@@ -14,5 +14,7 @@ print(wv_from_bin.distance('birth', 'chair'))
 
 wv_from_bin.most_similar('microcephaly')
 print(wv_from_bin.distance('microcephaly', 'defect'))
+print(wv_from_bin.distance('statin', 'statins'))
 
+print(wv_from_bin.distance('develop', 'cause'))
 
