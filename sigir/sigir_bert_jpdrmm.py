@@ -1625,6 +1625,11 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 use_cuda            = True
+max_seq_length      = 50
+device              = torch.device("cuda")
+bert_model          = 'bert-base-uncased'
+cache_dir           = '/home/dpappas/bert_cache/'
+tokenizer           = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5

@@ -131,11 +131,8 @@ no_cuda         = False
 # device          = torch.device("cpu")
 device          = torch.device("cuda")
 
-model = BertForSequenceClassification.from_pretrained(
-    bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2
-)
+model = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
 model.to(device)
-
 tokenizer       = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 
 fixed_tokens, embs = embed_the_sent('my name is kostakis')
