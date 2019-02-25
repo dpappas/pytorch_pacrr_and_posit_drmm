@@ -5,31 +5,38 @@
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 
-import os
-import json
-import time
-import random
-import logging
-import subprocess
-import torch
-import torch.nn.functional         as F
-import torch.nn                    as nn
-import numpy                       as np
-import torch.optim                 as optim
-# import  cPickle                     as pickle
-import pickle
-import torch.autograd              as autograd
-from tqdm import tqdm
-from pprint import pprint
-from gensim.models.keyedvectors import KeyedVectors
-from nltk.tokenize import sent_tokenize
-from difflib import SequenceMatcher
-import re
-import nltk
-import math
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
-from pytorch_pretrained_bert.tokenization import BertTokenizer
+import  os
+import  json
+import  time
+import  random
+import  logging
+import  subprocess
+import  torch
+import  torch.nn.functional         as F
+import  torch.nn                    as nn
+import  numpy                       as np
+import  torch.optim                 as optim
+import  torch.autograd              as autograd
+import  pickle
+from    tqdm import tqdm
+from    pprint import pprint
+from    nltk.tokenize import sent_tokenize
+from    difflib import SequenceMatcher
+import  nltk
+import  math
+from    sklearn.preprocessing import LabelEncoder
+from    sklearn.preprocessing import OneHotEncoder
+import  re
+import  logging
+import  torch
+from    pytorch_pretrained_bert.tokenization import BertTokenizer
+from    torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
+from    torch.utils.data.distributed import DistributedSampler
+from    pytorch_pretrained_bert.tokenization import BertTokenizer
+from    pytorch_pretrained_bert.modeling import BertForSequenceClassification, BertModel
+from    pytorch_pretrained_bert.optimization import BertAdam
+from    pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
+
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))

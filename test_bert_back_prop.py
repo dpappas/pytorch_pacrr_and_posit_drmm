@@ -107,6 +107,21 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         features.append(in_f)
     return features
 
+def embed_the_sent(sent):
+    eval_examples   = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
+    eval_features   = convert_examples_to_features(eval_examples, label_list, max_seq_length, tokenizer)
+    eval_feat       = eval_features[0]
+    input_ids       = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
+    input_mask      = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
+    segment_ids     = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
+    tokens          = eval_feat.tokens
+    with torch.no_grad():
+        token_embeds, pooled_output = model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
+        tok_inds                    = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
+        embs                        = pooled_output[tok_inds,:]
+    fixed_tokens = fix_bert_tokens(tokens)
+    return fixed_tokens, embs
+
 bert_model      = 'bert-base-uncased'
 max_seq_length  = 50
 eval_batch_size = 1
@@ -122,53 +137,10 @@ model = BertForSequenceClassification.from_pretrained(
 model.to(device)
 
 tokenizer       = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
-eval_examples   = [InputExample(guid='example_dato_1', text_a='my name is kostakis', text_b=None, label='1')]
-eval_features   = convert_examples_to_features(eval_examples, label_list, max_seq_length, tokenizer)
 
-for eval_feat in tqdm(eval_features, desc="Evaluating"):
-    input_ids   = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
-    input_mask  = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
-    segment_ids = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
-    label_ids   = torch.tensor([eval_feat.label_id], dtype=torch.long).to(device)
-    tokens      = eval_feat.tokens
-    print(tokens)
-    print(fix_bert_tokens(tokens))
-    with torch.no_grad():
-        tmp_eval_loss       = model(input_ids, segment_ids, input_mask, label_ids)
-        logits              = model(input_ids, segment_ids, input_mask)
-        token_embeds, pooled_output   = model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
-        print(token_embeds.size())
-        print(pooled_output.size())
-        tok_inds = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
-        print(pooled_output[tok_inds,:].size())
-
-exit()
-
-
-all_input_ids   = torch.tensor([f.input_ids     for f in eval_features], dtype=torch.long)
-all_input_mask  = torch.tensor([f.input_mask    for f in eval_features], dtype=torch.long)
-all_segment_ids = torch.tensor([f.segment_ids   for f in eval_features], dtype=torch.long)
-all_label_ids   = torch.tensor([f.label_id      for f in eval_features], dtype=torch.long)
-eval_data       = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-eval_sampler    = SequentialSampler(eval_data)
-eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=eval_batch_size)
-model.eval()
-
-for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluating"):
-    input_ids   = input_ids.to(device)
-    print(input_ids.size())
-    input_mask  = input_mask.to(device)
-    segment_ids = segment_ids.to(device)
-    label_ids   = label_ids.to(device)
-    ####
-    with torch.no_grad():
-        tmp_eval_loss       = model(input_ids, segment_ids, input_mask, label_ids)
-        logits              = model(input_ids, segment_ids, input_mask)
-        tt, pooled_output   = model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
-        print(tt.size())
-        print(pooled_output.size())
-
-
+fixed_tokens, embs = embed_the_sent('my name is kostakis')
+print(fixed_tokens)
+print(embs.size())
 
 
 
