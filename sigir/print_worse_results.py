@@ -147,8 +147,8 @@ for qid, val in tqdm(edata.items()):
 opath = '/home/dpappas/all_data_for_revision.json'
 with open(opath, 'w') as f:
     all_out_data = {
-        'GT_1': all_out_data_good,
-        'GT_0': all_out_data_bad
+        'GT_1': sorted(all_out_data_good, key=lambda x: x['emit'], reverse=True),
+        'GT_0': sorted(all_out_data_bad, key=lambda x: x['emit'], reverse=True)
     }
     f.write(json.dumps(all_out_data, indent=4, sort_keys=True))
     f.close()
