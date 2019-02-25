@@ -83,35 +83,81 @@ dataloc             = '/home/dpappas/for_ryan/'
 # print(test_data.keys())
 bioasq6_data_2  = {}
 deleted_pmids   = []
-max_sent_len    = 2
+deleted_qids    = []
+max_sent_len    = 1
 for qid in tqdm(bioasq6_data):
     if('snippets' not in bioasq6_data[qid]):
-        found = True
-    else:
-        held_snips  = [snip for snip in bioasq6_data[qid]['snippets'] if(len(sent_tokenize(snip['text']))<=max_sent_len)]
-        deleted_pmids.extend([snip['document'] for snip in bioasq6_data[qid]['snippets'] if (len(sent_tokenize(snip['text']))>max_sent_len)])
-        bioasq6_data[qid]['documents'] = [d for d in bioasq6_data[qid]['documents'] if(d not in deleted_pmids)]
-        found       = len(bioasq6_data[qid]['documents']) == 0
-    if(not found):
+        deleted_qids.append(qid)
+        continue
+    del_pmids                       = [snip['document'] for snip in bioasq6_data[qid]['snippets'] if (len(sent_tokenize(snip['text']))>max_sent_len)]
+    held_snips                      = [snip for snip in bioasq6_data[qid]['snippets'] if(len(sent_tokenize(snip['text']))<=max_sent_len)]
+    ret_pmids                       = [snip['document'] for snip in held_snips]
+    deleted_pmids.extend(del_pmids)
+    bioasq6_data[qid]['documents']  = [d for d in bioasq6_data[qid]['documents'] if(d in ret_pmids)]
+    if(len(bioasq6_data[qid]['documents']) != 0):
         bioasq6_data_2[qid] = bioasq6_data[qid]
+    else:
+        deleted_qids.append(qid)
 
 print(len(bioasq6_data))
 print(len(bioasq6_data_2))
 print(len(list(set(deleted_pmids))))
+print(len(list(set(deleted_qids))))
 
-# 0: 2251
-# 1:
-# 2:
-# 3:
-# 4:
-# 5:
+############
 
-# pprint(deleted_pmids)
-#
-#
-# test_data_2 = []
-# for datum in test_data['queries']:
-#     pprint(datum)
-#     exit()
+test_data_2 = {'queries':[]}
+for datum in tqdm(test_data['queries']):
+    if(datum['query_id'] in deleted_qids):
+        continue
+    datum['relevant_documents'] = [rd for rd in datum['relevant_documents'] if(rd not in deleted_pmids)]
+    if(len(datum['relevant_documents'])==0):
+        continue
+    else:
+        datum['retrieved_documents'] = [
+            rd for rd in datum['retrieved_documents'] if (rd['doc_id'] not in deleted_pmids)
+        ]
+        test_data_2['queries'].append(datum)
 
+print(len(test_data['queries']))
+print(len(test_data_2['queries']))
 
+############
+
+dev_data_2 = {'queries':[]}
+for datum in tqdm(dev_data['queries']):
+    if(datum['query_id'] in deleted_qids):
+        continue
+    datum['relevant_documents'] = [rd for rd in datum['relevant_documents'] if(rd not in deleted_pmids)]
+    if(len(datum['relevant_documents'])==0):
+        continue
+    else:
+        datum['retrieved_documents'] = [
+            rd for rd in datum['retrieved_documents'] if (rd['doc_id'] not in deleted_pmids)
+        ]
+        dev_data_2['queries'].append(datum)
+
+print(len(dev_data['queries']))
+print(len(dev_data_2['queries']))
+
+############
+
+train_data_2 = {'queries':[]}
+for datum in tqdm(train_data['queries']):
+    if(datum['query_id'] in deleted_qids):
+        continue
+    datum['relevant_documents'] = [rd for rd in datum['relevant_documents'] if(rd not in deleted_pmids)]
+    if(len(datum['relevant_documents'])==0):
+        continue
+    else:
+        datum['retrieved_documents'] = [
+            rd for rd in datum['retrieved_documents'] if (rd['doc_id'] not in deleted_pmids)
+        ]
+        train_data_2['queries'].append(datum)
+
+print(len(train_data['queries']))
+print(len(train_data_2['queries']))
+
+############
+
+pprint(train_docs.keys())
