@@ -1,5 +1,8 @@
 
 import pickle, json
+from pprint import pprint
+from nltk import sent_tokenize
+from tqdm import tqdm
 
 def RemoveTrainLargeYears(data, doc_text):
   for i in range(len(data['queries'])):
@@ -80,18 +83,21 @@ dataloc             = '/home/dpappas/for_ryan/'
 ) = load_all_data(dataloc=dataloc)
 
 
+# print(test_data.keys())
+bioasq6_data_2 = {}
+for doc_id in tqdm(bioasq6_data):
+    found = False
+    if('snippets' not in bioasq6_data[doc_id]):
+        found = True
+    else:
+        for snip in bioasq6_data[doc_id]['snippets']:
+            sents = sent_tokenize(snip['text'])
+            if(len(sents)>1):
+                found = True
+                break
+    if(found):
+        bioasq6_data_2[doc_id] = bioasq6_data[doc_id]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+print(len(bioasq6_data))
+print(len(bioasq6_data_2))
 
