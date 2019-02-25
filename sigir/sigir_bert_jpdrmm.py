@@ -490,7 +490,6 @@ def get_words(s, idf, max_idf):
     return sl, sl2
 
 def tokenize(x):
-    # return bioclean(x)
     x_tokens = bert_tokenizer.tokenize(x)
     x_tokens = fix_bert_tokens(x_tokens)
     return x_tokens
@@ -751,10 +750,10 @@ def create_one_hot_and_sim(tokens1, tokens2):
     #
     return oh1, oh2, ret
 
-def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
+def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
     good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    quest_toks          = tokenize(quest)
+    quest_toks          = tokenize(' '.join(bioclean(quest)))
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
@@ -829,40 +828,29 @@ def train_data_step1(train_data):
 
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        # print(quest_text)
-        qemb = all_quest_embeds[quest_text]
-        qemb = np.concatenate(qemb, axis=0)
-        # pprint(qemb.keys())
-        if (use_sent_tokenizer):
-            good_snips = get_snips(quest_id, gid, bioasq6_data)
-            good_snips = [' '.join(bioclean(sn)) for sn in good_snips]
-        else:
-            good_snips = []
-        #
+        ####
+        good_snips = get_snips(quest_id, gid, bioasq6_data)
+        good_snips = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        #
-        datum = prep_data(quest_text, docs[gid], gid, bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer)
-        good_sents_embeds = datum['sents_embeds']
-        good_sents_escores = datum['sents_escores']
-        good_doc_af = datum['doc_af']
-        good_sent_tags = datum['sent_tags']
+        ####
+        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf)
+        good_sents_embeds   = datum['sents_embeds']
+        good_sents_escores  = datum['sents_escores']
+        good_doc_af         = datum['doc_af']
+        good_sent_tags      = datum['sent_tags']
         good_held_out_sents = datum['held_out_sents']
-        good_oh_sims = datum['oh_sims']
+        good_oh_sims        = datum['oh_sims']
         #
-        datum = prep_data(quest_text, docs[bid], bid, bm25s_bid, [], idf, max_idf, use_sent_tokenizer)
-        bad_sents_embeds = datum['sents_embeds']
-        bad_sents_escores = datum['sents_escores']
-        bad_doc_af = datum['doc_af']
-        bad_sent_tags = [0] * len(datum['sent_tags'])
-        bad_held_out_sents = datum['held_out_sents']
-        bad_oh_sims = datum['oh_sims']
+        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf)
+        bad_sents_embeds    = datum['sents_embeds']
+        bad_sents_escores   = datum['sents_escores']
+        bad_doc_af          = datum['doc_af']
+        bad_sent_tags       = [0] * len(datum['sent_tags'])
+        bad_held_out_sents  = datum['held_out_sents']
+        bad_oh_sims         = datum['oh_sims']
         #
-        quest_tokens = tokenize(quest_text)
-        q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        # print(quest_tokens)
-        # print(len(quest_tokens))
-        # print(len(q_idfs))
-        # print(qemb.shape)
+        quest_tokens, qemb  = embed_the_sent(quest_text)
+        q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
             yield {
@@ -1036,16 +1024,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     doc_res, extracted_snippets = {}, []
     extracted_snippets_known_rel_num = []
     for retr in retr_docs:
-        datum = prep_data(
-            quest_text,
-            docs[retr['doc_id']],
-            retr['doc_id'],
-            retr['norm_bm25_score'],
-            gold_snips,
-            idf,
-            max_idf,
-            use_sent_tokenizer
-        )
+        datum = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf)
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds=datum['sents_embeds'],
             doc1_oh_sim=datum['oh_sims'],
