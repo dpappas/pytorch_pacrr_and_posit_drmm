@@ -286,7 +286,7 @@ def print_params(model):
     logger.info(40 * '=')
     trainable = 0
     untrainable = 0
-    for parameter in model.parameters():
+    for parameter in list(model.parameters()) + list(bert_model.parameters()):
         # print(parameter.size())
         v = 1
         for s in parameter.size():
@@ -757,7 +757,8 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
-    doc_toks            = tokenize(the_doc['title'] + ' ' + the_doc['abstractText'])
+    all_doc_text        = the_doc['title'] + ' ' + the_doc['abstractText']
+    doc_toks            = tokenize(all_doc_text)
     tomi                = (set(doc_toks) & set(quest_toks))
     tomi_no_stop        = tomi - set(stopwords)
     BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
@@ -766,7 +767,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
     quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
     features            = [
         len(quest) / 300.,
-        len(the_doc['title'] + the_doc['abstractText']) / 300.,
+        len(all_doc_text) / 300.,
         len(tomi_no_stop) / 100.,
         BM25score,
         sum(tomi_no_stop_idfs) / 100.,
@@ -1585,7 +1586,7 @@ k_sent_maxpool      = 5
 embedding_dim       = 768 # 50  # 30  # 200
 lr = 0.01
 b_size = 32
-max_epoch = 10
+max_epoch = 4
 
 hdlr = None
 for run in range(0, 5):
@@ -1594,7 +1595,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_bert_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'sigir_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1615,10 +1616,11 @@ for run in range(0, 5):
     logger.info('Compiling model...')
     model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
     if (use_cuda):
-        model = model.cuda()
-    params = model.parameters()
+        model   = model.cuda()
+    params      = list(model.parameters())
+    params      += list(bert_model.parameters())
     print_params(model)
-    optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
