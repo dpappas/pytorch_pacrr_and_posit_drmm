@@ -106,10 +106,10 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         input_mask = [1] * len(input_ids)
         ####
         # Zero-pad up to the sequence length.
-        padding = [0] * (max_seq_length - len(input_ids))
-        input_ids += padding
-        input_mask += padding
-        segment_ids += padding
+        padding         = [0] * (max_seq_length - len(input_ids))
+        input_ids       += padding
+        input_mask      += padding
+        segment_ids     += padding
         ####
         assert len(input_ids) == max_seq_length
         assert len(input_mask) == max_seq_length
@@ -124,7 +124,11 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
             logger.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
             logger.info("segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
             logger.info("label: %s (id = %d)" % (example.label, label_id))
-        features.append(InputFeatures(input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=label_id))
+        features.append(
+            InputFeatures(
+                input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=label_id
+            )
+        )
     return features
 
 bert_model      = 'bert-base-uncased'
@@ -166,7 +170,8 @@ for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc=
         tmp_eval_loss       = model(input_ids, segment_ids, input_mask, label_ids)
         logits              = model(input_ids, segment_ids, input_mask)
         tt, pooled_output   = model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
-
+        print(tt.size())
+        print(pooled_output.size())
 
 
 
