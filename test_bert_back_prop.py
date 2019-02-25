@@ -124,11 +124,11 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
             logger.info("input_mask: %s" % " ".join([str(x) for x in input_mask]))
             logger.info("segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
             logger.info("label: %s (id = %d)" % (example.label, label_id))
-        features.append(
-            InputFeatures(
-                input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=label_id
-            )
+        in_f = InputFeatures(
+            input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=label_id
         )
+        in_f.tokens = tokens
+        features.append(in_f)
     return features
 
 bert_model      = 'bert-base-uncased'
@@ -147,9 +147,17 @@ model = BertForSequenceClassification.from_pretrained(
 )
 model.to(device)
 
-tokenizer = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
+tokenizer       = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 
-eval_examples   = [InputExample(guid='example_dato_1', text_a='what is your name?', text_b='my name is kostakis', label='1')]
+eval_examples   = [
+    InputExample(
+        guid    ='example_dato_1',
+        text_a  ='what is your name?',
+        # text_b='my name is kostakis',
+        text_b=None,
+        label   ='1'
+    )
+]
 eval_features   = convert_examples_to_features(eval_examples, label_list, max_seq_length, tokenizer)
 all_input_ids   = torch.tensor([f.input_ids     for f in eval_features], dtype=torch.long)
 all_input_mask  = torch.tensor([f.input_mask    for f in eval_features], dtype=torch.long)
