@@ -4,19 +4,25 @@ import json
 from pprint import pprint
 from tqdm import tqdm
 
+#
+# def snip_is_relevant(one_sent, gold_snips):
+#     # print one_sent
+#     # pprint(gold_snips)
+#     return int(
+#         any(
+#             [
+#                 (one_sent.encode('ascii', 'ignore')  in gold_snip.encode('ascii','ignore'))
+#                 or
+#                 (gold_snip.encode('ascii', 'ignore') in one_sent.encode('ascii','ignore'))
+#                 for gold_snip in gold_snips
+#             ]
+#         )
+#     )
+
 def snip_is_relevant(one_sent, gold_snips):
-    # print one_sent
-    # pprint(gold_snips)
-    return int(
-        any(
-            [
-                (one_sent.encode('ascii', 'ignore')  in gold_snip.encode('ascii','ignore'))
-                or
-                (gold_snip.encode('ascii', 'ignore') in one_sent.encode('ascii','ignore'))
-                for gold_snip in gold_snips
-            ]
-        )
-    )
+    one_sent    = ' '.join(bioclean(one_sent))
+    gold_snips  = [' '.join(bioclean(snip)) for snip in gold_snips]
+    return int(one_sent in gold_snips)
 
 def get_one_bad():
     for snip in val['snippets'][pmid]:
