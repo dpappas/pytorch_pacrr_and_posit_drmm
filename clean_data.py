@@ -81,21 +81,37 @@ dataloc             = '/home/dpappas/for_ryan/'
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
 
 # print(test_data.keys())
-bioasq6_data_2 = {}
-for doc_id in tqdm(bioasq6_data):
-    found = False
-    if('snippets' not in bioasq6_data[doc_id]):
+bioasq6_data_2  = {}
+deleted_pmids   = []
+max_sent_len    = 2
+for qid in tqdm(bioasq6_data):
+    if('snippets' not in bioasq6_data[qid]):
         found = True
     else:
-        for snip in bioasq6_data[doc_id]['snippets']:
-            sents = sent_tokenize(snip['text'])
-            if(len(sents)>1):
-                found = True
-                break
-    if(found):
-        bioasq6_data_2[doc_id] = bioasq6_data[doc_id]
+        held_snips  = [snip for snip in bioasq6_data[qid]['snippets'] if(len(sent_tokenize(snip['text']))<=max_sent_len)]
+        deleted_pmids.extend([snip['document'] for snip in bioasq6_data[qid]['snippets'] if (len(sent_tokenize(snip['text']))>max_sent_len)])
+        bioasq6_data[qid]['documents'] = [d for d in bioasq6_data[qid]['documents'] if(d not in deleted_pmids)]
+        found       = len(bioasq6_data[qid]['documents']) == 0
+    if(not found):
+        bioasq6_data_2[qid] = bioasq6_data[qid]
 
 print(len(bioasq6_data))
 print(len(bioasq6_data_2))
+print(len(list(set(deleted_pmids))))
 
-pprint(test_data['queries'][0])
+# 0: 2251
+# 1:
+# 2:
+# 3:
+# 4:
+# 5:
+
+# pprint(deleted_pmids)
+#
+#
+# test_data_2 = []
+# for datum in test_data['queries']:
+#     pprint(datum)
+#     exit()
+
+
