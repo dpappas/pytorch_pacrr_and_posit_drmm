@@ -74,6 +74,26 @@ def load_all_data(dataloc):
     #
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data
 
+def handle_data(data, docs):
+    ret_data = {'queries':[]}
+    for datum in tqdm(data['queries']):
+        if(datum['query_id'] in deleted_qids):
+            continue
+        datum['relevant_documents'] = [rd for rd in datum['relevant_documents'] if(rd not in deleted_pmids)]
+        if(len(datum['relevant_documents'])==0):
+            continue
+        else:
+            datum['retrieved_documents'] = [
+                rd
+                for rd in datum['retrieved_documents']
+                if (rd['doc_id'] not in deleted_pmids)
+            ]
+            if(len(datum['retrieved_documents'])==0):
+                continue
+            ret_data['queries'].append(datum)
+    ret_docs = dict([item for item in tqdm(docs.items()) if (item[0] not in deleted_pmids)])
+    return ret_data, ret_docs
+
 # w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/'
@@ -130,76 +150,21 @@ with open(os.path.join(out_dataloc, 'BioASQ-trainingDataset6b.json'), 'w') as f:
 
 ############
 
-test_data_2 = {'queries':[]}
-for datum in tqdm(test_data['queries']):
-    if(datum['query_id'] in deleted_qids):
-        continue
-    datum['relevant_documents'] = [rd for rd in datum['relevant_documents'] if(rd not in deleted_pmids)]
-    if(len(datum['relevant_documents'])==0):
-        continue
-    else:
-        datum['retrieved_documents'] = [
-            rd
-            for rd in datum['retrieved_documents']
-            if (rd['doc_id'] not in deleted_pmids)
-        ]
-        test_data_2['queries'].append(datum)
-
-print('')
-print(len(test_data['queries']), len(test_data_2['queries']))
-print('')
-
-pickle.dump(test_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.test.pkl'), 'wb'), protocol=2)
-
-############
-
-dev_data_2 = {'queries':[]}
-for datum in tqdm(dev_data['queries']):
-    if(datum['query_id'] in deleted_qids):
-        continue
-    datum['relevant_documents'] = [rd for rd in datum['relevant_documents'] if(rd not in deleted_pmids)]
-    if(len(datum['relevant_documents'])==0):
-        continue
-    else:
-        datum['retrieved_documents'] = [
-            rd for rd in datum['retrieved_documents'] if (rd['doc_id'] not in deleted_pmids)
-        ]
-        dev_data_2['queries'].append(datum)
-
-print('')
+dev_data_2, dev_docs_2      = handle_data(dev_data, dev_docs)
 print(len(dev_data['queries']), len(dev_data_2['queries']))
-print('')
-pickle.dump(dev_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.dev.pkl'), 'wb'), protocol=2)
-
-############
-
-train_data_2 = {'queries':[]}
-for datum in tqdm(train_data['queries']):
-    if(datum['query_id'] in deleted_qids):
-        continue
-    datum['relevant_documents'] = [rd for rd in datum['relevant_documents'] if(rd not in deleted_pmids)]
-    if(len(datum['relevant_documents'])==0):
-        continue
-    else:
-        datum['retrieved_documents'] = [
-            rd for rd in datum['retrieved_documents'] if (rd['doc_id'] not in deleted_pmids)
-        ]
-        train_data_2['queries'].append(datum)
-
-print('')
-print(len(train_data['queries']), len(train_data_2['queries']))
-print('')
-pickle.dump(train_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.train.pkl'), 'wb'), protocol=2)
-
-############
-
-train_docs_2    = dict([item for item in tqdm(train_docs.items()) if(item[0] not in deleted_pmids)])
-dev_docs_2      = dict([item for item in tqdm(dev_docs.items())   if(item[0] not in deleted_pmids)])
-test_docs_2     = dict([item for item in tqdm(test_docs.items())  if(item[0] not in deleted_pmids)])
-
-print(len(train_docs), len(train_docs_2))
 print(len(dev_docs), len(dev_docs_2))
-print(len(test_docs), len(test_docs_2))
+pickle.dump(dev_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.dev.pkl'), 'wb'), protocol=2)
 pickle.dump(dev_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.dev.pkl'), 'wb'), protocol=2)
+
+test_data_2, test_docs_2    = handle_data(test_data, test_docs)
+print(len(test_data['queries']), len(test_data_2['queries']))
+print(len(test_docs), len(test_docs_2))
+pickle.dump(test_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.test.pkl'), 'wb'), protocol=2)
 pickle.dump(test_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.test.pkl'), 'wb'), protocol=2)
+
+train_data_2, train_docs_2  = handle_data(train_data, train_docs)
+print(len(train_data['queries']), len(train_data_2['queries']))
+print(len(train_docs), len(train_docs_2))
+pickle.dump(train_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.train.pkl'), 'wb'), protocol=2)
 pickle.dump(train_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.train.pkl'), 'wb'), protocol=2)
+
