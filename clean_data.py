@@ -85,7 +85,7 @@ if not os.path.exists(out_dataloc):
 (test_data, test_docs, dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
 
 # print(test_data.keys())
-bioasq6_data_2  = {}
+bioasq6_data_2  = {'questions' : []}
 deleted_pmids   = []
 deleted_qids    = []
 max_sent_len    = 1
@@ -114,7 +114,7 @@ for qid in tqdm(bioasq6_data):
     ]
     bioasq6_data[qid]['snippets']   = ret_snips
     if(len(bioasq6_data[qid]['documents']) != 0):
-        bioasq6_data_2[qid] = bioasq6_data[qid]
+        bioasq6_data_2['questions'].append(bioasq6_data[qid])
     else:
         deleted_qids.append(qid)
 
