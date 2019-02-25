@@ -193,9 +193,9 @@ pickle.dump(train_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.tra
 
 ############
 
-train_docs_2    = dict([item for item in train_docs.items() if(item[0] not in deleted_pmids)])
-dev_docs_2      = dict([item for item in dev_docs.items()   if(item[0] not in deleted_pmids)])
-test_docs_2     = dict([item for item in test_docs.items()  if(item[0] not in deleted_pmids)])
+train_docs_2    = dict([item for item in tqdm(train_docs.items()) if(item[0] not in deleted_pmids)])
+dev_docs_2      = dict([item for item in tqdm(dev_docs.items())   if(item[0] not in deleted_pmids)])
+test_docs_2     = dict([item for item in tqdm(test_docs.items())  if(item[0] not in deleted_pmids)])
 
 print(len(train_docs), len(train_docs_2))
 print(len(dev_docs), len(dev_docs_2))
