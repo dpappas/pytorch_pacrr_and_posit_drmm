@@ -135,7 +135,7 @@ def handle_bioasq_data(b_data):
             ret_data['questions'].append(b_data[qid])
         else:
             deleted_qids.append(qid)
-    return ret_data
+    return ret_data, deleted_pmids, deleted_qids
 
 # w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
