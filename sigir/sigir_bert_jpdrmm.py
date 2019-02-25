@@ -776,7 +776,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     for good_text in good_sents:
-        sent_toks, sent_embeds  = embed_the_sent(good_text)
+        sent_toks, sent_embeds  = embed_the_sent(' '.join(bioclean(good_text)))
         oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
         good_escores            = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
@@ -829,9 +829,9 @@ def train_data_step1(train_data):
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         ####
-        good_snips = get_snips(quest_id, gid, bioasq6_data)
-        good_snips = [' '.join(bioclean(sn)) for sn in good_snips]
-        quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
+        good_snips          = get_snips(quest_id, gid, bioasq6_data)
+        good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
+        quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
         ####
         datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf)
         good_sents_embeds   = datum['sents_embeds']
@@ -1010,28 +1010,25 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         'id': dato['query_id'],
         'documents': []
     }
+    ####
+    quest_text          = dato['query_text']
+    quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
+    quest_tokens, qemb  = embed_the_sent(quest_text)
+    ####
+    q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    gold_snips          = get_gold_snips(dato['query_id'], bioasq6_data)
     #
-    quest_text = dato['query_text']
-    #
-    qemb = all_quest_embeds[quest_text]
-    qemb = np.concatenate(qemb, axis=0)
-    quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-    #
-    quest_tokens = tokenize(quest_text)
-    q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    gold_snips = get_gold_snips(dato['query_id'], bioasq6_data)
-    #
-    doc_res, extracted_snippets = {}, []
-    extracted_snippets_known_rel_num = []
+    doc_res, extracted_snippets         = {}, []
+    extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf)
         doc_emit_, gs_emits_ = model.emit_one(
-            doc1_sents_embeds=datum['sents_embeds'],
-            doc1_oh_sim=datum['oh_sims'],
-            question_embeds=qemb,
-            q_idfs=q_idfs,
-            sents_gaf=datum['sents_escores'],
-            doc_gaf=datum['doc_af']
+            doc1_sents_embeds   = datum['sents_embeds'],
+            doc1_oh_sim         = datum['oh_sims'],
+            question_embeds     = qemb,
+            q_idfs              = q_idfs,
+            sents_gaf           = datum['sents_escores'],
+            doc_gaf             = datum['doc_af']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
