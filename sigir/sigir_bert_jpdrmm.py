@@ -37,10 +37,117 @@ from    pytorch_pretrained_bert.modeling import BertForSequenceClassification, B
 from    pytorch_pretrained_bert.optimization import BertAdam
 from    pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 
-
-bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords   = nltk.corpus.stopwords.words("english")
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
+class InputExample(object):
+    """A single training/test example for simple sequence classification."""
+    def __init__(self, guid, text_a, text_b=None, label=None):
+        """Constructs a InputExample.
+
+        Args:
+            guid: Unique id for the example.
+            text_a: string. The untokenized text of the first sequence. For single
+            sequence tasks, only this sequence must be specified.
+            text_b: (Optional) string. The untokenized text of the second sequence.
+            Only must be specified for sequence pair tasks.
+            label: (Optional) string. The label of the example. This should be
+            specified for train and dev examples, but not for test examples.
+        """
+        self.guid = guid
+        self.text_a = text_a
+        self.text_b = text_b
+        self.label = label
+
+class InputFeatures(object):
+    """A single set of features of data."""
+    def __init__(self, input_ids, input_mask, segment_ids, label_id):
+        self.input_ids = input_ids
+        self.input_mask = input_mask
+        self.segment_ids = segment_ids
+        self.label_id = label_id
+
+def fix_bert_tokens(tokens):
+    ret = []
+    for t in tokens:
+        if (t.startswith('##')):
+            ret[-1] = ret[-1] + t[2:]
+        else:
+            ret.append(t)
+    return ret
+
+def _truncate_seq_pair(tokens_a, tokens_b, max_length):
+    """Truncates a sequence pair in place to the maximum length."""
+    ####
+    # This is a simple heuristic which will always truncate the longer sequence
+    # one token at a time. This makes more sense than truncating an equal percent
+    # of tokens from each, since if one sequence is very short then each token
+    # that's truncated likely contains more information than a longer sequence.
+    while True:
+        total_length = len(tokens_a) + len(tokens_b)
+        if total_length <= max_length:
+            break
+        if len(tokens_a) > len(tokens_b):
+            tokens_a.pop()
+        else:
+            tokens_b.pop()
+
+def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer):
+    """Loads a data file into a list of `InputBatch`s."""
+    label_map = {label: i for i, label in enumerate(label_list)}
+    features = []
+    for (ex_index, example) in enumerate(examples):
+        tokens_a = tokenizer.tokenize(example.text_a)
+        tokens_b = None
+        if example.text_b:
+            tokens_b = tokenizer.tokenize(example.text_b)
+            _truncate_seq_pair(tokens_a, tokens_b, max_seq_length - 3)
+        else:
+            if len(tokens_a) > max_seq_length - 2:
+                tokens_a = tokens_a[:(max_seq_length - 2)]
+        ####
+        tokens          = ["[CLS]"] + tokens_a + ["[SEP]"]
+        segment_ids     = [0] * len(tokens)
+        ####
+        if tokens_b:
+            tokens      += tokens_b + ["[SEP]"]
+            segment_ids += [1] * (len(tokens_b) + 1)
+        input_ids       = tokenizer.convert_tokens_to_ids(tokens)
+        ####
+        input_mask      = [1] * len(input_ids)
+        ####
+        padding         = [0] * (max_seq_length - len(input_ids))
+        input_ids       += padding
+        input_mask      += padding
+        segment_ids     += padding
+        ####
+        assert len(input_ids)   == max_seq_length
+        assert len(input_mask)  == max_seq_length
+        assert len(segment_ids) == max_seq_length
+        ####
+        label_id    = label_map[example.label]
+        in_f        = InputFeatures(
+            input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=label_id
+        )
+        in_f.tokens = tokens
+        features.append(in_f)
+    return features
+
+def embed_the_sent(sent):
+    eval_examples   = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
+    eval_features   = convert_examples_to_features(eval_examples, label_list, max_seq_length, tokenizer)
+    eval_feat       = eval_features[0]
+    input_ids       = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
+    input_mask      = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
+    segment_ids     = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
+    tokens          = eval_feat.tokens
+    with torch.no_grad():
+        token_embeds, pooled_output = model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
+        tok_inds                    = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
+        embs                        = pooled_output[tok_inds,:]
+    fixed_tokens = fix_bert_tokens(tokens)
+    return fixed_tokens, embs
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
@@ -82,7 +189,6 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         print('deviation {} provided'.format(deviation))
     return avgdl, mean, deviation
 
-# Compute the term frequency of a word for a specific document
 def tf(term, document):
     tf = 0
     for word in document:
@@ -93,14 +199,6 @@ def tf(term, document):
     else:
         return tf / len(document)
 
-# Use BM25 ranking function in order to cimpute the similarity score between a question anda snippet
-# query: the given question
-# document: the snippet
-# k1, b: parameters
-# idf_scores: list with the idf scores
-# avddl: average document length
-# nomalize: in case we want to use Z-score normalization (Boolean)
-# mean, deviation: variables used for Z-score normalization
 def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
     score = 0
     for query_term in query:
@@ -120,7 +218,6 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
     else:
         return score
 
-# Compute the average length from a collection of documents
 def compute_avgdl(documents):
     total_words = 0
     for document in documents:
