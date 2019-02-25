@@ -99,8 +99,7 @@ for qid in tqdm(bioasq6_data):
     else:
         deleted_qids.append(qid)
 
-print(len(bioasq6_data))
-print(len(bioasq6_data_2))
+print(len(bioasq6_data), len(bioasq6_data_2))
 print(len(list(set(deleted_pmids))))
 print(len(list(set(deleted_qids))))
 
@@ -119,8 +118,7 @@ for datum in tqdm(test_data['queries']):
         ]
         test_data_2['queries'].append(datum)
 
-print(len(test_data['queries']))
-print(len(test_data_2['queries']))
+print(len(test_data['queries']), len(test_data_2['queries']))
 
 ############
 
@@ -137,8 +135,7 @@ for datum in tqdm(dev_data['queries']):
         ]
         dev_data_2['queries'].append(datum)
 
-print(len(dev_data['queries']))
-print(len(dev_data_2['queries']))
+print(len(dev_data['queries']), len(dev_data_2['queries']))
 
 ############
 
@@ -155,9 +152,13 @@ for datum in tqdm(train_data['queries']):
         ]
         train_data_2['queries'].append(datum)
 
-print(len(train_data['queries']))
-print(len(train_data_2['queries']))
+print(len(train_data['queries']), len(train_data_2['queries']))
 
 ############
 
-pprint(train_docs.keys())
+train_docs_2    = dict([item for item in train_docs.items() if(item[0] not in deleted_pmids)])
+dev_docs_2      = dict([item for item in dev_docs.items()   if(item[0] not in deleted_pmids)])
+test_docs_2     = dict([item for item in test_docs.items()  if(item[0] not in deleted_pmids)])
+print(len(train_docs,   train_docs_2))
+print(len(dev_docs,     dev_docs_2))
+print(len(test_docs,    test_docs_2))
