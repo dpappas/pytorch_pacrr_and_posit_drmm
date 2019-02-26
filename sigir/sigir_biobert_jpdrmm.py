@@ -872,6 +872,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
+    bert_model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     #
@@ -1122,6 +1123,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
+    bert_model.eval()
     #
     ret_data = {'questions': []}
     all_bioasq_subm_data_v1 = {"questions": []}
