@@ -1360,15 +1360,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-dataloc             = '/home/dpappas/for_ryan_clean/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
-use_cuda            = torch.cuda.is_available()
+# # laptop
+# w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# # dataloc             = '/home/dpappas/for_ryan/'
+# dataloc             = '/home/dpappas/for_ryan_clean/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
+# use_cuda            = torch.cuda.is_available()
 
 # # cslab241
 # w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -1404,6 +1404,14 @@ use_cuda            = torch.cuda.is_available()
 # eval_path           = '/home/cave/dpappas/bioasq_all/eval/run_eval.py'
 # retrieval_jar_path  = '/home/cave/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/cave/dpappas/'
+
+# thundera
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/for_ryan_clean/'
+eval_path           = '/home/dpappas/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/cave-of-time/dpappas/model_outputs/'
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
