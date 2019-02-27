@@ -1410,9 +1410,11 @@ k_sent_maxpool      = 5
 embedding_dim       = 30 #200
 lr                  = 0.01
 b_size              = 32
-max_epoch           = 10
+max_epoch           = 30
 
-hdlr = None
+early_stop          = 4
+
+hdlr                = None
 for run in range(0, 5):
     #
     my_seed = run
@@ -1446,6 +1448,7 @@ for run in range(0, 5):
     print_params(model)
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
+    waited_for  = 0
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
         train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
@@ -1457,8 +1460,14 @@ for run in range(0, 5):
                 epoch, model, best_dev_map, optimizer,
                 filename=os.path.join(odir, 'best_checkpoint.pth.tar')
             )
+            waited_for = 0
+        else:
+            waited_for += 1
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        if (waited_for > early_stop):
+            print('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
+            logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
 
 '''
 29,041,002 articles
