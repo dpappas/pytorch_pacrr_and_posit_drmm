@@ -1,5 +1,9 @@
 
 import torch
+import torch.nn as nn
+
+use_cuda    = torch.cuda.is_available()
+device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 
 class GaussianNoise(nn.Module):
     """Gaussian noise regularizer.
@@ -13,13 +17,13 @@ class GaussianNoise(nn.Module):
             won't be seen as a constant but something to optimize: this will bias the
             network to generate vectors with smaller values.
     """
-
+    #
     def __init__(self, sigma=0.1, is_relative_detach=True):
         super().__init__()
         self.sigma = sigma
         self.is_relative_detach = is_relative_detach
         self.noise = torch.tensor(0).to(device)
-
+    #
     def forward(self, x):
         if self.training and self.sigma != 0:
             scale = self.sigma * x.detach() if self.is_relative_detach else self.sigma * x
