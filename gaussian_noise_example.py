@@ -3,7 +3,7 @@ import torch
 
 use_cuda    = torch.cuda.is_available()
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
-mean, std   = 0., 0.05
+mean, std   = 0., 0.1
 
 embeddings  = torch.zeros(5, 10).float()
 embeddings  = embeddings.to(device)
