@@ -1398,8 +1398,11 @@ max_epoch           = 30
 
 early_stop          = 4
 
-hdlr                = None
-for run in range(0, 5):
+import sys
+run_from    = int(sys.argv[1])
+run_to      = int(sys.argv[2])
+hdlr        = None
+for run in range(run_from, run_to):
     #
     my_seed = run
     random.seed(my_seed)
