@@ -16,3 +16,10 @@ batch-search \
 
 # grep " 2000 " bioasq7b_bm25_retrieval.all.txt | wc -l # to see progress
 
+python3.6 /home/dpappas/generate_bioasq_data.py \
+trainining7b.json \
+bioasq7b_bm25_retrieval.all.txt \
+all \
+2016
+
+

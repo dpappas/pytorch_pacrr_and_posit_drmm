@@ -28,7 +28,6 @@ def create_docset(docs_needed):
     print(len(not_found))
     return docset
 
-
 def create_doc_subset(docset, ret_docs_needed, rel_docs_needed):
     doc_subset = {}
     for doc_id in ret_docs_needed:
@@ -39,7 +38,6 @@ def create_doc_subset(docset, ret_docs_needed, rel_docs_needed):
         except KeyError:
             print('Relevant doc {0} not found in docset.'.format(doc_id))
     return doc_subset
-
 
 def load_qret(retrieval_results_path):
     f = open(retrieval_results_path, 'r')
@@ -54,7 +52,6 @@ def load_qret(retrieval_results_path):
     retrieval_results = dict(retrieval_results)
     return retrieval_results
 
-
 def load_q_text(retrieval_results_path):
     f = open(retrieval_results_path, 'r', errors='ignore')
     q_text = {}
@@ -66,7 +63,6 @@ def load_q_text(retrieval_results_path):
     f.close()
     q_text = dict(q_text)
     return q_text
-
 
 def load_q_rels_from_json(retrieval_results_path):
     f = open(retrieval_results_path, 'r')
@@ -83,7 +79,6 @@ def load_q_rels_from_json(retrieval_results_path):
     n_qrels = dict(n_qrels)
     return qrels, n_qrels
 
-
 def load_q_text_from_json(retrieval_results_path):
     f = open(retrieval_results_path, 'r')
     data = json.load(f)
@@ -95,7 +90,6 @@ def load_q_text_from_json(retrieval_results_path):
     f.close()
     q_text = dict(q_text)
     return q_text
-
 
 def add_normalized_scores(q_ret):
     for q in q_ret:
@@ -110,7 +104,6 @@ def add_normalized_scores(q_ret):
             norm_scores = scores
         for i in range(len(q_ret[q])):
             q_ret[q][i] += (norm_scores[i],)
-
 
 def remove_recent_years(q_ret, keep_up_to_year, docset):
     new_q_ret = defaultdict(list)
@@ -127,7 +120,6 @@ def remove_recent_years(q_ret, keep_up_to_year, docset):
                 continue
             new_q_ret[q].append(t)
     return new_q_ret
-
 
 def generate_data(queries_file, retrieval_results_path, suffix, keep_up_to_year):
     q_rel, n_qrels = load_q_rels_from_json(queries_file)
@@ -194,7 +186,6 @@ def generate_data(queries_file, retrieval_results_path, suffix, keep_up_to_year)
         doc_subset = create_doc_subset(docset, retrieved_documents_set, relevant_documents_set)
         with open('bioasq_bm25_docset_top{0}.{1}.pkl'.format(k, suffix), 'wb') as f:
             pickle.dump(doc_subset, f, protocol=2)
-
 
 if __name__ == '__main__':
     # generate_data('../bioasq.train.json', 'bioasq_bm25_retrieval.train.txt', 'train', 2015)
