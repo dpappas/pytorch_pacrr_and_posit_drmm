@@ -10,4 +10,9 @@
 ../../bioasq7b_all_galago_queries.json \
 > /home/dpappas/bioasq7b_bm25_retrieval.all.txt
 
-# grep " 2000 " bioasq7b_bm25_retrieval.all.txt | wc -l
+# grep " 2000 " bioasq7b_bm25_retrieval.all.txt | wc -l # to see progress
+
+# mv /home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/bioasq7b_all_galago_queries.json /home/DATA/bioasq7/BioASQ-training7b/
+# mv /home/dpappas/bioasq7b_bm25_retrieval.all.txt /home/DATA/bioasq7/BioASQ-training7b/
+
+
