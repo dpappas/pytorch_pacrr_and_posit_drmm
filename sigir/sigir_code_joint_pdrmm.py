@@ -1452,6 +1452,7 @@ for run in range(0, 5):
         if (waited_for > early_stop):
             print('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
             logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
+            break
 
 '''
 29,041,002 articles
