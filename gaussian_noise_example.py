@@ -11,6 +11,7 @@ noise       = torch.zeros(1, embeddings.size(-1)).data.normal_(mean, std)
 noise       = noise.to(device)
 print(embeddings)
 print(noise)
+
 print(embeddings.size())
 print(noise.size())
 
