@@ -10,3 +10,4 @@
 ../../bioasq7b_all_galago_queries.json \
 > /home/dpappas/bioasq7b_bm25_retrieval.all.txt
 
+# grep " 2000 " bioasq7b_bm25_retrieval.all.txt | wc -l
