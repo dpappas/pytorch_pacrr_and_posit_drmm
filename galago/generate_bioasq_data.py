@@ -112,7 +112,7 @@ def add_normalized_scores(q_ret):
             q_ret[q][i] += (norm_scores[i],)
 
 
-def remove_recent_years(q_ret, keep_up_to_year):
+def remove_recent_years(q_ret, keep_up_to_year, docset):
     new_q_ret = defaultdict(list)
     for q in q_ret:
         for t in q_ret[q]:
@@ -141,7 +141,7 @@ def generate_data(queries_file, retrieval_results_path, suffix, keep_up_to_year)
         docs_needed.update([d[0] for d in q_ret[q_id]])
     docset = create_docset(docs_needed)
     #
-    q_ret = remove_recent_years(q_ret, keep_up_to_year)
+    q_ret = remove_recent_years(q_ret, keep_up_to_year, docset)
     #
     for k in [100]:
         print(k)
