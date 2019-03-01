@@ -8,5 +8,5 @@
 --defaultTextPart=postings.krovetz \
 --mode=threaded \
 ../../bioasq7b_all_galago_queries.json \
-> ../../bioasq7b_bm25_retrieval.all.txt
+> /home/dpappas/bioasq7b_bm25_retrieval.all.txt
 
