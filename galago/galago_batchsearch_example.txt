@@ -1,0 +1,12 @@
+
+# ./galago batch-search --index=pubmed_only_abstract_galago_index --verbose=False --requested=2000 --scorer=bm25 --defaultTextPart=postings.krovetz --mode=threaded ../../bioasq.train.galago.json > ../../bioasq_bm25_retrieval.train.txt
+./galago batch-search \
+--index=pubmed_only_abstract_galago_index \
+--verbose=False \
+--requested=2000 \
+--scorer=bm25 \
+--defaultTextPart=postings.krovetz \
+--mode=threaded \
+../../bioasq7b_all_galago_queries.json \
+> ../../bioasq7b_bm25_retrieval.all.txt
+
