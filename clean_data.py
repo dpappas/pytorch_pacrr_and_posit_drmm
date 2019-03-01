@@ -138,7 +138,8 @@ def handle_bioasq_data(b_data):
 # w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 # idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/'
-out_dataloc         = '/home/dpappas/for_ryan_clean/'
+# out_dataloc         = '/home/dpappas/for_ryan_clean/'
+out_dataloc         = '/home/dpappas/for_ryan_clean_2/'
 if not os.path.exists(out_dataloc):
     os.makedirs(out_dataloc)
 
@@ -158,53 +159,53 @@ with open(os.path.join(out_dataloc, 'BioASQ-trainingDataset6b.json'), 'w') as f:
     f.close()
 
 ############
-
-bioasq6_test_data_2 = {'questions':[]}
-for q in bioasq6_test_data['questions']:
-    q['documents'] = [
-        d
-        for d in q['documents']
-        if(d.split('/')[-1] not in deleted_pmids)
-    ]
-    if(len(q['documents'])>0):
-        bioasq6_test_data_2['questions'].append(q)
-
-print(len(bioasq6_test_data['questions']), len(bioasq6_test_data_2['questions']))
-
-with open(os.path.join(out_dataloc, 'bioasq.test.json'), 'w') as f:
-    f.write(json.dumps(bioasq6_test_data_2, indent=4, sort_keys=True))
-    f.close()
-
+#
+# bioasq6_test_data_2 = {'questions':[]}
+# for q in bioasq6_test_data['questions']:
+#     q['documents'] = [
+#         d
+#         for d in q['documents']
+#         if(d.split('/')[-1] not in deleted_pmids)
+#     ]
+#     if(len(q['documents'])>0):
+#         bioasq6_test_data_2['questions'].append(q)
+#
+# print(len(bioasq6_test_data['questions']), len(bioasq6_test_data_2['questions']))
+#
+# with open(os.path.join(out_dataloc, 'bioasq.test.json'), 'w') as f:
+#     f.write(json.dumps(bioasq6_test_data_2, indent=4, sort_keys=True))
+#     f.close()
+#
 ############
-
-bioasq6_dev_data_2 = {'questions':[]}
-for q in bioasq6_dev_data['questions']:
-    q['documents'] = [
-        d
-        for d in q['documents']
-        if(d.split('/')[-1] not in deleted_pmids)
-    ]
-    if(len(q['documents'])>0):
-        bioasq6_dev_data_2['questions'].append(q)
-
-print(len(bioasq6_dev_data['questions']), len(bioasq6_dev_data_2['questions']))
-
-with open(os.path.join(out_dataloc, 'bioasq.dev.json'), 'w') as f:
-    f.write(json.dumps(bioasq6_dev_data_2, indent=4, sort_keys=True))
-    f.close()
-
+#
+# bioasq6_dev_data_2 = {'questions':[]}
+# for q in bioasq6_dev_data['questions']:
+#     q['documents'] = [
+#         d
+#         for d in q['documents']
+#         if(d.split('/')[-1] not in deleted_pmids)
+#     ]
+#     if(len(q['documents'])>0):
+#         bioasq6_dev_data_2['questions'].append(q)
+#
+# print(len(bioasq6_dev_data['questions']), len(bioasq6_dev_data_2['questions']))
+#
+# with open(os.path.join(out_dataloc, 'bioasq.dev.json'), 'w') as f:
+#     f.write(json.dumps(bioasq6_dev_data_2, indent=4, sort_keys=True))
+#     f.close()
+#
 ############
-dev_data_2, dev_docs_2      = handle_data(dev_data, dev_docs)
-print(len(dev_data['queries']), len(dev_data_2['queries']))
-print(len(dev_docs), len(dev_docs_2))
-pickle.dump(dev_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.dev.pkl'), 'wb'), protocol=2)
-pickle.dump(dev_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.dev.pkl'), 'wb'), protocol=2)
+# dev_data_2, dev_docs_2      = handle_data(dev_data, dev_docs)
+# print(len(dev_data['queries']), len(dev_data_2['queries']))
+# print(len(dev_docs), len(dev_docs_2))
+# pickle.dump(dev_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.dev.pkl'), 'wb'), protocol=2)
+# pickle.dump(dev_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.dev.pkl'), 'wb'), protocol=2)
 ############
-test_data_2, test_docs_2    = handle_data(test_data, test_docs)
-print(len(test_data['queries']), len(test_data_2['queries']))
-print(len(test_docs), len(test_docs_2))
-pickle.dump(test_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.test.pkl'), 'wb'), protocol=2)
-pickle.dump(test_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.test.pkl'), 'wb'), protocol=2)
+# test_data_2, test_docs_2    = handle_data(test_data, test_docs)
+# print(len(test_data['queries']), len(test_data_2['queries']))
+# print(len(test_docs), len(test_docs_2))
+# pickle.dump(test_data_2, open(os.path.join(out_dataloc, 'bioasq_bm25_top100.test.pkl'), 'wb'), protocol=2)
+# pickle.dump(test_docs_2, open(os.path.join(out_dataloc, 'bioasq_bm25_docset_top100.test.pkl'), 'wb'), protocol=2)
 ############
 train_data_2, train_docs_2  = handle_data(train_data, train_docs)
 print(len(train_data['queries']), len(train_data_2['queries']))
