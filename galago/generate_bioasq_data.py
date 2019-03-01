@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from collections import OrderedDict, defaultdict
 from pymongo import MongoClient
-
+import sys
 
 def create_docset(docs_needed):
     print("Retrieving text for {0} documents".format(len(docs_needed)))
@@ -198,8 +198,14 @@ def generate_data(queries_file, retrieval_results_path, suffix, keep_up_to_year)
 
 if __name__ == '__main__':
     # generate_data('../bioasq.train.json', 'bioasq_bm25_retrieval.train.txt', 'train', 2015)
-    generate_data('../bioasq.dev.json', 'bioasq_bm25_retrieval.dev.txt', 'dev', 2016)
+    # generate_data('../bioasq.dev.json', 'bioasq_bm25_retrieval.dev.txt', 'dev', 2016)
     # generate_data('../bioasq.test.json', 'bioasq_bm25_retrieval.test.txt', 'test', 2016)
+    generate_data(
+        queries_file            = sys.argv[1],
+        retrieval_results_path  = sys.argv[2],
+        suffix                  = sys.argv[3],
+        keep_up_to_year         = int(sys.argv[4])
+    )
 
 '''
 
