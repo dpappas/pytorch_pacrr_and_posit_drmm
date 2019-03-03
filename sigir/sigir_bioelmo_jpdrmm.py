@@ -1120,6 +1120,8 @@ def load_all_data(dataloc, idf_pickle_path):
 
 def get_elmo_embeds(tokens):
     character_ids   = batch_to_ids([tokens])
+    if(use_cuda):
+        character_ids = character_ids.cuda()
     embeddings      = elmo(character_ids)
     the_embeds      = embeddings['elmo_representations'][0]
     return the_embeds[0]
@@ -1269,15 +1271,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
 
-    def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights,
-                           k2):
+    def do_for_one_doc_cnn(
+            self, doc_sents_embeds, oh_sims, sents_af, question_embeds,
+            q_conv_res_trigram, q_weights, k2
+    ):
         res = []
         for i in range(len(doc_sents_embeds)):
             sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False)
-            sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
+            sent_embeds = doc_sents_embeds[i]
             gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if (use_cuda):
-                sent_embeds = sent_embeds.cuda()
                 sim_oh = sim_oh.cuda()
                 gaf = gaf.cuda()
             conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -1386,11 +1389,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
     def emit_one(self, doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         if (use_cuda):
             q_idfs = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
             doc_gaf = doc_gaf.cuda()
         #
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -1426,12 +1427,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
                 question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
         if (use_cuda):
             q_idfs = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
             doc_gaf = doc_gaf.cuda()
             doc_baf = doc_baf.cuda()
         #
