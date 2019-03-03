@@ -174,22 +174,23 @@ def RemoveBadYears(data, doc_text, train):
                 break
     return data
 
-def print_params(model):
+def print_params(model, elmo):
     '''
     It just prints the number of parameters in the model.
     :param model:   The pytorch model
     :return:        Nothing.
     '''
     print(40 * '=')
+    print(elmo)
     print(model)
     print(40 * '=')
     logger.info(40 * '=')
+    logger.info(elmo)
     logger.info(model)
     logger.info(40 * '=')
     trainable = 0
     untrainable = 0
-    for parameter in model.parameters():
-        # print(parameter.size())
+    for parameter in list(model.parameters())+list(elmo.parameters()):
         v = 1
         for s in parameter.size():
             v *= s
@@ -1551,8 +1552,9 @@ for run in range(0, 5):
     model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
     if (use_cuda):
         model = model.cuda()
-    params = model.parameters()
-    print_params(model)
+        elmo  = elmo.cuda()
+    params      = model.parameters() + elmo.parameters()
+    print_params(model, elmo)
     optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
@@ -1562,8 +1564,8 @@ for run in range(0, 5):
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
             test_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
-            save_checkpoint(epoch, model, best_dev_map, optimizer,
-                            filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
+            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
+            save_checkpoint(epoch, elmo, best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint_bioelmo.pth.tar'))
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
                                                                                              best_dev_map, test_map))
         logger.info(
