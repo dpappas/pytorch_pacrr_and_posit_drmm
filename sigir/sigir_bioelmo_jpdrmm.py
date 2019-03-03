@@ -30,6 +30,7 @@ import math
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from allennlp.modules.elmo import Elmo, batch_to_ids
+from six.moves import reduce
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
                             t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
@@ -653,11 +654,7 @@ def create_one_hot_and_sim(tokens1, tokens2):
 def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_tokenizer):
     if (use_sent_tokenizer):
         title_sents = sent_tokenize(the_doc['title'])
-        # title_sents = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in title_sents]
-        # title_sents = [s for s in title_sents if (len(s.strip()) > 0)]
         abs_sents   = sent_tokenize(the_doc['abstractText'])
-        # abs_sents   = [' '.join(bioclean(s.replace('\ufeff', ' '))) for s in abs_sents]
-        # abs_sents   = [s for s in abs_sents if (len(s.strip()) > 0)]
         good_sents  = title_sents + abs_sents
         good_sents  = [
             s for s in good_sents
@@ -666,10 +663,7 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     else:
         good_sents = [the_doc['title'] + ' ' + the_doc['abstractText']]
     ####
-    elmo_f = os.path.join(elmo_embeds_dir, '{}.p'.format(pid))
-    gemb = pickle.load(open(elmo_f, 'rb'))
-    ####
-    quest_toks = tokenize(quest)
+    quest_toks  = tokenize(quest)
     good_doc_af = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
@@ -690,24 +684,23 @@ def prep_data(quest, the_doc, pid, the_bm25, good_snips, idf, max_idf, use_sent_
     ]
     good_doc_af.extend(features)
     #
-    all_elmo_embeds = gemb['title_elmo_average_embeds'] + gemb['abs_elmo_average_embeds']
-    ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
-    for good_text, elmo_embeds in zip(good_sents, all_elmo_embeds):
-        held_out    = good_text
-        good_text   = ' '.join(bioclean(good_text.replace('\ufeff', ' '))).strip()
-        sent_toks   = tokenize(good_text)
-        oh1, oh2, oh_sim = create_one_hot_and_sim(quest_toks, sent_toks)
+    for good_text in good_sents:
+        held_out            = good_text
+        good_text           = ' '.join(bioclean(good_text.replace('\ufeff', ' '))).strip()
+        sent_toks           = tokenize(good_text)
+        elmo_embeds         = get_elmo_embeds(sent_toks)
+        oh1, oh2, oh_sim    = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
-        good_escores = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores        = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
-        tomi = (set(sent_toks) & set(quest_toks))
-        tomi_no_stop = tomi - set(stopwords)
-        BM25score = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-        tomi_no_stop_idfs = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-        tomi_idfs = [idf_val(w, idf, max_idf) for w in tomi]
-        quest_idfs = [idf_val(w, idf, max_idf) for w in quest_toks]
-        features = [len(quest)/300., len(good_text)/300., len(tomi_no_stop)/100., BM25score, sum(tomi_no_stop_idfs)/100., sum(tomi_idfs)/sum(quest_idfs)]
+        tomi                = (set(sent_toks) & set(quest_toks))
+        tomi_no_stop        = tomi - set(stopwords)
+        BM25score           = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+        tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+        tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+        quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+        features            = [len(quest)/300., len(good_text)/300., len(tomi_no_stop)/100., BM25score, sum(tomi_no_stop_idfs)/100., sum(tomi_idfs)/sum(quest_idfs)]
         #
         good_sents_embeds.append(elmo_embeds)
         good_sents_escores.append(good_escores + features)
@@ -741,19 +734,15 @@ def train_data_step1(train_data):
 
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        # print(quest_text)
-        qemb = all_quest_embeds[quest_text]
-        qemb = np.concatenate(qemb, axis=0)
-        # pprint(qemb.keys())
+        quest_text  = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
+        qemb        = get_elmo_embeds(tokenize(quest_text))
         if (use_sent_tokenizer):
             good_snips = get_snips(quest_id, gid, bioasq6_data)
             good_snips = [' '.join(bioclean(sn)) for sn in good_snips]
         else:
             good_snips = []
         #
-        quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        #
-        datum = prep_data(quest_text, docs[gid], gid, bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer)
+        datum  = prep_data(quest_text, docs[gid], gid, bm25s_gid, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds = datum['sents_embeds']
         good_sents_escores = datum['sents_escores']
         good_doc_af = datum['doc_af']
@@ -935,28 +924,20 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         'documents': []
     }
     #
-    quest_text = dato['query_text']
-    #
-    qemb = all_quest_embeds[quest_text]
-    qemb = np.concatenate(qemb, axis=0)
-    quest_text = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
+    quest_text  = dato['query_text']
+    quest_text  = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
     #
     quest_tokens = tokenize(quest_text)
-    q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    gold_snips = get_gold_snips(dato['query_id'], bioasq6_data)
+    qemb         = get_elmo_embeds(quest_tokens)
+    q_idfs       = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    gold_snips   = get_gold_snips(dato['query_id'], bioasq6_data)
     #
     doc_res, extracted_snippets = {}, []
     extracted_snippets_known_rel_num = []
     for retr in retr_docs:
         datum = prep_data(
-            quest_text,
-            docs[retr['doc_id']],
-            retr['doc_id'],
-            retr['norm_bm25_score'],
-            gold_snips,
-            idf,
-            max_idf,
-            use_sent_tokenizer
+            quest_text, docs[retr['doc_id']], retr['doc_id'], retr['norm_bm25_score'],
+            gold_snips, idf, max_idf, use_sent_tokenizer
         )
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds=datum['sents_embeds'],
@@ -1000,10 +981,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3 = [], [], []
         extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3 = [], [], []
     #
-    # pprint(extracted_snippets_v1)
-    # pprint(extracted_snippets_v2)
-    # pprint(extracted_snippets_v3)
-    # exit()
     snips_res_v1 = prep_extracted_snippets(
         extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text']
     )
@@ -1013,10 +990,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     snips_res_v3 = prep_extracted_snippets(
         extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text']
     )
-    # pprint(snips_res_v1)
-    # pprint(snips_res_v2)
-    # pprint(snips_res_v3)
-    # exit()
     #
     snips_res_known_rel_num_v1 = prep_extracted_snippets(
         extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text']
@@ -1135,18 +1108,20 @@ def load_all_data(dataloc, idf_pickle_path):
     dev_data = RemoveBadYears(dev_data, dev_docs, False)
     test_data = RemoveBadYears(test_data, test_docs, False)
     #
-    if (os.path.exists(bert_all_words_path)):
-        words = pickle.load(open(bert_all_words_path, 'rb'))
-    else:
-        words = {}
-        GetWords(train_data, train_docs, words)
-        GetWords(dev_data, dev_docs, words)
-        GetWords(test_data, test_docs, words)
-        pickle.dump(words, open(bert_all_words_path, 'wb'), protocol=2)
+    words = {}
+    GetWords(train_data, train_docs, words)
+    GetWords(dev_data, dev_docs, words)
+    GetWords(test_data, test_docs, words)
     #
     print('loading idfs')
     idf, max_idf = load_idfs(idf_pickle_path, words)
     return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
+
+def get_elmo_embeds(tokens):
+    character_ids   = batch_to_ids([tokens])
+    embeddings      = elmo(character_ids)
+    the_embeds      = embeddings['elmo_representations'][0]
+    return the_embeds[0]
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
@@ -1511,24 +1486,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
-def get_elmo_embeds(sentences):
-    if (len(sentences) == 0):
-        return []
-    sentences       = [
-        tokenize(s)
-        for s in sentences
-        if (len(s) > 0)
-    ]
-    character_ids   = batch_to_ids(sentences)
-    embeddings      = elmo(character_ids)
-    the_embeds      = embeddings['elmo_representations'][0]
-    print(the_embeds.size())
-    ret             = [
-        the_embeds[i, :len(sentences[i]), :].data.numpy()
-        for i in range(len(sentences))
-    ]
-    return ret
-
 # laptop
 options_file        = "/home/dpappas/for_ryan/elmo_weights/options.json"
 weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
@@ -1554,7 +1511,9 @@ use_cuda            = True
 # use_cuda            = True
 # #####################
 
-elmo                = Elmo(options_file, weight_file, 1, dropout=0)
+elmo                    = Elmo(options_file, weight_file, 1, dropout=0, requires_grad=True)
+total_elmo_params       = sum([reduce(lambda x, y: x*y, list(p.size())) for p in elmo.parameters()])
+trainable_elmo_params   = sum([reduce(lambda x, y: x*y, list(p.size())) for p in elmo.parameters() if(p.requires_grad)])
 
 k_for_maxpool = 5
 k_sent_maxpool = 5
@@ -1570,7 +1529,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_joint_simple_elmo_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir = 'jpdrmm_bioelmo_2L_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
