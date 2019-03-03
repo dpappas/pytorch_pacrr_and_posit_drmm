@@ -5,12 +5,7 @@
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 
-import os
-import json
-import time
-import random
-import logging
-import subprocess
+import os, json, time, random, logging, subprocess
 import torch
 import torch.nn.functional         as F
 import torch.nn                    as nn
@@ -24,13 +19,14 @@ from pprint import pprint
 from gensim.models.keyedvectors import KeyedVectors
 from nltk.tokenize import sent_tokenize
 from difflib import SequenceMatcher
-import re
-import nltk
-import math
+import re, nltk, math
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from allennlp.modules.elmo import Elmo, batch_to_ids
 from six.moves import reduce
+import sys, warnings
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '',
                             t.replace('"', '').replace('/', '').replace('\\', '').replace("'",
@@ -1496,7 +1492,7 @@ dataloc             = '/home/dpappas/for_ryan/'
 eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
-use_cuda            = True
+use_cuda            = False
 #####################
 
 # # atlas , cslab243
