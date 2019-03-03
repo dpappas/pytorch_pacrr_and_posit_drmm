@@ -1553,7 +1553,7 @@ for run in range(0, 5):
     if (use_cuda):
         model = model.cuda()
         elmo  = elmo.cuda()
-    params      = model.parameters() + elmo.parameters()
+    params      = list(model.parameters()) + list(elmo.parameters())
     print_params(model, elmo)
     optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
