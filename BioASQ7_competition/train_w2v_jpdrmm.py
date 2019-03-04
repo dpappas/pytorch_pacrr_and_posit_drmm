@@ -126,6 +126,7 @@ def weighted_binary_cross_entropy(output, target, weights=None):
     return torch.neg(torch.mean(loss))
 
 def RemoveTrainLargeYears(data, doc_text):
+  data['queries'] = [q for q in data['queries'] if (len(q['retrieved_documents']) > 0)]
   for i in tqdm(range(len(data['queries']))):
     hyear = 1900
     for j in range(len(data['queries'][i]['retrieved_documents'])):
@@ -1369,10 +1370,9 @@ dataloc             = '/home/dpappas/for_ryan/bioasq7/BioASQ-training7b/'
 bioasq7_data            = json.load(open(os.path.join(dataloc,   'trainining7b.json')))
 train_docs              = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl'), 'rb'))
 train_data              = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl'), 'rb'))
-train_data['queries']   = [q for q in train_data['queries'] if(len(q['retrieved_documents']) > 0)]
 #####################
-train_data          = RemoveBadYears(train_data, train_docs, True)
-train_data          = RemoveTrainLargeYears(train_data, train_docs)
+train_data              = RemoveBadYears(train_data, train_docs, True)
+train_data              = RemoveTrainLargeYears(train_data, train_docs)
 
 #####################
 words               = {}
