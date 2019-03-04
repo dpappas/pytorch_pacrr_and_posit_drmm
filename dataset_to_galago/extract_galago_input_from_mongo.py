@@ -44,6 +44,7 @@ with open(ofile, 'w') as f_out:
 f_out.close()
 
 '''
+/home/gbrokos/BioASQ6/data/pubmedBaseline2018.v2.trectext
 <DOC>
 <DOCNO>40</DOCNO>
 <TEXT>
