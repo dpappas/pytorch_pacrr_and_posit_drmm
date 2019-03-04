@@ -45,11 +45,16 @@ for path in tqdm(all_xml_gzs[file_from:file_to]):
 
 vim index_xml_gz.py
 
-python3.6 index_xml_gz.py 0 200
-python3.6 index_xml_gz.py 200 400
-python3.6 index_xml_gz.py 400 600
-python3.6 index_xml_gz.py 600 800
-python3.6 index_xml_gz.py 800 1000
+python3.6 index_xml_gz.py 0 100     &
+python3.6 index_xml_gz.py 100 200   &
+python3.6 index_xml_gz.py 200 300   &
+python3.6 index_xml_gz.py 300 400   &
+python3.6 index_xml_gz.py 400 500   &
+python3.6 index_xml_gz.py 500 600   &
+python3.6 index_xml_gz.py 600 700   &
+python3.6 index_xml_gz.py 700 800   &
+python3.6 index_xml_gz.py 800 900   &
+python3.6 index_xml_gz.py 900 1000  &
 
 #############################
 
