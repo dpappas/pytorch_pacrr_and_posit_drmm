@@ -11,7 +11,6 @@ for i in range(1,893):
 
 '''
 
-
 import os
 import gzip
 import traceback
@@ -23,7 +22,6 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from elasticsearch import helpers
 import random
-
 
 es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
