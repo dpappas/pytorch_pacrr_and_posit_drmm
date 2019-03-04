@@ -1,4 +1,5 @@
 import pymongo, json
+from pprint import pprint
 
 client  = pymongo.MongoClient("localhost", 27017, maxPoolSize=50)
 d       = dict(
@@ -11,4 +12,5 @@ d       = dict(
     )
     for db in client.database_names()
 )
-print(json.dumps(d))
+pprint(d)
+
