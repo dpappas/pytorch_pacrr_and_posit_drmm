@@ -36,7 +36,7 @@ for path in tqdm(all_xml_gzs[file_from:file_to]):
                 'publicationDate'   : item['pubdate'],
             }
             res = mongo_collection.insert_one(mongo_datum)
-            pprint(res)
+            # pprint(res)
 #############################
 
 '''
