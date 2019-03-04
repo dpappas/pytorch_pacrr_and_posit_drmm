@@ -18,20 +18,23 @@ client              = pymongo.MongoClient("localhost", 27017, maxPoolSize=50)
 mongo_collection    = client[db_name][collection_name]
 print(mongo_collection.count())
 
+ingored_errors      = 0
 ofile               = '/home/DATA/pubmedBaseline2019.trectext'
 with open(ofile, 'w') as f_out:
     for item in tqdm(mongo_collection.find(), total=mongo_collection.count()):
-        dato = {
-            'DOC': {
-                'DOCNO' : int(item[u'pmid']),
-                'TEXT'  : ' '.join(bioclean(item['title'])+bioclean(item['abstractText']))
-            }
-        }
-        xml = dicttoxml.dicttoxml(dato, root=False, attr_type=False)
-        xml = parseString(xml)
-        txt = xml.toprettyxml()
-        txt = re.sub('<\?.*\?>', '', txt).strip()
-        f_out.write(txt+'\n')
+        pmid        = item[u'pmid']
+        text        = ' '.join(bioclean(item['title'])+bioclean(item['abstractText']))
+        f_out.write('<DOC>\n')
+        f_out.write('<DOCNO>{0}</DOCNO>\n'.format(pmid))
+        f_out.write('<TEXT>\n')
+        try:
+            f_out.write(text)
+        except:
+            print('Unicode Error at document: {0}'.format(pmid))
+            ingored_errors += 1
+            f_out.write(text.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore'))
+        f_out.write('\n</TEXT>\n')
+        f_out.write('</DOC>\n')
         f_out.flush()
 
 f_out.close()
