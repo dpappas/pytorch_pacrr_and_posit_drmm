@@ -1371,15 +1371,15 @@ w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/bioasq7/BioASQ-training7b/'
 #####################
-bioasq7_data            = json.load(open(os.path.join(dataloc,   'trainining7b.json')))
-train_docs              = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl'), 'rb'))
-train_data              = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl'), 'rb'))
+bioasq7_data        = json.load(open(os.path.join(dataloc,   'trainining7b.json')))
+all_docs            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl'), 'rb'))
+all_data            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl'), 'rb'))
 #####################
-train_data              = RemoveBadYears(train_data, train_docs, True)
-train_data              = RemoveTrainLargeYears(train_data, train_docs)
+all_data            = RemoveBadYears(all_data, all_docs, True)
+all_data            = RemoveTrainLargeYears(all_data, all_docs)
 #####################
 words               = {}
-GetWords(train_data, train_docs, words)
+GetWords(all_data, all_docs, words)
 #####################
 print('loading idfs')
 idf, max_idf        = load_idfs(idf_pickle_path, words)
@@ -1387,8 +1387,11 @@ print('loading w2v')
 wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 #####################
+avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
+print(avgdl, mean, deviation)
+#####################
 
-exit()
+# exit()
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1415,7 +1418,6 @@ embedding_dim       = 30 #200
 lr                  = 0.01
 b_size              = 32
 max_epoch           = 30
-
 early_stop          = 4
 
 import sys
@@ -1441,14 +1443,6 @@ for run in range(run_from, run_to):
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
     #
-    (
-        test_data, test_docs, dev_data, dev_docs, train_data, train_docs,
-        idf, max_idf, wv, bioasq6_data
-    ) = load_all_data(dataloc=dataloc, w2v_bin_path=w2v_bin_path, idf_pickle_path=idf_pickle_path)
-    #
-    avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
-    print(avgdl, mean, deviation)
-    #
     print('Compiling model...')
     logger.info('Compiling model...')
     model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
@@ -1461,7 +1455,7 @@ for run in range(run_from, run_to):
     waited_for  = 0
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
