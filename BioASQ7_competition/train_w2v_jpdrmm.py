@@ -751,7 +751,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     #
     start_time      = time.time()
     pbar = tqdm(
-        iterable=train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer),
+        iterable=train_data_step2(train_instances, all_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer),
         total=9684,
         # total=12114
     )
@@ -875,7 +875,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     quest_text                  = dato['query_text']
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    gold_snips                  = get_gold_snips(dato['query_id'], bioasq6_data)
+    gold_snips                  = get_gold_snips(dato['query_id'], bioasq7_data)
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
@@ -987,7 +987,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     data_for_revision               = {}
     #
     for dato in tqdm(data['queries']):
-        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
+        all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
         data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
@@ -1463,10 +1463,7 @@ for run in range(run_from, run_to):
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
             # test_map        = get_one_map('test', test_data, all_docs, use_sent_tokenizer=True)
-            save_checkpoint(
-                epoch, model, best_dev_map, optimizer,
-                filename=os.path.join(odir, 'best_dev_checkpoint.pth.tar')
-            )
+            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_dev_checkpoint.pth.tar'))
             waited_for = 0
         else:
             waited_for += 1
