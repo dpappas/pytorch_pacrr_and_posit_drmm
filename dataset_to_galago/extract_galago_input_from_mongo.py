@@ -5,10 +5,12 @@ from    pprint import pprint
 from    tqdm import tqdm
 from    xml.dom.minidom import parseString
 
-bioclean_mod = lambda t: re.sub(
-    '[.,?;*!%^&_+():-\[\]{}]', '',
-    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()
-).split()
+bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
+# bioclean_mod = lambda t: re.sub(
+#     '[.,?;*!%^&_+():-\[\]{}]', '',
+#     t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()
+# ).split()
 
 db_name             = 'pubmedBaseline2019'
 collection_name     = 'articles'
@@ -20,7 +22,7 @@ for item in mongo_collection.find().skip(1000).limit(100):
     dato = {
         'DOC': {
             'DOCNO' : int(item[u'pmid']),
-            'TEXT'  : ' '.join(bioclean_mod(item['title'])+bioclean_mod(item['abstractText']))
+            'TEXT'  : ' '.join(bioclean(item['title'])+bioclean(item['abstractText']))
         }
     }
     xml = dicttoxml.dicttoxml(dato, root=False, attr_type=False)
