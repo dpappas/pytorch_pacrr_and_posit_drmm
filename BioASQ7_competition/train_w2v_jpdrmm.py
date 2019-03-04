@@ -126,7 +126,7 @@ def weighted_binary_cross_entropy(output, target, weights=None):
     return torch.neg(torch.mean(loss))
 
 def RemoveTrainLargeYears(data, doc_text):
-  for i in range(len(data['queries'])):
+  for i in tqdm(range(len(data['queries']))):
     hyear = 1900
     for j in range(len(data['queries'][i]['retrieved_documents'])):
       if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
@@ -135,10 +135,11 @@ def RemoveTrainLargeYears(data, doc_text):
         if year[:1] == '1' or year[:1] == '2':
           if int(year) > hyear:
             hyear = int(year)
+    # if(len(data['queries'][i]['retrieved_documents'])>0):
     j = 0
     while True:
-      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      year = doc_text[doc_id]['publicationDate'].split('-')[0]
+      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
+      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
       if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
         del data['queries'][i]['retrieved_documents'][j]
       else:
