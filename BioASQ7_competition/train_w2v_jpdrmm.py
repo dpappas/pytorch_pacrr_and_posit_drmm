@@ -1385,10 +1385,12 @@ bioasq7_data        = dict((q['id'], q) for q in bioasq7_data['questions'])
 all_docs            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl'), 'rb'))
 all_data            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl'), 'rb'))
 #####################
-all_data            = RemoveBadYears(all_data, all_docs, True)
-all_data            = RemoveTrainLargeYears(all_data, all_docs)
 train_data          = {'queries': all_data['queries'][:-100]}
 dev_data            = {'queries': all_data['queries'][-100:]}
+#####################
+train_data          = RemoveBadYears(train_data, all_docs, True)
+train_data          = RemoveTrainLargeYears(train_data, all_docs)
+dev_data            = RemoveBadYears(dev_data, all_docs, False)
 #####################
 words               = {}
 GetWords(all_data, all_docs, words)
