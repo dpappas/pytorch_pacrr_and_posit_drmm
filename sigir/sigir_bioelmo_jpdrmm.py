@@ -1516,7 +1516,7 @@ k_for_maxpool   = 5
 k_sent_maxpool  = 5
 embedding_dim   = 1024 # 50  # 30  # 200
 lr              = 0.01
-b_size          = 32
+b_size          = 5 # 32
 max_epoch       = 10
 
 import sys

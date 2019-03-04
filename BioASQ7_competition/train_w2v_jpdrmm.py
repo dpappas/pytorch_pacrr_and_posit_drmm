@@ -1363,6 +1363,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 use_cuda = torch.cuda.is_available()
 
 #####################
+eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
+#####################
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/bioasq7/BioASQ-training7b/'
@@ -1373,7 +1377,6 @@ train_data              = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_to
 #####################
 train_data              = RemoveBadYears(train_data, train_docs, True)
 train_data              = RemoveTrainLargeYears(train_data, train_docs)
-
 #####################
 words               = {}
 GetWords(train_data, train_docs, words)
@@ -1386,17 +1389,6 @@ wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (wor
 #####################
 
 exit()
-
-# laptop
-w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-# dataloc             = '/home/dpappas/for_ryan/'
-# dataloc             = '/home/dpappas/for_ryan_clean_2/'
-dataloc             = '/home/dpappas/for_ryan_clean/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
-use_cuda            = torch.cuda.is_available()
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
