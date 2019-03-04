@@ -1381,7 +1381,7 @@ idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/bioasq7/BioASQ-training7b/'
 #####################
 bioasq7_data        = json.load(open(os.path.join(dataloc,   'trainining7b.json')))
-bioasq7_data        = dict( (q['id'], q) for q in bioasq7_data['questions'])
+bioasq7_data        = dict((q['id'], q) for q in bioasq7_data['questions'])
 all_docs            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl'), 'rb'))
 all_data            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl'), 'rb'))
 #####################
