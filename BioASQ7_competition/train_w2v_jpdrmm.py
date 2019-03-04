@@ -1381,8 +1381,8 @@ all_data            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100
 #####################
 all_data            = RemoveBadYears(all_data, all_docs, True)
 all_data            = RemoveTrainLargeYears(all_data, all_docs)
-train_data          = {'queries':all_data['queries'][:-100]}
-dev_data            = {'queries':all_data['queries'][-100:]}
+train_data          = {'queries': all_data['queries'][:-100]}
+dev_data            = {'queries': all_data['queries'][-100:]}
 #####################
 words               = {}
 GetWords(all_data, all_docs, words)
@@ -1462,16 +1462,16 @@ for run in range(run_from, run_to):
         epoch_dev_map       = get_one_map('dev', dev_data, all_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
-            test_map        = get_one_map('test', test_data, all_docs, use_sent_tokenizer=True)
+            # test_map        = get_one_map('test', test_data, all_docs, use_sent_tokenizer=True)
             save_checkpoint(
                 epoch, model, best_dev_map, optimizer,
-                filename=os.path.join(odir, 'best_checkpoint.pth.tar')
+                filename=os.path.join(odir, 'best_dev_checkpoint.pth.tar')
             )
             waited_for = 0
         else:
             waited_for += 1
-        print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
-        logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        print('epoch: {:02d} epoch_dev_map: {:.4f} best_dev_map: {:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
+        logger.info('epoch: {:02d} epoch_dev_map: {:.4f} best_dev_map: {:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
         if (waited_for > early_stop):
             print('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
             logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
