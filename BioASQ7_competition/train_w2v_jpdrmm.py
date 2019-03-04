@@ -68,6 +68,8 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         for score in BM25scores:
             nominator += ((score - mean) ** 2)
         deviation   = math.sqrt((nominator) / float(len(BM25scores) - 1))
+        print('mean {} computed'.format(mean))
+        print('deviation {} computed'.format(deviation))
     else:
         print('mean {} provided'.format(mean))
         print('deviation {} provided'.format(deviation))
@@ -1373,6 +1375,7 @@ idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/bioasq7/BioASQ-training7b/'
 #####################
 bioasq7_data        = json.load(open(os.path.join(dataloc,   'trainining7b.json')))
+bioasq7_data        = dict( (q['id'], q) for q in bioasq7_data['questions'])
 all_docs            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl'), 'rb'))
 all_data            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl'), 'rb'))
 #####################
@@ -1389,7 +1392,7 @@ wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=Tru
 wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 #####################
 # avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
-avgdl, mean, deviation = get_bm25_metrics()
+avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1856, mean=0.6279, deviation=1.2200)
 print(avgdl, mean, deviation)
 #####################
 
