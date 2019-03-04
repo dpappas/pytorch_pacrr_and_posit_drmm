@@ -1340,7 +1340,7 @@ torch.manual_seed(my_seed)
 #
 odir    = 'TREC_{}_run_5max_{}/'.format(which_model, 0)
 odir    = os.path.join(odd, odir)
-print odir
+print(odir)
 if(not os.path.exists(odir)):
     os.makedirs(odir)
 #
