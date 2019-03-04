@@ -1381,6 +1381,8 @@ all_data            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100
 #####################
 all_data            = RemoveBadYears(all_data, all_docs, True)
 all_data            = RemoveTrainLargeYears(all_data, all_docs)
+train_data          = {'queries':all_data['queries'][:-100]}
+dev_data            = {'queries':all_data['queries'][-100:]}
 #####################
 words               = {}
 GetWords(all_data, all_docs, words)
@@ -1391,12 +1393,9 @@ print('loading w2v')
 wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 #####################
-# avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1856, mean=0.6279, deviation=1.2200)
 print(avgdl, mean, deviation)
 #####################
-
-exit()
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1437,8 +1436,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    # odir = 'sigir_joint_simple_2L_only_positive_sents_0p01_run_{}/'.format(run)
-    odir = 'clean_data_2_sigir_joint_2L_no_mesh_0p01_run_{}/'.format(run)
+    odir    = 'bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
