@@ -49,22 +49,22 @@ python3.6 index_xml_gz.py 0 50      &
 python3.6 index_xml_gz.py 50 100    &
 python3.6 index_xml_gz.py 100 150   &
 python3.6 index_xml_gz.py 150 200   &
-python3.6 index_xml_gz.py 200 250   &
+python3.6 index_xml_gz.py 200 250
 python3.6 index_xml_gz.py 250 300   &
 python3.6 index_xml_gz.py 300 350   &
 python3.6 index_xml_gz.py 350 400   &
 python3.6 index_xml_gz.py 400 450   &
-python3.6 index_xml_gz.py 450 500   &
+python3.6 index_xml_gz.py 450 500
 python3.6 index_xml_gz.py 500 550   &
 python3.6 index_xml_gz.py 550 600   &
 python3.6 index_xml_gz.py 600 650   &
 python3.6 index_xml_gz.py 650 700   &
-python3.6 index_xml_gz.py 700 750   &
+python3.6 index_xml_gz.py 700 750
 python3.6 index_xml_gz.py 750 800   &
 python3.6 index_xml_gz.py 800 850   &
 python3.6 index_xml_gz.py 850 900   &
 python3.6 index_xml_gz.py 900 950   &
-python3.6 index_xml_gz.py 950 1000  &
+python3.6 index_xml_gz.py 950 1000
 
 #############################
 
