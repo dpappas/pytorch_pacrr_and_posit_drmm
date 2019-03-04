@@ -28,7 +28,7 @@ for item in mongo_collection.find().skip(1000).limit(100):
     txt = xml.toprettyxml()
     txt = re.sub('<\?.*\?>', '', txt).strip()
     print(txt)
-    break
+    # break
 
 '''
 <DOC>
