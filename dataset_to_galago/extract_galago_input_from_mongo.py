@@ -22,8 +22,11 @@ ingored_errors      = 0
 ofile               = '/home/DATA/pubmedBaseline2019.trectext'
 with open(ofile, 'w') as f_out:
     for item in tqdm(mongo_collection.find(), total=mongo_collection.count()):
-        pmid        = item[u'pmid']
-        text        = ' '.join(bioclean(item['title'])+bioclean(item['abstractText']))
+        pmid            = item[u'pmid']
+        title           = ' '.join(bioclean(item['title']))
+        abstractText    = ' '.join(bioclean(item['abstractText']))
+        text            = title + ' ' + abstractText
+        ######################
         f_out.write('<DOC>\n')
         f_out.write('<DOCNO>{0}</DOCNO>\n'.format(pmid))
         f_out.write('<TEXT>\n')
@@ -36,6 +39,7 @@ with open(ofile, 'w') as f_out:
         f_out.write('\n</TEXT>\n')
         f_out.write('</DOC>\n')
         f_out.flush()
+        ######################
 
 f_out.close()
 
