@@ -36,12 +36,13 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if(avgdl == 0):
         total_words = 0
         total_docs  = 0
-        for dic in tqdm(train_docs):
-            sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
+        for dic in tqdm(all_docs):
+            sents = sent_tokenize(all_docs[dic]['title']) + sent_tokenize(all_docs[dic]['abstractText'])
             for s in sents:
                 total_words += len(tokenize(s))
                 total_docs  += 1.
         avgdl = float(total_words) / float(total_docs)
+        print('avgdl {} computed'.format(avgdl))
     else:
         print('avgdl {} provided'.format(avgdl))
     #
@@ -49,12 +50,12 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         BM25scores  = []
         k1, b       = 1.2, 0.75
         not_found   = 0
-        for qid in tqdm(bioasq6_data):
-            qtext           = bioasq6_data[qid]['body']
-            all_retr_ids    = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
+        for qid in tqdm(bioasq7_data):
+            qtext           = bioasq7_data[qid]['body']
+            all_retr_ids    = [link.split('/')[-1] for link in bioasq7_data[qid]['documents']]
             for dic in all_retr_ids:
                 try:
-                    sents   = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
+                    sents   = sent_tokenize(all_docs[dic]['title']) + sent_tokenize(all_docs[dic]['abstractText'])
                     q_toks  = tokenize(qtext)
                     for sent in sents:
                         BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
@@ -333,7 +334,7 @@ def similar(upstream_seq, downstream_seq):
     return r1
 
 def get_pseudo_retrieved(dato):
-    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq6_data[dato['query_id']]['snippets']]
+    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq7_data[dato['query_id']]['snippets']]
     pseudo_retrieved            = [
         {
             'bm25_score'        : 7.76,
@@ -1387,11 +1388,12 @@ print('loading w2v')
 wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 #####################
-avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
+# avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
+avgdl, mean, deviation = get_bm25_metrics()
 print(avgdl, mean, deviation)
 #####################
 
-# exit()
+exit()
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1456,10 +1458,10 @@ for run in range(run_from, run_to):
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
         train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
+        epoch_dev_map       = get_one_map('dev', dev_data, all_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
-            test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
+            test_map        = get_one_map('test', test_data, all_docs, use_sent_tokenizer=True)
             save_checkpoint(
                 epoch, model, best_dev_map, optimizer,
                 filename=os.path.join(odir, 'best_checkpoint.pth.tar')
