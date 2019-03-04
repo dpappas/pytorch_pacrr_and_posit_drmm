@@ -19,7 +19,6 @@ mongo_collection    = client[db_name][collection_name]
 print(mongo_collection.count())
 
 ofile               = '/home/DATA/pubmedBaseline2019.trectext'
-
 with open(ofile, 'w') as f_out:
     for item in tqdm(mongo_collection.find(), total=mongo_collection.count()):
         dato = {
