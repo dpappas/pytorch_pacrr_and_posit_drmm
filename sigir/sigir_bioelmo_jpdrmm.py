@@ -1482,30 +1482,30 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
-# laptop
-options_file        = "/home/dpappas/for_ryan/elmo_weights/options.json"
-weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
-#####################
-idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/'
-# dataloc             = '/home/dpappas/for_ryan_clean/'
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
-use_cuda            = False
-#####################
-
-# # atlas , cslab243
-# options_file        = "/home/dpappas/bioasq_all/elmo_weights/options.json"
-# weight_file         = "/home/dpappas/bioasq_all/elmo_weights/weights.hdf5"
+# # laptop
+# options_file        = "/home/dpappas/for_ryan/elmo_weights/options.json"
+# weight_file         = "/home/dpappas/for_ryan/elmo_weights/weights.hdf5"
 # #####################
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
+# dataloc             = '/home/dpappas/for_ryan/'
+# # dataloc             = '/home/dpappas/for_ryan_clean/'
+# eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
 # odd                 = '/home/dpappas/'
-# use_cuda            = True
+# use_cuda            = False
 # #####################
+
+# atlas , cslab243
+options_file        = "/home/dpappas/bioasq_all/elmo_weights/options.json"
+weight_file         = "/home/dpappas/bioasq_all/elmo_weights/weights.hdf5"
+#####################
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
+use_cuda            = True
+#####################
 
 elmo                    = Elmo(options_file, weight_file, 1, dropout=0, requires_grad=True)
 total_elmo_params       = sum([reduce(lambda x, y: x*y, list(p.size())) for p in elmo.parameters()])
