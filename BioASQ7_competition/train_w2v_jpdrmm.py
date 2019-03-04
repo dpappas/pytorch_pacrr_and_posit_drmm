@@ -1366,8 +1366,8 @@ idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/bioasq7/BioASQ-training7b/'
 #####################
 bioasq7_data        = json.load(open(os.path.join(dataloc,   'trainining7b.json')))
-train_docs          = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl')))
-train_data          = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl')))
+train_docs          = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl'), 'rb'))
+train_data          = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl'), 'rb'))
 #####################
 train_data          = RemoveBadYears(train_data, train_docs, True)
 train_data          = RemoveTrainLargeYears(train_data, train_docs)
