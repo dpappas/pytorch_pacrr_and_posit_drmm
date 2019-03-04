@@ -40,6 +40,16 @@ for path in tqdm(all_xml_gzs[file_from:file_to]):
 #############################
 
 '''
+
+vim index_xml_gz.py
+
+python3.6 index_xml_gz.py 0 200    &
+python3.6 index_xml_gz.py 200 400  &
+python3.6 index_xml_gz.py 400 600  &
+python3.6 index_xml_gz.py 600 800  &
+python3.6 index_xml_gz.py 800 1000
+
+
 # pprint(client['pubmedBaseline2018']['articles'].find_one())
 
 u'abstractText'
