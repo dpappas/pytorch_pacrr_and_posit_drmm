@@ -1524,12 +1524,12 @@ bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 elmo_embeds_dir     = '/home/dpappas/bioasq_all/bert_elmo_embeds/'
 all_quest_embeds    = pickle.load(open('/home/dpappas/bioasq_all/all_quest_embeds.p', 'rb'))
 
-k_for_maxpool = 5
-k_sent_maxpool = 5
-embedding_dim = 50  # 30  # 200
-lr = 0.01
-b_size = 32
-max_epoch = 10
+k_for_maxpool       = 5
+k_sent_maxpool      = 5
+embedding_dim       = 50  # 30  # 200
+lr                  = 0.01
+b_size              = 32
+max_epoch           = 10
 
 hdlr = None
 for run in range(0, 5):
