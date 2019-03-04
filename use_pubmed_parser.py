@@ -49,8 +49,11 @@ python3.6 index_xml_gz.py 400 600
 python3.6 index_xml_gz.py 600 800
 python3.6 index_xml_gz.py 800 1000
 
+#############################
 
 # pprint(client['pubmedBaseline2018']['articles'].find_one())
+
+#############################
 
 u'abstractText'
 u'journalName'
