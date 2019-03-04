@@ -1,8 +1,14 @@
 
 
-import  os, sys, pymongo, dicttoxml
+import  os, re, sys, pymongo, dicttoxml
 from    pprint import pprint
 from    tqdm import tqdm
+from    xml.dom.minidom import parseString
+
+bioclean_mod = lambda t: re.sub(
+    '[.,?;*!%^&_+():-\[\]{}]', '',
+    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()
+).split()
 
 db_name             = 'pubmedBaseline2019'
 collection_name     = 'articles'
@@ -10,9 +16,19 @@ client              = pymongo.MongoClient("localhost", 27017, maxPoolSize=50)
 mongo_collection    = client[db_name][collection_name]
 print(mongo_collection.count())
 
-pprint(mongo_collection.find_one())
-
-
+for item in mongo_collection.find().skip(1000).limit(100):
+    dato = {
+        'DOC': {
+            'DOCNO' : int(item[u'pmid']),
+            'TEXT'  : ' '.join(bioclean_mod(item['title'])+bioclean_mod(item['abstractText']))
+        }
+    }
+    xml = dicttoxml.dicttoxml(dato, root=False, attr_type=False)
+    xml = parseString(xml)
+    txt = xml.toprettyxml()
+    txt = re.sub('<\?.*\?>', '', txt).strip()
+    print(txt)
+    break
 
 '''
 <DOC>
