@@ -360,8 +360,8 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     good_sent_tags = torch.FloatTensor(good_sent_tags)
     tags_2 = torch.zeros_like(bs_emits_)
     if (use_cuda):
-        good_sent_tags = good_sent_tags.cuda()
-        tags_2 = tags_2.cuda()
+        good_sent_tags = good_sent_tags.to(device)
+        tags_2 = tags_2.to(device)
     #
     # sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
     # sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
@@ -1117,7 +1117,7 @@ def load_all_data(dataloc, idf_pickle_path):
 def get_elmo_embeds(tokens):
     character_ids   = batch_to_ids([tokens])
     if(use_cuda):
-        character_ids = character_ids.cuda()
+        character_ids = character_ids.to(device)
     embeddings      = elmo(character_ids)
     the_embeds      = embeddings['elmo_representations'][0]
     return the_embeds[0]
@@ -1141,14 +1141,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # doc loss func
         self.margin_loss = nn.MarginRankingLoss(margin=1.0)
         if (use_cuda):
-            self.margin_loss = self.margin_loss.cuda()
+            self.margin_loss = self.margin_loss.to(device)
 
     def init_mesh_module(self):
         self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
         self.mesh_gru = nn.GRU(self.embedding_dim, self.embedding_dim)
         if (use_cuda):
-            self.mesh_h0 = self.mesh_h0.cuda()
-            self.mesh_gru = self.mesh_gru.cuda()
+            self.mesh_h0 = self.mesh_h0.to(device)
+            self.mesh_gru = self.mesh_gru.to(device)
 
     def init_context_module(self):
         self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
@@ -1156,24 +1156,24 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
         self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1)
         if (use_cuda):
-            self.trigram_conv_1 = self.trigram_conv_1.cuda()
-            self.trigram_conv_2 = self.trigram_conv_2.cuda()
-            self.trigram_conv_activation_1 = self.trigram_conv_activation_1.cuda()
-            self.trigram_conv_activation_2 = self.trigram_conv_activation_2.cuda()
+            self.trigram_conv_1 = self.trigram_conv_1.to(device)
+            self.trigram_conv_2 = self.trigram_conv_2.to(device)
+            self.trigram_conv_activation_1 = self.trigram_conv_activation_1.to(device)
+            self.trigram_conv_activation_2 = self.trigram_conv_activation_2.to(device)
 
     def init_question_weight_module(self):
         self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
         if (use_cuda):
-            self.q_weights_mlp = self.q_weights_mlp.cuda()
+            self.q_weights_mlp = self.q_weights_mlp.to(device)
 
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1 = nn.Linear(3 * 3, 8, bias=True)
         self.my_relu1 = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2 = nn.Linear(8, 1, bias=True)
         if (use_cuda):
-            self.linear_per_q1 = self.linear_per_q1.cuda()
-            self.linear_per_q2 = self.linear_per_q2.cuda()
-            self.my_relu1 = self.my_relu1.cuda()
+            self.linear_per_q1 = self.linear_per_q1.to(device)
+            self.linear_per_q2 = self.linear_per_q2.to(device)
+            self.my_relu1 = self.my_relu1.to(device)
 
     def init_sent_output_layer(self):
         if (self.sentence_out_method == 'MLP'):
@@ -1181,18 +1181,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_out_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1)
             self.sent_out_layer_2 = nn.Linear(8, 1, bias=False)
             if (use_cuda):
-                self.sent_out_layer_1 = self.sent_out_layer_1.cuda()
-                self.sent_out_activ_1 = self.sent_out_activ_1.cuda()
-                self.sent_out_layer_2 = self.sent_out_layer_2.cuda()
+                self.sent_out_layer_1 = self.sent_out_layer_1.to(device)
+                self.sent_out_activ_1 = self.sent_out_activ_1.to(device)
+                self.sent_out_layer_2 = self.sent_out_layer_2.to(device)
         else:
             self.sent_res_h0 = autograd.Variable(torch.randn(2, 1, 5))
             self.sent_res_bigru = nn.GRU(input_size=self.sent_add_feats + 1, hidden_size=5, bidirectional=True,
                                          batch_first=False)
             self.sent_res_mlp = nn.Linear(10, 1, bias=False)
             if (use_cuda):
-                self.sent_res_h0 = self.sent_res_h0.cuda()
-                self.sent_res_bigru = self.sent_res_bigru.cuda()
-                self.sent_res_mlp = self.sent_res_mlp.cuda()
+                self.sent_res_h0 = self.sent_res_h0.to(device)
+                self.sent_res_bigru = self.sent_res_bigru.to(device)
+                self.sent_res_mlp = self.sent_res_mlp.to(device)
 
     def init_doc_out_layer(self):
         self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True)
@@ -1200,10 +1200,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.final_layer_2 = nn.Linear(8, 1, bias=True)
         self.oo_layer = nn.Linear(2, 1, bias=True)
         if (use_cuda):
-            self.final_layer_1 = self.final_layer_1.cuda()
-            self.final_activ_1 = self.final_activ_1.cuda()
-            self.final_layer_2 = self.final_layer_2.cuda()
-            self.oo_layer = self.oo_layer.cuda()
+            self.final_layer_1 = self.final_layer_1.to(device)
+            self.final_activ_1 = self.final_activ_1.to(device)
+            self.final_layer_2 = self.final_layer_2.to(device)
+            self.oo_layer = self.oo_layer.to(device)
 
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta = negatives - positives
@@ -1277,8 +1277,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_embeds = doc_sents_embeds[i]
             gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if (use_cuda):
-                sim_oh = sim_oh.cuda()
-                gaf = gaf.cuda()
+                sim_oh = sim_oh.to(device)
+                gaf = gaf.to(device)
             conv_res = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
             #
@@ -1310,8 +1310,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if (use_cuda):
-                sent_embeds = sent_embeds.cuda()
-                gaf = gaf.cuda()
+                sent_embeds = sent_embeds.to(device)
+                gaf = gaf.to(device)
             conv_res, hn = self.apply_context_gru(sent_embeds, hn)
             #
             sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
@@ -1348,7 +1348,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         if (res.size()[0] < k):
             to_concat = torch.zeros(k - res.size()[0])
             if (use_cuda):
-                to_concat = to_concat.cuda()
+                to_concat = to_concat.to(device)
             res = torch.cat([res, to_concat], -1)
         return res
 
@@ -1371,7 +1371,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def apply_mesh_gru(self, mesh_embeds):
         mesh_embeds = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
         if (use_cuda):
-            mesh_embeds = mesh_embeds.cuda()
+            mesh_embeds = mesh_embeds.to(device)
         output, hn = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         return output[-1, 0, :]
 
@@ -1387,8 +1387,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         if (use_cuda):
-            q_idfs = q_idfs.cuda()
-            doc_gaf = doc_gaf.cuda()
+            q_idfs = q_idfs.to(device)
+            doc_gaf = doc_gaf.to(device)
         #
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1426,9 +1426,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
         doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
         if (use_cuda):
-            q_idfs = q_idfs.cuda()
-            doc_gaf = doc_gaf.cuda()
-            doc_baf = doc_baf.cuda()
+            q_idfs = q_idfs.to(device)
+            doc_gaf = doc_gaf.to(device)
+            doc_baf = doc_baf.to(device)
         #
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1505,21 +1505,29 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 use_cuda            = True
+device              = torch.device("cuda:0") if(use_cuda) else torch.device("cpu")
 #####################
 
 elmo                    = Elmo(options_file, weight_file, 1, dropout=0, requires_grad=True)
 total_elmo_params       = sum([reduce(lambda x, y: x*y, list(p.size())) for p in elmo.parameters()])
 trainable_elmo_params   = sum([reduce(lambda x, y: x*y, list(p.size())) for p in elmo.parameters() if(p.requires_grad)])
 
-k_for_maxpool = 5
-k_sent_maxpool = 5
-embedding_dim = 1024 # 50  # 30  # 200
-lr = 0.01
-b_size = 32
-max_epoch = 10
+k_for_maxpool   = 5
+k_sent_maxpool  = 5
+embedding_dim   = 1024 # 50  # 30  # 200
+lr              = 0.01
+b_size          = 32
+max_epoch       = 10
+
+import sys
+# run_from    = 0
+# run_to      = 5
+run_from    = int(sys.argv[1])
+run_to      = int(sys.argv[2])
+
 
 hdlr = None
-for run in range(0, 5):
+for run in range(run_from, run_to):
     #
     my_seed = run
     random.seed(my_seed)
@@ -1546,8 +1554,8 @@ for run in range(0, 5):
     logger.info('Compiling model...')
     model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
     if (use_cuda):
-        model = model.cuda()
-        elmo  = elmo.cuda()
+        model = model.to(device)
+        elmo  = elmo.to(device)
     params      = list(model.parameters()) + list(elmo.parameters())
     print_params(model, elmo)
     optimizer = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
