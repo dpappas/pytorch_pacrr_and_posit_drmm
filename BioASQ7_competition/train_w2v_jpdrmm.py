@@ -1003,11 +1003,18 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     if (prefix == 'dev'):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(dataloc+'bioasq.dev.json', os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'))
+        res_map = get_map_res(
+            os.path.join(odir, 'v3 dev_gold_bioasq.json'),
+            # dataloc +'bioasq.dev.json',
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
+        )
     else:
         with open(os.path.join(odir,'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(dataloc+'bioasq.test.json', os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'))
+        res_map = get_map_res(
+            os.path.join(odir, 'v3 test_gold_bioasq.json'),
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
+        )
     return res_map
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
