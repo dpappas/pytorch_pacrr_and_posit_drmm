@@ -18,19 +18,24 @@ client              = pymongo.MongoClient("localhost", 27017, maxPoolSize=50)
 mongo_collection    = client[db_name][collection_name]
 print(mongo_collection.count())
 
-for item in mongo_collection.find().skip(1000).limit(100):
-    dato = {
-        'DOC': {
-            'DOCNO' : int(item[u'pmid']),
-            'TEXT'  : ' '.join(bioclean(item['title'])+bioclean(item['abstractText']))
+ofile               = '/home/DATA/pubmedBaseline2019.trectext'
+
+with open(ofile, 'w') as f_out:
+    for item in tqdm(mongo_collection.find(), total=mongo_collection.count()):
+        dato = {
+            'DOC': {
+                'DOCNO' : int(item[u'pmid']),
+                'TEXT'  : ' '.join(bioclean(item['title'])+bioclean(item['abstractText']))
+            }
         }
-    }
-    xml = dicttoxml.dicttoxml(dato, root=False, attr_type=False)
-    xml = parseString(xml)
-    txt = xml.toprettyxml()
-    txt = re.sub('<\?.*\?>', '', txt).strip()
-    print(txt)
-    # break
+        xml = dicttoxml.dicttoxml(dato, root=False, attr_type=False)
+        xml = parseString(xml)
+        txt = xml.toprettyxml()
+        txt = re.sub('<\?.*\?>', '', txt).strip()
+        f_out.write(txt+'\n')
+        f_out.flush()
+
+f_out.close()
 
 '''
 <DOC>
