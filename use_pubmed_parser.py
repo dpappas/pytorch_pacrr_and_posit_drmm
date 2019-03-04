@@ -36,7 +36,8 @@ for path in tqdm(all_xml_gzs[file_from:file_to]):
                 'author'            : item['author'],
                 'publicationDate'   : item['pubdate'],
             }
-            res = mongo_collection.insert_one(mongo_datum)
+            if(mongo_collection.find_one({'pmid': item['pmid']}) is None):
+                res = mongo_collection.insert_one(mongo_datum)
             # pprint(res)
 #############################
 
