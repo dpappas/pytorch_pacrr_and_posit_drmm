@@ -585,10 +585,10 @@ for file_gz in fs:
                 get_Abstract()
                 # get_OtherAbstract()
             except:
-                print etree.tostring(elem, pretty_print=True)
+                print(etree.tostring(elem, pretty_print=True))
                 traceback.print_exc()
                 tb = traceback.format_exc()
-                print tb
+                print(tb)
             # pprint(dato)
             dato = fix_elk_dato(dato)
             # pprint(dato)
@@ -596,7 +596,7 @@ for file_gz in fs:
                 temp = create_an_action(dato)
                 actions.append(temp)
             else:
-                print 'found pmid {}'.format(dato['pmid'])
+                print('found pmid {}'.format(dato['pmid']))
             if (len(actions) >= b_size):
                 send_to_elk(actions)
                 actions = []
