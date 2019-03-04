@@ -1365,21 +1365,21 @@ w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
 dataloc             = '/home/dpappas/for_ryan/bioasq7/BioASQ-training7b/'
 #####################
-bioasq7_data    = json.load(open(os.path.join(dataloc, 'trainining7b.json')))
-train_docs      = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl')))
-train_data      = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl')))
+bioasq7_data        = json.load(open(os.path.join(dataloc,   'trainining7b.json')))
+train_docs          = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl')))
+train_data          = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl')))
 #####################
-train_data      = RemoveBadYears(train_data, train_docs, True)
-train_data      = RemoveTrainLargeYears(train_data, train_docs)
+train_data          = RemoveBadYears(train_data, train_docs, True)
+train_data          = RemoveTrainLargeYears(train_data, train_docs)
 #####################
-words           = {}
+words               = {}
 GetWords(train_data, train_docs, words)
 #####################
 print('loading idfs')
-idf, max_idf    = load_idfs(idf_pickle_path, words)
+idf, max_idf        = load_idfs(idf_pickle_path, words)
 print('loading w2v')
-wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
+wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 #####################
 
 exit()
