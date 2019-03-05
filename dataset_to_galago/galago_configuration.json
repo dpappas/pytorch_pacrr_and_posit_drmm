@@ -37,3 +37,13 @@
 // as seen in
 // cat /home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/galago-3.10-bin/bin/pubmed_only_abstract_galago_index/buildManifest.json
 
+//galago build \
+//--server=true \
+//--indexPath=/indexes/ap89.idx \
+//--inputPath=/data/ap89 \
+//--tokenizer/fields+docno \
+//--tokenizer/fields+head \
+//--tokenizer/fields+dateline \
+//--fileType=trectext \
+//--nonStemmedPostings=true
+
