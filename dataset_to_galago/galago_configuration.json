@@ -1,10 +1,10 @@
 {
-  "corpus" : false,
-  "fieldIndex" : true,
-  "fieldIndexParameters" : {
-    "nonStemmedPostings" : true,
-    "stemmedPostings" : true,
-    "stemmer" : [ "krovetz"]
+  "corpus"                      : false,
+  "fieldIndex"                  : true,
+  "fieldIndexParameters"        : {
+    "nonStemmedPostings"        : true,
+    "stemmedPostings"           : true,
+    "stemmer"                   : [ "krovetz"]
   },
   "fileType"                    : "trectext",
   "galagoJobDir"                : "galago_temp/",
@@ -25,12 +25,11 @@
   "stemmedPostings"             : true,
   "stemmer"                     : [ "krovetz"],
   "stemmerClass"                : {
-    "krovetz" : "org.lemurproject.galago.core.parse.stem.KrovetzStemmer"
+    "krovetz"                   : "org.lemurproject.galago.core.parse.stem.KrovetzStemmer"
   },
-  "tokenizer" : {
-    "fields" : [ "text"],
-    "formats" : {
-    }
+  "tokenizer"                   : {
+    "fields"                    : [ "text"],
+    "formats"                   : {}
   }
 }
 
