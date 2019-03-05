@@ -1572,6 +1572,7 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
+
 use_cuda            = True
 max_seq_length      = 50
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
