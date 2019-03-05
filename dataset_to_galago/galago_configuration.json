@@ -30,7 +30,9 @@
   "tokenizer" : {
     "fields" : [ "text"],
     "formats" : {
-
     }
   }
 }
+
+# as seen in
+# cat /home/DATA/Biomedical/document_ranking/bioasq_data/document_retrieval/galago-3.10-bin/bin/pubmed_only_abstract_galago_index/buildManifest.json
