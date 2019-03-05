@@ -1565,10 +1565,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
+
 # atlas , cslab243
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+dataloc             = '/home/dpappas/bioasq_all/for_ryan_clean_2/'
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
@@ -1596,7 +1598,8 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir = 'sigir_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
+    # odir = 'sigir_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir = 'sigir_bert_jpdrmm_2L_clean2_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
