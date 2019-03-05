@@ -46,3 +46,22 @@
 //--fileType=trectext \
 //--nonStemmedPostings=true
 
+// example config found in: https://sourceforge.net/p/lemur/wiki/Galago%20Indexing/
+//{
+//  "fileType"     : "trectext",
+//  "inputPath"    : "/data/trectext_docs.trectext",
+//  "indexPath"    : "/indexes/trectext_docs.idx",
+//  "fieldIndex"   : true,
+//  "stemmer"    : [ "krovetz", "porter" ],
+//  "tokenizer"    : {
+//    "fields"  : [ "title", "author", "dateline", "date", "area" ],
+//    "formats" : {
+//      "title"    : "string",
+//      "author"   : "string",
+//      "dateline" : "string",
+//      "date"     : "date",
+//      "area"     : "float"
+//    }
+//  }
+//}
+
