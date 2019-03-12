@@ -1566,7 +1566,6 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 #####################
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 #####################
-
 use_cuda            = True
 max_seq_length      = 50
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
@@ -1575,13 +1574,14 @@ cache_dir           = '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
 bert_model.to(device)
-
+#####################
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
 embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
 b_size              = 32
 max_epoch           = 4
+#####################
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
 
