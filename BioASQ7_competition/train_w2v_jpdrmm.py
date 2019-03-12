@@ -753,7 +753,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     start_time      = time.time()
     pbar = tqdm(
         iterable    = train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer),
-        total       = 13364
+        total       = len(train_instances)
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
@@ -1362,8 +1362,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 #####################
-eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 #####################
 w2v_bin_path        = '/home/dpappas/for_ryan/pubmed2018_w2v_30D.bin'
@@ -1372,12 +1372,9 @@ dataloc             = '/home/DATA/Biomedical/bioasq7/data/'
 #####################
 dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 #####################
-# avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1856, mean=0.6279, deviation=1.2200)
-avgdl, mean, deviation = get_bm25_metrics()
+avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 print(avgdl, mean, deviation)
 #####################
-
-
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
