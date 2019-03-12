@@ -1597,8 +1597,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    # odir = 'sigir_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
-    odir = 'sigir_bert_jpdrmm_2L_clean2_0p01_run_{}/'.format(run)
+    odir = 'bioasq7_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1632,8 +1631,12 @@ for run in range(0, 5):
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
             test_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
-            save_checkpoint(epoch, model, best_dev_map, optimizer,
-                            filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
+            save_checkpoint(
+                epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar')
+            )
+            save_checkpoint(
+                epoch, bert_model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar')
+            )
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
                                                                                              best_dev_map, test_map))
         logger.info(
