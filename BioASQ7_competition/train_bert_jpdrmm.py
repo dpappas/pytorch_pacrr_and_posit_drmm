@@ -1579,9 +1579,9 @@ bert_model.to(device)
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
 embedding_dim       = 768 # 50  # 30  # 200
-lr = 0.01
-b_size = 32
-max_epoch = 4
+lr                  = 0.01
+b_size              = 32
+max_epoch           = 4
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
 
