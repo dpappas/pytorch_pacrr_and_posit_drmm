@@ -1174,10 +1174,6 @@ def load_all_data(dataloc, idf_pickle_path):
         bioasq6_data = json.load(f)
         bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
     #
-    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
-        test_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
-        test_docs = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
         dev_data = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
@@ -1188,23 +1184,17 @@ def load_all_data(dataloc, idf_pickle_path):
         train_docs = pickle.load(f)
     print('loading words')
     #
-    train_data = RemoveBadYears(train_data, train_docs, True)
-    train_data = RemoveTrainLargeYears(train_data, train_docs)
-    dev_data = RemoveBadYears(dev_data, dev_docs, False)
-    test_data = RemoveBadYears(test_data, test_docs, False)
-    #
     if (os.path.exists(bert_all_words_path)):
         words = pickle.load(open(bert_all_words_path, 'rb'))
     else:
         words = {}
         GetWords(train_data, train_docs, words)
         GetWords(dev_data, dev_docs, words)
-        GetWords(test_data, test_docs, words)
         pickle.dump(words, open(bert_all_words_path, 'wb'), protocol=2)
     #
     print('loading idfs')
     idf, max_idf = load_idfs(idf_pickle_path, words)
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
+    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
@@ -1590,6 +1580,8 @@ lr = 0.01
 b_size = 32
 max_epoch = 4
 
+(dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
+
 hdlr = None
 for run in range(0, 5):
     #
@@ -1606,10 +1598,6 @@ for run in range(0, 5):
     logger, hdlr = init_the_logger(hdlr)
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
-    #
-    (
-        test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
-    ) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
     #
     avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
     print(avgdl, mean, deviation)
@@ -1631,17 +1619,10 @@ for run in range(0, 5):
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
             test_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
-            save_checkpoint(
-                epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar')
-            )
-            save_checkpoint(
-                epoch, bert_model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar')
-            )
-        print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
-                                                                                             best_dev_map, test_map))
-        logger.info(
-            'epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map,
-                                                                                           best_dev_map, test_map))
+            save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
+            save_checkpoint(epoch, bert_model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar'))
+        print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
+        logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f} test_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map, test_map))
 
 '''
 ['[CLS]', 'the', 'drugs', 'covered', 'target', 'ga', '##ba', '##a', 'za', '##le', '##pl', '##on', '-', 'cr', 'lore', '##di', '##pl', '##on', 'ev', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tam', '##ine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'ser', '##oton', '##in', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'mel', '##aton', '##ins', '##ero', '##ton', '##in', '##5', '-', 'h', '##t', '##1', '##a', 'pi', '##rom', '##ela', '##tine', 'and', 'mel', '##aton', '##in', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'mel', '##aton', '##in', 'and', 'ta', '##si', '##mel', '##te', '##on', 'for', 'pediatric', 'sleep', 'and', 'circa', '##dian', '[SEP]']
