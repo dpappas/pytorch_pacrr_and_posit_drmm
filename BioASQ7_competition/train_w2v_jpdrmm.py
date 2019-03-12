@@ -751,7 +751,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     #
     start_time      = time.time()
     pbar = tqdm(
-        iterable    = train_data_step2(train_instances, all_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer),
+        iterable    = train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer),
         total       = 13364
     )
     for datum in pbar:
@@ -1019,14 +1019,10 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
     #
-    with open(dataloc+'BioASQ-trainingDataset6b.json', 'r') as f:
-        bioasq6_data = json.load(f)
-        bioasq6_data = dict( (q['id'], q) for q in bioasq6_data['questions'] )
+    with open(dataloc+'trainining7b.json', 'r') as f:
+        bioasq7_data = json.load(f)
+        bioasq7_data = dict( (q['id'], q) for q in bioasq7_data['questions'] )
     #
-    with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
-        test_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.test.pkl', 'rb') as f:
-        test_docs = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
         dev_data = pickle.load(f)
     with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
@@ -1037,22 +1033,16 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
         train_docs = pickle.load(f)
     print('loading words')
     #
-    train_data  = RemoveBadYears(train_data, train_docs, True)
-    train_data  = RemoveTrainLargeYears(train_data, train_docs)
-    dev_data    = RemoveBadYears(dev_data, dev_docs, False)
-    test_data   = RemoveBadYears(test_data, test_docs, False)
-    #
     words           = {}
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
-    GetWords(test_data,  test_docs,  words)
     #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return test_data, test_docs, dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq6_data
+    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1370,7 +1360,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
-
 #####################
 eval_path           = '/home/dpappas/for_ryan/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/NetBeansProjects/my_bioasq_eval_2/dist/my_bioasq_eval_2.jar'
@@ -1378,32 +1367,15 @@ odd                 = '/home/dpappas/'
 #####################
 w2v_bin_path        = '/home/dpappas/for_ryan/fordp/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/for_ryan/fordp/idf.pkl'
-dataloc             = '/home/dpappas/for_ryan/bioasq7/BioASQ-training7b/'
+dataloc             = '/home/DATA/Biomedical/bioasq7/data/'
 #####################
-bioasq7_data        = json.load(open(os.path.join(dataloc,   'trainining7b.json')))
-bioasq7_data        = dict((q['id'], q) for q in bioasq7_data['questions'])
-all_docs            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl'), 'rb'))
-all_data            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl'), 'rb'))
-#####################
-train_data          = {'queries': all_data['queries'][:-100]}
-dev_data            = {'queries': all_data['queries'][-100:]}
-#####################
-train_data          = RemoveBadYears(train_data, all_docs, True)
-train_data          = RemoveTrainLargeYears(train_data, all_docs)
-dev_data            = RemoveBadYears(dev_data, all_docs, False)
-#####################
-words               = {}
-GetWords(all_data, all_docs, words)
-#####################
-print('loading idfs')
-idf, max_idf        = load_idfs(idf_pickle_path, words)
-print('loading w2v')
-wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
+dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 #####################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1856, mean=0.6279, deviation=1.2200)
 print(avgdl, mean, deviation)
 #####################
+
+
 
 # # atlas , cslab243
 # w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -1467,7 +1439,7 @@ for run in range(run_from, run_to):
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
         train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
-        epoch_dev_map       = get_one_map('dev', dev_data, all_docs, use_sent_tokenizer=True)
+        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
             # test_map        = get_one_map('test', test_data, all_docs, use_sent_tokenizer=True)
@@ -1492,4 +1464,28 @@ Is Hirschsprung disease a mendelian or a multifactorial disorder
 search: _exists_:AbstractText AND AbstractText:/.+/ AND _exists_:ArticleTitle AND ArticleTitle:/.+/
 
 
+'''
+
+'''
+#####################
+bioasq7_data        = json.load(open(os.path.join(dataloc,   'trainining7b.json')))
+bioasq7_data        = dict((q['id'], q) for q in bioasq7_data['questions'])
+all_docs            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_docset_top100.all.pkl'), 'rb'))
+all_data            = pickle.load(open(os.path.join(dataloc, 'bioasq_bm25_top100.all.pkl'), 'rb'))
+#####################
+train_data          = {'queries': all_data['queries'][:-100]}
+dev_data            = {'queries': all_data['queries'][-100:]}
+#####################
+train_data          = RemoveBadYears(train_data, all_docs, True)
+train_data          = RemoveTrainLargeYears(train_data, all_docs)
+dev_data            = RemoveBadYears(dev_data, all_docs, False)
+#####################
+words               = {}
+GetWords(all_data, all_docs, words)
+#####################
+print('loading idfs')
+idf, max_idf        = load_idfs(idf_pickle_path, words)
+print('loading w2v')
+wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 '''
