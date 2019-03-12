@@ -36,8 +36,8 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if(avgdl == 0):
         total_words = 0
         total_docs  = 0
-        for dic in tqdm(all_docs):
-            sents = sent_tokenize(all_docs[dic]['title']) + sent_tokenize(all_docs[dic]['abstractText'])
+        for dic in tqdm(train_docs):
+            sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
             for s in sents:
                 total_words += len(tokenize(s))
                 total_docs  += 1.
@@ -55,7 +55,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
             all_retr_ids    = [link.split('/')[-1] for link in bioasq7_data[qid]['documents']]
             for dic in all_retr_ids:
                 try:
-                    sents   = sent_tokenize(all_docs[dic]['title']) + sent_tokenize(all_docs[dic]['abstractText'])
+                    sents   = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
                     q_toks  = tokenize(qtext)
                     for sent in sents:
                         BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
@@ -1372,7 +1372,8 @@ dataloc             = '/home/DATA/Biomedical/bioasq7/data/'
 #####################
 dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 #####################
-avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1856, mean=0.6279, deviation=1.2200)
+# avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1856, mean=0.6279, deviation=1.2200)
+avgdl, mean, deviation = get_bm25_metrics()
 print(avgdl, mean, deviation)
 #####################
 
