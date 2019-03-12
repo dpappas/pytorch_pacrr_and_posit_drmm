@@ -1158,29 +1158,33 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     if (prefix == 'dev'):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(dataloc + 'bioasq.dev.json',
-                              os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'))
+        res_map = get_map_res(
+            os.path.join(odir, 'v3 dev_gold_bioasq.json'),
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
+        )
     else:
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(dataloc + 'bioasq.test.json',
-                              os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'))
+        res_map = get_map_res(
+            os.path.join(odir, 'v3 test_gold_bioasq.json'),
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
+        )
     return res_map
 
 def load_all_data(dataloc, idf_pickle_path):
     print('loading pickle data')
     #
-    with open(dataloc + 'BioASQ-trainingDataset6b.json', 'r') as f:
+    with open(dataloc + 'trainining7b.json', 'r') as f:
         bioasq6_data = json.load(f)
         bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
     #
-    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+    with open(dataloc + 'bioasq7_bm25_top100.dev.pkl', 'rb') as f:
         dev_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+    with open(dataloc + 'bioasq7_bm25_docset_top100.dev.pkl', 'rb') as f:
         dev_docs = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+    with open(dataloc + 'bioasq7_bm25_top100.train.pkl', 'rb') as f:
         train_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+    with open(dataloc + 'bioasq7_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs = pickle.load(f)
     print('loading words')
     #
