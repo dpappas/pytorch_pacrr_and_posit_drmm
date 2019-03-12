@@ -520,13 +520,14 @@ def GetWords(data, doc_text, words):
     for j in range(len(data['queries'][i]['retrieved_documents'])):
       doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
       dtext = (
-              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
-              ' '.join(
-                  [
-                      ' '.join(mm) for mm in
-                      get_the_mesh(doc_text[doc_id])
-                  ]
-              )
+              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText']
+              # +
+              # ' '.join(
+              #     [
+              #         ' '.join(mm) for mm in
+              #         get_the_mesh(doc_text[doc_id])
+              #     ]
+              # )
       )
       dwds = tokenize(dtext)
       for w in dwds:
@@ -1023,13 +1024,13 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
         bioasq7_data = json.load(f)
         bioasq7_data = dict( (q['id'], q) for q in bioasq7_data['questions'] )
     #
-    with open(dataloc + 'bioasq_bm25_top100.dev.pkl', 'rb') as f:
+    with open(dataloc + 'bioasq7_bm25_top100.dev.pkl', 'rb') as f:
         dev_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.dev.pkl', 'rb') as f:
+    with open(dataloc + 'bioasq7_bm25_docset_top100.dev.pkl', 'rb') as f:
         dev_docs = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_top100.train.pkl', 'rb') as f:
+    with open(dataloc + 'bioasq7_bm25_top100.train.pkl', 'rb') as f:
         train_data = pickle.load(f)
-    with open(dataloc + 'bioasq_bm25_docset_top100.train.pkl', 'rb') as f:
+    with open(dataloc + 'bioasq7_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs = pickle.load(f)
     print('loading words')
     #
