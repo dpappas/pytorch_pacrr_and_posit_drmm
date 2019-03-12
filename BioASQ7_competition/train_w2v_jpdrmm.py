@@ -1376,25 +1376,6 @@ avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=
 print(avgdl, mean, deviation)
 #####################
 
-# # atlas , cslab243
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# # dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
-# # dataloc             = '/home/dpappas/bioasq_all/for_ryan_clean/'
-# dataloc             = '/home/dpappas/bioasq_all/for_ryan_clean_2/'
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-# use_cuda            = True
-
-# # thundera
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/for_ryan_clean/'
-# eval_path           = '/home/dpappas/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/cave-of-time/dpappas/model_outputs/'
-
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
 embedding_dim       = 30 #200
@@ -1488,3 +1469,26 @@ print('loading w2v')
 wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 '''
+
+'''
+# # atlas , cslab243
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# # dataloc             = '/home/dpappas/bioasq_all/bioasq_data/'
+# # dataloc             = '/home/dpappas/bioasq_all/for_ryan_clean/'
+# dataloc             = '/home/dpappas/bioasq_all/for_ryan_clean_2/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
+# use_cuda            = True
+
+# # thundera
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/for_ryan_clean/'
+# eval_path           = '/home/dpappas/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/cave-of-time/dpappas/model_outputs/'
+'''
+
+
