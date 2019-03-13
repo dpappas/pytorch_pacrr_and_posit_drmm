@@ -8,18 +8,42 @@ import numpy as np
 from gensim.models.keyedvectors import KeyedVectors
 from sklearn.metrics.pairwise import cosine_similarity
 import re
+import pickle
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 
+def idf_val(w, idf, max_idf):
+    if w in idf:
+        return idf[w]
+    return max_idf
+
 def tokenize(x):
   return bioclean(x)
 
-print('loading w2v')
-# w2v_bin_path    = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+def load_idfs(idf_path):
+    with open(idf_path, 'rb') as f:
+        idf = pickle.load(f)
+    ret = {}
+    for w in idf:
+        ret[w] = idf[w]
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    idf = None
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    return ret, max_idf
+
+#################
+idf_pickle_path = "C:\\Users\\dvpap\\Downloads\\bioasq_all\\idf.pkl"
 w2v_bin_path    = "C:\\Users\\dvpap\\Downloads\\bioasq_all\\pubmed2018_w2v_30D.bin"
+#################
+idf, max_idf    = load_idfs(idf_pickle_path)
+print('loading w2v')
 wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv              = dict([(word, wv[word]) for word in wv.vocab.keys()])
+#################
 
 white           = Color("white")
 yellow_colors   = list(white.range_to(Color("yellow"), 101))
@@ -61,7 +85,7 @@ def create_table(tokens1, tokens2, scores):
     ####################
     max_scores      = scores.max(axis=1)
     aver5_scores    = np.average(np.sort(scores, axis=1)[:, -5:], axis=1)
-    print(max_scores.shape)
+    # print(max_scores.shape)
     ret_html        += "<p><b>Pooled scores:</b></p>"
     ret_html        += '<table>'
     ret_html        += '<tr><td></td>'
@@ -78,6 +102,12 @@ def create_table(tokens1, tokens2, scores):
     for j in range(len(tokens1)):
         score       =  int(aver5_scores[j])
         ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+    ####################
+    ret_html        += '<tr><td>IDF Score:</td>'
+    for j in range(len(tokens1)):
+        score       = idf_val(tokens1[j], idf, max_idf)
+        score       = int((score/max_idf) * 100)
+        ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, blue_colors[score])
     ####################
     ret_html     += '</tr>'
     ret_html     += '</table>'
