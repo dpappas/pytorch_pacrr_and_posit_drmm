@@ -14,9 +14,9 @@ wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv              = dict([(word, wv[word]) for word in wv.vocab.keys()])
 
 white           = Color("white")
-yellow_colors   = list(white.range_to(Color("yellow"), 100))
+yellow_colors   = list(white.range_to(Color("yellow"), 101))
 yellow_colors   = [c.get_hex_l() for c in yellow_colors]
-blue_colors     = list(white.range_to(Color("blue"), 100))
+blue_colors     = list(white.range_to(Color("blue"), 101))
 blue_colors     = [c.get_hex_l() for c in blue_colors]
 
 app = Flask(__name__)
@@ -48,7 +48,7 @@ def create_table(tokens1, tokens2, scores):
         ret_html    += '<th>{}</th>'.format(tok2)
         for j in range(len(tokens1)):
             tok1    = tokens1[j]
-            score   = scores[j][i]
+            score   = int(scores[j][i])
             ret_html += '<td title="{}" score="{}" bgcolor="{}"></div></td>'.format('{} : {} : {}'.format(tok1,tok2,str(score)), score, yellow_colors[score])
         ret_html += '</tr>'
     ret_html += '</table>'
@@ -60,7 +60,7 @@ def test_similarity_matrix():
     sent2           = 'the second sentence which is different than the first one'
     tokens1, emb1   = get_embeds(sent1.split(), wv)
     tokens2, emb2   = get_embeds(sent2.split(), wv)
-    scores          = cosine_similarity(emb1, emb2)
+    scores          = cosine_similarity(emb1, emb2) * 100
     #############
     ret_html    = '''
     <html>
