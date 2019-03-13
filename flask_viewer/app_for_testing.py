@@ -163,7 +163,10 @@ def test_similarity_matrix():
     tokens2         = tokenize(sent2)
     tokens1, emb1   = get_embeds(tokens1, wv)
     tokens2, emb2   = get_embeds(tokens2, wv)
-    scores          = cosine_similarity(emb1, emb2) * 100
+    # scores          = cosine_similarity(emb1, emb2).clip(min=0) * 100
+    scores          = cosine_similarity(emb1, emb2)
+    scores          = (scores + 1.0) / 2.0 # max min normalization
+    scores          = scores * 100
     _, _, scores_2  = create_one_hot_and_sim(tokens1, tokens2)
     #############
     ret_html    = '''
