@@ -41,9 +41,7 @@ def get_embeds(tokens, wv):
     return ret1, np.array(ret2, 'float64')
 
 def create_table(tokens1, tokens2, scores):
-    ret_html = '''
-    <table>
-    '''
+    ret_html = '<table>'
     ret_html += '<tr><td></td>'
     ####################
     for tok1 in tokens1:
@@ -60,6 +58,22 @@ def create_table(tokens1, tokens2, scores):
             ret_html += '<td style="min-width:60px" title="{}" score="{}" bgcolor="{}"></div></td>'.format('{} : {} : {}'.format(tok1,tok2,str(score)), score, yellow_colors[score])
         ret_html += '</tr>'
     ret_html += '</table>'
+    ####################
+    max_scores      = scores.max(axis=0)
+    ret_html        += "<p><b>Max scores:</b></p>"
+    ret_html        += '<table>'
+    ret_html        += '<tr><td></td>'
+    for tok1 in tokens1:
+        ret_html    += '<th>{}</th>'.format(tok1)
+    ret_html        += '</tr>'
+    ####################
+    ret_html        += '<tr><td>Max Score:</td>'
+    for j in range(len(tokens1)):
+        score       =  int(max_scores[j])
+        ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+    ####################
+    ret_html     += '</tr>'
+    ret_html     += '</table>'
     return ret_html
 
 @app.route("/")
