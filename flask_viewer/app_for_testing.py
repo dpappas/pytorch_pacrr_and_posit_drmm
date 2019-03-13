@@ -3,11 +3,13 @@ from colour import Color
 from flask import Flask
 from flask import render_template
 from flask import request
-import random
-import numpy as np
 from gensim.models.keyedvectors import KeyedVectors
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
 import re
+import random
+import numpy as np
 import pickle
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
@@ -52,6 +54,34 @@ blue_colors     = list(white.range_to(Color("blue"), 101))
 blue_colors     = [c.get_hex_l() for c in blue_colors]
 
 app = Flask(__name__)
+
+def create_one_hot_and_sim(tokens1, tokens2):
+    '''
+    :param tokens1:
+    :param tokens2:
+    :return:
+    exxample call : create_one_hot_and_sim('c d e'.split(), 'a b c'.split())
+    '''
+    label_encoder = LabelEncoder()
+    onehot_encoder = OneHotEncoder(sparse=False, categories='auto')
+    #
+    values = list(set(tokens1 + tokens2))
+    integer_encoded = label_encoder.fit_transform(values)
+    #
+    integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
+    onehot_encoder.fit(integer_encoded)
+    #
+    lab1 = label_encoder.transform(tokens1)
+    lab1 = np.expand_dims(lab1, axis=1)
+    oh1 = onehot_encoder.transform(lab1)
+    #
+    lab2 = label_encoder.transform(tokens2)
+    lab2 = np.expand_dims(lab2, axis=1)
+    oh2 = onehot_encoder.transform(lab2)
+    #
+    ret = np.matmul(oh1, np.transpose(oh2), out=None)
+    #
+    return oh1, oh2, ret
 
 def get_embeds(tokens, wv):
     ret1, ret2 = [], []
@@ -126,17 +156,28 @@ def test_similarity_matrix():
     tokens1, emb1   = get_embeds(tokens1, wv)
     tokens2, emb2   = get_embeds(tokens2, wv)
     scores          = cosine_similarity(emb1, emb2) * 100
+    _, _, scores_2  = create_one_hot_and_sim(tokens1, tokens2)
+    print(scores_2.shape)
     #############
     ret_html    = '''
     <html>
     <head>
     <style>
     table, th, td {border: 1px solid black;}
+    .floatLeft { width: 50%; float: left; }
+    .floatRight {width: 50%; float: right; }
+    .container { overflow: hidden; }
     </style>
     </head>
     <body>
     '''
+    ret_html    += '''
+    <div class="container">
+    <div class="floatLeft">
+    '''
     ret_html    += create_table(tokens1, tokens2, scores)
+    ret_html    += '</div>'
+    ret_html    += '<div class="floatRight">'
     ret_html    += '''
     <p><b>Note:</b> Attention scores between the sentences:</p>
     <p>Sentence1: {}</p>
@@ -144,6 +185,7 @@ def test_similarity_matrix():
     </body>
     </html>
     '''.format(sent1, sent2)
+    ret_html    += '</div></div>'
     return ret_html
 
 if __name__ == '__main__':
