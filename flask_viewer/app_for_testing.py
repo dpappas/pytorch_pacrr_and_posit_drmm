@@ -157,7 +157,6 @@ def test_similarity_matrix():
     tokens2, emb2   = get_embeds(tokens2, wv)
     scores          = cosine_similarity(emb1, emb2) * 100
     _, _, scores_2  = create_one_hot_and_sim(tokens1, tokens2)
-    print(scores_2.shape)
     #############
     ret_html    = '''
     <html>
@@ -178,6 +177,8 @@ def test_similarity_matrix():
     ret_html    += create_table(tokens1, tokens2, scores)
     ret_html    += '</div>'
     ret_html    += '<div class="floatRight">'
+    ret_html    += create_table(tokens1, tokens2, scores_2*100)
+    ret_html    += '</div></div>'
     ret_html    += '''
     <p><b>Note:</b> Attention scores between the sentences:</p>
     <p>Sentence1: {}</p>
@@ -185,7 +186,6 @@ def test_similarity_matrix():
     </body>
     </html>
     '''.format(sent1, sent2)
-    ret_html    += '</div></div>'
     return ret_html
 
 if __name__ == '__main__':
