@@ -111,7 +111,7 @@ def create_table(tokens1, tokens2, scores):
         for j in range(len(tokens1)):
             tok1    = tokens1[j]
             score   = int(scores[j][i])
-            ret_html += '<td style="min-width:60px" title="{}" score="{}" bgcolor="{}"></div></td>'.format('{} : {} : {}'.format(tok1,tok2,str(score)), score, yellow_colors[score])
+            ret_html += '<td style="min-width:50px" title="{}" score="{}" bgcolor="{}"></div></td>'.format('{} : {} : {}'.format(tok1,tok2,str(score)), score, yellow_colors[score])
         ret_html += '</tr>'
     ret_html += '</table>'
     ####################
@@ -129,23 +129,23 @@ def create_table(tokens1, tokens2, scores):
     ret_html        += '<tr><td>Max Score:</td>'
     for j in range(len(tokens1)):
         score       =  int(max_scores[j])
-        ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+        ret_html    += '<td style="min-width:50px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
     ####################
     ret_html        += '<tr><td>Aver of max 5 Scores:</td>'
     for j in range(len(tokens1)):
         score       =  int(aver5_scores[j])
-        ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+        ret_html    += '<td style="min-width:50px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
     ####################
     ret_html        += '<tr><td>Aver of all Scores:</td>'
     for j in range(len(tokens1)):
         score       =  int(aver_scores[j])
-        ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+        ret_html    += '<td style="min-width:50px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
     ####################
     ret_html        += '<tr><td>normalized (divided by max) IDF Score:</td>'
     for j in range(len(tokens1)):
         score       = idf_val(tokens1[j], idf, max_idf)
         score       = int((score/max_idf) * 100)
-        ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, blue_colors[score])
+        ret_html    += '<td style="min-width:50px" score="{}" bgcolor="{}"></div></td>'.format(score, blue_colors[score])
     ####################
     ret_html     += '</tr>'
     ret_html     += '</table>'
