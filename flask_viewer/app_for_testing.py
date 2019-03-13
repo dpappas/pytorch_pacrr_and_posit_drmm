@@ -54,10 +54,14 @@ def create_table(tokens1, tokens2, scores):
     ret_html += '</table>'
     return ret_html
 
+@app.route("/")
+def get_news():
+    return render_template("sentence_similarity.html")
+
 @app.route("/test_similarity_matrix", methods=["POST", "GET"])
 def test_similarity_matrix():
-    sent1           = 'this is the first sentence'
-    sent2           = 'the second sentence which is different than the first one'
+    sent1           = request.form.get("sent1").strip()
+    sent2           = request.form.get("sent2").strip()
     tokens1, emb1   = get_embeds(sent1.split(), wv)
     tokens2, emb2   = get_embeds(sent2.split(), wv)
     scores          = cosine_similarity(emb1, emb2) * 100
