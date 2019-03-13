@@ -178,17 +178,16 @@ def test_similarity_matrix():
     </head>
     <body>
     '''
-    ret_html    += '''
-    <div class="container">
-    <div class="floatLeft">
-    <p><h2>W2V cosine similarity</h2></p>
-    '''
+    ret_html    += '<div class="container">'
+    ret_html    += '<div class="floatLeft">'
+    ret_html    += '<p><h2>W2V cosine similarity:</h2></p>'
     ret_html    += create_table(tokens1, tokens2, scores)
     ret_html    += '</div>'
     ret_html    += '<div class="floatRight">'
-    ret_html    += '<p><h2>One-Hot cosine similarity</h2></p>'
+    ret_html    += '<p><h2>One-Hot cosine similarity:</h2></p>'
     ret_html    += create_table(tokens1, tokens2, scores_2*100)
-    ret_html    += '</div></div>'
+    ret_html    += '</div>'
+    ret_html    += '</div>'
     ret_html    += '''
     <p><b>Note:</b> Attention scores between the sentences:</p>
     <p>Sentence1: {}</p>
