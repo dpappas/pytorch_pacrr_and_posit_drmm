@@ -3,11 +3,12 @@ from colour import Color
 from flask import Flask
 from flask import render_template
 from flask import request
+from flask import send_from_directory
 from gensim.models.keyedvectors import KeyedVectors
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
-import re
+import re, os
 import random
 import numpy as np
 import pickle
@@ -195,6 +196,10 @@ def test_similarity_matrix():
     </html>
     '''.format(sent1, sent2)
     return ret_html
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
