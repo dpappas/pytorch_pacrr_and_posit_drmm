@@ -103,7 +103,7 @@ def create_table(tokens1, tokens2, scores):
         score       =  int(aver5_scores[j])
         ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
     ####################
-    ret_html        += '<tr><td>IDF Score:</td>'
+    ret_html        += '<tr><td>normalized (divided by max) IDF Score:</td>'
     for j in range(len(tokens1)):
         score       = idf_val(tokens1[j], idf, max_idf)
         score       = int((score/max_idf) * 100)
