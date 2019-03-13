@@ -1,7 +1,6 @@
 import numpy as np
 import tqdm
 
-
 def plot_attentions(documents, word_attention_scores, section_attention_scores, hierarchical=False):
     """
     :param documents: numpy array (str)
@@ -79,8 +78,6 @@ def plot_attentions(documents, word_attention_scores, section_attention_scores, 
         html_content += '</body>'
         #
         return html_content
-
-
 
 documents                   = [
     [
