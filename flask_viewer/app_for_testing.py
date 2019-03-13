@@ -114,6 +114,7 @@ def create_table(tokens1, tokens2, scores):
     ret_html += '</table>'
     ####################
     max_scores      = scores.max(axis=1)
+    aver_scores     = np.average(scores, axis=1)
     aver5_scores    = np.average(np.sort(scores, axis=1)[:, -5:], axis=1)
     # print(max_scores.shape)
     ret_html        += "<p><b>Pooled scores:</b></p>"
@@ -131,6 +132,11 @@ def create_table(tokens1, tokens2, scores):
     ret_html        += '<tr><td>Aver of max 5 Scores:</td>'
     for j in range(len(tokens1)):
         score       =  int(aver5_scores[j])
+        ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+    ####################
+    ret_html        += '<tr><td>Aver of all Scores:</td>'
+    for j in range(len(tokens1)):
+        score       =  int(aver_scores[j])
         ret_html    += '<td style="min-width:60px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
     ####################
     ret_html        += '<tr><td>normalized (divided by max) IDF Score:</td>'
