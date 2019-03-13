@@ -618,9 +618,11 @@ from flask import render_template
 from flask import request
 import random
 
-red     = Color("white")
-colors  = list(red.range_to(Color("yellow"), 100))
-colors  = [c.get_hex_l() for c in colors]
+white           = Color("white")
+yellow_colors   = list(white.range_to(Color("yellow"), 100))
+yellow_colors   = [c.get_hex_l() for c in yellow_colors]
+blue_colors     = list(white.range_to(Color("blue"), 100))
+blue_colors     = [c.get_hex_l() for c in blue_colors]
 
 app = Flask(__name__)
 
@@ -661,7 +663,7 @@ def get_quest_results():
     for res in mesh_res:
         score   = res[1] if (res[1]>0) else 0
         sent    = res[0]
-        ret_html += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
+        ret_html += '<div score="{}" style="background-color:{}">{}</div>'.format(score, yellow_colors[score], sent)
     ret_html += '</br></br>'
     ret_html += '<p>Extracted from model: {}</p>'.format(resume_from)
     #
