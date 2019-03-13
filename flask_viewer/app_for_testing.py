@@ -7,6 +7,13 @@ import random
 import numpy as np
 from gensim.models.keyedvectors import KeyedVectors
 from sklearn.metrics.pairwise import cosine_similarity
+import re
+
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
+
+def tokenize(x):
+  return bioclean(x)
 
 print('loading w2v')
 # w2v_bin_path    = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
@@ -63,8 +70,10 @@ def get_news():
 def test_similarity_matrix():
     sent1           = request.form.get("sent1").strip()
     sent2           = request.form.get("sent2").strip()
-    tokens1, emb1   = get_embeds(sent1.split(), wv)
-    tokens2, emb2   = get_embeds(sent2.split(), wv)
+    tokens1         = tokenize(sent1)
+    tokens2         = tokenize(sent2)
+    tokens1, emb1   = get_embeds(tokens1, wv)
+    tokens2, emb2   = get_embeds(tokens2, wv)
     scores          = cosine_similarity(emb1, emb2) * 100
     #############
     ret_html    = '''
