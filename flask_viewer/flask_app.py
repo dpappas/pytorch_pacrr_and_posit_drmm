@@ -655,7 +655,7 @@ def get_quest_results():
         score       = res[1] if (res[1]>0) else 0
         print(score)
         sent        = res[0]
-        ret_html    += '<div score="{}" style="background-color:{}">{}</div>'.format(score, colors[score], sent)
+        ret_html    += '<div score="{}" style="background-color:{}">{}</div>'.format(score, yellow_colors[score], sent)
     ret_html += '</br></br>'
     # add the scored mesh terms
     ret_html += '<h2>Mesh Terms:</h2>'
