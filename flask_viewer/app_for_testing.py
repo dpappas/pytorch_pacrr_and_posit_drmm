@@ -151,7 +151,3 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
 
 
-'''
-sent1 : Which human chromosome is the product of fusion
-sent2 : The results also demonstrate that the product of the activated met gene is a fusion protein and that the amino terminal end of this fusion protein, which is encoded by human chromosome 1, exhibits homology to laminin B1.
-'''
