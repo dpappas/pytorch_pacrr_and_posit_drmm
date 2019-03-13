@@ -9,7 +9,8 @@ from gensim.models.keyedvectors import KeyedVectors
 from sklearn.metrics.pairwise import cosine_similarity
 
 print('loading w2v')
-w2v_bin_path    = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# w2v_bin_path    = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+w2v_bin_path    = "C:\\Users\\dvpap\\Downloads\\bioasq_all\\pubmed2018_w2v_30D.bin"
 wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv              = dict([(word, wv[word]) for word in wv.vocab.keys()])
 
@@ -87,4 +88,4 @@ def test_similarity_matrix():
 
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
