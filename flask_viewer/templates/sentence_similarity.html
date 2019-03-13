@@ -2,20 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $("select[name='select_sent1']").on('change', function() {
+            $("textarea[name='sent1']").val($(this).val());
+        });
+    });
+    $(document).ready(function(){
+        $("select[name='select_sent2']").on('change', function() {
+            $("textarea[name='sent2']").val($(this).val());
+        });
+    });
+    </script>
+</head>
+<body>
     <title>Welcome to sentence similarity viewer</title>
     <form action="/test_similarity_matrix" method="POST">
         <textarea name="sent1" id="sent1" placeholder="Write here your first sentence." style="width: 705px; height: 59px;">
             Dinutuximab is used for treatment of which disease?
         </textarea>
+        <select name="select_sent1" id="slt2">
+            <option>room 1</option>
+            <option>room 2</option>
+            <option>room 3</option>
+        </select>
         </br>
         <textarea name="sent2" id="sent2" placeholder="Write here your second sentence." style="width: 705px; height: 59px;">
             As discussed in this perspective on antibodies in late-stage development, the outlook for additional approvals, potentially still in 2014 and certainly in 2015, is excellent as marketing applications for 7 antibody therapeutics (secukinumab, evolocumab, mepolizumab, dinutuximab, nivolumab, blinatumomab, necitumumab) are undergoing a first regulatory review in the EU or US.
         </textarea>
+        <select name="select_sent2" id="slt1">
+            <option>room 1</option>
+            <option>room 2</option>
+            <option>room 3</option>
+        </select>
         </br>
         <input type="submit" value="Submit"/>
     </form>
-</head>
-<body>
-
 </body>
 </html>
