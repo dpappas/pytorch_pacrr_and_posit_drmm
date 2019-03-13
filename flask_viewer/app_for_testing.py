@@ -1,5 +1,6 @@
 
 from colour import Color
+from flask import url_for
 from flask import Flask
 from flask import render_template
 from flask import request
@@ -168,6 +169,7 @@ def test_similarity_matrix():
     ret_html    = '''
     <html>
     <head>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <style>
     table, th, td {border: 1px solid black;}
     .floatLeft { width: 50%; float: left; }
@@ -203,6 +205,7 @@ def favicon():
 
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
+    app.add_url_rule('/favicon.ico', redirect_to=url_for('static', filename='favicon.ico'))
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
 
 
