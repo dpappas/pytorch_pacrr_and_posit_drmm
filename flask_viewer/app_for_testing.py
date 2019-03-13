@@ -59,7 +59,8 @@ def create_table(tokens1, tokens2, scores):
         ret_html += '</tr>'
     ret_html += '</table>'
     ####################
-    max_scores      = scores.max(axis=0)
+    max_scores      = scores.max(axis=1)
+    print(max_scores.shape)
     ret_html        += "<p><b>Max scores:</b></p>"
     ret_html        += '<table>'
     ret_html        += '<tr><td></td>'
