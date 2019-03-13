@@ -57,7 +57,7 @@ def create_table(tokens1, tokens2, scores):
         for j in range(len(tokens1)):
             tok1    = tokens1[j]
             score   = int(scores[j][i])
-            ret_html += '<td title="{}" score="{}" bgcolor="{}"></div></td>'.format('{} : {} : {}'.format(tok1,tok2,str(score)), score, yellow_colors[score])
+            ret_html += '<td style="min-width:60px" title="{}" score="{}" bgcolor="{}"></div></td>'.format('{} : {} : {}'.format(tok1,tok2,str(score)), score, yellow_colors[score])
         ret_html += '</tr>'
     ret_html += '</table>'
     return ret_html
@@ -98,3 +98,9 @@ def test_similarity_matrix():
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+
+
+'''
+sent1 : Which human chromosome is the product of fusion
+sent2 : The results also demonstrate that the product of the activated met gene is a fusion protein and that the amino terminal end of this fusion protein, which is encoded by human chromosome 1, exhibits homology to laminin B1.
+'''
