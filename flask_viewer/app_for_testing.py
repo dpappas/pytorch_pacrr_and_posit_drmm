@@ -118,7 +118,7 @@ def create_table(tokens1, tokens2, scores):
     max_scores      = scores.max(axis=1)
     aver_scores     = np.average(scores, axis=1)
     aver5_scores    = np.average(np.sort(scores, axis=1)[:, -5:], axis=1)
-    aver5min_scores = np.average(np.sort(scores, axis=1)[:, :-5], axis=1)
+    aver5min_scores = np.average(np.sort(scores, axis=1)[:, :5], axis=1)
     # print(max_scores.shape)
     ret_html        += "<p><b>Pooled scores:</b></p>"
     ret_html        += '<table>'

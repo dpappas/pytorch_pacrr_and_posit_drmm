@@ -2,7 +2,7 @@
 
 import json
 from pprint import pprint
-import cPickle as pickle
+import pickle
 
 dataloc = '/home/dpappas/for_ryan/'
 
@@ -20,7 +20,7 @@ for item in bioasq6_data.values():
         else:
             t = []
         if(len(t)==0):
-            print '{} {}'.format(item['id'], doc.split('/')[-1])
+            print('{} {}'.format(item['id'], doc.split('/')[-1]))
 
 # with open(dataloc + 'bioasq_bm25_top100.test.pkl', 'rb') as f:
 #     test_data = pickle.load(f)

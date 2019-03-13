@@ -2,8 +2,11 @@
 import json
 from pprint import pprint
 
-f1 = '/home/dpappas/DOC_CNN_PDRMM_standard_feats_run_2/v3 test_gold_bioasq.json'
-f2 = '/home/dpappas/DOC_CNN_PDRMM_standard_feats_run_2/v3 test_emit_bioasq.json'
+# f1 = '/home/dpappas/DOC_CNN_PDRMM_standard_feats_run_2/v3 test_gold_bioasq.json'
+# f2 = '/home/dpappas/DOC_CNN_PDRMM_standard_feats_run_2/v3 test_emit_bioasq.json'
+
+f1 = 'C:\\Users\\dvpap\\Downloads\\v3 dev_gold_bioasq.json'
+f2 = 'C:\\Users\\dvpap\\Downloads\\v3 dev_emit_bioasq.json'
 
 d1 = json.load(open(f1))
 d2 = json.load(open(f2))
