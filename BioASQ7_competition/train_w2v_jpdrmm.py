@@ -1034,9 +1034,16 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
         train_docs = pickle.load(f)
     print('loading words')
     #
-    words           = {}
+    words               = {}
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
+    #
+    extended_train_q    = pickle.load(open(dataloc+'metamap_extended_questions.train.p', 'rb'))
+    extended_dev_q      = pickle.load(open(dataloc+'metamap_extended_questions.dev.p', 'rb'))
+    ext                 = '{} {}'.format(' '.join([' '.join(t) for t in extended_train_q.values()]), ' '.join([' '.join(t) for t in extended_dev_q.values()]))
+    dwds                = tokenize(ext)
+    for w in dwds:
+        words[w] = 1
     #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
