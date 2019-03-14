@@ -701,6 +701,8 @@ def train_data_step1(train_data):
 
 def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
+        if (quest_text in extended_train_q):
+            quest_text = '{} || {}'.format(quest_text, ' | '.join(extended_train_q[quest_text]))
         if(use_sent_tokenizer):
             good_snips              = get_snips(quest_id, gid, bioasq6_data)
             good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
@@ -873,6 +875,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text                  = dato['query_text']
+    if(quest_text in extended_dev_q):
+        quest_text              = '{} || {}'.format(quest_text, ' | '.join(extended_dev_q[quest_text]))
+    #
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips                  = get_gold_snips(dato['query_id'], bioasq7_data)
@@ -1050,7 +1055,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
+    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data, extended_train_q, extended_dev_q
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1377,7 +1382,13 @@ w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 ##########################################
-dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
+(
+    dev_data, dev_docs,
+    train_data, train_docs,
+    idf, max_idf,
+    wv, bioasq7_data,
+    extended_train_q, extended_dev_q
+) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 ##########################################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 print(avgdl, mean, deviation)
