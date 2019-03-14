@@ -1361,20 +1361,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
-#####################
+##########################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
-#####################
+##########################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
-#####################
+##########################################
 dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
-#####################
+##########################################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 print(avgdl, mean, deviation)
-#####################
+##########################################
 
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
