@@ -1163,7 +1163,9 @@ odd                 = '/home/dpappas/'
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                = './'
+odir                = './test_jpdrmm/'
+if (not os.path.exists(odir)):
+    os.makedirs(odir)
 ###########################################################
 avgdl               = 21.1907
 mean                = 0.6275

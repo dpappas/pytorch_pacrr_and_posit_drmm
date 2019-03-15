@@ -259,29 +259,6 @@ def print_params(model, bert_model):
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
 
-def dummy_test():
-    doc1_embeds = np.random.rand(40, 200)
-    doc2_embeds = np.random.rand(30, 200)
-    question_embeds = np.random.rand(20, 200)
-    q_idfs = np.random.rand(20, 1)
-    gaf = np.random.rand(4)
-    baf = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds=doc1_embeds,
-            doc2_embeds=doc2_embeds,
-            question_embeds=question_embeds,
-            q_idfs=q_idfs,
-            gaf=gaf,
-            baf=baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -313,17 +290,6 @@ def get_map_res(fgold, femit):
     map_res = [l for l in lines if (l.startswith('map '))][0].split('\t')
     map_res = float(map_res[-1])
     return map_res
-
-def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
-    batch_cost = sum(batch_costs) / float(len(batch_costs))
-    batch_cost.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-    batch_aver_cost = batch_cost.cpu().item()
-    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    batch_aver_acc = sum(batch_acc) / float(len(batch_acc))
-    epoch_aver_acc = sum(epoch_acc) / float(len(epoch_acc))
-    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
@@ -455,34 +421,6 @@ def idf_val(w, idf, max_idf):
     if w in idf:
         return idf[w]
     return max_idf
-
-def get_embeds(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        if (tok in wv):
-            ret1.append(tok)
-            ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
-
-def get_embeds_use_unk(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        if (tok in wv):
-            ret1.append(tok)
-            ret2.append(wv[tok])
-        else:
-            wv[tok] = np.random.randn(embedding_dim)
-            ret1.append(tok)
-            ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
-
-def get_embeds_use_only_unk(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        wv[tok] = np.random.randn(embedding_dim)
-        ret1.append(tok)
-        ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
 
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
@@ -1367,7 +1305,9 @@ odd                 = '/home/dpappas/'
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                = './'
+odir                = './test_bert_jpdrmm/'
+if (not os.path.exists(odir)):
+    os.makedirs(odir)
 ###########################################################
 avgdl               = 21.1907
 mean                = 0.6275
