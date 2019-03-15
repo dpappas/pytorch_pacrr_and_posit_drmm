@@ -1374,7 +1374,16 @@ evaluation.EvaluatorTask1b \
 python \
 /home/dpappas/bioasq_all/eval/run_eval.py \
 "/home/dpappas/test_bert_jpdrmm/v3 test_gold_bioasq.json" \
-"/home/dpappas/test_bert_jpdrmm/elk_relevant_abs_posit_drmm_lists_test.json"
+"/home/dpappas/test_bert_jpdrmm/elk_relevant_abs_posit_drmm_lists_test.json" \
+ | grep map
+
+MAP documents   : 0.08401785714285709
+MAP snippets    : 0.05846759009205377
+GMAP documents  : 0.003971499747357504
+GMAP snippets   : 9.80472859647476E-4
+F1 snippets     : 0.09388342171746662
+
+trec map doc    : 0.4252
 
 '''
 

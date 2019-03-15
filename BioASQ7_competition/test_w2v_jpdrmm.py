@@ -1237,7 +1237,7 @@ GMAP documents  : 0.004855196367864728
 GMAP snippets   : 0.0010611736668060376
 F1 snippets     : 0.09489153914914335
 
-trec map doc : 0.4328
+trec map doc    : 0.4328
 
 '''
 
