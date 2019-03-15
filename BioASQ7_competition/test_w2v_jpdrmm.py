@@ -1211,3 +1211,35 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 ###########################################################
 print(test_map)
 
+
+'''
+java \
+-Xmx10G \
+-cp \
+/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b \
+-phaseA \
+-e \
+5 \
+"/home/dpappas/test_jpdrmm/v3 test_gold_bioasq.json" \
+"/home/dpappas/test_jpdrmm/v3 test_emit_bioasq.json"
+
+
+python \
+/home/dpappas/bioasq_all/eval/run_eval.py \
+"/home/dpappas/test_jpdrmm/v3 test_gold_bioasq.json" \
+"/home/dpappas/test_jpdrmm/elk_relevant_abs_posit_drmm_lists_test.json" \
+ | grep map
+
+MAP documents   : 0.08420833333333327
+MAP snippets    : 0.05073454275074414
+GMAP documents  : 0.004855196367864728
+GMAP snippets   : 0.0010611736668060376
+F1 snippets     : 0.09489153914914335
+
+trec map doc : 0.4328
+
+'''
+
+
+

@@ -1359,7 +1359,24 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 print(test_map)
 
 
+'''
+java \
+-Xmx10G \
+-cp \
+'/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' \
+evaluation.EvaluatorTask1b \
+-phaseA \
+-e \
+5 \
+"/home/dpappas/test_bert_jpdrmm/v3 test_gold_bioasq.json" \
+"/home/dpappas/test_bert_jpdrmm/v3 test_emit_bioasq.json"
 
+python \
+/home/dpappas/bioasq_all/eval/run_eval.py \
+"/home/dpappas/test_bert_jpdrmm/v3 test_gold_bioasq.json" \
+"/home/dpappas/test_bert_jpdrmm/elk_relevant_abs_posit_drmm_lists_test.json"
+
+'''
 
 
 
