@@ -146,46 +146,6 @@ def embed_the_sent(sent):
     fixed_tokens = fix_bert_tokens(tokens)
     return fixed_tokens, embs
 
-def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
-    if (avgdl == 0):
-        total_words = 0
-        total_docs = 0
-        for dic in tqdm(train_docs, ascii=True):
-            sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-            for s in sents:
-                total_words += len(tokenize(s))
-                total_docs += 1.
-        avgdl = float(total_words) / float(total_docs)
-    else:
-        print('avgdl {} provided'.format(avgdl))
-    #
-    if (mean == 0 and deviation == 0):
-        BM25scores = []
-        k1, b = 1.2, 0.75
-        not_found = 0
-        for qid in tqdm(bioasq6_data, ascii=True):
-            qtext = bioasq6_data[qid]['body']
-            all_retr_ids = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
-            for dic in all_retr_ids:
-                try:
-                    sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-                    q_toks = tokenize(qtext)
-                    for sent in sents:
-                        BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
-                        BM25scores.append(BM25score)
-                except KeyError:
-                    not_found += 1
-        #
-        mean = sum(BM25scores) / float(len(BM25scores))
-        nominator = 0
-        for score in BM25scores:
-            nominator += ((score - mean) ** 2)
-        deviation = math.sqrt((nominator) / float(len(BM25scores) - 1))
-    else:
-        print('mean {} provided'.format(mean))
-        print('deviation {} provided'.format(deviation))
-    return avgdl, mean, deviation
-
 def tf(term, document):
     tf = 0
     for word in document:
@@ -283,10 +243,6 @@ def print_params(model, bert_model):
     print(40 * '=')
     print(model)
     print(40 * '=')
-    logger.info(40 * '=')
-    logger.info(bert_model)
-    logger.info(model)
-    logger.info(40 * '=')
     trainable = 0
     untrainable = 0
     for parameter in list(model.parameters()) + list(bert_model.parameters()):
@@ -302,9 +258,6 @@ def print_params(model, bert_model):
     print(40 * '=')
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
-    logger.info(40 * '=')
-    logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
-    logger.info(40 * '=')
 
 def dummy_test():
     doc1_embeds = np.random.rand(40, 200)
