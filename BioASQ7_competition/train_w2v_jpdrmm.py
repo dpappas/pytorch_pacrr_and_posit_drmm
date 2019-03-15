@@ -701,8 +701,6 @@ def train_data_step1(train_data):
 
 def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        if (quest_text in extended_train_q):
-            quest_text = '{} || {}'.format(quest_text, ' | '.join(extended_train_q[quest_text]))
         if(use_sent_tokenizer):
             good_snips              = get_snips(quest_id, gid, bioasq6_data)
             good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
@@ -875,8 +873,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text                  = dato['query_text']
-    if(quest_text in extended_dev_q):
-        quest_text              = '{} || {}'.format(quest_text, ' | '.join(extended_dev_q[quest_text]))
     #
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
@@ -1043,19 +1039,12 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
     #
-    extended_train_q    = pickle.load(open(dataloc+'metamap_extended_questions.train.p', 'rb'))
-    extended_dev_q      = pickle.load(open(dataloc+'metamap_extended_questions.dev.p', 'rb'))
-    ext                 = '{} {}'.format(' '.join([' '.join(t) for t in extended_train_q.values()]), ' '.join([' '.join(t) for t in extended_dev_q.values()]))
-    dwds                = tokenize(ext)
-    for w in dwds:
-        words[w] = 1
-    #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data, extended_train_q, extended_dev_q
+    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1386,8 +1375,7 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
     dev_data, dev_docs,
     train_data, train_docs,
     idf, max_idf,
-    wv, bioasq7_data,
-    extended_train_q, extended_dev_q
+    wv, bioasq7_data
 ) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 ##########################################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
@@ -1414,7 +1402,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'extended_bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir    = 'bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
