@@ -1109,10 +1109,6 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ###########################################################
-# f_in1               = '/home/dpappas/bioasq_all/BioASQ-task7bPhaseB-testset1'
-# f_in2               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-# f_in3               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-###########################################################
 f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/BioASQ-task7bPhaseA-testset2'
 f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
 f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
