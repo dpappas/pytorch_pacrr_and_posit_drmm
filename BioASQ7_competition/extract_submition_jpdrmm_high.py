@@ -472,13 +472,6 @@ def GetWords(data, doc_text, words):
       for w in dwds:
         words[w] = 1
 
-def get_gold_snips(quest_id, bioasq6_data):
-    gold_snips                  = []
-    if ('snippets' in bioasq6_data[quest_id]):
-        for sn in bioasq6_data[quest_id]['snippets']:
-            gold_snips.extend(sent_tokenize(sn['text']))
-    return list(set(gold_snips))
-
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
         'body'      : quest_body,
@@ -701,11 +694,10 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    gold_snips                  = get_gold_snips(dato['query_id'], bioasq7_data)
     #
     doc_res, extracted_snippets         = {}, []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, [], idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
@@ -713,9 +705,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
         )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
-            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
-        )
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, [])
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
@@ -782,18 +772,10 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     if (prefix == 'dev'):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 dev_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
-        )
     else:
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 test_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
-        )
-    return res_map
+    return None
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
