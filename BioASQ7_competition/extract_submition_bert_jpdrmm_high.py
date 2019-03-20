@@ -1258,6 +1258,10 @@ min_sent_score      = float(sys.argv[2])
 ###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/BioASQ-task7bPhaseA-testset2'
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
@@ -1299,16 +1303,18 @@ bert_model.to(device)
 model.to(device)
 ###########################################################
 print('loading pickle data')
-with open('/home/dpappas/bioasq_all/BioASQ-task7bPhaseB-testset1', 'r') as f:
+with open(f_in1, 'r') as f:
     bioasq7_data = json.load(f)
+    for q in bioasq7_data['questions']:
+        if("documents" not in q):
+            q["documents"]  = []
+        if("snippets" not in q):
+            q["snippets"]   = []
     bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
-
-with open('/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl', 'rb') as f:
+with open(f_in2, 'rb') as f:
     test_data = pickle.load(f)
-
-with open('/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl', 'rb') as f:
+with open(f_in3, 'rb') as f:
     test_docs = pickle.load(f)
-
 ###########################################################
 words = {}
 GetWords(test_data, test_docs, words)
