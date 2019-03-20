@@ -717,8 +717,9 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
             "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
             held_out_sents[ind]
         )
-        all_emits.append(t)
-        if (emitss[ind] == mmax):
+        # if(emitss[ind] == mmax):
+        #     extracted_from_one.append(t)
+        if(emitss[ind]> min_sent_score):
             extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
@@ -812,7 +813,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
-    doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    doc_res = sorted([item for item in doc_res.items() if(item[1]>min_doc_score)], key = lambda x: x[1], reverse = True)
     the_doc_scores = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
     doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
     emitions['documents'] = doc_res[:100]
