@@ -27,7 +27,6 @@ from    difflib                     import SequenceMatcher
 import  re
 import  nltk
 import  math
-from sklearn.preprocessing          import minmax_scale
 import  sys
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
@@ -561,7 +560,7 @@ def snip_is_relevant(one_sent, gold_snips):
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     if(emit_only_abstract_sents):
-        good_sents = sent_tokenize(the_doc['abstractText'])
+        good_sents      = sent_tokenize(the_doc['abstractText'])
     else:
         good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
@@ -727,11 +726,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets'  : {retr['doc_id']: all_emits}}
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
-    # #
-    # # print(doc_res.values())
-    # scaled_emits    = sorted(minmax_scale(list(doc_res.values())))
-    # doc_res         = dict([item for item in zip(doc_res.keys(), scaled_emits) if(item[1]>0.5)])
-    # # print(scaled_emits)
+    #
     doc_res                                 = sorted([item for item in doc_res.items() if(item[1]>min_doc_score)], key = lambda x: x[1], reverse = True)
     the_doc_scores                          = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
     doc_res                                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
@@ -827,7 +822,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
         res_map = get_map_res(
             os.path.join(odir, 'v3 dev_gold_bioasq.json'),
-            # dataloc +'bioasq.dev.json',
             os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
         )
     else:
@@ -1172,9 +1166,9 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ###########################################################
-f_in1               = '/home/dpappas/bioasq_all/BioASQ-task7bPhaseB-testset1'
-f_in2               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1'
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
 ###########################################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'

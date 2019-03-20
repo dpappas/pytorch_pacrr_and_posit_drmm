@@ -646,7 +646,10 @@ def create_one_hot_and_sim(tokens1, tokens2):
     return oh1, oh2, ret
 
 def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
-    good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    if(emit_only_abstract_sents):
+        good_sents = sent_tokenize(the_doc['abstractText'])
+    else:
+        good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
@@ -838,13 +841,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     return data_for_revision, ret_data, snips_res
 
-def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
-    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
-    pprint(bioasq_snip_res)
-    print('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    print('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    print('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
+def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision):
     ###########################################################
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
@@ -1253,8 +1250,9 @@ def load_model_from_checkpoint(resume_from, resume_from_bert):
         bert_model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from_bert, checkpoint['epoch']))
 
-min_doc_score       = float(sys.argv[1])
-min_sent_score      = float(sys.argv[2])
+min_doc_score               = float(sys.argv[1])
+min_sent_score              = float(sys.argv[2])
+emit_only_abstract_sents    = bool(sys.argv[3])
 ###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
