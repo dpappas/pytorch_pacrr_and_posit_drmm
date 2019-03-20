@@ -691,7 +691,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text                  = dato['query_text']
-    #
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     #

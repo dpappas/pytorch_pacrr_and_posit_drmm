@@ -560,10 +560,10 @@ def snip_is_relevant(one_sent, gold_snips):
     )
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
-    if(use_sent_tokenizer):
-        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    if(emit_only_abstract_sents):
+        good_sents = sent_tokenize(the_doc['abstractText'])
     else:
-        good_sents  = [the_doc['title'] + the_doc['abstractText']]
+        good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -1162,8 +1162,9 @@ def load_model_from_checkpoint(resume_from):
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
-min_doc_score       = float(sys.argv[1])
-min_sent_score      = float(sys.argv[2])
+min_doc_score               = float(sys.argv[1])
+min_sent_score              = float(sys.argv[2])
+emit_only_abstract_sents    = bool(sys.argv[3])
 ###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
@@ -1171,13 +1172,9 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ###########################################################
-# f_in1               = '/home/dpappas/bioasq_all/BioASQ-task7bPhaseB-testset1'
-# f_in2               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-# f_in3               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-###########################################################
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/BioASQ-task7bPhaseA-testset2'
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+f_in1               = '/home/dpappas/bioasq_all/BioASQ-task7bPhaseB-testset1'
+f_in2               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
 ###########################################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'

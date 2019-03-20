@@ -645,7 +645,10 @@ def create_one_hot_and_sim(tokens1, tokens2):
     return oh1, oh2, ret
 
 def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
-    good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    if(emit_only_abstract_sents):
+        good_sents = sent_tokenize(the_doc['abstractText'])
+    else:
+        good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
@@ -1298,8 +1301,9 @@ def load_model_from_checkpoint(resume_from, resume_from_bert):
         bert_model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from_bert, checkpoint['epoch']))
 
-min_doc_score       = float(sys.argv[1])
-min_sent_score      = float(sys.argv[2])
+min_doc_score               = float(sys.argv[1])
+min_sent_score              = float(sys.argv[2])
+emit_only_abstract_sents    = bool(sys.argv[3])
 ###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
