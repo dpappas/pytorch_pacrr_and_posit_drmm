@@ -5,7 +5,7 @@
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 
-import  os
+import  os, sys
 import  json
 import  time
 import  random
@@ -705,9 +705,9 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
     }
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
-    emition = doc_emit_.cpu().item()
-    emitss = gs_emits_.tolist()
-    mmax = max(emitss)
+    emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_.tolist()
+    mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
         t = (
@@ -717,7 +717,9 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
             held_out_sents[ind]
         )
         all_emits.append(t)
-        if (emitss[ind] == mmax):
+        # if(emitss[ind] == mmax):
+        #     extracted_from_one.append(t)
+        if(emitss[ind]> min_sent_score):
             extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
@@ -811,7 +813,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
-    doc_res = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    doc_res = sorted([item for item in doc_res.items() if(item[1]>min_doc_score)], key = lambda x: x[1], reverse = True)
     the_doc_scores = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
     doc_res = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
     emitions['documents'] = doc_res[:100]
@@ -1296,11 +1298,18 @@ def load_model_from_checkpoint(resume_from, resume_from_bert):
         bert_model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from_bert, checkpoint['epoch']))
 
+min_doc_score       = float(sys.argv[1])
+min_sent_score      = float(sys.argv[2])
+###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
+###########################################################
+f_in1               = '/home/dpappas/bioasq_all/BioASQ-task7bPhaseB-testset1'
+f_in2               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
 ###########################################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1339,16 +1348,13 @@ bert_model.to(device)
 model.to(device)
 ###########################################################
 print('loading pickle data')
-with open('/home/dpappas/bioasq_all/BioASQ-task7bPhaseB-testset1', 'r') as f:
+with open(f_in1, 'r') as f:
     bioasq7_data = json.load(f)
     bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
-
-with open('/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl', 'rb') as f:
+with open(f_in2, 'rb') as f:
     test_data = pickle.load(f)
-
-with open('/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl', 'rb') as f:
+with open(f_in3, 'rb') as f:
     test_docs = pickle.load(f)
-
 ###########################################################
 words = {}
 GetWords(test_data, test_docs, words)
