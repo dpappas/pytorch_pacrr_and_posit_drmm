@@ -553,10 +553,10 @@ def snip_is_relevant(one_sent, gold_snips):
     )
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
-    if(use_sent_tokenizer):
-        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    if(emit_only_abstract_sents):
+        good_sents = sent_tokenize(the_doc['abstractText'])
     else:
-        good_sents  = [the_doc['title'] + the_doc['abstractText']]
+        good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -1099,8 +1099,9 @@ def load_model_from_checkpoint(resume_from):
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
-min_doc_score       = float(sys.argv[1])
-min_sent_score      = float(sys.argv[2])
+min_doc_score               = float(sys.argv[1])
+min_sent_score              = float(sys.argv[2])
+emit_only_abstract_sents    = bool(sys.argv[3])
 ###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
