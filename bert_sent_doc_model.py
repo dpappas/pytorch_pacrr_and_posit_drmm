@@ -1211,12 +1211,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_add_feats = 10
         self.embedding_dim  = embedding_dim
         #############################################################################################################
-        self.sent_mlp1      = nn.Linear(int(2*self.embedding_dim),  int(self.embedding_dim),    bias=True).to(device)
-        self.sent_mlp2      = nn.Linear(int(self.embedding_dim),    int(self.embedding_dim/2),  bias=True).to(device)
-        self.sent_out       = nn.Linear(int(self.embedding_dim/2),  1,                          bias=True).to(device)
+        mlp1_size           = 50
+        mlp2_size           = 50
+        self.sent_mlp1      = nn.Linear(2*self.embedding_dim,   50, bias=True).to(device)
+        self.sent_mlp2      = nn.Linear(50,                     50, bias=True).to(device)
+        self.sent_out       = nn.Linear(50,                     1,  bias=True).to(device)
         #############################################################################################################
+        bigru_size          = 50
         self.h0             = autograd.Variable(torch.randn(2, 1, 50)).to(device)
-        self.bigru          = nn.GRU(input_size=int(self.embedding_dim/2), hidden_size=50, bidirectional=True, batch_first=False).to(device)
+        self.bigru          = nn.GRU(input_size=50, hidden_size=50, bidirectional=True, batch_first=False).to(device)
         self.doc_out_mlp    = nn.Linear(100, 1, bias=False).to(device)
         #############################################################################################################
         self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
@@ -1249,10 +1252,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_out         = self.apply_doc_res_bigru(all_sent_reps)
         return sents_out, doc_out
     ######
-    def forward(
-        self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
-        question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf
-    ):
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         sents1_out, doc1_out    = self.emit_one(doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf)
         sents2_out, doc2_out    = self.emit_one(doc2_sents_embeds, doc2_oh_sim, question_embeds, q_idfs, sents_baf, doc_baf)
         loss1                   = self.my_hinge_loss(doc1_out, doc2_out)
