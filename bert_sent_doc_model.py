@@ -1205,29 +1205,38 @@ def load_all_data(dataloc, idf_pickle_path):
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
+    def __init__(self, embedding_dim=30):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.k = k_for_maxpool
-        self.k_sent_maxpool = k_sent_maxpool
-        self.doc_add_feats = 11
+        self.doc_add_feats  = 11
         self.sent_add_feats = 10
-        #
-        self.embedding_dim = embedding_dim
-        self.sentence_out_method = sentence_out_method
-        #
-        self.margin_loss = nn.MarginRankingLoss(margin=1.0)
-        if (use_cuda):
-            self.margin_loss = self.margin_loss.cuda()
+        self.embedding_dim  = embedding_dim
+        self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
+        self.sent_mlp1      = nn.Linear(int(2*self.embedding_dim),  int(self.embedding_dim),    bias=True).to(device)
+        self.sent_mlp2      = nn.Linear(int(self.embedding_dim),    int(self.embedding_dim/2),  bias=True).to(device)
     ######
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
-                question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
-        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(device)
-        print(question_embeds.shape)
-        print(q_idfs.shape)
-        print(doc_gaf.shape)
-        print(doc_baf.shape)
+    def emit_one(self, doc_sents_embeds, doc_oh_sim, question_embeds, q_idfs, sents_af, doc_af):
+        q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
+        doc_af  = autograd.Variable(torch.FloatTensor(doc_af), requires_grad=False).to(device)
+        doc_af  = autograd.Variable(torch.FloatTensor(doc_af), requires_grad=False).to(device)
+        q_rep = question_embeds[0]
+        all_sent_reps   = []
+        for sent_emb in doc_sents_embeds:
+            s_rep       = sent_emb[0]
+            joined      = torch.cat([q_rep, s_rep])
+            sent_out_1  = self.sent_mlp1(joined)
+            sent_out_1  = F.tanh(sent_out_1)
+            sent_out_2  = self.sent_mlp2(sent_out_1)
+            all_sent_reps.append(sent_out_2)
+        all_sent_reps   = torch.stack(all_sent_reps, dim=0)
+        print(all_sent_reps.shape)
+    ######
+    def forward(
+        self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
+        question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf
+    ):
+        doc_1_emits = self.emit_one(doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf)
+        doc_2_emits = self.emit_one(doc2_sents_embeds, doc2_oh_sim, question_embeds, q_idfs, sents_baf, doc_baf)
+
 
 
 use_cuda = torch.cuda.is_available()
@@ -1283,13 +1292,12 @@ for run in range(0, 5):
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
     #
-    # avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
-    avgdl, mean, deviation = get_bm25_metrics()
+    avgdl, mean, deviation = get_bm25_metrics(avgdl=26.3557, mean=0.8884, deviation=1.6483)
     print(avgdl, mean, deviation)
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
+    model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim).to(device)
     params      = list(model.parameters()) + list(biobert_model.parameters())
     print_params(model)
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
