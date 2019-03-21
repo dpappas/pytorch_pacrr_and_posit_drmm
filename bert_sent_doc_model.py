@@ -1276,7 +1276,7 @@ cache_dir               = '/home/dpappas/biobert_cache/'
 if(not os.path.exists(cache_dir)):
     os.makedirs(cache_dir)
 ####################################################################################
-use_cuda                = True
+use_cuda                = False
 max_seq_length          = 50
 device                  = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ####################################################################################
