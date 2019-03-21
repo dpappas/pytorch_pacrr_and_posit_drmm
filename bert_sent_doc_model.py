@@ -878,16 +878,17 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     bert_model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
-    #
+    ###############################################
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
-    #
+    ###############################################
     start_time = time.time()
     pbar = tqdm(
         iterable= train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
         total   = 14288, #9684, # 378,
         ascii   = True
     )
+    ###############################################
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds=datum['good_sents_embeds'],
@@ -901,18 +902,19 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             doc_gaf=datum['good_doc_af'],
             doc_baf=datum['bad_doc_af']
         )
-        #
+        ###############################################
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
         if (two_losses):
             sn_d1_l, sn_d2_l = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss = sn_d1_l + sn_d2_l
             l = 0.5
             cost_ = ((1 - l) * snip_loss) + (l * cost_)
-        #
+        ###############################################
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
+        ###############################################
         if (len(batch_costs) == b_size):
             batch_counter += 1
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs,
