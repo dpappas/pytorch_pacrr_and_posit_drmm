@@ -1269,10 +1269,10 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 #####################
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
+idf_pickle_path         s= '/home/dpappas/bioasq_all/idf.pkl'
+dataloc                 = '/home/dpappas/bioasq_all/bioasq7_data/'
 #####################
-cache_dir   = '/home/dpappas/biobert_cache/'
+cache_dir               = '/home/dpappas/biobert_cache/'
 if(not os.path.exists(cache_dir)):
     os.makedirs(cache_dir)
 #####################
