@@ -875,7 +875,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
-    bert_model.train()
+    biobert_model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     ###############################################
@@ -1127,7 +1127,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
-    bert_model.eval()
+    biobert_model.eval()
     #
     ret_data = {'questions': []}
     all_bioasq_subm_data_v1 = {"questions": []}
@@ -1301,6 +1301,6 @@ for run in range(0, 5):
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
             save_checkpoint(epoch, model,      best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
-            save_checkpoint(epoch, bert_model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar'))
+            save_checkpoint(epoch, biobert_model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar'))
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
