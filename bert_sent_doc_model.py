@@ -32,10 +32,10 @@ import  torch
 from    pytorch_pretrained_bert.tokenization import BertTokenizer
 from    torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from    torch.utils.data.distributed import DistributedSampler
-from    pytorch_pretrained_bert.tokenization import BertTokenizer
-from    pytorch_pretrained_bert.modeling import BertForSequenceClassification, BertModel
+from    pytorch_pretrained_bert.tokenization    import BertTokenizer
+from    pytorch_pretrained_bert.modeling        import BertForSequenceClassification, BertModel
 from    pytorch_pretrained_bert.optimization import BertAdam
-from    pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
+from    pytorch_pretrained_bert.file_utils      import PYTORCH_PRETRAINED_BERT_CACHE
 
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords   = nltk.corpus.stopwords.words("english")
@@ -130,20 +130,23 @@ def convert_examples_to_features(examples, max_seq_length, tokenizer):
         features.append(in_f)
     return features
 
-def embed_the_sent(sent):
-    eval_examples   = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
-    eval_features   = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
-    eval_feat       = eval_features[0]
-    input_ids       = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
-    input_mask      = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
-    segment_ids     = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
-    tokens          = eval_feat.tokens
-    with torch.no_grad():
-        token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
-        tok_inds                    = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
-        token_embeds                = token_embeds.squeeze(0)
-        embs                        = token_embeds[tok_inds,:]
-    fixed_tokens = fix_bert_tokens(tokens)
+def embed_the_sent(sent, fix=True):
+    eval_examples               = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
+    eval_features               = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
+    eval_feat                   = eval_features[0]
+    input_ids                   = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
+    input_mask                  = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
+    segment_ids                 = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
+    tokens                      = eval_feat.tokens
+    token_embeds, pooled_output = biobert_model(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
+    token_embeds                = token_embeds.squeeze(0)
+    if(fix):
+        tok_inds                = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
+        embs                    = token_embeds[tok_inds,:]
+        fixed_tokens            = fix_bert_tokens(tokens)
+    else:
+        embs                    = token_embeds
+        fixed_tokens            = tokens
     return fixed_tokens, embs
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
@@ -1567,13 +1570,20 @@ odd                 = '/home/dpappas/'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 #####################
-bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
+cache_dir   = '/home/dpappas/biobert_cache/'
+if(not os.path.exists(cache_dir)):
+    os.makedirs(cache_dir)
+#####################
+vocab_path          = '/media/dpappas/dpappas_data/biobert/biobert_pubmed/vocab.txt'
+config_path         = '/media/dpappas/dpappas_data/biobert/biobert_pubmed/bert_config.json'
+tokenizer           = BertTokenizer.from_pretrained(pretrained_model_name=vocab_path, cache_dir=cache_dir)
+init_checkpoint_pt  = "/media/dpappas/dpappas_data/biobert/biobert_pubmed/"
+biobert_model       = BertModel.from_pretrained(init_checkpoint_pt)
 #####################
 use_cuda            = True
 max_seq_length      = 50
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 bert_model          = 'bert-base-uncased'
-cache_dir           = '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
 bert_model.to(device)
