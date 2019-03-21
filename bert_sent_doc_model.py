@@ -1175,7 +1175,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         )
     return res_map
 
-def load_all_data(dataloc, idf_pickle_path):
+def load_all_data(dataloc):
     print('loading pickle data')
     #
     with open(dataloc + 'trainining7b.json', 'r') as f:
@@ -1192,17 +1192,7 @@ def load_all_data(dataloc, idf_pickle_path):
         train_docs = pickle.load(f)
     print('loading words')
     #
-    if (os.path.exists(bert_all_words_path)):
-        words = pickle.load(open(bert_all_words_path, 'rb'))
-    else:
-        words = {}
-        GetWords(train_data, train_docs, words)
-        GetWords(dev_data, dev_docs, words)
-        pickle.dump(words, open(bert_all_words_path, 'wb'), protocol=2)
-    #
-    print('loading idfs')
-    idf, max_idf = load_idfs(idf_pickle_path, words)
-    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
+    return dev_data, dev_docs, train_data, train_docs, bioasq6_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
@@ -1598,7 +1588,7 @@ b_size              = 32
 max_epoch           = 4
 #####################
 
-(dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
+(dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
 
 hdlr = None
 for run in range(0, 5):
