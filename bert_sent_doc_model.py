@@ -1276,9 +1276,9 @@ cache_dir   = '/home/dpappas/biobert_cache/'
 if(not os.path.exists(cache_dir)):
     os.makedirs(cache_dir)
 #####################
-use_cuda            = True
-max_seq_length      = 50
-device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
+use_cuda                = True
+max_seq_length          = 50
+device                  = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 #####################
 biobert_all_words_path  = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 vocab_path              = '/media/dpappas/dpappas_data/biobert/biobert_pubmed/vocab.txt'
