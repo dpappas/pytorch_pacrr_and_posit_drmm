@@ -1211,13 +1211,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_add_feats = 10
         self.embedding_dim  = embedding_dim
         #############################################################################################################
+        proj_size           = 100
         mlp1_size           = 50
-        mlp2_size           = 50
-        self.sent_mlp1      = nn.Linear(2*self.embedding_dim,   50, bias=True).to(device)
-        self.sent_mlp2      = nn.Linear(50,                     50, bias=True).to(device)
-        self.sent_out       = nn.Linear(50,                     1,  bias=True).to(device)
-        #############################################################################################################
+        mlp2_size           = 25
         bigru_size          = 25
+        #############################################################################################################
+        self.projection     = nn.Linear(self.embedding_dim,     proj_size,  bias=False).to(device)
+        self.sent_mlp1      = nn.Linear(2*proj_size,   mlp1_size,  bias=True).to(device)
+        self.sent_mlp2      = nn.Linear(mlp1_size,              mlp2_size,  bias=True).to(device)
+        self.sent_out       = nn.Linear(mlp2_size,              1,          bias=True).to(device)
+        #############################################################################################################
         self.h0             = autograd.Variable(torch.randn(2, 1, bigru_size)).to(device)
         self.bigru          = nn.GRU(input_size=mlp2_size, hidden_size=bigru_size, bidirectional=True, batch_first=False).to(device)
         self.doc_out_mlp    = nn.Linear(2*bigru_size, 1, bias=False).to(device)
@@ -1239,10 +1242,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def emit_one(self, doc_sents_embeds, doc_oh_sim, question_embeds, q_idfs, sents_af, doc_af):
         q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
         doc_af          = autograd.Variable(torch.FloatTensor(doc_af), requires_grad=False).to(device)
-        q_rep           = question_embeds[0]
+        q_rep           = self.projection(question_embeds[0])
         all_sent_reps   = []
         for sent_emb in doc_sents_embeds:
-            s_rep       = sent_emb[0]
+            s_rep       = self.projection(sent_emb[0])
             joined      = torch.cat([q_rep, s_rep])
             sent_out_1  = torch.tanh(self.sent_mlp1(joined))
             sent_out_2  = torch.tanh(self.sent_mlp2(sent_out_1))
