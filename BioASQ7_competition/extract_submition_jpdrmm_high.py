@@ -630,8 +630,9 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
         all_emits.append(t)
         # if(emitss[ind] == mmax):
         #     extracted_from_one.append(t)
-        if(emitss[ind]> min_sent_score):
-            extracted_from_one.append(t)
+        # if(emitss[ind]> min_sent_score):
+        #     extracted_from_one.append(t)
+        extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
