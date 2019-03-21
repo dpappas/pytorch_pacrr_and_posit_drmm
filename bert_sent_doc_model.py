@@ -1210,34 +1210,53 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.doc_add_feats  = 11
         self.sent_add_feats = 10
         self.embedding_dim  = embedding_dim
-        self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
+        #############################################################################################################
         self.sent_mlp1      = nn.Linear(int(2*self.embedding_dim),  int(self.embedding_dim),    bias=True).to(device)
         self.sent_mlp2      = nn.Linear(int(self.embedding_dim),    int(self.embedding_dim/2),  bias=True).to(device)
+        self.sent_out       = nn.Linear(int(self.embedding_dim/2),  1,                          bias=True).to(device)
+        #############################################################################################################
+        self.h0             = autograd.Variable(torch.randn(2, 1, 50)).to(device)
+        self.bigru          = nn.GRU(input_size=int(self.embedding_dim/2), hidden_size=50, bidirectional=True, batch_first=False).to(device)
+        self.doc_out_mlp    = nn.Linear(100, 1, bias=False).to(device)
+        #############################################################################################################
+        self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
+        #############################################################################################################
+    ######
+    def apply_doc_res_bigru(self, the_input):
+        output, hn      = self.bigru(the_input.unsqueeze(1), self.h0)
+        output          = F.tanh(output)
+        output          = self.doc_out_mlp(output[0][0])
+        return output
+    ######
+    def my_hinge_loss(self, positives, negatives, margin=1.0):
+        delta      = negatives - positives
+        loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
+        return loss_q_pos
     ######
     def emit_one(self, doc_sents_embeds, doc_oh_sim, question_embeds, q_idfs, sents_af, doc_af):
-        q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
-        doc_af  = autograd.Variable(torch.FloatTensor(doc_af), requires_grad=False).to(device)
-        doc_af  = autograd.Variable(torch.FloatTensor(doc_af), requires_grad=False).to(device)
-        q_rep = question_embeds[0]
+        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
+        doc_af          = autograd.Variable(torch.FloatTensor(doc_af), requires_grad=False).to(device)
+        q_rep           = question_embeds[0]
         all_sent_reps   = []
         for sent_emb in doc_sents_embeds:
             s_rep       = sent_emb[0]
             joined      = torch.cat([q_rep, s_rep])
-            sent_out_1  = self.sent_mlp1(joined)
-            sent_out_1  = F.tanh(sent_out_1)
-            sent_out_2  = self.sent_mlp2(sent_out_1)
+            sent_out_1  = F.tanh(self.sent_mlp1(joined))
+            sent_out_2  = F.tanh(self.sent_mlp2(sent_out_1))
             all_sent_reps.append(sent_out_2)
         all_sent_reps   = torch.stack(all_sent_reps, dim=0)
-        print(all_sent_reps.shape)
+        sents_out       = F.sigmoid(self.sent_out(all_sent_reps)).squeeze(-1)
+        doc_out         = self.apply_doc_res_bigru(all_sent_reps)
+        return sents_out, doc_out
     ######
     def forward(
         self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
         question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf
     ):
-        doc_1_emits = self.emit_one(doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf)
-        doc_2_emits = self.emit_one(doc2_sents_embeds, doc2_oh_sim, question_embeds, q_idfs, sents_baf, doc_baf)
-
-
+        sents1_out, doc1_out    = self.emit_one(doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf)
+        sents2_out, doc2_out    = self.emit_one(doc2_sents_embeds, doc2_oh_sim, question_embeds, q_idfs, sents_baf, doc_baf)
+        loss1                   = self.my_hinge_loss(doc1_out, doc2_out)
+        return loss1, doc1_out, doc2_out, sents1_out, sents2_out
 
 use_cuda = torch.cuda.is_available()
 
