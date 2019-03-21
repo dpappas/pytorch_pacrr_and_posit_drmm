@@ -1288,12 +1288,12 @@ bert_tokenizer          = BertTokenizer.from_pretrained(pretrained_model_name=vo
 biobert_model           = BertModel.from_pretrained(init_checkpoint_pt)
 biobert_model.to(device)
 #####################
-k_for_maxpool       = 5
-k_sent_maxpool      = 5
-embedding_dim       = 768 # 50  # 30  # 200
-lr                  = 0.01
-b_size              = 6
-max_epoch           = 4
+k_for_maxpool           = 5
+k_sent_maxpool          = 5
+embedding_dim           = 768 # 50  # 30  # 200
+lr                      = 0.01
+b_size                  = 6
+max_epoch               = 4
 #####################
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
