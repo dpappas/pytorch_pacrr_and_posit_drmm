@@ -1331,7 +1331,7 @@ for run in range(0, 5):
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
-            save_checkpoint(epoch, model,      best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
-            save_checkpoint(epoch, biobert_model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar'))
+            save_checkpoint(epoch, model,           best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
+            save_checkpoint(epoch, biobert_model,   best_dev_map, optimizer, filename=os.path.join(odir, 'best_biobert_checkpoint.pth.tar'))
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
