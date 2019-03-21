@@ -1248,7 +1248,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sent_out_2  = torch.tanh(self.sent_mlp2(sent_out_1))
             all_sent_reps.append(sent_out_2)
         all_sent_reps   = torch.stack(all_sent_reps, dim=0)
-        sents_out       = F.sigmoid(self.sent_out(all_sent_reps)).squeeze(-1)
+        sents_out       = torch.sigmoid(self.sent_out(all_sent_reps)).squeeze(-1)
         doc_out         = self.apply_doc_res_bigru(all_sent_reps)
         return sents_out, doc_out
     ######
@@ -1288,7 +1288,7 @@ k_for_maxpool       = 5
 k_sent_maxpool      = 5
 embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
-b_size              = 32
+b_size              = 10
 max_epoch           = 4
 #####################
 
