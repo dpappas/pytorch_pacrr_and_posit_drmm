@@ -1264,22 +1264,22 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 
-##########################################
+####################################################################################
 eval_path               = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path      = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                     = '/home/dpappas/'
-##########################################
+####################################################################################
 idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc                 = '/home/dpappas/bioasq_all/bioasq7_data/'
-##########################################
+####################################################################################
 cache_dir               = '/home/dpappas/biobert_cache/'
 if(not os.path.exists(cache_dir)):
     os.makedirs(cache_dir)
-##########################################
+####################################################################################
 use_cuda                = True
 max_seq_length          = 50
 device                  = torch.device("cuda") if(use_cuda) else torch.device("cpu")
-##########################################
+####################################################################################
 biobert_all_words_path  = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 vocab_path              = '/media/dpappas/dpappas_data/biobert/biobert_pubmed/vocab.txt'
 config_path             = '/media/dpappas/dpappas_data/biobert/biobert_pubmed/bert_config.json'
@@ -1287,14 +1287,14 @@ init_checkpoint_pt      = "/media/dpappas/dpappas_data/biobert/biobert_pubmed/"
 bert_tokenizer          = BertTokenizer.from_pretrained(pretrained_model_name=vocab_path, cache_dir=cache_dir)
 biobert_model           = BertModel.from_pretrained(init_checkpoint_pt)
 biobert_model.to(device)
-##########################################
+####################################################################################
 k_for_maxpool           = 5
 k_sent_maxpool          = 5
 embedding_dim           = 768 # 50  # 30  # 200
 lr                      = 0.01
 b_size                  = 6
 max_epoch               = 4
-##########################################
+####################################################################################
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
 
