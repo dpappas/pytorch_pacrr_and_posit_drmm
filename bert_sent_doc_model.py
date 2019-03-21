@@ -289,7 +289,7 @@ def print_params(model):
     logger.info(40 * '=')
     trainable = 0
     untrainable = 0
-    for parameter in list(model.parameters()) + list(biobert_model.parameters()):
+    for parameter in list(model.parameters()):
         # print(parameter.size())
         v = 1
         for s in parameter.size():
@@ -1291,7 +1291,7 @@ k_for_maxpool       = 5
 k_sent_maxpool      = 5
 embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
-b_size              = 10
+b_size              = 6
 max_epoch           = 4
 #####################
 
@@ -1321,6 +1321,7 @@ for run in range(0, 5):
     logger.info('Compiling model...')
     model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim).to(device)
     params      = list(model.parameters()) + list(biobert_model.parameters())
+    print_params(biobert_model)
     print_params(model)
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
