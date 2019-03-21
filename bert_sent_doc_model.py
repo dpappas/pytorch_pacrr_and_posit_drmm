@@ -1217,17 +1217,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_mlp2      = nn.Linear(50,                     50, bias=True).to(device)
         self.sent_out       = nn.Linear(50,                     1,  bias=True).to(device)
         #############################################################################################################
-        bigru_size          = 50
-        self.h0             = autograd.Variable(torch.randn(2, 1, 50)).to(device)
-        self.bigru          = nn.GRU(input_size=50, hidden_size=50, bidirectional=True, batch_first=False).to(device)
-        self.doc_out_mlp    = nn.Linear(100, 1, bias=False).to(device)
+        bigru_size          = 25
+        self.h0             = autograd.Variable(torch.randn(2, 1, bigru_size)).to(device)
+        self.bigru          = nn.GRU(input_size=mlp2_size, hidden_size=bigru_size, bidirectional=True, batch_first=False).to(device)
+        self.doc_out_mlp    = nn.Linear(2*bigru_size, 1, bias=False).to(device)
         #############################################################################################################
         self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
         #############################################################################################################
     ######
     def apply_doc_res_bigru(self, the_input):
         output, hn      = self.bigru(the_input.unsqueeze(1), self.h0)
-        output          = F.tanh(output)
+        output          = torch.tanh(output)
         output          = self.doc_out_mlp(output[0][0])
         return output
     ######
@@ -1244,8 +1244,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         for sent_emb in doc_sents_embeds:
             s_rep       = sent_emb[0]
             joined      = torch.cat([q_rep, s_rep])
-            sent_out_1  = F.tanh(self.sent_mlp1(joined))
-            sent_out_2  = F.tanh(self.sent_mlp2(sent_out_1))
+            sent_out_1  = torch.tanh(self.sent_mlp1(joined))
+            sent_out_2  = torch.tanh(self.sent_mlp2(sent_out_1))
             all_sent_reps.append(sent_out_2)
         all_sent_reps   = torch.stack(all_sent_reps, dim=0)
         sents_out       = F.sigmoid(self.sent_out(all_sent_reps)).squeeze(-1)
