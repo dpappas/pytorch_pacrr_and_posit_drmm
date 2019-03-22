@@ -251,6 +251,10 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     torch.save(state, filename)
 
 def get_map_res(fgold, femit):
+    logger.info("command:")
+    logger.info(['python', eval_path, fgold, femit])
+    print("command:")
+    print(['python', eval_path, fgold, femit])
     trec_eval_res   = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err)      = trec_eval_res.communicate()
     lines           = out.decode("utf-8").split('\n')
@@ -306,6 +310,17 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
         f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
         f.close()
     #
+    print('command:')
+    print([
+            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
+            '-phaseA', '-e', '5', fgold, femit
+        ])
+    logger.info('command:')
+    logger.info([
+            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
+            '-phaseA', '-e', '5', fgold, femit
+        ]
+    )
     bioasq_eval_res = subprocess.Popen(
         [
             'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
@@ -1364,13 +1379,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 ##########################################
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
+eval_path           = '/content/drive/My Drive/data_for_colab/bioasq7/eval (1)/run_eval.py'
+retrieval_jar_path  = '/content/drive/My Drive/data_for_colab/bioasq7/dist/my_bioasq_eval_2.jar'
+odd                 = '/content/drive/My Drive/data_for_colab/bioasq7/outputs/'
 ##########################################
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
+w2v_bin_path    = '/content/drive/My Drive/data_for_colab/pubmed2018_w2v_30D.bin'
+idf_pickle_path = '/content/drive/My Drive/data_for_colab/idf.pkl'
+dataloc         = '/content/drive/My Drive/data_for_colab/bioasq7/data/'
 ##########################################
 (
     dev_data, dev_docs,
@@ -1498,4 +1519,17 @@ wv                  = dict([(word, wv[word]) for word in wv.vocab.keys() if (wor
 # odd                 = '/home/cave-of-time/dpappas/model_outputs/'
 '''
 
+'''
+! java -Xmx10G -cp \
+"/content/drive/My Drive/data_for_colab/bioasq7/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/content/drive/My Drive/data_for_colab/bioasq7/outputs/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
+"/content/drive/My Drive/data_for_colab/bioasq7/outputs/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq.json"
 
+! python \
+"/content/drive/My Drive/data_for_colab/bioasq7/eval (1)/run_eval.py" \
+"/content/drive/My Drive/data_for_colab/bioasq7/outputs/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
+"/content/drive/My Drive/data_for_colab/bioasq7/outputs/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq.json"
+
+
+'''
