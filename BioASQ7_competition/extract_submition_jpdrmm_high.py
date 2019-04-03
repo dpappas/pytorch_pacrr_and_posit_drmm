@@ -628,11 +628,11 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
             held_out_sents[ind]
         )
         all_emits.append(t)
+        # extracted_from_one.append(t)
         # if(emitss[ind] == mmax):
         #     extracted_from_one.append(t)
         if(emitss[ind]> min_sent_score):
             extracted_from_one.append(t)
-        extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
@@ -1102,7 +1102,7 @@ def load_model_from_checkpoint(resume_from):
 
 min_doc_score               = float(sys.argv[1])
 min_sent_score              = float(sys.argv[2])
-emit_only_abstract_sents    = bool(sys.argv[3])
+emit_only_abstract_sents    = bool(int(sys.argv[3]))
 ###########################################################
 use_cuda                    = torch.cuda.is_available()
 ###########################################################
@@ -1201,7 +1201,7 @@ F1 snippets     : 0.09489153914914335
 
 trec map doc    : 0.4328
 
-python3.6 tt.py -30. -30. False
+python3.6 tt.py -30. -30. 0
 grep -E '\"body\"|\"text\"' "test_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
 
 '''
