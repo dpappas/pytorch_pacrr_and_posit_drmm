@@ -1202,7 +1202,6 @@ F1 snippets     : 0.09489153914914335
 trec map doc    : 0.4328
 
 python3.6 tt.py -30. -30. False
-
 grep -E '\"body\"|\"text\"' "test_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
 
 '''

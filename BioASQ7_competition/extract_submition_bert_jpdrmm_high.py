@@ -722,8 +722,8 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
         )
         # if(emitss[ind] == mmax):
         #     extracted_from_one.append(t)
-        # if(emitss[ind]> min_sent_score):
-        #     extracted_from_one.append(t)
+        if(emitss[ind]> min_sent_score):
+            extracted_from_one.append(t)
         extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
@@ -1351,6 +1351,9 @@ GMAP snippets   : 9.80472859647476E-4
 F1 snippets     : 0.09388342171746662
 
 trec map doc    : 0.4252
+
+python3.6 tt.py -30. -30. False
+grep -E '\"body\"|\"text\"' "test_bert_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
 
 '''
 
