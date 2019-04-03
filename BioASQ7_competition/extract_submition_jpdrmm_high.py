@@ -1206,7 +1206,7 @@ trec map doc    : 0.4328
 
 python3.6 tt.py -30. -30. 0
 grep -E '\"body\"|\"text\"' "test_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
-
+cp "/home/dpappas/test_jpdrmm_high_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/jpdrmm.json" 
 '''
 
 
