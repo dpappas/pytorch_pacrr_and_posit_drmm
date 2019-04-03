@@ -1104,20 +1104,24 @@ min_doc_score               = float(sys.argv[1])
 min_sent_score              = float(sys.argv[2])
 emit_only_abstract_sents    = bool(sys.argv[3])
 ###########################################################
-use_cuda = torch.cuda.is_available()
+use_cuda                    = torch.cuda.is_available()
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ###########################################################
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/BioASQ-task7bPhaseA-testset2'
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+# f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/BioASQ-task7bPhaseA-testset2'
+# f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+# f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/BioASQ-task7bPhaseA-testset3'
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
 ###########################################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                = './test_jpdrmm_high_batch2/'
+# odir                = './test_jpdrmm_high_batch2/'
+odir                = './test_jpdrmm_high_batch3/'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
@@ -1196,6 +1200,8 @@ GMAP snippets   : 0.0010611736668060376
 F1 snippets     : 0.09489153914914335
 
 trec map doc    : 0.4328
+
+python3.6 tt.py -30. -30. False
 
 '''
 
