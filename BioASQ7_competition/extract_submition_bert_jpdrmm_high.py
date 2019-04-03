@@ -1257,9 +1257,10 @@ emit_only_abstract_sents    = bool(sys.argv[3])
 ###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/BioASQ-task7bPhaseA-testset2'
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+# fs_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/BioASQ-task7bPhaseA-testset3'
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1268,7 +1269,8 @@ odd                 = '/home/dpappas/'
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                = './test_bert_jpdrmm_high_batch2/'
+# odir                = './test_bert_jpdrmm_high_batch2/'
+odir                = './test_bert_jpdrmm_high_batch3/'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
