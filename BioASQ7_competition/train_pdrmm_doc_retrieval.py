@@ -801,13 +801,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data):
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
     doc_res                                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
-    the_doc_scores                          = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
     doc_res                                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
     emitions['documents']                   = doc_res[:100]
     ret_data['questions'].append(emitions)
-    #
-    extracted_snippets                      = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-    extracted_snippets_known_rel_num        = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
     #
     extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3                                             = [], [], []
     extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3   = [], [], []
