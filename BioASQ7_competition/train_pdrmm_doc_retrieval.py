@@ -671,32 +671,26 @@ def train_data_step1(train_data):
 
 def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        if(use_sent_tokenizer):
-            good_snips              = get_snips(quest_id, gid, bioasq6_data)
-            good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
-        else:
-            good_snips              = []
+        good_snips              = []
         #############################################
-        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
-        good_sents_embeds           = datum['doc_embeds']
-        good_doc_af                 = datum['doc_af']
+        datum                        = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
+        good_doc_embeds, good_doc_af = datum['doc_embeds'], datum['doc_af']
         #############################################
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
-        bad_sents_embeds            = datum['doc_embeds']
-        bad_doc_af                  = datum['doc_af']
+        bad_doc_embeds, bad_doc_af  = datum['doc_embeds'], datum['doc_af']
         #############################################
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #############################################
         yield {
-            'good_sents_embeds'     : good_sents_embeds,
+            'good_doc_embeds'       : good_doc_embeds,
             'good_doc_af'           : good_doc_af,
             #############################################
-            'bad_sents_embeds'      : bad_sents_embeds,
+            'bad_doc_embeds'        : bad_doc_embeds,
             'bad_doc_af'            : bad_doc_af,
             #############################################
             'quest_embeds'          : quest_embeds,
-            'q_idfs'                : q_idfs,
+            'q_idfs'                : q_idfs
         }
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
