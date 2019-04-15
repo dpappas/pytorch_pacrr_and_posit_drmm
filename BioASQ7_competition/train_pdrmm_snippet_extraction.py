@@ -771,7 +771,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         total       = 14288 # 17850
     )
     for datum in pbar:
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+        gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = datum['good_sents_embeds'],
             doc2_sents_embeds   = datum['bad_sents_embeds'],
             question_embeds     = datum['quest_embeds'],
@@ -783,12 +783,9 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         )
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
-        if(two_losses):
-            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss                       = sn_d1_l + sn_d2_l
-            # snip_loss = sn_d1_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
+        sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+        snip_loss                       = sn_d1_l + sn_d2_l
+        cost_                           = snip_loss
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1360,26 +1357,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
         #
-        final_good_output   = self.final_layer_1(good_out_pp)
-        final_good_output   = self.final_activ_1(final_good_output)
-        final_good_output   = self.final_layer_2(final_good_output)
-        #
         gs_emits            = gs_emits.unsqueeze(-1)
         gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
         gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits            = torch.sigmoid(gs_emits)
-        #
-        final_bad_output    = self.final_layer_1(bad_out_pp)
-        final_bad_output    = self.final_activ_1(final_bad_output)
-        final_bad_output    = self.final_layer_2(final_bad_output)
         #
         bs_emits            = bs_emits.unsqueeze(-1)
         bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
         bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
         bs_emits            = torch.sigmoid(bs_emits)
         #
-        loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        return gs_emits, bs_emits
 
 use_cuda = torch.cuda.is_available()
 ##########################################
