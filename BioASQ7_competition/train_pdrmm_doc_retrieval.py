@@ -1144,8 +1144,6 @@ b_size              = 32
 max_epoch           = 30
 early_stop          = 4
 
-# run_from    = int(sys.argv[1])
-# run_to      = int(sys.argv[2])
 run_from    = 0
 run_to      = 5
 hdlr        = None
