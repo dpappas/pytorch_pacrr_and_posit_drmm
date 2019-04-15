@@ -1007,11 +1007,13 @@ with open(f_in1, 'r') as f:
         if("snippets" not in q):
             q["snippets"]   = []
     bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
+###########################################################
 with open(f_in2, 'rb') as f:
     test_data = pickle.load(f)
+###########################################################
 with open(f_in3, 'rb') as f:
     test_docs = pickle.load(f)
-
+###########################################################
 words = {}
 GetWords(test_data, test_docs, words)
 ###########################################################
@@ -1024,3 +1026,25 @@ wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 test_map        = get_one_map('test', test_data, test_docs)
 ###########################################################
 print(test_map)
+
+'''
+mv \
+"/home/dpappas/test_pdrmm_batch3/v3 test_emit_bioasq.json" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/pdrmm.json"
+
+java -Xmx10G -cp \
+/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert_jpdrmm.json" | grep "^MAP documents"
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert_jpdrmm.json" | grep "^MAP documents"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/bert_jpdrmm.json" | grep "^MAP documents"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bert_jpdrmm.json" | grep "^MAP documents"
+(0.08401785714285709 + 0.07413134920634917 + 0.11210158730158724) / 3.0 = 0.09008359788
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert_jpdrmm.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/bert_jpdrmm.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bert_jpdrmm.json" | grep "^MAP snippets"
+(0.05846759009205377 + 0.1239309003941363 + 0.21200432463850613) / 3.0 = 0.13146760504
+
+'''
