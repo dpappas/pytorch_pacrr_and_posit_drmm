@@ -805,8 +805,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     print('Epoch:{:02d} aver_epoch_cost: {:.4f}'.format(epoch, epoch_aver_cost))
     logger.info('Epoch:{:02d} aver_epoch_cost: {:.4f}'.format(epoch, epoch_aver_cost))
 
-def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
-    emition                 = doc_emit_.cpu().item()
+def do_for_one_retrieved(gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emitss                  = gs_emits_.tolist()
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
@@ -821,7 +820,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
         # if(emitss[ind] == mmax):
         #     extracted_from_one.append(t)
         extracted_from_one.append(t)
-    doc_res[retr['doc_id']] = float(emition)
+    doc_res[retr['doc_id']] = 0.0
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
@@ -889,16 +888,14 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
-        doc_emit_, gs_emits_    = model.emit_one(
+        gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
         )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
-            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
-        )
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
@@ -1027,7 +1024,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         )
     return res_map
     '''
-    return v3_bioasq_snip_res['MAP documents']
+    return v3_bioasq_snip_res['MAP snippets']
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     print('loading pickle data')
@@ -1303,19 +1300,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = F.softmax(q_weights, dim=-1)
         #
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        #
-        final_good_output   = self.final_layer_1(good_out_pp)
-        final_good_output   = self.final_activ_1(final_good_output)
-        final_good_output   = self.final_layer_2(final_good_output)
-        #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits            = torch.sigmoid(gs_emits)
         #
-        return final_good_output, gs_emits
+        return gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
