@@ -23,49 +23,6 @@ bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '')
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords   = nltk.corpus.stopwords.words("english")
 
-def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
-    if(avgdl == 0):
-        total_words = 0
-        total_docs  = 0
-        for dic in tqdm(train_docs):
-            sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-            for s in sents:
-                total_words += len(tokenize(s))
-                total_docs  += 1.
-        avgdl = float(total_words) / float(total_docs)
-        print('avgdl {} computed'.format(avgdl))
-    else:
-        print('avgdl {} provided'.format(avgdl))
-    #
-    if(mean == 0 and deviation==0):
-        BM25scores  = []
-        k1, b       = 1.2, 0.75
-        not_found   = 0
-        for qid in tqdm(bioasq7_data):
-            qtext           = bioasq7_data[qid]['body']
-            all_retr_ids    = [link.split('/')[-1] for link in bioasq7_data[qid]['documents']]
-            for dic in all_retr_ids:
-                try:
-                    sents   = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-                    q_toks  = tokenize(qtext)
-                    for sent in sents:
-                        BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
-                        BM25scores.append(BM25score)
-                except KeyError:
-                    not_found += 1
-        #
-        mean        = sum(BM25scores)/float(len(BM25scores))
-        nominator   = 0
-        for score in BM25scores:
-            nominator += ((score - mean) ** 2)
-        deviation   = math.sqrt((nominator) / float(len(BM25scores) - 1))
-        print('mean {} computed'.format(mean))
-        print('deviation {} computed'.format(deviation))
-    else:
-        print('mean {} provided'.format(mean))
-        print('deviation {} provided'.format(deviation))
-    return avgdl, mean, deviation
-
 # Compute the term frequency of a word for a specific document
 def tf(term, document):
     tf = 0
@@ -172,9 +129,6 @@ def print_params(model):
     print(40 * '=')
     print(model)
     print(40 * '=')
-    logger.info(40 * '=')
-    logger.info(model)
-    logger.info(40 * '=')
     trainable       = 0
     untrainable     = 0
     for parameter in model.parameters():
@@ -190,9 +144,6 @@ def print_params(model):
     print(40 * '=')
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
-    logger.info(40 * '=')
-    logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
-    logger.info(40 * '=')
 
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
@@ -219,8 +170,6 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     torch.save(state, filename)
 
 def get_map_res(fgold, femit):
-    logger.info("command:")
-    logger.info(['python', eval_path, fgold, femit])
     print("command:")
     print(['python', eval_path, fgold, femit])
     trec_eval_res   = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
@@ -283,12 +232,6 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
             'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
             '-phaseA', '-e', '5', fgold, femit
         ])
-    logger.info('command:')
-    logger.info([
-            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
-            '-phaseA', '-e', '5', fgold, femit
-        ]
-    )
     bioasq_eval_res = subprocess.Popen(
         [
             'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
@@ -346,20 +289,6 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
     sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2,         size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
-
-def init_the_logger(hdlr):
-    if not os.path.exists(odir):
-        os.makedirs(odir)
-    od          = odir.split('/')[-1] # 'sent_posit_drmm_MarginRankingLoss_0p001'
-    logger      = logging.getLogger(od)
-    if(hdlr is not None):
-        logger.removeHandler(hdlr)
-    hdlr        = logging.FileHandler(os.path.join(odir,'model.log'))
-    formatter   = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    hdlr.setFormatter(formatter)
-    logger.addHandler(hdlr)
-    logger.setLevel(logging.INFO)
-    return logger, hdlr
 
 def get_words(s, idf, max_idf):
     sl  = tokenize(s)
@@ -626,91 +555,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
     ######################################################################################
     return {'doc_embeds' : doc_embeds, 'doc_af' : doc_af}
 
-def train_data_step1(train_data):
-    ret = []
-    for dato in tqdm(train_data['queries']):
-        quest       = dato['query_text']
-        quest_id    = dato['query_id']
-        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-        good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-        if(len(bad_pmids)>0):
-            for gid in good_pmids:
-                bid = random.choice(bad_pmids)
-                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
-    print('')
-    return ret
-
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
-    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        good_snips              = []
-        #############################################
-        datum                        = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf)
-        good_doc_embeds, good_doc_af = datum['doc_embeds'], datum['doc_af']
-        #############################################
-        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
-        bad_doc_embeds, bad_doc_af  = datum['doc_embeds'], datum['doc_af']
-        #############################################
-        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-        #############################################
-        yield {
-            'good_doc_embeds'       : good_doc_embeds,
-            'good_doc_af'           : good_doc_af,
-            #############################################
-            'bad_doc_embeds'        : bad_doc_embeds,
-            'bad_doc_af'            : bad_doc_af,
-            #############################################
-            'quest_embeds'          : quest_embeds,
-            'q_idfs'                : q_idfs
-        }
-
-def train_one(epoch, bioasq6_data):
-    model.train()
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
-    ################################################
-    train_instances = train_data_step1(train_data)
-    random.shuffle(train_instances)
-    ################################################
-    start_time      = time.time()
-    pbar = tqdm(
-        iterable    = train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf),
-        total       = 14288 # 17850
-    )
-    for datum in pbar:
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds     = datum['good_doc_embeds'],
-            doc2_embeds     = datum['bad_doc_embeds'],
-            question_embeds = datum['quest_embeds'],
-            q_idfs          = datum['q_idfs'],
-            doc_gaf         = datum['good_doc_af'],
-            doc_baf         = datum['bad_doc_af']
-        )
-        ################################################
-        batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_costs.append(cost_.cpu().item())
-        batch_costs.append(cost_)
-        if (len(batch_costs) == b_size):
-            batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-            elapsed_time    = time.time() - start_time
-            start_time      = time.time()
-            pbar.set_description('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-            batch_costs, batch_acc = [], []
-    if (len(batch_costs) > 0):
-        batch_counter   += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
-        elapsed_time    = time.time() - start_time
-        start_time      = time.time()
-        print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-        logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-    print('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-
 def do_for_one_retrieved(doc_emit_, retr, doc_res):
     emition                 = doc_emit_.cpu().item()
     all_emits, extracted_from_one = [], []
@@ -835,10 +679,6 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
     print('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    logger.info('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    logger.info('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    logger.info('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    logger.info('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
@@ -846,10 +686,6 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
     print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    logger.info('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    logger.info('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    logger.info('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     return bioasq_snip_res
 
@@ -1189,6 +1025,6 @@ print('loading w2v')
 wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 ###########################################################
-test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
+test_map        = get_one_map('test', test_data, test_docs)
 ###########################################################
 print(test_map)
