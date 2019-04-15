@@ -787,8 +787,6 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         snip_loss                       = sn_d1_l + sn_d2_l
         cost_                           = snip_loss
         #
-        batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
         batch_costs.append(cost_)
         if (len(batch_costs) == b_size):
@@ -797,9 +795,14 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
             pbar.set_description(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
+                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time)
+            )
+            logger.info(
+                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
+                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time
+                )
+            )
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
         batch_counter += 1
@@ -1083,7 +1086,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
         self.init_sent_output_layer()
-        self.init_doc_out_layer()
         # doc loss func
         self.margin_loss        = nn.MarginRankingLoss(margin=1.0)
         if(use_cuda):
@@ -1135,16 +1137,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 self.sent_res_h0    = self.sent_res_h0.cuda()
                 self.sent_res_bigru = self.sent_res_bigru.cuda()
                 self.sent_res_mlp   = self.sent_res_mlp.cuda()
-    def init_doc_out_layer(self):
-        self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True)
-        self.final_activ_1  = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.final_layer_2  = nn.Linear(8, 1, bias=True)
-        self.oo_layer       = nn.Linear(2, 1, bias=True)
-        if(use_cuda):
-            self.final_layer_1  = self.final_layer_1.cuda()
-            self.final_activ_1  = self.final_activ_1.cuda()
-            self.final_layer_2  = self.final_layer_2.cuda()
-            self.oo_layer       = self.oo_layer.cuda()
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta      = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
@@ -1354,17 +1346,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
-        #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits            = torch.sigmoid(gs_emits)
-        #
-        bs_emits            = bs_emits.unsqueeze(-1)
-        bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
         bs_emits            = torch.sigmoid(bs_emits)
         #
         return gs_emits, bs_emits
