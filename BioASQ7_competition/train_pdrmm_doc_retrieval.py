@@ -1178,7 +1178,7 @@ for run in range(run_from, run_to):
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
-            # test_map        = get_one_map('test', test_data, all_docs, use_sent_tokenizer=True)
+            # test_map        = get_one_map('test', test_data, all_docs)
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_dev_checkpoint.pth.tar'))
             waited_for = 0
         else:
