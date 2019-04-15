@@ -262,16 +262,14 @@ def get_map_res(fgold, femit):
     map_res         = float(map_res[-1])
     return map_res
 
-def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
+def back_prop(batch_costs, epoch_costs):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
     batch_cost.backward()
     optimizer.step()
     optimizer.zero_grad()
     batch_aver_cost = batch_cost.cpu().item()
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    batch_aver_acc  = sum(batch_acc) / float(len(batch_acc))
-    epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
-    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
+    return batch_aver_cost, epoch_aver_cost
 
 def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
@@ -759,8 +757,8 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
+    batch_costs, epoch_costs = [], []
+    batch_counter, epoch_aver_cost = 0, 0.
     #
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
@@ -791,28 +789,21 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         batch_costs.append(cost_)
         if (len(batch_costs) == b_size):
             batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+            batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            pbar.set_description(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
-                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time)
-            )
-            logger.info(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
-                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time
-                )
-            )
-            batch_costs, batch_acc = [], []
+            pbar.set_description('{:03d} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, elapsed_time))
+            logger.info('{:03d} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, elapsed_time))
+            batch_costs = []
     if (len(batch_costs) > 0):
         batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+        batch_aver_cost, epoch_aver_cost = back_prop(batch_costs, epoch_costs)
         elapsed_time = time.time() - start_time
         start_time = time.time()
-        print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-        logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-    print('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+        print('{:03d} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, elapsed_time))
+        logger.info('{:03d} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, elapsed_time))
+    print('Epoch:{:02d} aver_epoch_cost: {:.4f}'.format(epoch, epoch_aver_cost))
+    logger.info('Epoch:{:02d} aver_epoch_cost: {:.4f}'.format(epoch, epoch_aver_cost))
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition                 = doc_emit_.cpu().item()
@@ -1353,19 +1344,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 ##########################################
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-eval_path           = '/content/drive/My Drive/data_for_colab/bioasq7/eval (1)/run_eval.py'
-retrieval_jar_path  = '/content/drive/My Drive/data_for_colab/bioasq7/dist/my_bioasq_eval_2.jar'
-odd                 = '/content/drive/My Drive/data_for_colab/bioasq7/outputs/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
 ##########################################
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
-w2v_bin_path    = '/content/drive/My Drive/data_for_colab/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/content/drive/My Drive/data_for_colab/idf.pkl'
-dataloc         = '/content/drive/My Drive/data_for_colab/bioasq7/data/'
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 ##########################################
 (
     dev_data, dev_docs,
