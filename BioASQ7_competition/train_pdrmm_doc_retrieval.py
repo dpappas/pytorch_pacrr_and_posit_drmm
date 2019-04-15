@@ -765,7 +765,7 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
 
-def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data):
     emitions                    = {
         'body': dato['query_text'],
         'id': dato['query_id'],
@@ -808,28 +808,13 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     extracted_snippets                      = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
     extracted_snippets_known_rel_num        = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
-    if(use_sent_tokenizer):
-        extracted_snippets_v1               = select_snippets_v1(extracted_snippets)
-        extracted_snippets_v2               = select_snippets_v2(extracted_snippets)
-        extracted_snippets_v3               = select_snippets_v3(extracted_snippets, the_doc_scores)
-        extracted_snippets_known_rel_num_v1 = select_snippets_v1(extracted_snippets_known_rel_num)
-        extracted_snippets_known_rel_num_v2 = select_snippets_v2(extracted_snippets_known_rel_num)
-        extracted_snippets_known_rel_num_v3 = select_snippets_v3(extracted_snippets_known_rel_num, the_doc_scores)
-    else:
-        extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3 = [], [], []
-        extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3 = [], [], []
     #
-    # pprint(extracted_snippets_v1)
-    # pprint(extracted_snippets_v2)
-    # pprint(extracted_snippets_v3)
-    # exit()
+    extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3                                             = [], [], []
+    extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3   = [], [], []
+    #
     snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    # pprint(snips_res_v1)
-    # pprint(snips_res_v2)
-    # pprint(snips_res_v3)
-    # exit()
     #
     snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
@@ -872,7 +857,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     #
     return bioasq_snip_res
 
-def get_one_map(prefix, data, docs, use_sent_tokenizer):
+def get_one_map(prefix, data, docs):
     model.eval()
     #
     ret_data                        = {'questions': []}
@@ -887,7 +872,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     #
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data)
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
