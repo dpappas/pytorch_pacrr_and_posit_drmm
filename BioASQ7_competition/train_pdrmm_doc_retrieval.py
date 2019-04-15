@@ -628,61 +628,30 @@ def snip_is_relevant(one_sent, gold_snips):
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     quest_toks      = tokenize(quest)
-    good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
-    good_doc_af.append(len(sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])) / 60.)
     ######################################################################################
-    doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
-    tomi                = (set(doc_toks) & set(quest_toks))
-    tomi_no_stop        = tomi - set(stopwords)
-    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
-    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
-    features            = [
-        len(quest)                                      / 300.,
-        len(the_doc['title'] + the_doc['abstractText']) / 300.,
-        len(tomi_no_stop)                               / 100.,
+    doc_text                    = the_doc['title'] + ' ' + the_doc['abstractText']
+    doc_af                      = GetScores(quest, doc_text, the_bm25, idf, max_idf)
+    doc_sents                   = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    doc_toks                    = tokenize(doc_text)
+    doc_tokens, doc_embeds      = get_embeds(doc_toks, wv)
+    tomi                        = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop                = tomi - set(stopwords)
+    BM25score                   = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    tomi_no_stop_idfs           = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs                   = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs                  = [idf_val(w, idf, max_idf) for w in quest_toks]
+    doc_af.extend([
+        len(doc_sents)          / 60.,
+        len(doc_toks)           / 342.,
+        len(quest)              / 300.,
+        len(doc_text)           / 300.,
+        len(tomi_no_stop)       / 100.,
         BM25score,
-        sum(tomi_no_stop_idfs)                          / 100.,
-        sum(tomi_idfs)                                  / sum(quest_idfs),
-    ]
-    good_doc_af.extend(features)
+        sum(tomi_no_stop_idfs)  / 100.,
+        sum(tomi_idfs)          / sum(quest_idfs),
+    ])
     ######################################################################################
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
-    for good_text in good_sents:
-        sent_toks                   = tokenize(good_text)
-        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
-        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
-        good_escores.append(len(sent_toks)/ 342.)
-        if (len(good_embeds) > 0):
-            #
-            tomi                = (set(sent_toks) & set(quest_toks))
-            tomi_no_stop        = tomi - set(stopwords)
-            BM25score           = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-            tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-            tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
-            quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
-            features            = [
-                len(quest)              / 300.,
-                len(good_text)          / 300.,
-                len(tomi_no_stop)       / 100.,
-                BM25score,
-                sum(tomi_no_stop_idfs)  / 100.,
-                sum(tomi_idfs)          / sum(quest_idfs),
-            ]
-            #
-            good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores+features)
-            held_out_sents.append(good_text)
-            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
-    ####
-    return {
-        'sents_embeds'     : good_sents_embeds,
-        'sents_escores'    : good_sents_escores,
-        'doc_af'           : good_doc_af,
-        'sent_tags'        : good_sent_tags,
-        'held_out_sents'   : held_out_sents,
-    }
+    return {'doc_embeds' : doc_embeds, 'doc_af' : doc_af}
 
 def train_data_step1(train_data):
     ret = []
@@ -709,39 +678,26 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
             good_snips              = []
         #############################################
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
-        good_sents_embeds           = datum['sents_embeds']
-        good_sents_escores          = datum['sents_escores']
+        good_sents_embeds           = datum['doc_embeds']
         good_doc_af                 = datum['doc_af']
-        good_sent_tags              = datum['sent_tags']
-        good_held_out_sents         = datum['held_out_sents']
         #############################################
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
-        bad_sents_embeds            = datum['sents_embeds']
-        bad_sents_escores           = datum['sents_escores']
+        bad_sents_embeds            = datum['doc_embeds']
         bad_doc_af                  = datum['doc_af']
-        bad_sent_tags               = [0] * len(datum['sent_tags'])
-        bad_held_out_sents          = datum['held_out_sents']
         #############################################
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #############################################
-        if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
-            yield {
-                'good_sents_embeds'     : good_sents_embeds,
-                'good_sents_escores'    : good_sents_escores,
-                'good_doc_af'           : good_doc_af,
-                'good_sent_tags'        : good_sent_tags,
-                'good_held_out_sents'   : good_held_out_sents,
-                #############################################
-                'bad_sents_embeds'      : bad_sents_embeds,
-                'bad_sents_escores'     : bad_sents_escores,
-                'bad_doc_af'            : bad_doc_af,
-                'bad_sent_tags'         : bad_sent_tags,
-                'bad_held_out_sents'    : bad_held_out_sents,
-                #############################################
-                'quest_embeds'          : quest_embeds,
-                'q_idfs'                : q_idfs,
-            }
+        yield {
+            'good_sents_embeds'     : good_sents_embeds,
+            'good_doc_af'           : good_doc_af,
+            #############################################
+            'bad_sents_embeds'      : bad_sents_embeds,
+            'bad_doc_af'            : bad_doc_af,
+            #############################################
+            'quest_embeds'          : quest_embeds,
+            'q_idfs'                : q_idfs,
+        }
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
