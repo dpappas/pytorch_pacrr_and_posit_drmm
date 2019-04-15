@@ -1126,38 +1126,20 @@ class Posit_Drmm_Modeler(nn.Module):
         output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output          = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
-        res = []
-        for i in range(len(doc_sents_embeds)):
-            sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
-            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            if(use_cuda):
-                sent_embeds     = sent_embeds.cuda()
-                gaf             = gaf.cuda()
-            conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
-            #
-            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh              = (sim_insens > (1 - (1e-3))).float()
-            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled  = self.pooling_method(sim_insens)
-            sensitive_pooled    = self.pooling_method(sim_sens)
-            oh_pooled           = self.pooling_method(sim_oh)
-            #
-            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
-            res.append(sent_add_feats)
-        res = torch.stack(res)
-        if(self.sentence_out_method == 'MLP'):
-            res = self.sent_out_layer_1(res)
-            res = self.sent_out_activ_1(res)
-            res = self.sent_out_layer_2(res).squeeze(-1)
-        else:
-            res = self.apply_sent_res_bigru(res)
-        # ret = self.get_max(res).unsqueeze(0)
-        ret = self.get_kmax(res, k2)
-        return ret, res
+    def do_for_one_doc_cnn(self, doc_embeds, question_embeds, q_conv_res_trigram, q_weights):
+        conv_res            = self.apply_context_convolution(doc_embeds,    self.trigram_conv_1, self.trigram_conv_activation_1)
+        conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
+        #####################
+        sim_insens          = self.my_cosine_sim(question_embeds, doc_embeds).squeeze(0)
+        sim_oh              = (sim_insens > (1 - (1e-3))).float()
+        sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+        #####################
+        insensitive_pooled  = self.pooling_method(sim_insens)
+        sensitive_pooled    = self.pooling_method(sim_sens)
+        oh_pooled           = self.pooling_method(sim_oh)
+        #####################
+        doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+        return doc_emit
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         hn  = self.context_h0
@@ -1230,14 +1212,33 @@ class Posit_Drmm_Modeler(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
-    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
-        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
-        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
-        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
-        if(use_cuda):
-            q_idfs          = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
-            doc_gaf         = doc_gaf.cuda()
+    def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf):
+        q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
+        question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).to(device)
+        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
+        #
+        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
+        #
+        q_weights = torch.cat([q_context, q_idfs], -1)
+        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights = F.softmax(q_weights, dim=-1)
+        #
+        good_out    = self.do_for_one_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
+        good_out_pp = torch.cat([good_out, doc_gaf], -1)
+        #
+        final_good_output = self.final_layer_1(good_out_pp)
+        final_good_output = self.final_activ_1(final_good_output)
+        final_good_output = self.final_layer_2(final_good_output)
+        #
+        return final_good_output
+    def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf):
+        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False).to(device)
+        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False).to(device)
+        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False).to(device)
+        doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False).to(device)
+        doc1_embeds         = autograd.Variable(torch.FloatTensor(doc1_embeds),         requires_grad=False).to(device)
+        doc2_embeds         = autograd.Variable(torch.FloatTensor(doc2_embeds),         requires_grad=False).to(device)
         #
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1246,40 +1247,8 @@ class Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        #
-        final_good_output   = self.final_layer_1(good_out_pp)
-        final_good_output   = self.final_activ_1(final_good_output)
-        final_good_output   = self.final_layer_2(final_good_output)
-        #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
-        #
-        return final_good_output, gs_emits
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
-        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
-        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
-        doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
-        if(use_cuda):
-            q_idfs          = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
-            doc_gaf         = doc_gaf.cuda()
-            doc_baf         = doc_baf.cuda()
-        #
-        q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        #
-        q_weights           = torch.cat([q_context, q_idfs], -1)
-        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights           = F.softmax(q_weights, dim=-1)
-        #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        good_out            = self.do_for_one_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
+        bad_out             = self.do_for_one_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
         #
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
@@ -1288,24 +1257,16 @@ class Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
-        #
         final_bad_output    = self.final_layer_1(bad_out_pp)
         final_bad_output    = self.final_activ_1(final_bad_output)
         final_bad_output    = self.final_layer_2(final_bad_output)
         #
-        bs_emits            = bs_emits.unsqueeze(-1)
-        bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
-        bs_emits            = torch.sigmoid(bs_emits)
-        #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        return loss1, final_good_output, final_bad_output
 
-use_cuda = torch.cuda.is_available()
+use_cuda    = torch.cuda.is_available()
+device      = torch.device("cuda:0") if(use_cuda) else torch.device("cpu")
+
 ##########################################
 # eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 # retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
