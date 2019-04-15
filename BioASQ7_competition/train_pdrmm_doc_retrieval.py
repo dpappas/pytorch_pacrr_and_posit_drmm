@@ -1216,21 +1216,21 @@ class Posit_Drmm_Modeler(nn.Module):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).to(device)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
-        #
+        #######################################################################################
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
-        #
+        #######################################################################################
         q_weights = torch.cat([q_context, q_idfs], -1)
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
-        #
+        #######################################################################################
         good_out    = self.do_for_one_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
-        #
+        #######################################################################################
         final_good_output = self.final_layer_1(good_out_pp)
         final_good_output = self.final_activ_1(final_good_output)
         final_good_output = self.final_layer_2(final_good_output)
-        #
+        #######################################################################################
         return final_good_output
     def forward(self, doc1_embeds, doc2_embeds, question_embeds, q_idfs, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False).to(device)
@@ -1239,28 +1239,28 @@ class Posit_Drmm_Modeler(nn.Module):
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False).to(device)
         doc1_embeds         = autograd.Variable(torch.FloatTensor(doc1_embeds),         requires_grad=False).to(device)
         doc2_embeds         = autograd.Variable(torch.FloatTensor(doc2_embeds),         requires_grad=False).to(device)
-        #
+        #######################################################################################
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        #
+        #######################################################################################
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        #
+        #######################################################################################
         good_out            = self.do_for_one_doc_cnn(doc1_embeds, question_embeds, q_context, q_weights)
         bad_out             = self.do_for_one_doc_cnn(doc2_embeds, question_embeds, q_context, q_weights)
-        #
+        #######################################################################################
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
-        #
+        #######################################################################################
         final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
-        #
+        #######################################################################################
         final_bad_output    = self.final_layer_1(bad_out_pp)
         final_bad_output    = self.final_activ_1(final_bad_output)
         final_bad_output    = self.final_layer_2(final_bad_output)
-        #
+        #######################################################################################
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output
 
