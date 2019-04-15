@@ -708,12 +708,12 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = datum['good_doc_embeds'],
-            doc2_sents_embeds   = datum['bad_doc_embeds'],
-            question_embeds     = datum['quest_embeds'],
-            q_idfs              = datum['q_idfs'],
-            doc_gaf             = datum['good_doc_af'],
-            doc_baf             = datum['bad_doc_af']
+            doc1_embeds     = datum['good_doc_embeds'],
+            doc2_embeds     = datum['bad_doc_embeds'],
+            question_embeds = datum['quest_embeds'],
+            q_idfs          = datum['q_idfs'],
+            doc_gaf         = datum['good_doc_af'],
+            doc_baf         = datum['bad_doc_af']
         )
         ################################################
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
