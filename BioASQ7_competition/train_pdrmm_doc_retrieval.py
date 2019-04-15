@@ -708,23 +708,13 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = datum['good_sents_embeds'],
-            doc2_sents_embeds   = datum['bad_sents_embeds'],
+            doc1_sents_embeds   = datum['good_doc_embeds'],
+            doc2_sents_embeds   = datum['bad_doc_embeds'],
             question_embeds     = datum['quest_embeds'],
             q_idfs              = datum['q_idfs'],
-            sents_gaf           = datum['good_sents_escores'],
-            sents_baf           = datum['bad_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
             doc_baf             = datum['bad_doc_af']
         )
-        ################################################
-        good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
-        if(two_losses):
-            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss                       = sn_d1_l + sn_d2_l
-            # snip_loss = sn_d1_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
         ################################################
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -735,9 +725,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            pbar.set_description(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
+            pbar.set_description('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
@@ -1002,14 +990,14 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 
-class Sent_Posit_Drmm_Modeler(nn.Module):
+class Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
              embedding_dim          = 30,
              k_for_maxpool          = 5,
              sentence_out_method    = 'MLP',
              k_sent_maxpool         = 1
          ):
-        super(Sent_Posit_Drmm_Modeler, self).__init__()
+        super(Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         self.k_sent_maxpool                         = k_sent_maxpool
         self.doc_add_feats                          = 11
@@ -1375,7 +1363,7 @@ for run in range(run_from, run_to):
     #
     print('Compiling model...')
     logger.info('Compiling model...')
-    model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
+    model       = Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
     if(use_cuda):
         model   = model.cuda()
     params      = model.parameters()
