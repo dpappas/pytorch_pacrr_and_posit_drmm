@@ -1297,6 +1297,17 @@ java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.E
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/bert.json" | grep "^MAP snippets"
 (0.06486042675230512 + 0.047277665911662915 + 0.08591015249565215) / 3.0 = 0.06601608171
 
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert-high-conf-0.01.json" | grep "^MAP documents"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/bert-high-conf-0.01.json" | grep "^MAP documents"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bert-high-conf-0.01.json" | grep "^MAP documents"
+(0.08123690476190468 + 0.08296666666666663 + 0.11017539682539677) / 3.0 = 0.09145965608
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_high_bcnn.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/bert_high_bcnn.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/bert_high_bcnn.json" | grep "^MAP snippets"
+(0.13329145558537722 + 0.11853710004450006 + 0.18459823640259568) / 3.0 = 0.14547559734
+
+
+
 
 '''
 
