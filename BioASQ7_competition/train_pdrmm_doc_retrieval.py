@@ -194,29 +194,6 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def dummy_test():
-    doc1_embeds         = np.random.rand(40, 200)
-    doc2_embeds         = np.random.rand(30, 200)
-    question_embeds     = np.random.rand(20, 200)
-    q_idfs              = np.random.rand(20, 1)
-    gaf                 = np.random.rand(4)
-    baf                 = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds     = doc1_embeds,
-            doc2_embeds     = doc2_embeds,
-            question_embeds = question_embeds,
-            q_idfs          = q_idfs,
-            gaf             = gaf,
-            baf             = baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -622,7 +599,7 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
     quest_toks      = tokenize(quest)
     ######################################################################################
     doc_text                    = the_doc['title'] + ' ' + the_doc['abstractText']
@@ -665,14 +642,14 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         good_snips              = []
         #############################################
-        datum                        = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
+        datum                        = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf)
         good_doc_embeds, good_doc_af = datum['doc_embeds'], datum['doc_af']
         #############################################
-        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
+        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
         bad_doc_embeds, bad_doc_af  = datum['doc_embeds'], datum['doc_af']
         #############################################
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
@@ -689,7 +666,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
             'q_idfs'                : q_idfs
         }
 
-def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
+def train_one(epoch, bioasq6_data):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
@@ -699,7 +676,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     ################################################
     start_time      = time.time()
     pbar = tqdm(
-        iterable    = train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer),
+        iterable    = train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf),
         total       = 14288 # 17850
     )
     for datum in pbar:
@@ -734,22 +711,9 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     print('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
-def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
+def do_for_one_retrieved(doc_emit_, retr, doc_res):
     emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_.tolist()
-    mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
-    for ind in range(len(emitss)):
-        t = (
-            snip_is_relevant(held_out_sents[ind], gold_snips),
-            emitss[ind],
-            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind]
-        )
-        all_emits.append(t)
-        # if(emitss[ind] == mmax):
-        #     extracted_from_one.append(t)
-        extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
@@ -812,22 +776,19 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    gold_snips                  = get_gold_snips(dato['query_id'], bioasq7_data)
+    gold_snips                  = []
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
-        doc_emit_, gs_emits_    = model.emit_one(
-            doc1_sents_embeds   = datum['sents_embeds'],
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf)
+        doc_emit_               = model.emit_one(
+            doc1_embeds         = datum['doc_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
-            sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
         )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
-            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
-        )
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, retr, doc_res)
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
@@ -835,7 +796,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         if (total_relevant > 0):
             extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
         if (dato['query_id'] not in data_for_revision):
-            data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets'  : {retr['doc_id']: all_emits}}
+            data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets': {retr['doc_id']: all_emits}}
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
@@ -1232,8 +1193,8 @@ for run in range(run_from, run_to):
     waited_for  = 0
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
+        train_one(epoch+1, bioasq7_data)
+        epoch_dev_map       = get_one_map('dev', dev_data, dev_doc)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
             # test_map        = get_one_map('test', test_data, all_docs, use_sent_tokenizer=True)
