@@ -1004,9 +1004,6 @@ class Posit_Drmm_Modeler(nn.Module):
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss        = nn.MarginRankingLoss(margin=1.0).to(device)
-    def init_mesh_module(self):
-        self.mesh_h0    = autograd.Variable(torch.randn(1, 1, self.embedding_dim)).to(device)
-        self.mesh_gru   = nn.GRU(self.embedding_dim, self.embedding_dim).to(device)
     def init_context_module(self):
         self.trigram_conv_1             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
         # self.trigram_conv_activation_1  = torch.nn.LeakyReLU(negative_slope=0.1)
@@ -1101,7 +1098,7 @@ class Posit_Drmm_Modeler(nn.Module):
         oh_pooled           = self.pooling_method(sim_oh)
         #####################
         doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-        return doc_emit
+        return doc_emit.unsqueeze(-1)
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         hn  = self.context_h0
@@ -1156,17 +1153,6 @@ class Posit_Drmm_Modeler(nn.Module):
         res = self.min_max_norm(res)
         res = torch.max(res)
         return res
-    def apply_mesh_gru(self, mesh_embeds):
-        mesh_embeds             = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False).to(device)
-        output, hn              = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
-        return output[-1,0,:]
-    def get_mesh_rep(self, meshes_embeds, q_context):
-        meshes_embeds   = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
-        meshes_embeds   = torch.stack(meshes_embeds)
-        sim_matrix      = self.my_cosine_sim(meshes_embeds, q_context).squeeze(0)
-        max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
-        output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
-        return output
     def emit_one(self, doc1_embeds, question_embeds, q_idfs, doc_gaf):
         q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
         question_embeds = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).to(device)
