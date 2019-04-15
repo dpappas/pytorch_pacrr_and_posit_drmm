@@ -703,7 +703,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         total       = 14288 # 17850
     )
     for datum in pbar:
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+        cost_, doc1_emit_, doc2_emit_ = model(
             doc1_embeds     = datum['good_doc_embeds'],
             doc2_embeds     = datum['bad_doc_embeds'],
             question_embeds = datum['quest_embeds'],
@@ -991,8 +991,7 @@ class Posit_Drmm_Modeler(nn.Module):
         super(Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         self.k_sent_maxpool                         = k_sent_maxpool
-        self.doc_add_feats                          = 11
-        self.sent_add_feats                         = 10
+        self.doc_add_feats                          = 12
         #
         self.embedding_dim                          = embedding_dim
         self.sentence_out_method                    = sentence_out_method
@@ -1000,7 +999,6 @@ class Posit_Drmm_Modeler(nn.Module):
         self.init_context_module()
         self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
-        self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss        = nn.MarginRankingLoss(margin=1.0).to(device)
@@ -1017,15 +1015,6 @@ class Posit_Drmm_Modeler(nn.Module):
         self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True).to(device)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True).to(device)
-    def init_sent_output_layer(self):
-        if(self.sentence_out_method == 'MLP'):
-            self.sent_out_layer_1       = nn.Linear(self.sent_add_feats+1, 8, bias=False).to(device)
-            self.sent_out_activ_1       = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
-            self.sent_out_layer_2       = nn.Linear(8, 1, bias=False).to(device)
-        else:
-            self.sent_res_h0    = autograd.Variable(torch.randn(2, 1, 5)).to(device)
-            self.sent_res_bigru = nn.GRU(input_size=self.sent_add_feats+1, hidden_size=5, bidirectional=True, batch_first=False).to(device)
-            self.sent_res_mlp   = nn.Linear(10, 1, bias=False).to(device)
     def init_doc_out_layer(self):
         self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True).to(device)
         self.final_activ_1  = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
@@ -1099,36 +1088,6 @@ class Posit_Drmm_Modeler(nn.Module):
         #####################
         doc_emit            = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
         return doc_emit.unsqueeze(-1)
-    def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
-        res = []
-        hn  = self.context_h0
-        for i in range(len(doc_sents_embeds)):
-            sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False).to(device)
-            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(device)
-            conv_res, hn        = self.apply_context_gru(sent_embeds, hn)
-            #
-            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh              = (sim_insens > (1 - (1e-3))).float()
-            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled  = self.pooling_method(sim_insens)
-            sensitive_pooled    = self.pooling_method(sim_sens)
-            oh_pooled           = self.pooling_method(sim_oh)
-            #
-            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
-            res.append(sent_add_feats)
-        res = torch.stack(res)
-        if(self.sentence_out_method == 'MLP'):
-            res = self.sent_out_layer_1(res)
-            res = self.sent_out_activ_1(res)
-            res = self.sent_out_layer_2(res).squeeze(-1)
-        else:
-            res = self.apply_sent_res_bigru(res)
-        # ret = self.get_max(res).unsqueeze(0)
-        ret = self.get_kmax(res, k2)
-        res = torch.sigmoid(res)
-        return ret, res
     def get_max(self, res):
         return torch.max(res)
     def get_kmax(self, res, k):
