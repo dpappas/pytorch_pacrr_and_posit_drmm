@@ -635,8 +635,11 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
-    good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
+    if(use_sent_tokenizer):
+        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    else:
+        good_sents  = [the_doc['title'] + the_doc['abstractText']]
     ####
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -692,7 +695,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf):
         'sents_escores'    : good_sents_escores,
         'doc_af'           : good_doc_af,
         'sent_tags'        : good_sent_tags,
-        'held_out_sents'   : held_out_sents
+        'held_out_sents'   : held_out_sents,
     }
 
 def train_data_step1(train_data):
@@ -711,19 +714,22 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
+def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        good_snips                  = get_snips(quest_id, gid, bioasq6_data)
-        good_snips                  = [' '.join(bioclean(sn)) for sn in good_snips]
+        if(use_sent_tokenizer):
+            good_snips              = get_snips(quest_id, gid, bioasq6_data)
+            good_snips              = [' '.join(bioclean(sn)) for sn in good_snips]
+        else:
+            good_snips              = []
         #
-        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf)
+        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds           = datum['sents_embeds']
         good_sents_escores          = datum['sents_escores']
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         #
-        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf)
+        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
         bad_doc_af                  = datum['doc_af']
@@ -733,7 +739,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
-        if(sum(good_sent_tags)>0):
+        if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
             yield {
                 'good_sents_embeds'     : good_sents_embeds,
                 'good_sents_escores'    : good_sents_escores,
@@ -751,7 +757,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf):
                 'q_idfs'                : q_idfs,
             }
 
-def train_one(epoch, bioasq6_data, two_losses):
+def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
@@ -761,7 +767,7 @@ def train_one(epoch, bioasq6_data, two_losses):
     #
     start_time      = time.time()
     pbar = tqdm(
-        iterable    = train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf),
+        iterable    = train_data_step2(train_instances, train_docs, wv, bioasq6_data, idf, max_idf, use_sent_tokenizer),
         total       = 14288 # 17850
     )
     for datum in pbar:
@@ -1444,11 +1450,11 @@ for run in range(run_from, run_to):
     waited_for  = 0
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq7_data, two_losses=True)
-        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
+        train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
+        epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
-            # test_map        = get_one_map('test', test_data, all_docs)
+            # test_map        = get_one_map('test', test_data, all_docs, use_sent_tokenizer=True)
             save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_dev_checkpoint.pth.tar'))
             waited_for = 0
         else:
