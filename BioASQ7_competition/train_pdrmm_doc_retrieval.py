@@ -991,12 +991,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 
 class Posit_Drmm_Modeler(nn.Module):
-    def __init__(self,
-             embedding_dim          = 30,
-             k_for_maxpool          = 5,
-             sentence_out_method    = 'MLP',
-             k_sent_maxpool         = 1
-         ):
+    def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
         super(Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         self.k_sent_maxpool                         = k_sent_maxpool
