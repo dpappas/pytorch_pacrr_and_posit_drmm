@@ -1147,7 +1147,7 @@ early_stop          = 4
 # run_from    = int(sys.argv[1])
 # run_to      = int(sys.argv[2])
 run_from    = 0
-run_to      = 1
+run_to      = 5
 hdlr        = None
 for run in range(run_from, run_to):
     #
@@ -1175,7 +1175,7 @@ for run in range(run_from, run_to):
     waited_for  = 0
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch+1, bioasq7_data)
+        train_one(epoch+1, bioasq7_data)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map

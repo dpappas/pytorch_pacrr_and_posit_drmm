@@ -953,7 +953,7 @@ class Posit_Drmm_Modeler(nn.Module):
 
 use_cuda    = torch.cuda.is_available()
 device      = torch.device("cuda:0") if(use_cuda) else torch.device("cpu")
-
+###########################################################
 min_doc_score               = -1000.
 min_sent_score              = -1000.
 emit_only_abstract_sents    = False
@@ -964,14 +964,15 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ###########################################################
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/BioASQ-task7bPhaseA-testset3'
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+batch               = sys.argv[1]
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch, batch)
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch)
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch)
 ###########################################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                = './test_pdrmm_batch3/'
+odir                = './test_pdrmm_batch{}/'.format(batch)
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
@@ -1029,22 +1030,23 @@ print(test_map)
 
 '''
 mv \
+"/home/dpappas/test_pdrmm_batch1/v3 test_emit_bioasq.json" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json"
+
+mv \
+"/home/dpappas/test_pdrmm_batch2/v3 test_emit_bioasq.json" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/pdrmm.json"
+
+mv \
 "/home/dpappas/test_pdrmm_batch3/v3 test_emit_bioasq.json" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/pdrmm.json"
 
-java -Xmx10G -cp \
-/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
-evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert_jpdrmm.json" | grep "^MAP documents"
-
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert_jpdrmm.json" | grep "^MAP documents"
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/bert_jpdrmm.json" | grep "^MAP documents"
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bert_jpdrmm.json" | grep "^MAP documents"
-(0.08401785714285709 + 0.07413134920634917 + 0.11210158730158724) / 3.0 = 0.09008359788
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json" | grep "^MAP documents"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/pdrmm.json" | grep "^MAP documents"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/pdrmm.json" | grep "^MAP documents"
+(0.06950714285714284 + 0.06106428571428566 + 0.07329841269841265) / 3.0 = 0.06795661375
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert_jpdrmm.json" | grep "^MAP snippets"
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/bert_jpdrmm.json" | grep "^MAP snippets"
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bert_jpdrmm.json" | grep "^MAP snippets"
-(0.05846759009205377 + 0.1239309003941363 + 0.21200432463850613) / 3.0 = 0.13146760504
 
 '''
