@@ -1017,12 +1017,11 @@ params      = model.parameters()
 ###########################################################
 import os, sys, pickle, json
 batch               = sys.argv[1]
+fname               = sys.argv[2]
 ddata               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/'.format(batch)
 ddocs               = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_{}/'.format(batch)
-# docs_retrieved_path = os.path.join(ddocs, 'bert-high-conf-0.01.json')
-# docs_retrieved_path = os.path.join(ddocs, 'bert.json')
-# docs_retrieved_path = os.path.join(ddocs, 'term-pacrr.json')
-docs_retrieved_path = os.path.join(ddocs, 'pdrmm.json')
+# bert | bert-high-conf-0.01 | pdrmm | term-pacrr
+docs_retrieved_path = os.path.join(ddocs, '{}.json'.format(fname))
 f1                  = os.path.join(ddata, 'bioasq7_bm25_top100.test.pkl')
 f2                  = os.path.join(ddata, 'bioasq7_bm25_docset_top100.test.pkl')
 with open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batch, batch), 'r') as f:
@@ -1035,8 +1034,10 @@ with open(f2, 'rb') as f:
 with open(docs_retrieved_path, 'r') as f:
     doc_res = json.load(f)
     doc_res = dict([(t['id'], t) for t in doc_res['questions']])
+for q in test_data['queries']:
+    q['retrieved_documents'] = [d for d in q['retrieved_documents'] if('http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(d['doc_id']) in doc_res[q['query_id']]['documents'])]
 ###########################################################
-odir                = './test_snippet_pdrmm_batch{}/'.format(batch)
+odir                = './test_snippet_{}_pdrmm_batch{}/'.format(fname, batch)
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
@@ -1054,18 +1055,43 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 print(test_map)
 
 '''
+python3.6 tt.py 1 bert
+python3.6 tt.py 2 bert
+python3.6 tt.py 3 bert
+python3.6 tt.py 1 pdrmm
+python3.6 tt.py 2 pdrmm
+python3.6 tt.py 3 pdrmm
+python3.6 tt.py 1 bert-high-conf-0.01
+python3.6 tt.py 2 bert-high-conf-0.01
+python3.6 tt.py 3 bert-high-conf-0.01
 
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json" | grep "^MAP documents"
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/pdrmm.json" | grep "^MAP documents"
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/pdrmm.json" | grep "^MAP documents"
-() / 3.0 = 
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/home/dpappas/test_snippet_pdrmm_batch1/v3 test_emit_bioasq.json" \
-| grep "^MAP snippets"
+mv "/home/dpappas/test_snippet_bert_pdrmm_batch1/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json"
+mv "/home/dpappas/test_snippet_bert_pdrmm_batch2/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/bert_pdrmm.json"
+mv "/home/dpappas/test_snippet_bert_pdrmm_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/bert_pdrmm.json"
 
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/pdrmm_bcnn.json" | grep "^MAP snippets"
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/pdrmm_bcnn.json" | grep "^MAP snippets"
-() / 3.0 = 
+mv "/home/dpappas/test_snippet_pdrmm_pdrmm_batch1/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_pdrmm.json"
+mv "/home/dpappas/test_snippet_pdrmm_pdrmm_batch2/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/pdrmm_pdrmm.json"
+mv "/home/dpappas/test_snippet_pdrmm_pdrmm_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/pdrmm_pdrmm.json"
+
+mv "/home/dpappas/test_snippet_bert-high-conf-0.01_pdrmm_batch1/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bertHC_pdrmm.json"
+mv "/home/dpappas/test_snippet_bert-high-conf-0.01_pdrmm_batch2/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/bertHC_pdrmm.json"
+mv "/home/dpappas/test_snippet_bert-high-conf-0.01_pdrmm_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/bertHC_pdrmm.json"
+
+
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_pdrmm.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/pdrmm_pdrmm.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/pdrmm_pdrmm.json" | grep "^MAP snippets"
+(0.10106486234739709 + 0.07643191603282874 + 0.1449111414296121) / 3.0 = 0.1074693066
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/bert_pdrmm.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/bert_pdrmm.json" | grep "^MAP snippets"
+(0.10540013430094866 + 0.07351742479823153 + 0.15097950331830276) / 3.0 = 0.10996568747
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bertHC_pdrmm.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/bertHC_pdrmm.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/bertHC_pdrmm.json" | grep "^MAP snippets"
+(0.1737983586639454 + 0.13632136134003411 + 0.21866786418214) / 3.0 = 0.17626252806
 
 '''
