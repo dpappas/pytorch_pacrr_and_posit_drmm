@@ -130,25 +130,15 @@ def convert_examples_to_features(examples, max_seq_length, tokenizer):
         features.append(in_f)
     return features
 
-def embed_the_sent(sent):
-    eval_examples   = [
-        InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')
-    ]
-    eval_features   = convert_examples_to_features(
-        eval_examples, max_seq_length, bert_tokenizer
-    )
-    eval_feat       = eval_features[0]
-    input_ids       = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
-    input_mask      = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
-    segment_ids     = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
-    tokens          = eval_feat.tokens
-    with torch.no_grad():
-        token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
-        tok_inds                    = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
-        token_embeds                = token_embeds.squeeze(0)
-        embs                        = token_embeds[tok_inds,:]
-    fixed_tokens = fix_bert_tokens(tokens)
-    return fixed_tokens, embs
+def embed_the_sent(sent, quest):
+    eval_examples               = [InputExample(guid='example_dato_1', text_a=sent, text_b=quest, label='1')]
+    eval_features               = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
+    eval_feat                   = eval_features[0]
+    input_ids                   = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
+    input_mask                  = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
+    segment_ids                 = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
+    token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
+    return pooled_output
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
@@ -753,7 +743,7 @@ def create_one_hot_and_sim(tokens1, tokens2):
     #
     return oh1, oh2, ret
 
-def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
+def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
     good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -777,11 +767,10 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
     ]
     good_doc_af.extend(features)
     ####
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
-        sent_toks, sent_embeds  = embed_the_sent(' '.join(bioclean(good_text)))
-        oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
-        good_oh_sim.append(oh_sim)
+        sent_toks               = bioclean(good_text)
+        sent_embeds             = embed_the_sent(' '.join(bioclean(good_text)), ' '.join(bioclean(quest)))
         good_escores            = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
         tomi                    = (set(sent_toks) & set(quest_toks))
@@ -809,8 +798,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
         'sents_escores': good_sents_escores,
         'doc_af': good_doc_af,
         'sent_tags': good_sent_tags,
-        'held_out_sents': held_out_sents,
-        'oh_sims': good_oh_sim
+        'held_out_sents': held_out_sents
     }
 
 def train_data_step1(train_data):
@@ -835,8 +823,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         good_snips          = get_snips(quest_id, gid, bioasq6_data)
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        quest_tokens, qemb  = embed_the_sent(quest_text)
-        q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        quest_tokens        = bioclean(quest_text)
         ####
         datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf, quest_tokens)
         good_sents_embeds   = datum['sents_embeds']
@@ -844,15 +831,13 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         good_doc_af         = datum['doc_af']
         good_sent_tags      = datum['sent_tags']
         good_held_out_sents = datum['held_out_sents']
-        good_oh_sims        = datum['oh_sims']
         #
-        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf, quest_tokens)
+        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf)
         bad_sents_embeds    = datum['sents_embeds']
         bad_sents_escores   = datum['sents_escores']
         bad_doc_af          = datum['doc_af']
         bad_sent_tags       = [0] * len(datum['sent_tags'])
         bad_held_out_sents  = datum['held_out_sents']
-        bad_oh_sims         = datum['oh_sims']
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
             yield {
@@ -861,17 +846,12 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
                 'good_doc_af': good_doc_af,
                 'good_sent_tags': good_sent_tags,
                 'good_held_out_sents': good_held_out_sents,
-                'good_oh_sims': good_oh_sims,
                 #
                 'bad_sents_embeds': bad_sents_embeds,
                 'bad_sents_escores': bad_sents_escores,
                 'bad_doc_af': bad_doc_af,
                 'bad_sent_tags': bad_sent_tags,
                 'bad_held_out_sents': bad_held_out_sents,
-                'bad_oh_sims': bad_oh_sims,
-                #
-                'quest_embeds': qemb,
-                'q_idfs': q_idfs,
             }
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
