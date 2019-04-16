@@ -1138,8 +1138,24 @@ class JBERT_Modeler(nn.Module):
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
     ##########################
-    def emit_one(self):
-        pass
+    def emit_one(self, doc1_sents_embeds, sents_gaf, doc_gaf):
+        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
+        sents_gaf = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
+        #
+        doc1_sents_embeds       = torch.stack(doc1_sents_embeds).squeeze(1)
+        doc1_sents_embeds_af    = torch.cat([doc1_sents_embeds, sents_gaf], -1)
+        #
+        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_sents_embeds_af), negative_slope=0.1)
+        sents1_out              = F.sigmoid(self.sent_out_layer_2(sents1_out))
+        #
+        max_feats_of_sents_1    = torch.max(doc1_sents_embeds, 0)[0].unsqueeze(0)
+        max_feats_of_sents_1_af = torch.cat([max_feats_of_sents_1, doc_gaf], -1)
+        doc1_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_1_af), negative_slope=0.1)
+        doc1_out                = self.doc_layer_2(doc1_out)
+        #
+        final_in_1              = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
+        sents1_out              = F.sigmoid(self.oo_layer(final_in_1))
+        return final_in_1, sents1_out
     ##########################
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, sents_gaf, sents_baf, doc_gaf, doc_baf):
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
