@@ -750,24 +750,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     v2_bioasq_snip_res = print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
     v3_bioasq_snip_res = print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
     #
-    '''
-    if (prefix == 'dev'):
-        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 dev_gold_bioasq.json'),
-            # dataloc +'bioasq.dev.json',
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
-        )
-    else:
-        with open(os.path.join(odir,'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 test_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
-        )
-    return res_map
-    '''
     return v3_bioasq_snip_res['MAP snippets']
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
@@ -1085,12 +1067,11 @@ use_cuda = torch.cuda.is_available()
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
 ###########################################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                = './test_jpdrmm/'
+odir                = './test_snippet_pdrmm/'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
@@ -1132,3 +1113,7 @@ print('loading w2v')
 wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 ###########################################################
+test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
+###########################################################
+print(test_map)
+
