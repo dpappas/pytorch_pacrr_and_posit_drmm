@@ -297,29 +297,6 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def dummy_test():
-    doc1_embeds = np.random.rand(40, 200)
-    doc2_embeds = np.random.rand(30, 200)
-    question_embeds = np.random.rand(20, 200)
-    q_idfs = np.random.rand(20, 1)
-    gaf = np.random.rand(4)
-    baf = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds=doc1_embeds,
-            doc2_embeds=doc2_embeds,
-            question_embeds=question_embeds,
-            q_idfs=q_idfs,
-            gaf=gaf,
-            baf=baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
 def compute_the_cost(costs, back_prop=True):
     cost_ = torch.stack(costs)
     cost_ = cost_.sum() / (1.0 * cost_.size(0))
@@ -798,7 +775,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
         quest_tokens        = bioclean(quest_text)
         ####
-        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf, quest_tokens)
+        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf)
         good_sents_embeds   = datum['sents_embeds']
         good_sents_escores  = datum['sents_escores']
         good_doc_af         = datum['doc_af']
@@ -846,8 +823,6 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
             doc1_sents_embeds   = datum['good_sents_embeds'],
             doc2_sents_embeds   = datum['bad_sents_embeds'],
-            question_embeds     = datum['quest_embeds'],
-            q_idfs              = datum['q_idfs'],
             sents_gaf           = datum['good_sents_escores'],
             sents_baf           = datum['bad_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
@@ -967,19 +942,16 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     ####
     quest_text          = dato['query_text']
     quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-    quest_tokens, qemb  = embed_the_sent(quest_text)
+    quest_tokens        = bioclean(quest_text)
     ####
-    q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips          = get_gold_snips(dato['query_id'], bioasq6_data)
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf, quest_tokens)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf)
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
-            question_embeds     = qemb,
-            q_idfs              = q_idfs,
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
         )
@@ -1155,13 +1127,16 @@ def load_all_data(dataloc, idf_pickle_path):
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 class JBERT_Modeler(nn.Module):
-    def __init__(self, embedding_dim=30):
+    def __init__(self, embedding_dim=768):
         super(JBERT_Modeler, self).__init__()
         #
-        self.sent_out_layer_1   = nn.Linear(embedding_dim, 8, bias=False).to(device)
-        self.sent_out_layer_2   = nn.Linear(8, 1, bias=False).to(device)
+        self.doc_add_feats      = 11
+        self.sent_add_feats     = 10
         #
-        self.doc_layer_1        = nn.Linear(embedding_dim, 8, bias=True).to(device)
+        self.sent_out_layer_1   = nn.Linear(embedding_dim + self.sent_add_feats, 8, bias=True).to(device)
+        self.sent_out_layer_2   = nn.Linear(8, 1, bias=True).to(device)
+        #
+        self.doc_layer_1        = nn.Linear(embedding_dim + self.doc_add_feats, 8, bias=True).to(device)
         self.doc_layer_2        = nn.Linear(8, 1, bias=True).to(device)
         #
         self.oo_layer           = nn.Linear(2, 1, bias=True).to(device)
@@ -1169,35 +1144,80 @@ class JBERT_Modeler(nn.Module):
     def emit_one(self):
         pass
     ##########################
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
-        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(device)
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, sents_gaf, sents_baf, doc_gaf, doc_baf):
+        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
+        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).unsqueeze(0).to(device)
+        sents_gaf = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
+        sents_baf = autograd.Variable(torch.FloatTensor(sents_baf), requires_grad=False).to(device)
+        # already done by bert : doc1_sents_embeds, doc2_sents_embeds
+        # print(doc_gaf.size()) # 1 x 11
+        # print(doc_baf.size()) # 1 x 11
+        # print(sents_gaf.size()) # N1 x 10
+        # print(sents_baf.size()) # N2 x 10
         #
-
+        doc1_sents_embeds       = torch.stack(doc1_sents_embeds).squeeze(1)
+        doc1_sents_embeds_af    = torch.cat([doc1_sents_embeds, sents_gaf], -1)
+        doc2_sents_embeds       = torch.stack(doc2_sents_embeds).squeeze(1)
+        doc2_sents_embeds_af    = torch.cat([doc2_sents_embeds, sents_baf], -1)
+        # print(doc1_sents_embeds.size())
+        # print(doc2_sents_embeds.size())
         #
-        good_out_pp = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp = torch.cat([bad_out, doc_baf], -1)
+        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_sents_embeds_af), negative_slope=0.1)
+        sents1_out              = F.sigmoid(self.sent_out_layer_2(sents1_out))
+        sents2_out              = F.leaky_relu(self.sent_out_layer_1(doc2_sents_embeds_af), negative_slope=0.1)
+        sents2_out              = F.sigmoid(self.sent_out_layer_2(sents2_out))
+        # print(sents1_out.size())
+        # print(sents2_out.size())
         #
-        final_good_output = self.final_layer_1(good_out_pp)
-        final_good_output = self.final_activ_1(final_good_output)
-        final_good_output = self.final_layer_2(final_good_output)
+        max_feats_of_sents_1    = torch.max(doc1_sents_embeds, 0)[0].unsqueeze(0)
+        max_feats_of_sents_2    = torch.max(doc2_sents_embeds, 0)[0].unsqueeze(0)
+        max_feats_of_sents_1_af = torch.cat([max_feats_of_sents_1, doc_gaf], -1)
+        max_feats_of_sents_2_af = torch.cat([max_feats_of_sents_2, doc_baf], -1)
+        # print(max_feats_of_sents_1_af.size())
+        # print(max_feats_of_sents_2_af.size())
         #
-        gs_emits = gs_emits.unsqueeze(-1)
-        gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits = torch.sigmoid(gs_emits)
+        doc1_out = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_1_af), negative_slope=0.1)
+        doc1_out = self.doc_layer_2(doc1_out)
+        doc2_out = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_2_af), negative_slope=0.1)
+        doc2_out = self.doc_layer_2(doc2_out)
         #
-        final_bad_output = self.final_layer_1(bad_out_pp)
-        final_bad_output = self.final_activ_1(final_bad_output)
-        final_bad_output = self.final_layer_2(final_bad_output)
+        print(sents1_out.size())
+        print(sents2_out.size())
+        print(doc1_out.size())
+        print(doc2_out.size())
+        final_in_1      = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
+        final_in_2      = torch.cat([sents2_out, doc2_out.expand_as(sents2_out)], -1)
+        print(final_in_1.size())
+        print(final_in_2.size())
+        sents1_out      = self.oo_layer(final_in_1)
+        sents2_out      = self.oo_layer(final_in_2)
+        print(sents1_out.size())
+        print(sents2_out.size())
+        return
         #
-        bs_emits = bs_emits.unsqueeze(-1)
-        bs_emits = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits = self.oo_layer(bs_emits).squeeze(-1)
-        bs_emits = torch.sigmoid(bs_emits)
-        #
-        # loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        # good_out_pp = torch.cat([good_out, doc_gaf], -1)
+        # bad_out_pp = torch.cat([bad_out, doc_baf], -1)
+        # #
+        # final_good_output = self.final_layer_1(good_out_pp)
+        # final_good_output = self.final_activ_1(final_good_output)
+        # final_good_output = self.final_layer_2(final_good_output)
+        # #
+        # gs_emits = gs_emits.unsqueeze(-1)
+        # gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        # gs_emits = self.oo_layer(gs_emits).squeeze(-1)
+        # gs_emits = torch.sigmoid(gs_emits)
+        # #
+        # final_bad_output = self.final_layer_1(bad_out_pp)
+        # final_bad_output = self.final_activ_1(final_bad_output)
+        # final_bad_output = self.final_layer_2(final_bad_output)
+        # #
+        # bs_emits = bs_emits.unsqueeze(-1)
+        # bs_emits = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        # bs_emits = self.oo_layer(bs_emits).squeeze(-1)
+        # bs_emits = torch.sigmoid(bs_emits)
+        # #
+        # # loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
+        # return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
     ##########################
 
 use_cuda = torch.cuda.is_available()
@@ -1222,8 +1242,6 @@ bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=Tr
 bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
 bert_model.to(device)
 #####################
-k_for_maxpool       = 5
-k_sent_maxpool      = 5
 embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
 b_size              = 6
@@ -1254,7 +1272,7 @@ for run in range(0, 5):
     ######
     print('Compiling model...')
     logger.info('Compiling model...')
-    model = JBERT_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
+    model       = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
     params      = list(model.parameters())
     params      += list(bert_model.parameters())
     print_params(model)

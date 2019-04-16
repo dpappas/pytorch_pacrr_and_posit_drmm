@@ -124,8 +124,8 @@ def convert_examples_to_features(examples, max_seq_length, tokenizer):
 eval_examples   = [
     InputExample(
         guid='example_dato_1',
-        text_a='i wanna be the very best',
-        text_b='like no one ever was',
+        text_a='i asuyubdwanna beasdasda the very best',
+        text_b=None,
         label='1'
     )
 ]
@@ -135,13 +135,12 @@ max_seq_length      = 50
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
+
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
-
-eval_features = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
-
 bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
 bert_model.to(device)
 
+eval_features       = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
 eval_feat           = eval_features[0]
 input_ids           = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
 input_mask          = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
@@ -150,4 +149,14 @@ tokens              = eval_feat.tokens
 token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
 
 
+def fix_bert_tokens(tokens):
+    ret = []
+    for t in tokens:
+        if (t.startswith('##')):
+            ret[-1] = ret[-1] + t[2:]
+        else:
+            ret.append(t)
+    return ret
+
+fixed_tokens = fix_bert_tokens(eval_feat.tokens)
 
