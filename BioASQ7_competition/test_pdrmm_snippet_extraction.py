@@ -85,50 +85,6 @@ def weighted_binary_cross_entropy(output, target, weights=None):
         loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
     return torch.neg(torch.mean(loss))
 
-def RemoveTrainLargeYears(data, doc_text):
-  data['queries'] = [q for q in data['queries'] if (len(q['retrieved_documents']) > 0)]
-  for i in tqdm(range(len(data['queries']))):
-    hyear = 1900
-    for j in range(len(data['queries'][i]['retrieved_documents'])):
-      if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
-        doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-        year = doc_text[doc_id]['publicationDate'].split('-')[0]
-        if year[:1] == '1' or year[:1] == '2':
-          if int(year) > hyear:
-            hyear = int(year)
-    # if(len(data['queries'][i]['retrieved_documents'])>0):
-    j = 0
-    while True:
-      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
-      if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
-        del data['queries'][i]['retrieved_documents'][j]
-      else:
-        j += 1
-      if j == len(data['queries'][i]['retrieved_documents']):
-        break
-  return data
-
-def RemoveBadYears(data, doc_text, train):
-  for i in range(len(data['queries'])):
-    j = 0
-    while True:
-      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
-      ##########################
-      # Skip 2017/2018 docs always. Skip 2016 docs for training.
-      # Need to change for final model - 2017 should be a train year only.
-      # Use only for testing.
-      if year == '2017' or year == '2018' or (train and year == '2016'):
-      #if year == '2018' or (train and year == '2017'):
-        del data['queries'][i]['retrieved_documents'][j]
-      else:
-        j += 1
-      ##########################
-      if j == len(data['queries'][i]['retrieved_documents']):
-        break
-  return data
-
 def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
     '''
     :param state:       the stete of the pytorch mode
@@ -223,19 +179,6 @@ def similar(upstream_seq, downstream_seq):
     to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
     r1              = SequenceMatcher(None, to_match, longest_match).ratio()
     return r1
-
-def get_pseudo_retrieved(dato):
-    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq7_data[dato['query_id']]['snippets']]
-    pseudo_retrieved            = [
-        {
-            'bm25_score'        : 7.76,
-            'doc_id'            : id,
-            'is_relevant'       : True,
-            'norm_bm25_score'   : 3.85
-        }
-        for id in set(some_ids)
-    ]
-    return pseudo_retrieved
 
 def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
     wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
@@ -407,13 +350,6 @@ def GetWords(data, doc_text, words):
       dwds = tokenize(dtext)
       for w in dwds:
         words[w] = 1
-
-def get_gold_snips(quest_id, bioasq6_data):
-    gold_snips                  = []
-    if ('snippets' in bioasq6_data[quest_id]):
-        for sn in bioasq6_data[quest_id]['snippets']:
-            gold_snips.extend(sent_tokenize(sn['text']))
-    return list(set(gold_snips))
 
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
@@ -635,7 +571,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    gold_snips                  = get_gold_snips(dato['query_id'], bioasq7_data)
+    gold_snips                  = []
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
@@ -1103,6 +1039,9 @@ ddocs               = '/home/dpappas/bioasq_all/bioasq7/document_results/test_ba
 f1                  = os.path.join(ddata, 'bioasq7_bm25_top100.test.pkl')
 f2                  = os.path.join(ddata, 'bioasq7_bm25_docset_top100.test.pkl')
 docs_retrieved_path = os.path.join(ddocs, 'pdrmm.json')
+with open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batch, batch), 'r') as f:
+    bioasq7_data = json.load(f)
+    bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
 with open(f1, 'rb') as f:
     test_data = pickle.load(f)
 with open(f2, 'rb') as f:
