@@ -496,7 +496,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
 
 def do_for_one_retrieved(gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emitss                  = gs_emits_.tolist()
-    mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
         t = (
@@ -506,8 +505,6 @@ def do_for_one_retrieved(gs_emits_, held_out_sents, retr, doc_res, gold_snips):
             held_out_sents[ind]
         )
         all_emits.append(t)
-        # if(emitss[ind] == mmax):
-        #     extracted_from_one.append(t)
         extracted_from_one.append(t)
     doc_res[retr['doc_id']] = 0.0
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
@@ -622,25 +619,13 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    # pprint(snips_res_v1)
-    # pprint(snips_res_v2)
-    # pprint(snips_res_v3)
-    # exit()
     #
     snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     #
-    snips_res = {
-        'v1' : snips_res_v1,
-        'v2' : snips_res_v2,
-        'v3' : snips_res_v3,
-    }
-    snips_res_known = {
-        'v1' : snips_res_known_rel_num_v1,
-        'v2' : snips_res_known_rel_num_v2,
-        'v3' : snips_res_known_rel_num_v3,
-    }
+    snips_res = {'v1':snips_res_v1, 'v2':snips_res_v2, 'v3':snips_res_v3}
+    snips_res_known = {'v1':snips_res_known_rel_num_v1, 'v2':snips_res_known_rel_num_v2, 'v3':snips_res_known_rel_num_v3}
     return data_for_revision, ret_data, snips_res, snips_res_known
 
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
@@ -674,7 +659,9 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     #
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(
+            docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer
+        )
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
@@ -1042,10 +1029,13 @@ docs_retrieved_path = os.path.join(ddocs, 'pdrmm.json')
 with open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batch, batch), 'r') as f:
     bioasq7_data = json.load(f)
     bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
+
 with open(f1, 'rb') as f:
     test_data = pickle.load(f)
+
 with open(f2, 'rb') as f:
     test_docs = pickle.load(f)
+
 with open(docs_retrieved_path, 'r') as f:
     doc_res = json.load(f)
     doc_res = dict([(t['id'], t) for t in doc_res['questions']])
