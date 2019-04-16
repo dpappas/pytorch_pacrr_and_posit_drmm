@@ -1244,10 +1244,9 @@ for run in range(0, 5):
     print('Compiling model...')
     logger.info('Compiling model...')
     model       = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
-    params      = list(model.parameters())
-    params      += list(bert_model.parameters())
     print_params(model)
-    optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    print_params(bert_model)
+    optimizer   = optim.Adam(list(model.parameters())+list(bert_model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
