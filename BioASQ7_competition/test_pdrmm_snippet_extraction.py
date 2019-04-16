@@ -994,10 +994,6 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                = './test_snippet_pdrmm/'
-if (not os.path.exists(odir)):
-    os.makedirs(odir)
-###########################################################
 avgdl               = 21.1907
 mean                = 0.6275
 deviation           = 1.2210
@@ -1020,25 +1016,29 @@ load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 ###########################################################
 import os, sys, pickle, json
-batch               = '1'
+batch               = sys.argv[1]
 ddata               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/'.format(batch)
 ddocs               = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_{}/'.format(batch)
+# docs_retrieved_path = os.path.join(ddocs, 'bert-high-conf-0.01.json')
+# docs_retrieved_path = os.path.join(ddocs, 'bert.json')
+# docs_retrieved_path = os.path.join(ddocs, 'term-pacrr.json')
+docs_retrieved_path = os.path.join(ddocs, 'pdrmm.json')
 f1                  = os.path.join(ddata, 'bioasq7_bm25_top100.test.pkl')
 f2                  = os.path.join(ddata, 'bioasq7_bm25_docset_top100.test.pkl')
-docs_retrieved_path = os.path.join(ddocs, 'pdrmm.json')
 with open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batch, batch), 'r') as f:
     bioasq7_data = json.load(f)
     bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
-
 with open(f1, 'rb') as f:
     test_data = pickle.load(f)
-
 with open(f2, 'rb') as f:
     test_docs = pickle.load(f)
-
 with open(docs_retrieved_path, 'r') as f:
     doc_res = json.load(f)
     doc_res = dict([(t['id'], t) for t in doc_res['questions']])
+###########################################################
+odir                = './test_snippet_pdrmm_batch{}/'.format(batch)
+if (not os.path.exists(odir)):
+    os.makedirs(odir)
 ###########################################################
 words = {}
 GetWords(test_data, test_docs, words)
@@ -1053,3 +1053,19 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 ###########################################################
 print(test_map)
 
+'''
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json" | grep "^MAP documents"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/pdrmm.json" | grep "^MAP documents"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/pdrmm.json" | grep "^MAP documents"
+() / 3.0 = 
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/test_snippet_pdrmm_batch1/v3 test_emit_bioasq.json" \
+| grep "^MAP snippets"
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/pdrmm_bcnn.json" | grep "^MAP snippets"
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/pdrmm_bcnn.json" | grep "^MAP snippets"
+() / 3.0 = 
+
+'''
