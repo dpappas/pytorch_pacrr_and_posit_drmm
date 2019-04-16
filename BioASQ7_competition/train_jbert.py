@@ -1206,7 +1206,7 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 #####################
 use_cuda            = True
-max_seq_length      = 50
+max_seq_length      = 40
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
