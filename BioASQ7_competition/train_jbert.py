@@ -422,8 +422,8 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     gs_emits_       = gs_emits_.squeeze(-1)
     good_sent_tags  = torch.FloatTensor(good_sent_tags).to(device)
     tags_2          = torch.zeros_like(bs_emits_).to(device)
-    print(gs_emits_)
-    print(good_sent_tags)
+    # print(gs_emits_)
+    # print(good_sent_tags)
     #
     # sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
     # sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
@@ -1169,10 +1169,10 @@ class JBERT_Modeler(nn.Module):
         #
         final_in_1      = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
         final_in_2      = torch.cat([sents2_out, doc2_out.expand_as(sents2_out)], -1)
-        sents1_out      = self.oo_layer(final_in_1)
-        sents2_out      = self.oo_layer(final_in_2)
-        loss1 = self.my_hinge_loss(doc1_out, doc2_out)
-        print(loss1)
+        sents1_out      = F.sigmoid(self.oo_layer(final_in_1))
+        sents2_out      = F.sigmoid(self.oo_layer(final_in_2))
+        loss1           = self.my_hinge_loss(doc1_out, doc2_out)
+        # print(loss1)
         return loss1, doc1_out, doc2_out, sents1_out, sents2_out
     ##########################
 
