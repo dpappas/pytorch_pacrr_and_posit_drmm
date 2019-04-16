@@ -717,6 +717,7 @@ def snip_is_relevant(one_sent, gold_snips):
 
 def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
     good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    quest_toks          = bioclean(quest)
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
@@ -1154,17 +1155,16 @@ def load_all_data(dataloc, idf_pickle_path):
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 class JBERT_Modeler(nn.Module):
-    def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
+    def __init__(self, embedding_dim=30):
         super(JBERT_Modeler, self).__init__()
         #
-        self.sent_out_layer_1 = nn.Linear(self.sent_add_feats + 1, 8, bias=False).to(device)
-        self.sent_out_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
-        self.sent_out_layer_2 = nn.Linear(8, 1, bias=False).to(device)
+        self.sent_out_layer_1   = nn.Linear(embedding_dim, 8, bias=False).to(device)
+        self.sent_out_layer_2   = nn.Linear(8, 1, bias=False).to(device)
         #
-        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True).to(device)
-        self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
-        self.final_layer_2 = nn.Linear(8, 1, bias=True).to(device)
-        self.oo_layer = nn.Linear(2, 1, bias=True).to(device)
+        self.doc_layer_1        = nn.Linear(embedding_dim, 8, bias=True).to(device)
+        self.doc_layer_2        = nn.Linear(8, 1, bias=True).to(device)
+        #
+        self.oo_layer           = nn.Linear(2, 1, bias=True).to(device)
     ##########################
     def emit_one(self):
         pass
