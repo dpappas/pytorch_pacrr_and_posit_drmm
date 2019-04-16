@@ -1096,14 +1096,21 @@ resume_from     = '/home/dpappas/bioasq_snippet_pdrmm_0p01_run_0/best_dev_checkp
 load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 ###########################################################
-print('loading pickle data')
-with open('/home/dpappas/bioasq_all/BioASQ-task7bPhaseB-testset1', 'r') as f:
-    bioasq7_data = json.load(f)
-    bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
-with open('/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl', 'rb') as f:
+import os, sys, pickle, json
+batch               = '1'
+ddata               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/'.format(batch)
+ddocs               = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_{}/'.format(batch)
+f1                  = os.path.join(ddata, 'bioasq7_bm25_top100.test.pkl')
+f2                  = os.path.join(ddata, 'bioasq7_bm25_docset_top100.test.pkl')
+docs_retrieved_path = os.path.join(ddocs, 'pdrmm.json')
+with open(f1, 'rb') as f:
     test_data = pickle.load(f)
-with open('/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl', 'rb') as f:
+with open(f2, 'rb') as f:
     test_docs = pickle.load(f)
+with open(docs_retrieved_path, 'r') as f:
+    doc_res = json.load(f)
+    doc_res = dict([(t['id'], t) for t in doc_res['questions']])
+###########################################################
 words = {}
 GetWords(test_data, test_docs, words)
 ###########################################################
