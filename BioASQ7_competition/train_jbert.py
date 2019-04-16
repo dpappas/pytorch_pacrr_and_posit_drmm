@@ -297,16 +297,6 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def compute_the_cost(costs, back_prop=True):
-    cost_ = torch.stack(costs)
-    cost_ = cost_.sum() / (1.0 * cost_.size(0))
-    if (back_prop):
-        cost_.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-    the_cost = cost_.cpu().item()
-    return the_cost
-
 def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
     '''
     :param state:       the stete of the pytorch mode
@@ -334,6 +324,7 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost.backward()
     optimizer.step()
     optimizer.zero_grad()
+    model.zero_grad()
     batch_aver_cost = batch_cost.cpu().item()
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
     batch_aver_acc = sum(batch_acc) / float(len(batch_acc))
@@ -427,13 +418,12 @@ def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
     return sum(losses) / float(len(losses))
 
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
-    bs_emits_ = bs_emits_.squeeze(-1)
-    gs_emits_ = gs_emits_.squeeze(-1)
-    good_sent_tags = torch.FloatTensor(good_sent_tags)
-    tags_2 = torch.zeros_like(bs_emits_)
-    if (use_cuda):
-        good_sent_tags = good_sent_tags.cuda()
-        tags_2 = tags_2.cuda()
+    bs_emits_       = bs_emits_.squeeze(-1)
+    gs_emits_       = gs_emits_.squeeze(-1)
+    good_sent_tags  = torch.FloatTensor(good_sent_tags).to(device)
+    tags_2          = torch.zeros_like(bs_emits_).to(device)
+    print(gs_emits_)
+    print(good_sent_tags)
     #
     # sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
     # sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
@@ -842,15 +832,17 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         batch_costs.append(cost_)
         if (len(batch_costs) == b_size):
             batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs,
-                                                                                         batch_acc, epoch_acc)
+            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
+                batch_costs, epoch_costs, batch_acc, epoch_acc)
             elapsed_time = time.time() - start_time
             start_time = time.time()
-            print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                     batch_aver_acc, epoch_aver_acc, elapsed_time))
+            print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
+                batch_counter, batch_aver_cost, epoch_aver_cost,batch_aver_acc, epoch_aver_acc, elapsed_time)
+            )
             logger.info(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
+                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
+                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time)
+            )
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
         batch_counter += 1
@@ -1141,6 +1133,11 @@ class JBERT_Modeler(nn.Module):
         #
         self.oo_layer           = nn.Linear(2, 1, bias=True).to(device)
     ##########################
+    def my_hinge_loss(self, positives, negatives, margin=1.0):
+        delta = negatives - positives
+        loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
+        return loss_q_pos
+    ##########################
     def emit_one(self):
         pass
     ##########################
@@ -1174,35 +1171,9 @@ class JBERT_Modeler(nn.Module):
         final_in_2      = torch.cat([sents2_out, doc2_out.expand_as(sents2_out)], -1)
         sents1_out      = self.oo_layer(final_in_1)
         sents2_out      = self.oo_layer(final_in_2)
-        print(sents1_out.size())
-        print(sents2_out.size())
-        print(doc1_out.size())
-        print(doc2_out.size())
-        return
-        #
-        # good_out_pp = torch.cat([good_out, doc_gaf], -1)
-        # bad_out_pp = torch.cat([bad_out, doc_baf], -1)
-        # #
-        # final_good_output = self.final_layer_1(good_out_pp)
-        # final_good_output = self.final_activ_1(final_good_output)
-        # final_good_output = self.final_layer_2(final_good_output)
-        # #
-        # gs_emits = gs_emits.unsqueeze(-1)
-        # gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        # gs_emits = self.oo_layer(gs_emits).squeeze(-1)
-        # gs_emits = torch.sigmoid(gs_emits)
-        # #
-        # final_bad_output = self.final_layer_1(bad_out_pp)
-        # final_bad_output = self.final_activ_1(final_bad_output)
-        # final_bad_output = self.final_layer_2(final_bad_output)
-        # #
-        # bs_emits = bs_emits.unsqueeze(-1)
-        # bs_emits = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        # bs_emits = self.oo_layer(bs_emits).squeeze(-1)
-        # bs_emits = torch.sigmoid(bs_emits)
-        # #
-        # # loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
-        # return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        loss1 = self.my_hinge_loss(doc1_out, doc2_out)
+        print(loss1)
+        return loss1, doc1_out, doc2_out, sents1_out, sents2_out
     ##########################
 
 use_cuda = torch.cuda.is_available()
