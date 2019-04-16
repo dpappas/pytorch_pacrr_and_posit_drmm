@@ -715,34 +715,6 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-def create_one_hot_and_sim(tokens1, tokens2):
-    '''
-    :param tokens1:
-    :param tokens2:
-    :return:
-    exxample call : create_one_hot_and_sim('c d e'.split(), 'a b c'.split())
-    '''
-    label_encoder = LabelEncoder()
-    onehot_encoder = OneHotEncoder(sparse=False, categories='auto')
-    #
-    values = list(set(tokens1 + tokens2))
-    integer_encoded = label_encoder.fit_transform(values)
-    #
-    integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
-    onehot_encoder.fit(integer_encoded)
-    #
-    lab1 = label_encoder.transform(tokens1)
-    lab1 = np.expand_dims(lab1, axis=1)
-    oh1 = onehot_encoder.transform(lab1)
-    #
-    lab2 = label_encoder.transform(tokens2)
-    lab2 = np.expand_dims(lab2, axis=1)
-    oh2 = onehot_encoder.transform(lab2)
-    #
-    ret = np.matmul(oh1, np.transpose(oh2), out=None)
-    #
-    return oh1, oh2, ret
-
 def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
     good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
@@ -871,16 +843,14 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds=datum['good_sents_embeds'],
-            doc2_sents_embeds=datum['bad_sents_embeds'],
-            doc1_oh_sim=datum['good_oh_sims'],
-            doc2_oh_sim=datum['bad_oh_sims'],
-            question_embeds=datum['quest_embeds'],
-            q_idfs=datum['q_idfs'],
-            sents_gaf=datum['good_sents_escores'],
-            sents_baf=datum['bad_sents_escores'],
-            doc_gaf=datum['good_doc_af'],
-            doc_baf=datum['bad_doc_af']
+            doc1_sents_embeds   = datum['good_sents_embeds'],
+            doc2_sents_embeds   = datum['bad_sents_embeds'],
+            question_embeds     = datum['quest_embeds'],
+            q_idfs              = datum['q_idfs'],
+            sents_gaf           = datum['good_sents_escores'],
+            sents_baf           = datum['bad_sents_escores'],
+            doc_gaf             = datum['good_doc_af'],
+            doc_baf             = datum['bad_doc_af']
         )
         #
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
@@ -1007,7 +977,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf, quest_tokens)
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
-            doc1_oh_sim         = datum['oh_sims'],
             question_embeds     = qemb,
             q_idfs              = q_idfs,
             sents_gaf           = datum['sents_escores'],
@@ -1187,148 +1156,24 @@ def load_all_data(dataloc, idf_pickle_path):
 class JBERT_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
         super(JBERT_Modeler, self).__init__()
-        self.k = k_for_maxpool
-        self.k_sent_maxpool = k_sent_maxpool
-        self.doc_add_feats = 11
-        self.sent_add_feats = 10
         #
-        self.embedding_dim = embedding_dim
-        self.sentence_out_method = sentence_out_method
-        # to create q weights
-        self.init_sent_output_layer()
-        self.init_doc_out_layer()
-        # doc loss func
-        self.margin_loss = nn.MarginRankingLoss(margin=1.0)
-        if (use_cuda):
-            self.margin_loss = self.margin_loss.cuda()
+        self.sent_out_layer_1 = nn.Linear(self.sent_add_feats + 1, 8, bias=False).to(device)
+        self.sent_out_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
+        self.sent_out_layer_2 = nn.Linear(8, 1, bias=False).to(device)
+        #
+        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True).to(device)
+        self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
+        self.final_layer_2 = nn.Linear(8, 1, bias=True).to(device)
+        self.oo_layer = nn.Linear(2, 1, bias=True).to(device)
     ##########################
-    def init_sent_output_layer(self):
-        if (self.sentence_out_method == 'MLP'):
-            self.sent_out_layer_1 = nn.Linear(self.sent_add_feats + 1, 8, bias=False)
-            self.sent_out_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1)
-            self.sent_out_layer_2 = nn.Linear(8, 1, bias=False)
-            if (use_cuda):
-                self.sent_out_layer_1 = self.sent_out_layer_1.cuda()
-                self.sent_out_activ_1 = self.sent_out_activ_1.cuda()
-                self.sent_out_layer_2 = self.sent_out_layer_2.cuda()
-        else:
-            self.sent_res_h0 = autograd.Variable(torch.randn(2, 1, 5))
-            self.sent_res_bigru = nn.GRU(input_size=self.sent_add_feats + 1, hidden_size=5, bidirectional=True,
-                                         batch_first=False)
-            self.sent_res_mlp = nn.Linear(10, 1, bias=False)
-            if (use_cuda):
-                self.sent_res_h0 = self.sent_res_h0.cuda()
-                self.sent_res_bigru = self.sent_res_bigru.cuda()
-                self.sent_res_mlp = self.sent_res_mlp.cuda()
+    def emit_one(self):
+        pass
     ##########################
-    def init_doc_out_layer(self):
-        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True)
-        self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.final_layer_2 = nn.Linear(8, 1, bias=True)
-        self.oo_layer = nn.Linear(2, 1, bias=True)
-        if (use_cuda):
-            self.final_layer_1 = self.final_layer_1.cuda()
-            self.final_activ_1 = self.final_activ_1.cuda()
-            self.final_layer_2 = self.final_layer_2.cuda()
-            self.oo_layer = self.oo_layer.cuda()
-    ##########################
-    def get_max(self, res):
-        return torch.max(res)
-    ##########################
-    def get_kmax(self, res, k):
-        res = torch.sort(res, 0)[0]
-        res = res[-k:].squeeze(-1)
-        if (len(res.size()) == 0):
-            res = res.unsqueeze(0)
-        if (res.size()[0] < k):
-            to_concat = torch.zeros(k - res.size()[0])
-            if (use_cuda):
-                to_concat = to_concat.cuda()
-            res = torch.cat([res, to_concat], -1)
-        return res
-    ##########################
-    def get_max_and_average_of_k_max(self, res, k):
-        k_max_pooled = self.get_kmax(res, k)
-        average_k_max_pooled = k_max_pooled.sum() / float(k)
-        the_maximum = k_max_pooled[-1]
-        the_concatenation = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
-        return the_concatenation
-    ##########################
-    def get_average(self, res):
-        res = torch.sum(res) / float(res.size()[0])
-        return res
-    ##########################
-    def emit_one(self, doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf):
-        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
-        if (use_cuda):
-            q_idfs = q_idfs.cuda()
-            doc_gaf = doc_gaf.cuda()
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, sents_gaf, sents_baf, doc_gaf, doc_baf):
+        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
+        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(device)
         #
-        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
-        #
-        q_weights = torch.cat([q_context, q_idfs], -1)
-        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights = F.softmax(q_weights, dim=-1)
-        #
-        good_out, gs_emits = self.do_for_one_doc_cnn(
-            doc1_sents_embeds,
-            doc1_oh_sim,
-            sents_gaf,
-            question_embeds,
-            q_context,
-            q_weights,
-            self.k_sent_maxpool
-        )
-        #
-        good_out_pp = torch.cat([good_out, doc_gaf], -1)
-        #
-        final_good_output = self.final_layer_1(good_out_pp)
-        final_good_output = self.final_activ_1(final_good_output)
-        final_good_output = self.final_layer_2(final_good_output)
-        #
-        gs_emits = gs_emits.unsqueeze(-1)
-        gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits = torch.sigmoid(gs_emits)
-        #
-        return final_good_output, gs_emits
-    ##########################
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
-        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
-        if (use_cuda):
-            q_idfs = q_idfs.cuda()
-            doc_gaf = doc_gaf.cuda()
-            doc_baf = doc_baf.cuda()
-        #
-        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
-        #
-        q_weights = torch.cat([q_context, q_idfs], -1)
-        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights = F.softmax(q_weights, dim=-1)
-        #
-        good_out, gs_emits = self.do_for_one_doc_cnn(
-            doc1_sents_embeds,
-            doc1_oh_sim,
-            sents_gaf,
-            question_embeds,
-            q_context,
-            q_weights,
-            self.k_sent_maxpool
-        )
-        bad_out, bs_emits = self.do_for_one_doc_cnn(
-            doc2_sents_embeds,
-            doc2_oh_sim,
-            sents_baf,
-            question_embeds,
-            q_context,
-            q_weights,
-            self.k_sent_maxpool
-        )
+
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
@@ -1351,7 +1196,7 @@ class JBERT_Modeler(nn.Module):
         bs_emits = self.oo_layer(bs_emits).squeeze(-1)
         bs_emits = torch.sigmoid(bs_emits)
         #
-        loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
+        # loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
     ##########################
 
@@ -1381,7 +1226,7 @@ k_for_maxpool       = 5
 k_sent_maxpool      = 5
 embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
-b_size              = 32
+b_size              = 6
 max_epoch           = 4
 #####################
 
@@ -1394,7 +1239,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     ######
-    odir = 'bioasq7_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir = 'bioasq7_JBERT_2L_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
