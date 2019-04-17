@@ -860,8 +860,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition = doc_emit_.cpu().item()
-    emitss = gs_emits_.tolist()
-    mmax = max(emitss)
+    emitss  = gs_emits_.tolist()
+    mmax    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
         t = (
@@ -973,7 +973,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     if (use_sent_tokenizer):
         extracted_snippets_v1 = select_snippets_v1(extracted_snippets)
         extracted_snippets_v2 = select_snippets_v2(extracted_snippets)
-        pprint(extracted_snippets[:20])
+        # pprint(extracted_snippets[:20])
         extracted_snippets_v3 = select_snippets_v3(extracted_snippets, the_doc_scores)
         extracted_snippets_known_rel_num_v1 = select_snippets_v1(extracted_snippets_known_rel_num)
         extracted_snippets_known_rel_num_v2 = select_snippets_v2(extracted_snippets_known_rel_num)
@@ -1158,6 +1158,8 @@ class JBERT_Modeler(nn.Module):
         final_in_1      = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
         sents1_out      = F.sigmoid(self.oo_layer(final_in_1))
         # print(loss1)
+        sents1_out      = sents1_out.squeeze(-1)
+        doc1_out        = doc1_out.squeeze(-1)
         return doc1_out, sents1_out
     ##########################
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, sents_gaf, sents_baf, doc_gaf, doc_baf):
@@ -1192,7 +1194,11 @@ class JBERT_Modeler(nn.Module):
         sents2_out      = F.sigmoid(self.oo_layer(final_in_2))
         loss1           = self.my_hinge_loss(doc1_out, doc2_out)
         # print(loss1)
-        return loss1, doc1_out.squeeze(-1), doc2_out.squeeze(-1), sents1_out, sents2_out
+        sents1_out      = sents1_out.squeeze(-1)
+        sents2_out      = sents2_out.squeeze(-1)
+        doc1_out        = doc1_out.squeeze(-1)
+        doc2_out        = doc2_out.squeeze(-1)
+        return loss1, doc1_out, doc2_out, sents1_out, sents2_out
     ##########################
 
 use_cuda = torch.cuda.is_available()
@@ -1253,7 +1259,7 @@ for run in range(0, 5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
