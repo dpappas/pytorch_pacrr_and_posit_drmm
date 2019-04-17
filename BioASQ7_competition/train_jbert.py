@@ -973,6 +973,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     if (use_sent_tokenizer):
         extracted_snippets_v1 = select_snippets_v1(extracted_snippets)
         extracted_snippets_v2 = select_snippets_v2(extracted_snippets)
+        pprint(extracted_snippets[:20])
         extracted_snippets_v3 = select_snippets_v3(extracted_snippets, the_doc_scores)
         extracted_snippets_known_rel_num_v1 = select_snippets_v1(extracted_snippets_known_rel_num)
         extracted_snippets_known_rel_num_v2 = select_snippets_v2(extracted_snippets_known_rel_num)
@@ -1150,11 +1151,13 @@ class JBERT_Modeler(nn.Module):
         #
         max_feats_of_sents_1    = torch.max(doc1_sents_embeds, 0)[0].unsqueeze(0)
         max_feats_of_sents_1_af = torch.cat([max_feats_of_sents_1, doc_gaf], -1)
-        doc1_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_1_af), negative_slope=0.1)
-        doc1_out                = self.doc_layer_2(doc1_out)
         #
-        final_in_1              = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
-        sents1_out              = F.sigmoid(self.oo_layer(final_in_1))
+        doc1_out = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_1_af), negative_slope=0.1)
+        doc1_out = self.doc_layer_2(doc1_out)
+        #
+        final_in_1      = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
+        sents1_out      = F.sigmoid(self.oo_layer(final_in_1))
+        # print(loss1)
         return doc1_out, sents1_out
     ##########################
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, sents_gaf, sents_baf, doc_gaf, doc_baf):
@@ -1189,7 +1192,7 @@ class JBERT_Modeler(nn.Module):
         sents2_out      = F.sigmoid(self.oo_layer(final_in_2))
         loss1           = self.my_hinge_loss(doc1_out, doc2_out)
         # print(loss1)
-        return loss1, doc1_out, doc2_out, sents1_out, sents2_out
+        return loss1, doc1_out.squeeze(-1), doc2_out.squeeze(-1), sents1_out, sents2_out
     ##########################
 
 use_cuda = torch.cuda.is_available()
