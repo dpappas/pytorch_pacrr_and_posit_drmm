@@ -1016,17 +1016,11 @@ load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 ###########################################################
 import os, sys, pickle, json
-batch               = sys.argv[1]
-fname               = sys.argv[2]
-ddata               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/'.format(batch)
-ddocs               = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_{}/'.format(batch)
-# bert | bert-high-conf-0.01 | pdrmm | term-pacrr
-docs_retrieved_path = os.path.join(ddocs, '{}.json'.format(fname))
-f1                  = os.path.join(ddata, 'bioasq7_bm25_top100.test.pkl')
-f2                  = os.path.join(ddata, 'bioasq7_bm25_docset_top100.test.pkl')
-with open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batch, batch), 'r') as f:
-    bioasq7_data = json.load(f)
-    bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
+odir                = './test_bert_high_pdrmm_batch4/'
+docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/bert-high-conf-0.01.json'
+f1                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f2                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+###########################################################
 with open(f1, 'rb') as f:
     test_data = pickle.load(f)
 with open(f2, 'rb') as f:
@@ -1034,10 +1028,10 @@ with open(f2, 'rb') as f:
 with open(docs_retrieved_path, 'r') as f:
     doc_res = json.load(f)
     doc_res = dict([(t['id'], t) for t in doc_res['questions']])
+    bioasq7_data = doc_res
 for q in test_data['queries']:
     q['retrieved_documents'] = [d for d in q['retrieved_documents'] if('http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(d['doc_id']) in doc_res[q['query_id']]['documents'])]
 ###########################################################
-odir                = './test_snippet_{}_pdrmm_batch{}/'.format(fname, batch)
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
@@ -1054,3 +1048,17 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 ###########################################################
 print(test_map)
 
+'''
+
+rsync -av cslab241.cs.aueb.gr:/home/DATA/Biomedical/bioasq7/ bioasq_all/bioasq7/
+
+scp /home/dpappas/bioasq_all/bioasq7/submit_files/test_batch_4/* cslab241.cs.aueb.gr:/home/DATA/Biomedical/bioasq7/submit_files/test_batch_4
+scp /home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/* cslab241.cs.aueb.gr:/home/DATA/Biomedical/bioasq7/document_results/test_batch_4
+scp /home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/* cslab241.cs.aueb.gr:/home/DATA/Biomedical/bioasq7/snippet_results/test_batch_4
+rsync -av  
+
+
+mv "./test_bert_high_pdrmm_batch4/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/bertHC_pdrmm.json"
+mv "./test_bert_pdrmm_batch4/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/bert_pdrmm.json"
+
+'''
