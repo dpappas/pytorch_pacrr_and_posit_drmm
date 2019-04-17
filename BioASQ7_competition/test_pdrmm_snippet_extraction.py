@@ -1094,4 +1094,6 @@ java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.E
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/bertHC_pdrmm.json" | grep "^MAP snippets"
 (0.1737983586639454 + 0.13632136134003411 + 0.21866786418214) / 3.0 = 0.17626252806
 
+# rsync -av cslab241.cs.aueb.gr:/home/DATA/Biomedical/bioasq7/ bioasq_all/bioasq7/
+
 '''
