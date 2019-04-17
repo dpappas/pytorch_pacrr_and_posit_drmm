@@ -594,6 +594,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
     # doc_res                                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
+    doc_res                                 = list(doc_res.items())
     the_doc_scores                          = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
     doc_res                                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
     emitions['documents']                   = doc_res[:100]
@@ -1016,8 +1017,8 @@ load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 ###########################################################
 import os, sys, pickle, json
-odir                = './test_bert_high_pdrmm_batch4/'
-docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/bert-high-conf-0.01.json'
+odir                = './test_termpacrr_pdrmm_batch4/'
+docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/term-pacrr.json'
 f1                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
 f2                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
 ###########################################################
@@ -1059,6 +1060,7 @@ rsync -av
 
 
 mv "./test_bert_high_pdrmm_batch4/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/bertHC_pdrmm.json"
-mv "./test_bert_pdrmm_batch4/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/bert_pdrmm.json"
+mv "./test_bert_pdrmm_batch4/v3 test_emit_bioasq.json"      "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/bert_pdrmm.json"
+mv "./test_termpacrr_pdrmm_batch4/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/termpaccr_pdrmm.json"
 
 '''
