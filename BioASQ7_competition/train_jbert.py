@@ -1155,7 +1155,7 @@ class JBERT_Modeler(nn.Module):
         #
         final_in_1              = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
         sents1_out              = F.sigmoid(self.oo_layer(final_in_1))
-        return final_in_1, sents1_out
+        return doc1_out, sents1_out
     ##########################
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, sents_gaf, sents_baf, doc_gaf, doc_baf):
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
@@ -1250,7 +1250,7 @@ for run in range(0, 5):
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+        # train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
