@@ -1260,10 +1260,10 @@ emit_only_abstract_sents    = False
 ###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
-# fs_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_2/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/BioASQ-task7bPhaseA-testset3'
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseA-testset4'
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+odir                = './test_bert_jpdrmm_high_batch4/'
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1272,8 +1272,6 @@ odd                 = '/home/dpappas/'
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-# odir                = './test_bert_jpdrmm_high_batch2/'
-odir                = './test_bert_jpdrmm_high_batch3/'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
@@ -1358,6 +1356,8 @@ trec map doc    : 0.4252
 python3.6 tt.py -30. -30. False
 grep -E '\"body\"|\"text\"' "test_bert_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
 cp "/home/dpappas/test_bert_jpdrmm_high_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bert_jpdrmm.json" 
+
+CUDA_VISIBLE_DEVICES=1 python3.6 tt.py  
 
 '''
 
