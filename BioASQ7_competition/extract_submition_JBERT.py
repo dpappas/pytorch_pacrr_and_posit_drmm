@@ -986,18 +986,18 @@ print(avgdl, mean, deviation)
 ###########################################################
 use_cuda                    = torch.cuda.is_available()
 ###########################################################
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 ###########################################################
-bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
+bert_all_words_path         = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 ###########################################################
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseA-testset3'
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-odir                = './test_jpdrmm_high_batch3/'
+f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseA-testset3'
+f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+odir                        = './test_jpdrmm_high_batch3/'
 ###########################################################
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
 if (not os.path.exists(odir)):
     os.makedirs(odir)
