@@ -273,6 +273,18 @@ def get_map_res(fgold, femit):
     map_res = float(map_res[-1])
     return map_res
 
+def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
+    batch_cost = sum(batch_costs) / float(len(batch_costs))
+    batch_cost.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+    model.zero_grad()
+    batch_aver_cost = batch_cost.cpu().item()
+    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
+    batch_aver_acc = sum(batch_acc) / float(len(batch_acc))
+    epoch_aver_acc = sum(epoch_acc) / float(len(epoch_acc))
+    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
+
 def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
     java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
@@ -338,6 +350,54 @@ def similar(upstream_seq, downstream_seq):
     to_match = upstream_seq if (len(downstream_seq) > len(upstream_seq)) else downstream_seq
     r1 = SequenceMatcher(None, to_match, longest_match).ratio()
     return r1
+
+def get_pseudo_retrieved(dato):
+    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq7_data[dato['query_id']]['snippets']]
+    pseudo_retrieved = [
+        {
+            'bm25_score': 7.76,
+            'doc_id': id,
+            'is_relevant': True,
+            'norm_bm25_score': 3.85
+        }
+        for id in set(some_ids)
+    ]
+    return pseudo_retrieved
+
+def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
+    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
+    wrong = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
+    wrong = torch.cat(wrong + [bs_emits_.squeeze(-1)])
+    losses = [model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
+    return sum(losses) / float(len(losses))
+
+def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
+    bs_emits_       = bs_emits_.squeeze(-1)
+    gs_emits_       = gs_emits_.squeeze(-1)
+    good_sent_tags  = torch.FloatTensor(good_sent_tags).to(device)
+    tags_2          = torch.zeros_like(bs_emits_).to(device)
+    # print(gs_emits_)
+    # print(good_sent_tags)
+    #
+    # sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
+    # sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, size_average=False, reduce=True)
+    sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, reduction='sum')
+    sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
+    return sn_d1_l, sn_d2_l
+
+def init_the_logger(hdlr):
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    od = odir.split('/')[-1]  # 'sent_posit_drmm_MarginRankingLoss_0p001'
+    logger = logging.getLogger(od)
+    if (hdlr is not None):
+        logger.removeHandler(hdlr)
+    hdlr = logging.FileHandler(os.path.join(odir, 'model.log'))
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+    return logger, hdlr
 
 def get_words(s, idf, max_idf):
     sl = tokenize(s)
@@ -719,7 +779,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf)
-        doc_emit_, gs_emits_ = bert_model.emit_one(
+        doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
@@ -810,6 +870,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     #
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
+    model.eval()
     bert_model.eval()
     #
     ret_data = {'questions': []}
@@ -824,10 +885,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     #
     for dato in tqdm(data['queries'], ascii=True):
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato,
-                                                                                        dato['retrieved_documents'],
-                                                                                        data_for_revision, ret_data,
-                                                                                        use_sent_tokenizer)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
@@ -835,12 +893,9 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
     #
-    print_the_results('v1 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1,
-                      data_for_revision)
-    print_the_results('v2 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2,
-                      data_for_revision)
-    print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3,
-                      data_for_revision)
+    print_the_results('v1 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1, data_for_revision)
+    print_the_results('v2 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
+    print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
     #
     if (prefix == 'dev'):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
@@ -977,6 +1032,24 @@ class JBERT_Modeler(nn.Module):
         return loss1, doc1_out, doc2_out, sents1_out, sents2_out
     ##########################
 
+use_cuda = torch.cuda.is_available()
+
+###########################################################
+max_seq_length      = 40
+device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
+bert_model          = 'bert-base-uncased'
+cache_dir           = '/home/dpappas/bert_cache/'
+bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
+bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
+bert_model.to(device)
+embedding_dim       = 768
+model               = JBERT_Modeler(embedding_dim=embedding_dim)
+model.to(device)
+###########################################################
+
+
+
+
 min_doc_score               = -1000.
 min_sent_score              = -1000.
 emit_only_abstract_sents    = False
@@ -1004,7 +1077,7 @@ print(avgdl, mean, deviation)
 ###########################################################
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
-embedding_dim       = 30 #200
+embedding_dim       = 768
 ###########################################################
 my_seed     = 1
 random.seed(my_seed)
