@@ -1014,10 +1014,11 @@ retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.ja
 ###########################################################
 bert_all_words_path         = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 ###########################################################
-f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseA-testset3'
-f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-odir                        = './test_jpdrmm_high_batch3/'
+batch                       = 2
+f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch, batch)
+f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch)
+f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch)
+odir                        = './test_jpdrmm_high_batch{}/'.format(batch)
 ###########################################################
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
@@ -1074,3 +1075,6 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 ###########################################################
 print(test_map)
 ###########################################################
+
+# CUDA_VISIBLE_DEVICES=1 python3.6 ttt.py
+
