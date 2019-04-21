@@ -713,13 +713,13 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
     quest_tokens        = bioclean(quest_text)
     ####
-    gold_snips          = get_gold_snips(dato['query_id'], bioasq6_data)
+    gold_snips          = get_gold_snips(dato['query_id'], bioasq7_data)
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf)
-        doc_emit_, gs_emits_ = model.emit_one(
+        doc_emit_, gs_emits_ = bert_model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
@@ -823,7 +823,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     data_for_revision = {}
     #
     for dato in tqdm(data['queries'], ascii=True):
-        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
+        all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
         data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato,
                                                                                         dato['retrieved_documents'],
                                                                                         data_for_revision, ret_data,
