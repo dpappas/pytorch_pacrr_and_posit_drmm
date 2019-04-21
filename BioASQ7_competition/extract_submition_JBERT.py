@@ -1035,21 +1035,6 @@ class JBERT_Modeler(nn.Module):
 use_cuda = torch.cuda.is_available()
 
 ###########################################################
-max_seq_length      = 40
-device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
-bert_model          = 'bert-base-uncased'
-cache_dir           = '/home/dpappas/bert_cache/'
-bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
-bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
-bert_model.to(device)
-embedding_dim       = 768
-model               = JBERT_Modeler(embedding_dim=embedding_dim)
-model.to(device)
-###########################################################
-
-
-
-
 min_doc_score               = -1000.
 min_sent_score              = -1000.
 emit_only_abstract_sents    = False
@@ -1066,7 +1051,6 @@ f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_
 f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
 odir                        = './test_jpdrmm_high_batch3/'
 ###########################################################
-w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
 if (not os.path.exists(odir)):
@@ -1075,15 +1059,12 @@ if (not os.path.exists(odir)):
 avgdl, mean, deviation      = 21.1907, 0.6275, 1.2210
 print(avgdl, mean, deviation)
 ###########################################################
-k_for_maxpool       = 5
-k_sent_maxpool      = 5
-embedding_dim       = 768
-###########################################################
 my_seed     = 1
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 ###########################################################
 max_seq_length      = 40
+embedding_dim       = 768
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
