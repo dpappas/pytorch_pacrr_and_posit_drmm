@@ -887,12 +887,12 @@ def load_all_data(dataloc, idf_pickle_path):
     idf, max_idf = load_idfs(idf_pickle_path, words)
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
-def load_model_from_checkpoint(resume_from):
+def load_model_from_checkpoint(model, resume_from):
     global start_epoch, optimizer
     if os.path.isfile(resume_from):
         print("=> loading checkpoint '{}'".format(resume_from))
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
-        bert_model.load_state_dict(checkpoint['state_dict'])
+        model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
 class JBERT_Modeler(nn.Module):
@@ -1024,11 +1024,14 @@ cache_dir           = '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
 bert_model.to(device)
+model               = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
 ###########################################################
-resume_from         = '/home/dpappas/bioasq7_JBERT_2L_0p01_run_0/best_checkpoint.pth.tar'
-load_model_from_checkpoint(resume_from)
-params              = bert_model.parameters()
+resume_from         = '/home/dpappas/bioasq7_JBERT_2L_0p01_run_0/best_bert_checkpoint.pth.tar'
+load_model_from_checkpoint(bert_model, resume_from)
 print_params(bert_model)
+resume_from         = '/home/dpappas/bioasq7_JBERT_2L_0p01_run_0/best_checkpoint.pth.tar'
+load_model_from_checkpoint(model, resume_from)
+print_params(model)
 ###########################################################
 print('loading pickle data')
 with open(f_in1, 'r') as f:
