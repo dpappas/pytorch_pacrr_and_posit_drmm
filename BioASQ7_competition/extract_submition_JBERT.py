@@ -990,14 +990,13 @@ use_cuda                    = torch.cuda.is_available()
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
 ###########################################################
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 ###########################################################
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseA-testset4'
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-odir                = './test_jpdrmm_high_batch4/'
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseA-testset3'
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+odir                = './test_jpdrmm_high_batch3/'
 ###########################################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1055,4 +1054,4 @@ print('loading w2v')
 test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 ###########################################################
 print(test_map)
-
+###########################################################
