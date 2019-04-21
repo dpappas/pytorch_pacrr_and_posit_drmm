@@ -1024,7 +1024,8 @@ cache_dir           = '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
 bert_model.to(device)
-model               = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
+model               = JBERT_Modeler(embedding_dim=embedding_dim)
+model.to(device)
 ###########################################################
 resume_from         = '/home/dpappas/bioasq7_JBERT_2L_0p01_run_0/best_bert_checkpoint.pth.tar'
 load_model_from_checkpoint(bert_model, resume_from)
