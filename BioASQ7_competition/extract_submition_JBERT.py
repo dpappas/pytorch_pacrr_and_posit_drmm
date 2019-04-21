@@ -981,9 +981,6 @@ min_doc_score               = -1000.
 min_sent_score              = -1000.
 emit_only_abstract_sents    = False
 ###########################################################
-avgdl, mean, deviation      = 21.1907, 0.6275, 1.2210
-print(avgdl, mean, deviation)
-###########################################################
 use_cuda                    = torch.cuda.is_available()
 ###########################################################
 eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
@@ -1002,9 +999,7 @@ idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
-avgdl               = 21.1907
-mean                = 0.6275
-deviation           = 1.2210
+avgdl, mean, deviation      = 21.1907, 0.6275, 1.2210
 print(avgdl, mean, deviation)
 ###########################################################
 k_for_maxpool       = 5
