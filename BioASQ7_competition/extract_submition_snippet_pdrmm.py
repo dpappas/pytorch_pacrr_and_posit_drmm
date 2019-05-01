@@ -1012,9 +1012,9 @@ model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool
 if(use_cuda):
     model   = model.cuda()
 ###########################################################
-resume_from     = '/home/dpappas/bioasq_snippet_pdrmm_0p01_run_0/best_dev_checkpoint.pth.tar'
+resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq_snippet_pdrmm_0p01_run_0/best_dev_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
-params      = model.parameters()
+params          = model.parameters()
 ###########################################################
 import os, sys, pickle, json
 odir                = './test_berthigh_pdrmm_batch5/'
