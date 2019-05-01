@@ -1260,10 +1260,10 @@ emit_only_abstract_sents    = False
 ###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseA-testset4'
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-odir                = './test_bert_jpdrmm_high_batch4/'
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseA-testset5'
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+odir                = './test_bert_jpdrmm_high_batch5/'
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
