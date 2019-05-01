@@ -1017,8 +1017,8 @@ load_model_from_checkpoint(resume_from)
 params          = model.parameters()
 ###########################################################
 import os, sys, pickle, json
-odir                = './test_berthigh_pdrmm_batch5/'
-docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_5/bert-high-conf-0.01.json'
+odir                = './test_bert_pdrmm_batch5/'
+docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_5/bert.json'
 f1                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
 f2                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
 ###########################################################
@@ -1062,5 +1062,17 @@ rsync -av
 mv "./test_bert_high_pdrmm_batch4/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/bertHC_pdrmm.json"
 mv "./test_bert_pdrmm_batch4/v3 test_emit_bioasq.json"      "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/bert_pdrmm.json"
 mv "./test_termpacrr_pdrmm_batch4/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/termpaccr_pdrmm.json"
+
+mv "./test_berthigh_pdrmm_batch5/v3 test_emit_bioasq.json"  "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/bertHC_pdrmm.json"
+mv "./test_bert_pdrmm_batch5/v3 test_emit_bioasq.json"      "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/bert_pdrmm.json"
+mv "./test_termpacrr_pdrmm_batch5/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/termpaccr_pdrmm.json"
+
+scp bioasq_all/bioasq7/document_results/test_batch_5/* dpappas@cslab241.cs.aueb.gr:/home/DATA/Biomedical/bioasq7/document_results/test_batch_5/
+scp bioasq_all/bioasq7/snippet_results/test_batch_5/* dpappas@cslab241.cs.aueb.gr:/home/DATA/Biomedical/bioasq7/snippet_results/test_batch_5/
+
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/bert_pdrmm.json" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_5/jpdrmm.json"
+
 
 '''
