@@ -1017,10 +1017,10 @@ load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 ###########################################################
 import os, sys, pickle, json
-odir                = './test_termpacrr_pdrmm_batch4/'
-docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/term-pacrr.json'
-f1                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f2                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+odir                = './test_berthigh_pdrmm_batch5/'
+docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_5/bert-high-conf-0.01.json'
+f1                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f2                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
 ###########################################################
 with open(f1, 'rb') as f:
     test_data = pickle.load(f)
