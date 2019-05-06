@@ -1157,10 +1157,10 @@ class JBERT_Modeler(nn.Module):
         return doc1_out, sents1_out
     ##########################
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
-        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).unsqueeze(0).to(device)
-        sents_gaf = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
-        sents_baf = autograd.Variable(torch.FloatTensor(sents_baf), requires_grad=False).to(device)
+        doc_gaf                 = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
+        doc_baf                 = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).unsqueeze(0).to(device)
+        sents_gaf               = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
+        sents_baf               = autograd.Variable(torch.FloatTensor(sents_baf), requires_grad=False).to(device)
         #
         doc1_sents_embeds       = torch.stack(doc1_sents_embeds).squeeze(1)
         doc1_sents_embeds_af    = torch.cat([doc1_sents_embeds, sents_gaf], -1)
@@ -1177,10 +1177,10 @@ class JBERT_Modeler(nn.Module):
         max_feats_of_sents_1_af = torch.cat([max_feats_of_sents_1, doc_gaf], -1)
         max_feats_of_sents_2_af = torch.cat([max_feats_of_sents_2, doc_baf], -1)
         #
-        doc1_out = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_1_af), negative_slope=0.1)
-        doc1_out = self.doc_layer_2(doc1_out)
-        doc2_out = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_2_af), negative_slope=0.1)
-        doc2_out = self.doc_layer_2(doc2_out)
+        doc1_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_1_af), negative_slope=0.1)
+        doc1_out                = self.doc_layer_2(doc1_out)
+        doc2_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_2_af), negative_slope=0.1)
+        doc2_out                = self.doc_layer_2(doc2_out)
         #
         final_in_1      = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
         final_in_2      = torch.cat([sents2_out, doc2_out.expand_as(sents2_out)], -1)
