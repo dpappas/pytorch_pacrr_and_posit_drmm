@@ -166,7 +166,6 @@ if(index.startswith('el_')):
     }
    }
 
-
 print(elastic_con.indices.create(index = index, ignore=400, body=mapping))
 
 # zcat enwiki-20181112-cirrussearch-content.json.gz | parallel --pipe -L 2 -N 200 -j3 'curl -s http://localhost:9200/wikipedia_json_gz/_bulk --data-binary @- > /dev/null'
