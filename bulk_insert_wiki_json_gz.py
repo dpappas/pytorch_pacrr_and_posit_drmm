@@ -7,6 +7,7 @@ import elasticsearch
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from elasticsearch import helpers
+import re
 
 def abs_found(pmid):
     bod = {
@@ -46,18 +47,33 @@ def send_to_elk(actions):
                 flag = False
 
 es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
-index       = 'el_wikipedia_json_gz'
+index       = 'en_wikipedia_json_gz'
 doc_type    = "wiki_page"
 b_size      = 200
 actions     = []
-# fpath       = '/media/dpappas/dpappas_data/enwiki-20181112-cirrussearch-content.json.gz'
-fpath       = '/media/dpappas/dpappas_data/elwiki-20190211-cirrussearch-content.json.gz'
+fpath       = '/media/dpappas/dpappas_data/enwiki-20181112-cirrussearch-content.json.gz'
+# fpath       = '/media/dpappas/dpappas_data/elwiki-20190211-cirrussearch-content.json.gz'
 proc        = subprocess.Popen(["zcat", fpath], stdout=subprocess.PIPE)
-
 for line in iter(proc.stdout.readline,''):
     line    = line.rstrip()
     dato    = json.loads(line)
-    # pprint(dato)
+    if('source_text' in dato):
+        tt = dato['source_text']
+        tt = re.sub('\{\{.*?\}\}', '', tt, re.DOTALL)
+        tt = re.sub('{|.*|}', '', tt, re.DOTALL)
+        tt = re.sub('\[\[File:.*?\]\]', '', tt, re.DOTALL)
+        tt = re.sub('\[\[Category:.*?\]\]', '', tt, re.DOTALL)
+        tt = re.sub('<ref .*?/>', '', tt, re.DOTALL)
+        tt = re.sub('<ref.*?</ref>', '', tt, re.DOTALL)
+        # re.findall('\[\[(.*?)|(.*?)\]\]', tt, re.DOTALL)
+        tt = re.sub(r'\[\[([^\|]+?)\]\]', r'\1' , tt, re.DOTALL)
+        tt = re.sub(r'\[\[(.*?)\|(.*?)\]\]', r'\2' , tt, re.DOTALL)
+        tt = tt.strip()
+        print(tt)
+        print(20 * '-')
+        if('Freakies' in tt):
+            break
+
     temp    = create_an_action(dato)
     actions.append(temp)
     if(len(actions) >= b_size):
