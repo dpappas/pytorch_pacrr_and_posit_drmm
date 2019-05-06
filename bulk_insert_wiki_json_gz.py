@@ -46,6 +46,23 @@ def send_to_elk(actions):
             else:
                 flag = False
 
+def clean_the_damn_thing(tt):
+    tt = tt.replace('&nbsp;', ' ').replace('<sub>', '').replace('</sub>', '').replace('<blockquote>', '').replace('</blockquote>', '')
+    ####################################################################
+    for i in range(4):
+        tt = re.sub(r'\{\{([^\{]+?)\}\}',   r'',    tt, flags=re.DOTALL)
+    for i in range(4):
+        tt = re.sub(r'\{\|[^\{]+?\|\}',     r'',    tt, flags=re.DOTALL)
+    ####################################################################
+    tt = re.sub(r'\[\[File:.*?\]\]',        r'',    tt, flags=re.DOTALL)
+    tt = re.sub(r'\[\[Category:.*?\]\]',    r'',    tt, flags=re.DOTALL)
+    ####################################################################
+    tt = re.sub(r'<ref .*?/>',              r'',    tt, flags=re.DOTALL)
+    tt = re.sub(r'<ref.*?</ref>',           r'',    tt, flags=re.DOTALL)
+    tt = re.sub(r'\[\[([^\|]+?)\]\]',       r'\1',  tt, flags=re.DOTALL)
+    tt = re.sub(r'\[\[(.*?)\|(.*?)\]\]',    r'\2',  tt, flags=re.DOTALL)
+    return tt.strip()
+
 es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 index       = 'en_wikipedia_json_gz'
 doc_type    = "wiki_page"
@@ -54,24 +71,16 @@ actions     = []
 fpath       = '/media/dpappas/dpappas_data/enwiki-20181112-cirrussearch-content.json.gz'
 # fpath       = '/media/dpappas/dpappas_data/elwiki-20190211-cirrussearch-content.json.gz'
 proc        = subprocess.Popen(["zcat", fpath], stdout=subprocess.PIPE)
-for line in iter(proc.stdout.readline,''):
+
+for line in iter(proc.stdout.readline, ''):
     line    = line.rstrip()
     dato    = json.loads(line)
     if('source_text' in dato):
-        tt = dato['source_text']
-        tt = re.sub('\{\{.*?\}\}', '', tt, re.DOTALL)
-        tt = re.sub('{|.*|}', '', tt, re.DOTALL)
-        tt = re.sub('\[\[File:.*?\]\]', '', tt, re.DOTALL)
-        tt = re.sub('\[\[Category:.*?\]\]', '', tt, re.DOTALL)
-        tt = re.sub('<ref .*?/>', '', tt, re.DOTALL)
-        tt = re.sub('<ref.*?</ref>', '', tt, re.DOTALL)
-        # re.findall('\[\[(.*?)|(.*?)\]\]', tt, re.DOTALL)
-        tt = re.sub(r'\[\[([^\|]+?)\]\]', r'\1' , tt, re.DOTALL)
-        tt = re.sub(r'\[\[(.*?)\|(.*?)\]\]', r'\2' , tt, re.DOTALL)
-        tt = tt.strip()
-        print(tt)
+        print(clean_the_damn_thing(dato['source_text']))
         print(20 * '-')
-        if('Freakies' in tt):
+        # re.sub(r'\{\|.+?\|\}', r'', tt, re.DOTALL)
+        # re.findall(r'\{\|.+?\|\}', tt, re.DOTALL)
+        if('Norton Water Tower'.lower() in dato['title'].lower()):
             break
 
     temp    = create_an_action(dato)
