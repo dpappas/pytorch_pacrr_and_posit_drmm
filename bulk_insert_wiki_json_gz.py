@@ -97,24 +97,29 @@ for line in iter(proc.stdout.readline, ''):
     line    = line.rstrip()
     dato    = json.loads(line)
     if('source_text' in dato):
+        ##############################
         print(dato['title'])
+        print(dato['timestamp'])
+        print(dato['wikibase_item'])
+        print(dato['category'])
+        print(dato['create_timestamp'])
+        ##############################
         # print(dato['opening_text'])
         paragraphs = re.split(r'\s\s+', dato['text'], flags=re.DOTALL)
-        paragraphs = [par.strip() for par in paragraphs if(par is not None and len(par.strip()) > 0)]
+        paragraphs = [
+            par.strip()
+            for par in paragraphs
+            if(par is not None and len(par.strip()) > 0 and len(par.strip().split()) > 5)
+        ]
         for par in paragraphs:
             print(par)
             print(5 * '-')
         print(20 * '=')
-        # re.sub(r'\{\|.+?\|\}', r'', tt, re.DOTALL)
-        # re.findall(r'\{\|.+?\|\}', tt, re.DOTALL)
-        if('Battle of Diamond Rock'.lower() in dato['title'].lower()):
-            break
     # temp    = create_an_action(dato)
     # actions.append(temp)
     # if(len(actions) >= b_size):
     #     send_to_elk(actions)
     #     actions = []
-
 
 if(len(actions) > 0):
     send_to_elk(actions)
