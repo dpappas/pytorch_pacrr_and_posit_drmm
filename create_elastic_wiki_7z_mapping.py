@@ -2,47 +2,14 @@
 from elasticsearch import Elasticsearch
 
 elastic_con = Elasticsearch(['localhost:9200'], verify_certs=True)
-# index       = 'wikipedia_json_gz'
-# doc_type    = "wiki_page"
-index       = 'el_wikipedia_json_gz'
+index       = 'wikipedia_json_gz'
 doc_type    = "wiki_page"
+# index       = 'el_wikipedia_json_gz'
+# doc_type    = "wiki_page"
 
 elastic_con.indices.delete(index=index, ignore=[400,404])
 
 mapping = {
-  "settings": {
-    "analysis": {
-      "filter": {
-        "greek_stop": {
-          "type":       "stop",
-          "stopwords":  "_greek_"
-        },
-        "greek_lowercase": {
-          "type":       "lowercase",
-          "language":   "greek"
-        },
-        "greek_keywords": {
-          "type":       "keyword_marker",
-          "keywords":   ["παράδειγμα"]
-        },
-        "greek_stemmer": {
-          "type":       "stemmer",
-          "language":   "greek"
-        }
-      },
-      "analyzer": {
-        "rebuilt_greek": {
-          "tokenizer":  "standard",
-          "filter": [
-            "greek_lowercase",
-            "greek_stop",
-            "greek_keywords",
-            "greek_stemmer"
-          ]
-        }
-      }
-    }
-   },
    "mappings": {
          doc_type: {
             "properties": {
@@ -175,6 +142,30 @@ mapping = {
          }
    }
 }
+
+if(index.startswith('el_')):
+    mapping["settings"] = {
+    "analysis": {
+      "filter": {
+        "greek_stop": {"type": "stop", "stopwords": "_greek_"},
+        "greek_lowercase": {"type": "lowercase", "language": "greek"},
+        "greek_keywords": {"type": "keyword_marker", "keywords": ["παράδειγμα"]},
+        "greek_stemmer": {"type":"stemmer", "language": "greek"}
+      },
+      "analyzer": {
+        "rebuilt_greek": {
+          "tokenizer":  "standard",
+          "filter": [
+            "greek_lowercase",
+            "greek_stop",
+            "greek_keywords",
+            "greek_stemmer"
+          ]
+        }
+      }
+    }
+   }
+
 
 print(elastic_con.indices.create(index = index, ignore=400, body=mapping))
 
