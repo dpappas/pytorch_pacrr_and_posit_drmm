@@ -121,6 +121,15 @@ def convert_examples_to_features(examples, max_seq_length, tokenizer):
         features.append(in_f)
     return features
 
+def fix_bert_tokens(tokens):
+    ret = []
+    for t in tokens:
+        if (t.startswith('##')):
+            ret[-1] = ret[-1] + t[2:]
+        else:
+            ret.append(t)
+    return ret
+
 eval_examples   = [
     InputExample(
         guid='example_dato_1',
@@ -137,8 +146,7 @@ bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
 
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
-bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
-bert_model.to(device)
+bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1)).to(device)
 
 eval_features       = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
 eval_feat           = eval_features[0]
@@ -148,15 +156,10 @@ segment_ids         = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to
 tokens              = eval_feat.tokens
 token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=False)
 
+fixed_tokens        = fix_bert_tokens(eval_feat.tokens)
 
-def fix_bert_tokens(tokens):
-    ret = []
-    for t in tokens:
-        if (t.startswith('##')):
-            ret[-1] = ret[-1] + t[2:]
-        else:
-            ret.append(t)
-    return ret
+tok_inds            = [i for i in range(len(tokens)) if (not tokens[i].startswith('##'))]
+token_embeds        = token_embeds.squeeze(0)
+embs                = token_embeds[tok_inds, :]
 
-fixed_tokens = fix_bert_tokens(eval_feat.tokens)
 
