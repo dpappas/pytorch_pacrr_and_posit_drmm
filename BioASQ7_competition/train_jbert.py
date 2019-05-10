@@ -1220,7 +1220,7 @@ bert_model.to(device)
 embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
 b_size              = 6
-max_epoch           = 4
+max_epoch           = 10
 #####################
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
@@ -1249,7 +1249,8 @@ for run in range(0, 5):
     model     = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
     print_params(model)
     print_params(bert_model)
-    optimizer = optim.Adam(list(model.parameters())+list(bert_model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    # optimizer = optim.Adam(list(model.parameters())+list(bert_model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    optimizer = optim.Adam(list(model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
