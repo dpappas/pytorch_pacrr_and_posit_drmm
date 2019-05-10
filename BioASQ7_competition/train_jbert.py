@@ -1231,7 +1231,7 @@ for run in range(0, 5):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     ######
-    odir = 'bioasq7_JBERT_2L_0p01_run_{}/'.format(run)
+    odir = 'frozen_bioasq7_JBERT_2L_0p01_run_{}/'.format(run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1246,10 +1246,10 @@ for run in range(0, 5):
     ######
     print('Compiling model...')
     logger.info('Compiling model...')
-    model       = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
+    model     = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
     print_params(model)
     print_params(bert_model)
-    optimizer   = optim.Adam(list(model.parameters())+list(bert_model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    optimizer = optim.Adam(list(model.parameters())+list(bert_model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
