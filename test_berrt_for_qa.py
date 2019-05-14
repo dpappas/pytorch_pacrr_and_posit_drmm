@@ -163,3 +163,14 @@ token_embeds        = token_embeds.squeeze(0)
 embs                = token_embeds[tok_inds, :]
 
 
+
+# eval_examples   = [
+#     InputExample(
+#         guid='example_dato_1',
+#         text_a='i wanna be the very best',
+#         text_b='like noone ever was',
+#         label='1'
+#     )
+# ]
+# eval_feat           = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)[0]
+# tokens              = eval_feat.tokens
