@@ -1218,20 +1218,21 @@ bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache
 bert_model.to(device)
 #####################
 embedding_dim       = 768 # 50  # 30  # 200
-lr                  = 0.01
+# lrs                  = [1e-03, 1e-04, 5e-04, 5e-05, 5e-06]
+lr                  = 5e-06
 b_size              = 6
 max_epoch           = 10
 #####################
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
 hdlr = None
-for run in range(0, 5):
+for run in range(0, 1):
     ######
     my_seed = run
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     ######
-    odir = 'frozen_bioasq7_JBERT_2L_0p01_run_{}/'.format(run)
+    odir = 'frozen_bioasq7_JBERT_2L_{}_run_{}/'.format(str(lr), run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1262,4 +1263,14 @@ for run in range(0, 5):
             save_checkpoint(epoch, bert_model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar'))
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
+
+'''
+
+CUDA_VISIBLE_DEVICES=0 python3.6 train_1.py
+CUDA_VISIBLE_DEVICES=0 python3.6 train_2.py
+CUDA_VISIBLE_DEVICES=1 python3.6 train_3.py     
+CUDA_VISIBLE_DEVICES=1 python3.6 train_4.py     Running
+CUDA_VISIBLE_DEVICES=1 python3.6 train_5.py     Running
+
+'''
 
