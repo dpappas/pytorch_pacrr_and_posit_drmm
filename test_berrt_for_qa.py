@@ -139,7 +139,7 @@ eval_examples   = [
     )
 ]
 
-use_cuda            = True
+use_cuda            = False
 max_seq_length      = 50
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 bert_model          = 'bert-base-uncased'
@@ -167,8 +167,8 @@ embs                = token_embeds[tok_inds, :]
 # eval_examples   = [
 #     InputExample(
 #         guid='example_dato_1',
-#         text_a='i wanna be the very best',
-#         text_b='like noone ever was',
+#         text_a='"Measurement of neopterin',
+#         text_b='which metabolic pathway',
 #         label='1'
 #     )
 # ]
