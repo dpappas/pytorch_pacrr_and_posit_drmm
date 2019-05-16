@@ -1267,10 +1267,10 @@ for run in range(0, 1):
 '''
 
 CUDA_VISIBLE_DEVICES=0 python3.6 train_1.py
-CUDA_VISIBLE_DEVICES=0 python3.6 train_2.py
-CUDA_VISIBLE_DEVICES=1 python3.6 train_3.py     
-CUDA_VISIBLE_DEVICES=1 python3.6 train_4.py     Running
-CUDA_VISIBLE_DEVICES=1 python3.6 train_5.py     Running
+CUDA_VISIBLE_DEVICES=0 python3.6 train_2.py     Running
+CUDA_VISIBLE_DEVICES=1 python3.6 train_3.py     Running
+CUDA_VISIBLE_DEVICES=1 python3.6 train_4.py     Done
+CUDA_VISIBLE_DEVICES=1 python3.6 train_5.py     Done
 
 '''
 
