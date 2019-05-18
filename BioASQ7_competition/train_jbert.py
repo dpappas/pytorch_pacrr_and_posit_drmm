@@ -1274,11 +1274,11 @@ CUDA_VISIBLE_DEVICES=1 python3.6 train_3.py     Done
 CUDA_VISIBLE_DEVICES=1 python3.6 train_4.py     Done
 CUDA_VISIBLE_DEVICES=1 python3.6 train_5.py     Done
 
-CUDA_VISIBLE_DEVICES=0 python3.6 train_6.py     Pending     5e-05
-CUDA_VISIBLE_DEVICES=0 python3.6 train_7.py     Pending     5e-04
-CUDA_VISIBLE_DEVICES=1 python3.6 train_8.py     Pending     1e-04
-CUDA_VISIBLE_DEVICES=1 python3.6 train_9.py     Pending     1e-03
-CUDA_VISIBLE_DEVICES=1 python3.6 train_10.py    Pending     5e-06
+CUDA_VISIBLE_DEVICES=0 python3.6 train_6.py     Pending     5e-05   unfrozen
+CUDA_VISIBLE_DEVICES=0 python3.6 train_7.py     Pending     5e-04   unfrozen
+CUDA_VISIBLE_DEVICES=1 python3.6 train_8.py     Pending     1e-04   unfrozen
+CUDA_VISIBLE_DEVICES=1 python3.6 train_9.py     Pending     1e-03   unfrozen
+CUDA_VISIBLE_DEVICES=1 python3.6 train_10.py    Pending     5e-06   unfrozen
 
 '''
 
