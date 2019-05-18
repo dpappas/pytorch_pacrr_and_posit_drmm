@@ -1233,7 +1233,8 @@ for run in range(0, 1):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     ######
-    odir = 'frozen_bioasq7_JBERT_2L_{}_run_{}/'.format(str(lr), run)
+    # odir = 'frozen_bioasq7_JBERT_2L_{}_run_{}/'.format(str(lr), run)
+    odir = 'bioasq7_JBERT_2L_{}_run_{}/'.format(str(lr), run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1251,8 +1252,8 @@ for run in range(0, 1):
     model     = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
     print_params(model)
     print_params(bert_model)
-    # optimizer = optim.Adam(list(model.parameters())+list(bert_model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-    optimizer = optim.Adam(list(model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    optimizer = optim.Adam(list(model.parameters())+list(bert_model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    # optimizer = optim.Adam(list(model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
@@ -1267,11 +1268,17 @@ for run in range(0, 1):
 
 '''
 
-CUDA_VISIBLE_DEVICES=0 python3.6 train_1.py
-CUDA_VISIBLE_DEVICES=0 python3.6 train_2.py     Running
-CUDA_VISIBLE_DEVICES=1 python3.6 train_3.py     Running
+CUDA_VISIBLE_DEVICES=1 python3.6 train_1.py     Running
+CUDA_VISIBLE_DEVICES=0 python3.6 train_2.py     Done
+CUDA_VISIBLE_DEVICES=1 python3.6 train_3.py     Done
 CUDA_VISIBLE_DEVICES=1 python3.6 train_4.py     Done
 CUDA_VISIBLE_DEVICES=1 python3.6 train_5.py     Done
+
+CUDA_VISIBLE_DEVICES=0 python3.6 train_6.py     Pending     5e-05
+CUDA_VISIBLE_DEVICES=0 python3.6 train_7.py     Pending     5e-04
+CUDA_VISIBLE_DEVICES=1 python3.6 train_8.py     Pending     1e-04
+CUDA_VISIBLE_DEVICES=1 python3.6 train_9.py     Pending     1e-03
+CUDA_VISIBLE_DEVICES=1 python3.6 train_10.py    Pending     5e-06
 
 '''
 
