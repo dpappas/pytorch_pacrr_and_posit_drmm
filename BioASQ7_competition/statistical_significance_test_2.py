@@ -97,8 +97,14 @@ odir                = '/home/dpappas/sign_testing/'
 
 goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1'
 
-sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json'
-sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json'
+# sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json'
+# sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json'
+# sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert.json'
+# sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
+sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT_F.json'
+sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
+temp1f = 'A1.json'
+temp2f = 'A2.json'
 
 print(goldf)
 print(sysAf)
@@ -132,12 +138,12 @@ for n in tqdm.tqdm(range(1, N+1)):
                 temp = A['questions'][j]['documents'][i]
                 A['questions'][j]['documents'][i] = B['questions'][j]['documents'][i]
                 B['questions'][j]['documents'][i] = temp
-    with open('A.json', 'w') as f:
+    with open(temp1f, 'w') as f:
         json.dump(A, f)
-    with open('B.json', 'w') as f:
+    with open(temp2f, 'w') as f:
         json.dump(B, f)
-    new_sysA_metric = get_bioasq_res(goldf, 'A.json')[u'MAP documents']
-    new_sysB_metric = get_bioasq_res(goldf, 'B.json')[u'MAP documents']
+    new_sysA_metric = get_bioasq_res(goldf, temp1f)[u'MAP documents']
+    new_sysB_metric = get_bioasq_res(goldf, temp2f)[u'MAP documents']
     new_diff        = abs(new_sysA_metric - new_sysB_metric)
     if new_diff >= orig_diff:
         num_invalid += 1
