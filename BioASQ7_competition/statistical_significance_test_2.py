@@ -101,13 +101,19 @@ goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json'
 # sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert.json'
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
-sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT_F.json'
+# sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT_F.json'
+# sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
+# sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json'
+# sysBf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_pdrmm.json'
+sysAf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json'
 sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
 
-temp1f = 'A1.json'
-temp2f = 'A2.json'
+temp1f = 'C1.json'
+temp2f = 'C2.json'
 # metric = u'MAP documents'
+# field = 'documents'
 metric = u'MAP snippets'
+field = "snippets"
 
 print(goldf)
 print(sysAf)
@@ -135,12 +141,12 @@ for n in tqdm.tqdm(range(1, N+1)):
     B = copy.deepcopy(sysB)
     ########################
     for j in range(len(A['questions'])):
-        for i in range(len(A['questions'][j]['documents'])):
+        for i in range(len(A['questions'][j][field])):
             rval = random.random()
             if rval < 0.5:
-                temp = A['questions'][j]['documents'][i]
-                A['questions'][j]['documents'][i] = B['questions'][j]['documents'][i]
-                B['questions'][j]['documents'][i] = temp
+                temp = A['questions'][j][field][i]
+                A['questions'][j][field][i] = B['questions'][j][field][i]
+                B['questions'][j][field][i] = temp
     with open(temp1f, 'w') as f:
         json.dump(A, f)
     with open(temp2f, 'w') as f:
