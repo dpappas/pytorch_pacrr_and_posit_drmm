@@ -280,7 +280,8 @@ def print_params(model):
     logger.info(40 * '=')
     trainable = 0
     untrainable = 0
-    for parameter in list(model.parameters()) + list(bert_model.parameters()):
+    # for parameter in list(model.parameters()) + list(bert_model.parameters()):
+    for parameter in list(model.parameters()):
         # print(parameter.size())
         v = 1
         for s in parameter.size():
