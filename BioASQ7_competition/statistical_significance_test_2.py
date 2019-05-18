@@ -103,15 +103,18 @@ goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
 sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT_F.json'
 sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
+
 temp1f = 'A1.json'
 temp2f = 'A2.json'
+# metric = u'MAP documents'
+metric = u'MAP snippets'
 
 print(goldf)
 print(sysAf)
 print(sysBf)
 
-scoreA = get_bioasq_res(goldf, sysAf)[u'MAP documents']
-scoreB = get_bioasq_res(goldf, sysBf)[u'MAP documents']
+scoreA = get_bioasq_res(goldf, sysAf)[metric]
+scoreB = get_bioasq_res(goldf, sysBf)[metric]
 pprint(scoreA)
 pprint(scoreB)
 
@@ -142,8 +145,8 @@ for n in tqdm.tqdm(range(1, N+1)):
         json.dump(A, f)
     with open(temp2f, 'w') as f:
         json.dump(B, f)
-    new_sysA_metric = get_bioasq_res(goldf, temp1f)[u'MAP documents']
-    new_sysB_metric = get_bioasq_res(goldf, temp2f)[u'MAP documents']
+    new_sysA_metric = get_bioasq_res(goldf, temp1f)[metric]
+    new_sysB_metric = get_bioasq_res(goldf, temp2f)[metric]
     new_diff        = abs(new_sysA_metric - new_sysB_metric)
     if new_diff >= orig_diff:
         num_invalid += 1
