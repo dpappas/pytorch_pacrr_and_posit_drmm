@@ -714,13 +714,13 @@ app = Flask(__name__)
 def get_news():
     return render_template("sentence_similarity.html")
 
-@app.route("/test_similarity_matrix_jpdrmm", methods=["POST", "GET"])
+@app.route("/test_similarity_matrix", methods=["POST", "GET"])
 def test_similarity_matrix():
     sent1           = request.form.get("sent1").strip()
     sent2           = request.form.get("sent2").strip()
     tokens1         = tokenize(sent1)
     tokens2         = tokenize(sent2)
-    scores          = get_sim(sent1, sent2)
+    scores          = get_sim(sent1, sent2).clip(min=0) * 100
     #############
     ret_html    = '''
     <html>
@@ -741,7 +741,7 @@ def test_similarity_matrix():
     ret_html    += '</div>'
     ret_html    += '<div class="floatRight">'
     ret_html    += '<p><h2>One-Hot cosine similarity:</h2></p>'
-    ret_html    += create_table(tokens1, tokens2, scores*100)
+    ret_html    += create_table(tokens1, tokens2, scores)
     ret_html    += '</div>'
     ret_html    += '</div>'
     ret_html    += '''
