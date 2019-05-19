@@ -27,10 +27,210 @@ from    difflib                     import SequenceMatcher
 import  re
 import  nltk
 import  math
+from colour import Color
+from flask import url_for
+from flask import Flask
+from flask import render_template
+from flask import request
+from flask import send_from_directory
+from gensim.models.keyedvectors import KeyedVectors
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
+import re, os
+import random
+import numpy as np
+import pickle
+
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords   = nltk.corpus.stopwords.words("english")
+
+def get_words(s, idf, max_idf):
+    sl  = tokenize(s)
+    sl  = [s for s in sl]
+    sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
+    return sl, sl2
+
+def uwords(words):
+  uw = {}
+  for w in words:
+    uw[w] = 1
+  return [w for w in uw]
+
+def ubigrams(words):
+  uw = {}
+  prevw = "<pw>"
+  for w in words:
+    uw[prevw + '_' + w] = 1
+    prevw = w
+  return [w for w in uw]
+
+def query_doc_overlap(qwords, dwords, idf, max_idf):
+    # % Query words in doc.
+    qwords_in_doc = 0
+    idf_qwords_in_doc = 0.0
+    idf_qwords = 0.0
+    for qword in uwords(qwords):
+      idf_qwords += idf_val(qword, idf, max_idf)
+      for dword in uwords(dwords):
+        if qword == dword:
+          idf_qwords_in_doc += idf_val(qword, idf, max_idf)
+          qwords_in_doc     += 1
+          break
+    if len(qwords) <= 0:
+      qwords_in_doc_val = 0.0
+    else:
+      qwords_in_doc_val = (float(qwords_in_doc) /
+                           float(len(uwords(qwords))))
+    if idf_qwords <= 0.0:
+      idf_qwords_in_doc_val = 0.0
+    else:
+      idf_qwords_in_doc_val = float(idf_qwords_in_doc) / float(idf_qwords)
+    # % Query bigrams  in doc.
+    qwords_bigrams_in_doc = 0
+    idf_qwords_bigrams_in_doc = 0.0
+    idf_bigrams = 0.0
+    for qword in ubigrams(qwords):
+      wrds = qword.split('_')
+      idf_bigrams += idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf)
+      for dword in ubigrams(dwords):
+        if qword == dword:
+          qwords_bigrams_in_doc += 1
+          idf_qwords_bigrams_in_doc += (idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf))
+          break
+    if len(qwords) <= 0:
+      qwords_bigrams_in_doc_val = 0.0
+    else:
+      qwords_bigrams_in_doc_val = (float(qwords_bigrams_in_doc) / float(len(ubigrams(qwords))))
+    if idf_bigrams <= 0.0:
+      idf_qwords_bigrams_in_doc_val = 0.0
+    else:
+      idf_qwords_bigrams_in_doc_val = (float(idf_qwords_bigrams_in_doc) / float(idf_bigrams))
+    return [
+        qwords_in_doc_val,
+        qwords_bigrams_in_doc_val,
+        idf_qwords_in_doc_val,
+        idf_qwords_bigrams_in_doc_val
+    ]
+
+def GetScores(qtext, dtext, bm25, idf, max_idf):
+    qwords, qw2 = get_words(qtext, idf, max_idf)
+    dwords, dw2 = get_words(dtext, idf, max_idf)
+    qd1         = query_doc_overlap(qwords, dwords, idf, max_idf)
+    bm25        = [bm25]
+    return qd1[0:3] + bm25
+
+# Compute the term frequency of a word for a specific document
+def tf(term, document):
+    tf = 0
+    for word in document:
+        if word == term:
+            tf += 1
+    if len(document) == 0:
+        return tf
+    else:
+        return tf/len(document)
+
+# Use BM25 ranking function in order to cimpute the similarity score between a question anda snippet
+# query: the given question
+# document: the snippet
+# k1, b: parameters
+# idf_scores: list with the idf scores
+# avddl: average document length
+# nomalize: in case we want to use Z-score normalization (Boolean)
+# mean, deviation: variables used for Z-score normalization
+def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
+    score = 0
+    for query_term in query:
+        if query_term not in idf_scores:
+            score += rare_word * (
+                    (tf(query_term, document) * (k1 + 1)) /
+                    (
+                            tf(query_term, document) +
+                            k1 * (1 - b + b * (len(document) / avgdl))
+                    )
+            )
+        else:
+            score += idf_scores[query_term] * ((tf(query_term, document) * (k1 + 1)) / (tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+    if normalize:
+        return ((score - mean)/deviation)
+    else:
+        return score
+
+def snip_is_relevant(one_sent, gold_snips):
+    # print one_sent
+    # pprint(gold_snips)
+    return int(
+        any(
+            [
+                (one_sent.encode('ascii', 'ignore')  in gold_snip.encode('ascii','ignore'))
+                or
+                (gold_snip.encode('ascii', 'ignore') in one_sent.encode('ascii','ignore'))
+                for gold_snip in gold_snips
+            ]
+        )
+    )
+
+def prep_data(quest, sents, the_bm25, wv, good_snips, idf, max_idf):
+    ####
+    quest_toks      = tokenize(quest)
+    good_doc_af     = GetScores(quest, ' '.join(sents), the_bm25, idf, max_idf)
+    good_doc_af.append(len(sents) / 60.)
+    #
+    doc_toks            = tokenize(' '.join(sents))
+    tomi                = (set(doc_toks) & set(quest_toks))
+    tomi_no_stop        = tomi - set(stopwords)
+    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+    features            = [
+        len(quest)                                      / 300.,
+        len(' '.join(sents))                            / 300.,
+        len(tomi_no_stop)                               / 100.,
+        BM25score,
+        sum(tomi_no_stop_idfs)                          / 100.,
+        sum(tomi_idfs)                                  / sum(quest_idfs),
+    ]
+    good_doc_af.extend(features)
+    ####
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    for good_text in sents:
+        sent_toks                   = tokenize(good_text)
+        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
+        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores.append(len(sent_toks)/ 342.)
+        if (len(good_embeds) > 0):
+            #
+            tomi                = (set(sent_toks) & set(quest_toks))
+            tomi_no_stop        = tomi - set(stopwords)
+            BM25score           = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+            tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+            tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+            quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+            features            = [
+                len(quest)              / 300.,
+                len(good_text)          / 300.,
+                len(tomi_no_stop)       / 100.,
+                BM25score,
+                sum(tomi_no_stop_idfs)  / 100.,
+                sum(tomi_idfs)          / sum(quest_idfs),
+            ]
+            #
+            good_sents_embeds.append(good_embeds)
+            good_sents_escores.append(good_escores+features)
+            held_out_sents.append(good_text)
+            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+    ####
+    return {
+        'sents_embeds'     : good_sents_embeds,
+        'sents_escores'    : good_sents_escores,
+        'doc_af'           : good_doc_af,
+        'sent_tags'        : good_sent_tags,
+        'held_out_sents'   : held_out_sents,
+    }
 
 def print_params(model):
     '''
@@ -106,6 +306,95 @@ def load_idfs(idf_path, words):
     print('Loaded idf tables with max idf {}'.format(max_idf))
     #
     return ret, max_idf
+
+def idf_val(w, idf, max_idf):
+    if w in idf:
+        return idf[w]
+    return max_idf
+
+def get_embeds(tokens, wv):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        if(tok in wv):
+            ret1.append(tok)
+            ret2.append(wv[tok])
+    return ret1, np.array(ret2, 'float64')
+
+def create_table(tokens1, tokens2, scores):
+    ret_html = '<table>'
+    ret_html += '<tr><td></td>'
+    ####################
+    for tok1 in tokens1:
+        ret_html += '<th>{}</th>'.format(tok1)
+    ret_html += '</tr>'
+    ####################
+    for i in range(len(tokens2)):
+        tok2        = tokens2[i]
+        ret_html    += '<tr>'
+        ret_html    += '<th>{}</th>'.format(tok2)
+        for j in range(len(tokens1)):
+            tok1    = tokens1[j]
+            score   = int(scores[j][i])
+            ret_html += '<td style="min-width:50px" title="{}" score="{}" bgcolor="{}"></div></td>'.format('{} : {} : {}'.format(tok1,tok2,str(score)), score, yellow_colors[score])
+        ret_html += '</tr>'
+    ret_html += '</table>'
+    ####################
+    max_scores      = scores.max(axis=1)
+    aver_scores     = np.average(scores, axis=1)
+    aver5_scores    = np.average(np.sort(scores, axis=1)[:, -5:], axis=1)
+    aver5min_scores = np.average(np.sort(scores, axis=1)[:, :5], axis=1)
+    # print(max_scores.shape)
+    ret_html        += "<p><b>Pooled scores:</b></p>"
+    ret_html        += '<table>'
+    ret_html        += '<tr><td></td>'
+    for tok1 in tokens1:
+        ret_html    += '<th>{}</th>'.format(tok1)
+    ret_html        += '</tr>'
+    ####################
+    ret_html        += '<tr><td>Max Score:</td>'
+    for j in range(len(tokens1)):
+        score       =  int(max_scores[j])
+        ret_html    += '<td style="min-width:50px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+    ####################
+    ret_html        += '<tr><td>Aver of max 5 Scores:</td>'
+    for j in range(len(tokens1)):
+        score       =  int(aver5_scores[j])
+        ret_html    += '<td style="min-width:50px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+    ####################
+    ret_html        += '<tr><td>Aver of min 5 Scores:</td>'
+    for j in range(len(tokens1)):
+        score       =  int(aver5min_scores[j])
+        ret_html    += '<td style="min-width:50px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+    ####################
+    ret_html        += '<tr><td>Aver of all Scores:</td>'
+    for j in range(len(tokens1)):
+        score       =  int(aver_scores[j])
+        ret_html    += '<td style="min-width:50px" score="{}" bgcolor="{}"></div></td>'.format(score, yellow_colors[score])
+    ####################
+    ret_html        += '<tr><td>normalized (divided by max) IDF Score:</td>'
+    for j in range(len(tokens1)):
+        score       = idf_val(tokens1[j], idf, max_idf)
+        score       = int((score/max_idf) * 100)
+        ret_html    += '<td style="min-width:50px" score="{}" bgcolor="{}"></div></td>'.format(score, blue_colors[score])
+    ####################
+    ret_html     += '</tr>'
+    ret_html     += '</table>'
+    return ret_html
+
+def get_sim(quest_text, sent_text):
+    # quest_text  = 'What is the mechanism of action of anlotinib'
+    # sent_text   = 'Anlotinib is a novel TKI targeting the vascular endothelial growth factor receptor (VEGFR), fibroblast growth factor receptor (FGFR), platelet-derived growth factor receptor (PDGFR) and c-Kit.'
+    sents       = [sent_text]
+    quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
+    q_idfs      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    datum       = prep_data(quest_text, sents, 2.43, wv, [], idf, max_idf)
+    sim_sens    = model.emit_one(
+        doc1_sents_embeds   = datum['sents_embeds'],
+        question_embeds     = quest_embeds,
+        q_idfs              = q_idfs,
+        sents_gaf           = datum['sents_escores']
+    )
+    return sim_sens[0].data.numpy()
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -244,7 +533,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output          = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
-        res = []
+        res     = []
+        ret3    = []
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
@@ -257,6 +547,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
             sim_oh              = (sim_insens > (1 - (1e-3))).float()
             sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+            ret3.append(sim_sens)
             #
             insensitive_pooled  = self.pooling_method(sim_insens)
             sensitive_pooled    = self.pooling_method(sim_sens)
@@ -274,7 +565,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
         ret = self.get_kmax(res, k2)
-        return ret, res
+        return ret, res, ret3
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         hn  = self.context_h0
@@ -347,14 +638,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
-    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
+    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
-        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         if(use_cuda):
             q_idfs          = q_idfs.cuda()
             question_embeds = question_embeds.cuda()
-            doc_gaf         = doc_gaf.cuda()
         #
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -363,67 +652,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        good_out, gs_emits, sim_Sens  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        #
-        final_good_output   = self.final_layer_1(good_out_pp)
-        final_good_output   = self.final_activ_1(final_good_output)
-        final_good_output   = self.final_layer_2(final_good_output)
-        #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
-        #
-        return final_good_output, gs_emits
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
-        question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
-        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
-        doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
-        if(use_cuda):
-            q_idfs          = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
-            doc_gaf         = doc_gaf.cuda()
-            doc_baf         = doc_baf.cuda()
-        #
-        q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        #
-        q_weights           = torch.cat([q_context, q_idfs], -1)
-        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights           = F.softmax(q_weights, dim=-1)
-        #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
-        #
-        final_good_output   = self.final_layer_1(good_out_pp)
-        final_good_output   = self.final_activ_1(final_good_output)
-        final_good_output   = self.final_layer_2(final_good_output)
-        #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
-        #
-        final_bad_output    = self.final_layer_1(bad_out_pp)
-        final_bad_output    = self.final_activ_1(final_bad_output)
-        final_bad_output    = self.final_layer_2(final_bad_output)
-        #
-        bs_emits            = bs_emits.unsqueeze(-1)
-        bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
-        bs_emits            = torch.sigmoid(bs_emits)
-        #
-        loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        return sim_Sens
 
 ###########################################################
-use_cuda = torch.cuda.is_available()
+use_cuda = False #torch.cuda.is_available()
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
@@ -468,5 +702,58 @@ wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 ###########################################################
 
+white           = Color("white")
+yellow_colors   = list(white.range_to(Color("yellow"), 101))
+yellow_colors   = [c.get_hex_l() for c in yellow_colors]
+blue_colors     = list(white.range_to(Color("blue"), 101))
+blue_colors     = [c.get_hex_l() for c in blue_colors]
 
+app = Flask(__name__)
+
+@app.route("/")
+def get_news():
+    return render_template("sentence_similarity.html")
+
+@app.route("/test_similarity_matrix_jpdrmm", methods=["POST", "GET"])
+def test_similarity_matrix():
+    sent1           = request.form.get("sent1").strip()
+    sent2           = request.form.get("sent2").strip()
+    tokens1         = tokenize(sent1)
+    tokens2         = tokenize(sent2)
+    scores          = get_sim(sent1, sent2)
+    #############
+    ret_html    = '''
+    <html>
+    <head>
+    <style>
+    table, th, td {border: 1px solid black;}
+    .floatLeft { width: 50%; float: left; }
+    .floatRight {width: 50%; float: right; }
+    .container { overflow: hidden; }
+    </style>
+    </head>
+    <body>
+    '''
+    ret_html    += '<div class="container">'
+    ret_html    += '<div class="floatLeft">'
+    ret_html    += '<p><h2>W2V cosine similarity (clipped negative to zero):</h2></p>'
+    ret_html    += create_table(tokens1, tokens2, scores)
+    ret_html    += '</div>'
+    ret_html    += '<div class="floatRight">'
+    ret_html    += '<p><h2>One-Hot cosine similarity:</h2></p>'
+    ret_html    += create_table(tokens1, tokens2, scores*100)
+    ret_html    += '</div>'
+    ret_html    += '</div>'
+    ret_html    += '''
+    <p><b>Note:</b> Attention scores between the sentences:</p>
+    <p>Sentence1: {}</p>
+    <p>Sentence2: {}</p>
+    </body>
+    </html>
+    '''.format(sent1, sent2)
+    return ret_html
+
+if __name__ == '__main__':
+    # app.run(port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
 
