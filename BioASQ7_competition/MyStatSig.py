@@ -172,6 +172,8 @@ print('Overall: {}'.format(float(num_invalid) / float(N)))
 
 '''
 
+########################################################################################
+
 python3.6 sig.py \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json" \
@@ -182,6 +184,7 @@ python3.6 sig.py \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json" \
 "MAP documents"
 
+########################################################################################
 
 python3.6 sig.py \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json" \
@@ -207,6 +210,8 @@ python3.6 sig.py \
 "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_bcnn.json" \
 "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json" \
 "MAP snippets"
+
+########################################################################################
 
 snippet extraction
 jpdrmm      - pdrmm_pdrmm   : 0.0004
