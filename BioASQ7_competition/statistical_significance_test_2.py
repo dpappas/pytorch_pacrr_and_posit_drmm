@@ -167,6 +167,7 @@ jpdrmm      - pdrmm_pdrmm   : 0.0004
 bert_pdrmm  - JBERT         : 0.0113
 
 doccument retrieval
+JPDRMM  - PDRMM             : 0.6923
 JBERT_F - JBERT             : 0.6782
 BERT    - JBERT             : 0.0541 
 '''

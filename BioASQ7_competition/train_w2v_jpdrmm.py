@@ -1390,12 +1390,12 @@ eval_path           = '/content/drive/My Drive/data_for_colab/bioasq7/eval (1)/r
 retrieval_jar_path  = '/content/drive/My Drive/data_for_colab/bioasq7/dist/my_bioasq_eval_2.jar'
 odd                 = '/content/drive/My Drive/data_for_colab/bioasq7/outputs/'
 ##########################################
-# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-# dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
-w2v_bin_path    = '/content/drive/My Drive/data_for_colab/pubmed2018_w2v_30D.bin'
-idf_pickle_path = '/content/drive/My Drive/data_for_colab/idf.pkl'
-dataloc         = '/content/drive/My Drive/data_for_colab/bioasq7/data/'
+w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
+# w2v_bin_path    = '/content/drive/My Drive/data_for_colab/pubmed2018_w2v_30D.bin'
+# idf_pickle_path = '/content/drive/My Drive/data_for_colab/idf.pkl'
+# dataloc         = '/content/drive/My Drive/data_for_colab/bioasq7/data/'
 ##########################################
 (
     dev_data, dev_docs,
