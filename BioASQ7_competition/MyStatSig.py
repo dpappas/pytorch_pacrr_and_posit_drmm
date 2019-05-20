@@ -115,10 +115,9 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 
 goldf, sysAf, sysBf, metric, opath = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
 
-rand_name = ''.join([random.choice('abcdefghijklmnopqrstuvwxyz') for i in range(3)])
-
-temp1f = '{}.json'.format(rand_name+'A')
-temp2f = '{}.json'.format(rand_name+'B')
+rand_name   = ''.join([random.choice('abcdefghijklmnopqrstuvwxyz'+'abcdefghijklmnopqrstuvwxyz'.upper()) for i in range(4)])
+temp1f      = '{}.json'.format(rand_name+'A')
+temp2f      = '{}.json'.format(rand_name+'B')
 
 print(goldf)
 print(sysAf)
