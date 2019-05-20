@@ -703,7 +703,7 @@ wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 ###########################################################
 
 white           = Color("white")
-yellow_colors   = list(white.range_to(Color("yellow"), 101))
+yellow_colors   = list(white.range_to(Color("red"), 101))
 yellow_colors   = [c.get_hex_l() for c in yellow_colors]
 blue_colors     = list(white.range_to(Color("blue"), 101))
 blue_colors     = [c.get_hex_l() for c in blue_colors]
@@ -720,7 +720,7 @@ def test_similarity_matrix():
     sent2           = request.form.get("sent2").strip()
     tokens1         = tokenize(sent1)
     tokens2         = tokenize(sent2)
-    scores          = get_sim(sent1, sent2).clip(min=0) * 100
+    scores          = get_sim(' '.join(tokens1), ' '.join(tokens2)).clip(min=0) * 100
     #############
     ret_html    = '''
     <html>

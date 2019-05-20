@@ -958,7 +958,7 @@ class Posit_Drmm_Modeler(nn.Module):
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True).to(device)
     def init_doc_out_layer(self):
-        self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True).to(device)
+        self.final_layer_1  = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True).to(device)
         self.final_activ_1  = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
         self.final_layer_2  = nn.Linear(8, 1, bias=True).to(device)
         self.oo_layer       = nn.Linear(2, 1, bias=True).to(device)
