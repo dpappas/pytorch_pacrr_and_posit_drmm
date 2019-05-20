@@ -79,7 +79,7 @@ with open(sysBf) as f:
 
 sysA_metric = getScore(gold, sysA, metric, "sysA")
 sysB_metric = getScore(gold, sysB, metric, "sysB")
-orig_diff = sysA_metric - sysB_metric
+orig_diff   = sysA_metric - sysB_metric
 
 N = 10000
 num_invalid = 0
