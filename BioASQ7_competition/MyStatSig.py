@@ -145,7 +145,8 @@ orig_diff   =  abs(sysA_metric - sysB_metric)
 N           = 10000
 num_invalid = 0
 
-for n in tqdm.tqdm(range(1, N+1)):
+pbar = tqdm.tqdm(range(1, N+1))
+for n in pbar:
     A = copy.deepcopy(sysA)
     B = copy.deepcopy(sysB)
     ########################
@@ -167,7 +168,7 @@ for n in tqdm.tqdm(range(1, N+1)):
     if new_diff >= orig_diff:
         num_invalid += 1
     if n % 20 == 0 and n > 0:
-        print('Random Iteration {}: {}'.format(n, float(num_invalid) / float(n)))
+        pbar.set_description('Random Iteration {}: {}'.format(n, float(num_invalid) / float(n)))
 
 print('Overall: {}'.format(float(num_invalid) / float(N)))
 with(open(opath, 'w')) as fp:
