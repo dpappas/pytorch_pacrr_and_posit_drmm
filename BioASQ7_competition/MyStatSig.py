@@ -188,5 +188,8 @@ JBERT_F - JBERT             : 0.6782
 BERT    - JBERT             : 0.0541 
 '''
 
+'''
+ps -ef | grep "sig.py" | awk '{print $3}' | xargs kill -9 $1
+'''
 
 

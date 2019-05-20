@@ -162,6 +162,9 @@ for n in tqdm.tqdm(range(1, N+1)):
 print('Overall: {}'.format(float(num_invalid) / float(N)))
 
 '''
+
+ps -ef | grep "sig.py" | grep python3.6 | awk '{print $2}' | xargs kill -9 $1
+
 snippet extraction
 jpdrmm      - pdrmm_pdrmm   : 0.0004
 bert_pdrmm  - JBERT         : 0.0113
