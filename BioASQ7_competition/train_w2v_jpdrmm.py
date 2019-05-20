@@ -1537,3 +1537,10 @@ evaluation.EvaluatorTask1b -phaseA -e 5 \
 
 
 '''
+
+'''
+
+np.average([len(q['snippets']) for q in list(bioasq7_data.values())])
+list(bioasq7_data.values())[0].keys()
+np.average([len(q['relevant_documents']) for q in train_data['queries']])
+'''
