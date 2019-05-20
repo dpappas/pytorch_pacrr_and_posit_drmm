@@ -8,6 +8,7 @@ import os
 import json
 import copy
 import subprocess
+import sys
 
 # def ranking_rprecision_score(y_true, y_score, k=10):
 #     """Precision at rank k
@@ -105,15 +106,22 @@ goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
 # sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json'
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_pdrmm.json'
-sysAf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json'
-sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
+# sysAf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json'
+# sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
+#
+# temp1f = 'C1.json'
+# temp2f = 'C2.json'
+# # metric = u'MAP documents'
+# metric = u'MAP snippets'
 
-temp1f = 'C1.json'
-temp2f = 'C2.json'
-# metric = u'MAP documents'
-# field = 'documents'
-metric = u'MAP snippets'
-field = "snippets"
+sysAf   = sys.argv[1]
+sysBf   = sys.argv[2]
+metric  = sys.argv[3]
+
+rand_name = ''.join([random.choice('abcdefghijklmnopqrstuvwxyz') for i in range(3)])
+
+temp1f = '{}.json'.format(rand_name+'A')
+temp2f = '{}.json'.format(rand_name+'B')
 
 print(goldf)
 print(sysAf)
@@ -163,6 +171,45 @@ for n in tqdm.tqdm(range(1, N+1)):
 print('Overall: {}'.format(float(num_invalid) / float(N)))
 
 '''
+
+python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json" \
+"MAP documents"
+
+python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert.json" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json" \
+"MAP documents"
+
+
+
+
+python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_pdrmm.json" \
+"MAP snippets"
+
+python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json" \
+"MAP snippets"
+
+python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT_F." \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json" \
+"MAP snippets"
+
+python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_bcnn.json" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_pdrmm.json" \
+"MAP snippets"
+
+python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_bcnn.json" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json" \
+"MAP snippets"
+
 snippet extraction
 jpdrmm      - pdrmm_pdrmm   : 0.0004
 bert_pdrmm  - JBERT         : 0.0113
