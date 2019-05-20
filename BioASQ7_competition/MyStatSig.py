@@ -94,7 +94,6 @@ def get_bioasq_res(fgold, femit):
     return ret
 
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odir                = '/home/dpappas/sign_testing/'
 
 # goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1'
 #
@@ -118,6 +117,7 @@ goldf   = sys.argv[1]
 sysAf   = sys.argv[2]
 sysBf   = sys.argv[3]
 metric  = sys.argv[4]
+opath   = sys.argv[5]
 
 rand_name = ''.join([random.choice('abcdefghijklmnopqrstuvwxyz') for i in range(3)])
 
@@ -170,6 +170,9 @@ for n in tqdm.tqdm(range(1, N+1)):
         print('Random Iteration {}: {}'.format(n, float(num_invalid) / float(n)))
 
 print('Overall: {}'.format(float(num_invalid) / float(N)))
+with(open(opath, 'w')) as fp:
+    fp.write('Overall: {}'.format(float(num_invalid) / float(N)))
+    fp.close()
 
 '''
 
