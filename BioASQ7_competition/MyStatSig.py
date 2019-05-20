@@ -140,13 +140,14 @@ for n in tqdm.tqdm(range(1, N+1)):
     A = copy.deepcopy(sysA)
     B = copy.deepcopy(sysB)
     ########################
-    for j in range(len(A['questions'])):
-        for i in range(len(A['questions'][j][field])):
-            rval = random.random()
-            if rval < 0.5:
-                temp = A['questions'][j][field][i]
-                A['questions'][j][field][i] = B['questions'][j][field][i]
-                B['questions'][j][field][i] = temp
+    for qi in range(len(A['questions'])):
+        rval = random.random()
+        if rval < 0.5:
+            AD = [d for d in A['questions'][qi]['documents']]
+            BD = [d for d in B['questions'][qi]['documents']]
+            A['questions'][qi]['documents'] = [d for d in BD]
+            B['questions'][qi]['documents'] = [d for d in AD]
+    ########################
     with open(temp1f, 'w') as f:
         json.dump(A, f)
     with open(temp2f, 'w') as f:
