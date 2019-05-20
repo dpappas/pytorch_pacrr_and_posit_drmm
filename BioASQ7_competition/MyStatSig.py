@@ -128,8 +128,8 @@ print(goldf)
 print(sysAf)
 print(sysBf)
 
-scoreA = get_bioasq_res(goldf, sysAf)[metric]
-scoreB = get_bioasq_res(goldf, sysBf)[metric]
+scoreA  = get_bioasq_res(goldf, sysAf)[metric]
+scoreB  = get_bioasq_res(goldf, sysBf)[metric]
 pprint(scoreA)
 pprint(scoreB)
 
