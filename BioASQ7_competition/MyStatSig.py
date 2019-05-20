@@ -96,8 +96,8 @@ def get_bioasq_res(fgold, femit):
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odir                = '/home/dpappas/sign_testing/'
 
-goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1'
-
+# goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1'
+#
 # sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json'
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json'
 # sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert.json'
@@ -114,9 +114,10 @@ goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-
 # # metric = u'MAP documents'
 # metric = u'MAP snippets'
 
-sysAf   = sys.argv[1]
-sysBf   = sys.argv[2]
-metric  = sys.argv[3]
+goldf   = sys.argv[1]
+sysAf   = sys.argv[2]
+sysBf   = sys.argv[3]
+metric  = sys.argv[4]
 
 rand_name = ''.join([random.choice('abcdefghijklmnopqrstuvwxyz') for i in range(3)])
 
@@ -175,11 +176,13 @@ print('Overall: {}'.format(float(num_invalid) / float(N)))
 ########################################################################################
 
 python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json" \
 "MAP documents"
 
 python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert.json" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json" \
 "MAP documents"
@@ -187,26 +190,31 @@ python3.6 sig.py \
 ########################################################################################
 
 python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json" \
 "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_pdrmm.json" \
 "MAP snippets"
 
 python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json" \
 "MAP snippets"
 
 python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT_F." \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json" \
 "MAP snippets"
 
 python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_bcnn.json" \
 "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_pdrmm.json" \
 "MAP snippets"
 
 python3.6 sig.py \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_bcnn.json" \
 "/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json" \
 "MAP snippets"
