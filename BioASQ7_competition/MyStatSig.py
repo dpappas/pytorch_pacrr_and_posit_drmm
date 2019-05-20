@@ -113,11 +113,7 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 # # metric = u'MAP documents'
 # metric = u'MAP snippets'
 
-goldf   = sys.argv[1]
-sysAf   = sys.argv[2]
-sysBf   = sys.argv[3]
-metric  = sys.argv[4]
-opath   = sys.argv[5]
+goldf, sysAf, sysBf, metric, opath = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
 
 rand_name = ''.join([random.choice('abcdefghijklmnopqrstuvwxyz') for i in range(3)])
 
