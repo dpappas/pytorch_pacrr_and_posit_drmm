@@ -79,6 +79,7 @@ def get_bioasq_res(fgold, femit):
     '''
     jar_path = retrieval_jar_path
     #
+    print(' '.join(['java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b', '-phaseA', '-e', '5', fgold, femit]))
     bioasq_eval_res = subprocess.Popen(
         ['java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b', '-phaseA', '-e', '5', fgold, femit],
         stdout=subprocess.PIPE, shell=False
@@ -177,6 +178,13 @@ with(open(opath, 'w')) as fp:
     fp.close()
 
 '''
+
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b" \
+-phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"KoswB.json"
+
 
 ########################################################################################
 
