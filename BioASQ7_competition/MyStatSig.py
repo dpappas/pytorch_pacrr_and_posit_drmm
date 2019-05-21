@@ -148,10 +148,16 @@ for n in pbar:
     for qi in range(len(A['questions'])):
         rval = random.random()
         if rval < 0.5:
-            AD = [d for d in A['questions'][qi]['documents']]
-            BD = [d for d in B['questions'][qi]['documents']]
-            A['questions'][qi]['documents'] = [d for d in BD]
-            B['questions'][qi]['documents'] = [d for d in AD]
+            if(metric=="MAP snippets"):
+                AD = [d for d in A['questions'][qi]["snippets"]]
+                BD = [d for d in B['questions'][qi]["snippets"]]
+                A['questions'][qi]["snippets"] = [d for d in BD]
+                B['questions'][qi]["snippets"] = [d for d in AD]
+            else:
+                AD = [d for d in A['questions'][qi]['documents']]
+                BD = [d for d in B['questions'][qi]['documents']]
+                A['questions'][qi]['documents'] = [d for d in BD]
+                B['questions'][qi]['documents'] = [d for d in AD]
     ########################
     with open(temp1f, 'w') as f:
         json.dump(A, f)

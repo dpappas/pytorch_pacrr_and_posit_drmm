@@ -965,9 +965,9 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ###########################################################
 batch               = sys.argv[1]
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch, batch)
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch)
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch)
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch, batch)
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch)
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch)
 ###########################################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
@@ -994,7 +994,7 @@ model       = Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_fo
 if(use_cuda):
     model   = model.cuda()
 ###########################################################
-resume_from     = '/home/dpappas/bioasq_doc_pdrmm_0p01_run_0/best_dev_checkpoint.pth.tar'
+resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq_doc_pdrmm_0p01_run_0/best_dev_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 print_params(model)
