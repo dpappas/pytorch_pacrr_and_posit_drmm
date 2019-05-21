@@ -206,6 +206,15 @@ BERT    - JBERT             : 0.0541
 
 '''
 ps -ef | grep "sig.py" | awk '{print $3}' | xargs kill -9 $1
+
+
+java -Xmx1G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/BioASQ-task7bPhaseB-testset123" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/b123_joined/JBERT.json"
+
+
 '''
 
 
