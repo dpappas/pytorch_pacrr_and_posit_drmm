@@ -8,10 +8,10 @@ from pprint import pprint
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
-batch = 3
-d   = json.load(open('/home/dpappas/test_jpdrmm_high_batch{}/v3 test_data_for_revision.json'.format(batch)))
-d1   = json.load(open('/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_{}/jpdrmm.json'.format(batch)))
-d2  = json.load(open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batch, batch)))
+batch   = 1
+d       = json.load(open('/home/dpappas/test_jpdrmm_high_batch{}/v3 test_data_for_revision.json'.format(batch)))
+d1      = json.load(open('/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_{}/jpdrmm.json'.format(batch)))
+d2      = json.load(open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batch, batch)))
 
 data1 = {}
 for q in d1['questions']:
@@ -69,6 +69,8 @@ for q in data1:
 pprint(data1[u'Please list the 4 genes involved in Sanfilippo syndrome, also known as mucopolysaccharidosis III (MPS-III).'])
 pprint(data2[u'Please list the 4 genes involved in Sanfilippo syndrome, also known as mucopolysaccharidosis III (MPS-III).'])
 
+pprint(data1['What is the mechanism of action of anlotinib'])
+pprint(data2['What is the mechanism of action of anlotinib'])
 
 
 
