@@ -87,17 +87,55 @@ for plink in B - A:
 
 
 for plink in A & B:
-    if(
-        len(data2[u'What is the mechanism of action of anlotinib?'][plink]) >
-        len(data1[u'What is the mechanism of action of anlotinib?'][plink])
-    ):
+    if(len(data2[u'What is the mechanism of action of anlotinib?'][plink]) != len(data1[u'What is the mechanism of action of anlotinib?'][plink])):
         print(plink)
         pprint(data1[u'What is the mechanism of action of anlotinib?'][plink])
         pprint(data2[u'What is the mechanism of action of anlotinib?'][plink])
         print(20 * '-')
 
+outputs = {}
+for q in data1.keys():
+    A, B    = set(data1[q]), set(data2[q])
+    ###################
+    for plink in A & B:
+        if(len(data2[q][plink]) > len(data1[q][plink])):
+            if(q not in outputs):
+                outputs[q] = {}
+            try:
+                outputs[q]['misoswsto'].append([q, plink, data1[q][plink], data2[q][plink]])
+            except:
+                outputs[q]['misoswsto'] = [[q, plink, data1[q][plink], data2[q][plink]]]
+        elif(len(data2[q][plink]) == len(data1[q][plink])):
+            if(q not in outputs):
+                outputs[q] = {}
+            try:
+                outputs[q]['swsto'].append([q, plink, data1[q][plink], data2[q][plink]])
+            except:
+                outputs[q]['swsto'] = [[q, plink, data1[q][plink], data2[q][plink]]]
+    ###################
+    for plink in A - B:
+        if(q not in outputs):
+            outputs[q] = {}
+        try:
+            outputs[q]['lathos01'].append([q, plink, data1[q][plink]])
+        except:
+            outputs[q]['lathos01']= [[q, plink, data1[q][plink]]]
+    ###################
+    for plink in B - A:
+        if(q not in outputs):
+            outputs[q] = {}
+        try:
+            outputs[q]['lathos10'].append([q, plink, data2[q][plink]])
+        except:
+            outputs[q]['lathos10']= [[q, plink, data2[q][plink]]]
+    ###################
 
 
+
+for q in outputs:
+    if(len(outputs[q]) == 4 ):
+        pprint(outputs[q])
+        print(40 * '-')
 
 
 

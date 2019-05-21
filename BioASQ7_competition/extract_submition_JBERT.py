@@ -1018,7 +1018,12 @@ batch                       = 4
 f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch, batch)
 f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch)
 f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch)
+###########################################################
+# bert_resume_from            = '/media/dpappas/dpappas_data/models_out/bioasq7_JBERT_2L_0p01_run_0/best_bert_checkpoint.pth.tar'
+# model_resume_from           = '/media/dpappas/dpappas_data/models_out/bioasq7_JBERT_2L_0p01_run_0/best_checkpoint.pth.tar'
 # odir                        = './test_jbert_batch{}/'.format(batch)
+bert_resume_from            = '/home/dpappas/frozen_bioasq7_JBERT_2L_0p01_run_0/best_bert_checkpoint.pth.tar'
+model_resume_from           = '/home/dpappas/frozen_bioasq7_JBERT_2L_0p01_run_0/best_checkpoint.pth.tar'
 odir                        = './test_frozen_jbert_batch{}/'.format(batch)
 ###########################################################
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1044,13 +1049,9 @@ bert_model.to(device)
 model               = JBERT_Modeler(embedding_dim=embedding_dim)
 model.to(device)
 ###########################################################
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_JBERT_2L_0p01_run_0/best_bert_checkpoint.pth.tar'
-# resume_from         = '/home/dpappas/frozen_bioasq7_JBERT_2L_0p01_run_0/best_bert_checkpoint.pth.tar'
-load_model_from_checkpoint(bert_model, resume_from)
+load_model_from_checkpoint(bert_model, bert_resume_from)
 print_params(bert_model)
-# resume_from         = '/home/dpappas/frozen_bioasq7_JBERT_2L_0p01_run_0/best_checkpoint.pth.tar'
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_JBERT_2L_0p01_run_0/best_checkpoint.pth.tar'
-load_model_from_checkpoint(model, resume_from)
+load_model_from_checkpoint(model, model_resume_from)
 print_params(model)
 ###########################################################
 print('loading pickle data')
