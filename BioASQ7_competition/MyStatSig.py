@@ -79,7 +79,7 @@ def get_bioasq_res(fgold, femit):
     '''
     jar_path = retrieval_jar_path
     #
-    print(' '.join(['java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b', '-phaseA', '-e', '5', fgold, femit]))
+    #print(' '.join(['java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b', '-phaseA', '-e', '5', fgold, femit]))
     bioasq_eval_res = subprocess.Popen(
         ['java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b', '-phaseA', '-e', '5', fgold, femit],
         stdout=subprocess.PIPE, shell=False
