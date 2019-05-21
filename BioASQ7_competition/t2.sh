@@ -20,7 +20,7 @@ python3.6 sig.py "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task
 "MAP snippets" "sig_bertpdrmm_JBERT_snips_2.txt"
 
 python3.6 sig.py "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/JBERT_F." \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/JBERT_F.json" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/JBERT.json" \
 "MAP snippets" "sig_JBERTF_JBERT_snips_2.txt"
 
