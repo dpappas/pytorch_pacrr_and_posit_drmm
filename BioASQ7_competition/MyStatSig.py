@@ -180,11 +180,17 @@ with(open(opath, 'w')) as fp:
 '''
 
 java -Xmx10G -cp \
-"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b" \
--phaseA -e 5 \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "KoswB.json"
 
+
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_bcnn.json"
 
 ########################################################################################
 
