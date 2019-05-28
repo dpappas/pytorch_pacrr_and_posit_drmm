@@ -1173,6 +1173,13 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 ###########################################################
 print(test_map)
 
+'''
+CUDA_VISIBLE_DEVICES=0 python3.6 t.py 1 &
+CUDA_VISIBLE_DEVICES=0 python3.6 t.py 2 &
+CUDA_VISIBLE_DEVICES=1 python3.6 t.py 3 &
+CUDA_VISIBLE_DEVICES=1 python3.6 t.py 4 &
+CUDA_VISIBLE_DEVICES=1 python3.6 t.py 5
+'''
 
 '''
 java \
