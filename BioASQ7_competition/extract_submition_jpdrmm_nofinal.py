@@ -777,6 +777,14 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
     return None
 
+def load_model_from_checkpoint(resume_from):
+    global start_epoch, optimizer
+    if os.path.isfile(resume_from):
+        print("=> loading checkpoint '{}'".format(resume_from))
+        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
+        model.load_state_dict(checkpoint['state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
              embedding_dim          = 30,
@@ -1041,11 +1049,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
+        # gs_emits            = gs_emits.unsqueeze(-1)
+        # gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        # gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
+        # gs_emits            = torch.sigmoid(gs_emits)
         #
+        gs_emits            = torch.sigmoid(gs_emits)
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
@@ -1075,30 +1084,25 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
+        # gs_emits            = gs_emits.unsqueeze(-1)
+        # gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        # gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
+        # gs_emits            = torch.sigmoid(gs_emits)
         #
         final_bad_output    = self.final_layer_1(bad_out_pp)
         final_bad_output    = self.final_activ_1(final_bad_output)
         final_bad_output    = self.final_layer_2(final_bad_output)
         #
-        bs_emits            = bs_emits.unsqueeze(-1)
-        bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
+        # bs_emits            = bs_emits.unsqueeze(-1)
+        # # bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        # bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        # bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
+        # bs_emits            = torch.sigmoid(bs_emits)
+        gs_emits            = torch.sigmoid(gs_emits)
         bs_emits            = torch.sigmoid(bs_emits)
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
-
-def load_model_from_checkpoint(resume_from):
-    global start_epoch, optimizer
-    if os.path.isfile(resume_from):
-        print("=> loading checkpoint '{}'".format(resume_from))
-        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
-        model.load_state_dict(checkpoint['state_dict'])
-        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
 # min_doc_score               = float(sys.argv[1])
 # min_sent_score              = float(sys.argv[2])
@@ -1113,10 +1117,12 @@ eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                         = '/home/dpappas/'
 ###########################################################
-f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseA-testset5'
-f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-odir                        = './test_jpdrmm_high_batch5/'
+b                           = 1
+f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(b, b)
+f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
+f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
+resume_from                 = '/home/dpappas/nofinal_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
+odir                        = './test_nofinal_jpdrmm_high_batch{}/'.format(b)
 ###########################################################
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1140,7 +1146,6 @@ model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool
 if(use_cuda):
     model   = model.cuda()
 ###########################################################
-resume_from     = '/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 print_params(model)
@@ -1172,5 +1177,26 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 ###########################################################
 print(test_map)
 
+'''
 
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/test_nofinal_jpdrmm_high_batch1/v3 test_emit_bioasq.json" \
+| grep "^MAP documents"
+
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/test_jpdrmm_high_batch1/v3 test_emit_bioasq.json"
+
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json"
+
+'''
 
