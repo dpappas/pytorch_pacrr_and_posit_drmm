@@ -1476,6 +1476,7 @@ Is Hirschsprung disease a mendelian or a multifactorial disorder
 
 search: _exists_:AbstractText AND AbstractText:/.+/ AND _exists_:ArticleTitle AND ArticleTitle:/.+/
 
+CUDA_VISIBLE_DEVICES=1 python3.6
 
 '''
 
