@@ -1179,6 +1179,12 @@ print(test_map)
 
 '''
 
+CUDA_VISIBLE_DEVICES=0 python3.6 t.py 1 &
+CUDA_VISIBLE_DEVICES=0 python3.6 t.py 2 &
+CUDA_VISIBLE_DEVICES=0 python3.6 t.py 3 &
+CUDA_VISIBLE_DEVICES=1 python3.6 t.py 4 &
+CUDA_VISIBLE_DEVICES=1 python3.6 t.py 5
+
 java -Xmx10G -cp \
 "/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
 evaluation.EvaluatorTask1b -phaseA -e 5 \
@@ -1192,11 +1198,25 @@ evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/test_jpdrmm_high_batch1/v3 test_emit_bioasq.json"
 
-java -Xmx10G -cp \
-"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
-evaluation.EvaluatorTask1b -phaseA -e 5 \
+java -Xmx10G -cp "/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json"
+
+java -Xmx10G -cp "/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/jpdrmm.json"
+
+java -Xmx10G -cp "/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/jpdrmm.json"
+
+java -Xmx10G -cp "/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/jpdrmm.json"
+
+java -Xmx10G -cp "/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_5/jpdrmm.json"
 
 '''
 
