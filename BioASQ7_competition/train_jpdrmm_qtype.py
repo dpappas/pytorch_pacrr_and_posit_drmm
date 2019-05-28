@@ -1350,6 +1350,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         print(q_context.size())
+        print(F.avg_pool1d(q_context).size())
         exit()
         #
         q_weights           = torch.cat([q_context, q_idfs], -1)
@@ -1546,3 +1547,6 @@ np.average([len(q['snippets']) for q in list(bioasq7_data.values())])
 list(bioasq7_data.values())[0].keys()
 np.average([len(q['relevant_documents']) for q in train_data['queries']])
 '''
+
+
+
