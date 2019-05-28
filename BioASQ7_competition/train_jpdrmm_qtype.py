@@ -1087,6 +1087,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_mlps_for_pooled_attention()
         self.init_sent_output_layer()
         self.init_doc_out_layer()
+        #
+        self.q_type_head        = nn.Linear(self.embedding_dim, 1, bias=True)
+        self.average_head       = nn.Linear(self.embedding_dim, 1, bias=True)
+        #
         # doc loss func
         self.margin_loss        = nn.MarginRankingLoss(margin=1.0)
         if(use_cuda):
@@ -1124,7 +1128,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def init_sent_output_layer(self):
         if(self.sentence_out_method == 'MLP'):
             # self.sent_out_layer_1       = nn.Linear(self.sent_add_feats+1, 8, bias=False)
-            self.sent_out_layer_1       = nn.Linear(self.sent_add_feats+self.embedding_dim+1, 8, bias=False)
+            self.sent_out_layer_1       = nn.Linear(
+                self.sent_add_feats+self.embedding_dim+self.embedding_dim+1, 8, bias=False
+            )
             self.sent_out_activ_1       = torch.nn.LeakyReLU(negative_slope=0.1)
             self.sent_out_layer_2       = nn.Linear(8, 1, bias=False)
             if(use_cuda):
@@ -1203,7 +1209,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output          = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2, q_aver):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2, q_aver, q_type_pooled):
         res = []
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
@@ -1214,8 +1220,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
             #
-            sent_aver           = F.avg_pool2d(conv_res.unsqueeze(0), kernel_size=(conv_res.size(0), 1)).squeeze(0).squeeze(0)
-            # sent_max            = F.avg_pool2d(conv_res.unsqueeze(0), kernel_size=(conv_res.size(0), 1)).squeeze(0).squeeze(0)
+            sent_aver           = self.apply_head(conv_res, self.average_head)
             #
             sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
             sim_oh              = (sim_insens > (1 - (1e-3))).float()
@@ -1227,12 +1232,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             #
-            # sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
-            # print(sent_add_feats.size())
-            # sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1), q_aver, sent_aver])
-            # print(sent_add_feats.size())
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1), torch.mul(q_aver, sent_aver)])
-            # print(sent_add_feats.size())
+            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1), torch.mul(q_aver, sent_aver), q_type_pooled])
             res.append(sent_add_feats)
         res = torch.stack(res)
         if(self.sentence_out_method == 'MLP'):
@@ -1316,6 +1316,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
+    def apply_head(self, X, head):
+        x_aver  = F.sigmoid(head(X))
+        x_aver  = torch.sum(x_aver.expand_as(X) * X, dim=0)
+        return x_aver
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -1328,13 +1332,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_aver              = F.avg_pool2d(q_context.unsqueeze(0), kernel_size=(q_context.size(0), 1)).squeeze(0).squeeze(0)
+        q_aver              = self.apply_head(q_context, self.average_head)
+        q_type_pooled       = self.apply_head(q_context, self.q_type_head)
         #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool, q_aver)
+        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool, q_aver, q_type_pooled)
         #
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         #
@@ -1363,7 +1368,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
         # print(q_context.size())
-        q_aver              = F.avg_pool2d(q_context.unsqueeze(0), kernel_size=(q_context.size(0), 1)).squeeze(0).squeeze(0)
+        q_aver              = self.apply_head(q_context, self.average_head)
+        q_type_pooled       = self.apply_head(q_context, self.q_type_head)
+        # print(q_aver.size())
+        # exit()
+        # q_aver              = F.avg_pool2d(q_context.unsqueeze(0), kernel_size=(q_context.size(0), 1)).squeeze(0).squeeze(0)
         # q_max               = F.max_pool2d(q_context.unsqueeze(0), kernel_size=(q_context.size(0), 1)).squeeze(0).squeeze(0)
         # print(q_aver.size())
         # exit()
@@ -1372,8 +1381,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool, q_aver)
-        bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool, q_aver)
+        good_out, gs_emits  = self.do_for_one_doc_cnn(
+            doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool, q_aver, q_type_pooled
+        )
+        bad_out, bs_emits   = self.do_for_one_doc_cnn(
+            doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool, q_aver, q_type_pooled
+        )
         #
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
