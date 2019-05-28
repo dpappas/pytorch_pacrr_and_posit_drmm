@@ -1113,10 +1113,12 @@ eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                         = '/home/dpappas/'
 ###########################################################
-f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseA-testset5'
-f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-odir                        = './test_jpdrmm_high_batch5/'
+b                           = sys.argv[1]
+f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(b, b)
+f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
+f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
+resume_from                 = '/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
+odir                        = '/home/dpappas/test_jpdrmm_high_batch{}/'.format(b)
 ###########################################################
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1140,7 +1142,6 @@ model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool
 if(use_cuda):
     model   = model.cuda()
 ###########################################################
-resume_from     = '/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 print_params(model)
