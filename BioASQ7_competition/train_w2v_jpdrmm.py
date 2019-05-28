@@ -1374,6 +1374,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_bad_output    = self.final_layer_2(final_bad_output)
         #
         bs_emits            = bs_emits.unsqueeze(-1)
+        # bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
         bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
         bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
         bs_emits            = torch.sigmoid(bs_emits)
@@ -1383,12 +1384,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 ##########################################
-# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-# odd                 = '/home/dpappas/'
-eval_path           = '/content/drive/My Drive/data_for_colab/bioasq7/eval (1)/run_eval.py'
-retrieval_jar_path  = '/content/drive/My Drive/data_for_colab/bioasq7/dist/my_bioasq_eval_2.jar'
-odd                 = '/content/drive/My Drive/data_for_colab/bioasq7/outputs/'
+eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/dpappas/'
+# eval_path           = '/content/drive/My Drive/data_for_colab/bioasq7/eval (1)/run_eval.py'
+# retrieval_jar_path  = '/content/drive/My Drive/data_for_colab/bioasq7/dist/my_bioasq_eval_2.jar'
+# odd                 = '/content/drive/My Drive/data_for_colab/bioasq7/outputs/'
 ##########################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
