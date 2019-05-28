@@ -1317,8 +1317,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
     def apply_head(self, X, head):
-        x_aver  = F.sigmoid(head(X))
-        x_aver  = torch.sum(x_aver.expand_as(X) * X, dim=0)
+        self_attention  = F.sigmoid(head(X))
+        x_aver          = torch.sum(self_attention.expand_as(X) * X, dim=0)
         return x_aver
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
