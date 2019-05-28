@@ -1330,11 +1330,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
+        # gs_emits            = gs_emits.unsqueeze(-1)
+        # gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        # gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
+        # gs_emits            = torch.sigmoid(gs_emits)
         #
+        gs_emits            = torch.sigmoid(gs_emits)
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
@@ -1364,19 +1365,21 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
+        # gs_emits            = gs_emits.unsqueeze(-1)
+        # gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        # gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
+        # gs_emits            = torch.sigmoid(gs_emits)
         #
         final_bad_output    = self.final_layer_1(bad_out_pp)
         final_bad_output    = self.final_activ_1(final_bad_output)
         final_bad_output    = self.final_layer_2(final_bad_output)
         #
-        bs_emits            = bs_emits.unsqueeze(-1)
-        # bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
+        # bs_emits            = bs_emits.unsqueeze(-1)
+        # # bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        # bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        # bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
+        # bs_emits            = torch.sigmoid(bs_emits)
+        gs_emits            = torch.sigmoid(gs_emits)
         bs_emits            = torch.sigmoid(bs_emits)
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
@@ -1421,7 +1424,7 @@ import sys
 # run_from    = int(sys.argv[1])
 # run_to      = int(sys.argv[2])
 run_from    = 0
-run_to      = 5
+run_to      = 1
 hdlr        = None
 for run in range(run_from, run_to):
     #
@@ -1429,7 +1432,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir    = 'nofinal_bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
@@ -1546,3 +1549,4 @@ np.average([len(q['snippets']) for q in list(bioasq7_data.values())])
 list(bioasq7_data.values())[0].keys()
 np.average([len(q['relevant_documents']) for q in train_data['queries']])
 '''
+
