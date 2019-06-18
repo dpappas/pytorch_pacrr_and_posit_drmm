@@ -244,20 +244,36 @@ def print_params(model, bert_model):
     print(40 * '=')
     print(model)
     print(40 * '=')
-    trainable = 0
-    untrainable = 0
-    for parameter in list(model.parameters()) + list(bert_model.parameters()):
+    ##########################################################################################################
+    bert_trainable = 0
+    bert_untrainable = 0
+    for parameter in list(bert_model.parameters()):
         # print(parameter.size())
         v = 1
         for s in parameter.size():
             v *= s
         if (parameter.requires_grad):
-            trainable += v
+            bert_trainable += v
         else:
-            untrainable += v
-    total_params = trainable + untrainable
+            bert_untrainable += v
+    bert_total_params = bert_trainable + bert_untrainable
     print(40 * '=')
-    print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
+    print('BERT: trainable:{} untrainable:{} total:{}'.format(bert_trainable, bert_untrainable, bert_total_params))
+    print(40 * '=')
+    ##########################################################################################################
+    model_trainable = 0
+    model_untrainable = 0
+    for parameter in list(model.parameters()):
+        v = 1
+        for s in parameter.size():
+            v *= s
+        if (parameter.requires_grad):
+            model_trainable += v
+        else:
+            model_untrainable += v
+    model_total_params = model_trainable + model_untrainable
+    print(40 * '=')
+    print('MODEL: trainable:{} untrainable:{} total:{}'.format(model_trainable, model_untrainable, model_total_params))
     print(40 * '=')
 
 def compute_the_cost(costs, back_prop=True):
