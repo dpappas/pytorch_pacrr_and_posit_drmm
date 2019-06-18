@@ -16,3 +16,5 @@
 # mv /home/dpappas/bioasq7b_bm25_retrieval.all.txt /home/DATA/bioasq7/BioASQ-training7b/
 
 
+
+
