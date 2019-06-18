@@ -616,7 +616,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     # pprint(extracted_snippets_v1)
     # pprint(extracted_snippets_v2)
     # pprint(extracted_snippets_v3)
-    # exit()
+    #
     snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
@@ -711,6 +711,31 @@ def load_model_from_checkpoint(resume_from):
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
+def print_params(model):
+    '''
+    It just prints the number of parameters in the model.
+    :param model:   The pytorch model
+    :return:        Nothing.
+    '''
+    print(40 * '=')
+    print(model)
+    print(40 * '=')
+    trainable       = 0
+    untrainable     = 0
+    for parameter in model.parameters():
+        # print(parameter.size())
+        v = 1
+        for s in parameter.size():
+            v *= s
+        if(parameter.requires_grad):
+            trainable   += v
+        else:
+            untrainable += v
+    total_params = trainable + untrainable
+    print(40 * '=')
+    print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
+    print(40 * '=')
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1015,6 +1040,7 @@ if(use_cuda):
 resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq_snippet_pdrmm_0p01_run_0/best_dev_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 params          = model.parameters()
+print_params(model)
 ###########################################################
 import os, sys, pickle, json
 # odir                = './test_bert_pdrmm_batch5/'
