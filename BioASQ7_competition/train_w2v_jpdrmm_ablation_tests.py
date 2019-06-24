@@ -1415,14 +1415,13 @@ avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=
 print(avgdl, mean, deviation)
 ##########################################
 # abblation testing
-import sys
-use_sent_extra  = True
-use_doc_extra   = True
-use_OH_sim      = True
-use_W2V_sim     = True
-use_context_sim = True
-use_sent_loss   = True
-use_last_layer  = True
+use_sent_extra  = bool(sys.argv[1]) # True
+use_doc_extra   = bool(sys.argv[2]) # True
+use_OH_sim      = bool(sys.argv[3]) # True
+use_W2V_sim     = bool(sys.argv[4]) # True
+use_context_sim = bool(sys.argv[5]) # True
+use_sent_loss   = bool(sys.argv[6]) # True
+use_last_layer  = bool(sys.argv[7]) # True
 ##########################################
 
 k_for_maxpool       = 5
@@ -1489,6 +1488,22 @@ for run in range(run_from, run_to):
             break
 
 '''
-CUDA_VISIBLE_DEVICES=1 python3.6 train_noOHsim.py  
+###########################################################
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 1 1 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 1 1 0 1
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 1 0 1 1
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 0 1 1 1
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 0 1 1 1 1
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 0 1 1 1 1 1
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 0 1 1 1 1 1 1
+###########################################################
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 1 0 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 0 1 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 0 1 1 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 0 1 1 1 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 0 1 1 1 1 1 0
+
+
+
 '''
 
