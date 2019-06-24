@@ -1414,14 +1414,13 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 print(avgdl, mean, deviation)
 ##########################################
-# abblation testing
-use_sent_extra  = bool(sys.argv[1]) # True
-use_doc_extra   = bool(sys.argv[2]) # True
-use_OH_sim      = bool(sys.argv[3]) # True
-use_W2V_sim     = bool(sys.argv[4]) # True
-use_context_sim = bool(sys.argv[5]) # True
-use_sent_loss   = bool(sys.argv[6]) # True
-use_last_layer  = bool(sys.argv[7]) # True
+use_sent_extra  = bool(int(sys.argv[1])) # True
+use_doc_extra   = bool(int(sys.argv[2])) # True
+use_OH_sim      = bool(int(sys.argv[3])) # True
+use_W2V_sim     = bool(int(sys.argv[4])) # True
+use_context_sim = bool(int(sys.argv[5])) # True
+use_sent_loss   = bool(int(sys.argv[6])) # True
+use_last_layer  = bool(int(sys.argv[7])) # True
 ##########################################
 
 k_for_maxpool       = 5
