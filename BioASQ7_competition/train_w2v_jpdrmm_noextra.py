@@ -1458,3 +1458,7 @@ for run in range(run_from, run_to):
             logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
             break
 
+'''
+CUDA_VISIBLE_DEVICES=1 python3.6 train_noallextra.py  
+'''
+
