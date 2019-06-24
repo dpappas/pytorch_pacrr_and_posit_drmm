@@ -1077,7 +1077,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.k                                      = k_for_maxpool
         self.k_sent_maxpool                         = k_sent_maxpool
         self.doc_add_feats                          = 0
-        self.sent_add_feats                         = 10
+        self.sent_add_feats                         = 0
         #
         self.embedding_dim                          = embedding_dim
         self.sentence_out_method                    = sentence_out_method
@@ -1139,7 +1139,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 self.sent_res_bigru = self.sent_res_bigru.cuda()
                 self.sent_res_mlp   = self.sent_res_mlp.cuda()
     def init_doc_out_layer(self):
-        self.final_layer_1  = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True)
+        self.final_layer_1 = nn.Linear(self.doc_add_feats+self.k_sent_maxpool, 8, bias=True)
         self.final_activ_1  = torch.nn.LeakyReLU(negative_slope=0.1)
         self.final_layer_2  = nn.Linear(8, 1, bias=True)
         self.oo_layer       = nn.Linear(2, 1, bias=True)
@@ -1206,10 +1206,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = []
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
-            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
+            # gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
             if(use_cuda):
                 sent_embeds     = sent_embeds.cuda()
-                gaf             = gaf.cuda()
+                # gaf             = gaf.cuda()
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
             #
@@ -1222,7 +1222,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             oh_pooled           = self.pooling_method(sim_oh)
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            # sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            sent_add_feats      = torch.cat([sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
         if(self.sentence_out_method == 'MLP'):
@@ -1309,9 +1310,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
+        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         if(use_cuda):
             q_idfs          = q_idfs.cuda()
             question_embeds = question_embeds.cuda()
+            doc_gaf         = doc_gaf.cuda()
         #
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1322,40 +1325,63 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        final_good_output   = self.final_layer_1(good_out)
+        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        #
+        final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
+        gs_emits            = gs_emits.unsqueeze(-1)
+        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits            = torch.sigmoid(gs_emits)
+        #
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
+        doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
+        doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         if(use_cuda):
             q_idfs          = q_idfs.cuda()
             question_embeds = question_embeds.cuda()
-        #####################
+            doc_gaf         = doc_gaf.cuda()
+            doc_baf         = doc_baf.cuda()
+        #
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
-        #####################
+        #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        #####################
+        #
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        #####################
-        final_good_output   = self.final_layer_1(good_out)
+        #
+        # good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        # bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
+        good_out_pp         = torch.cat([good_out], -1)
+        bad_out_pp          = torch.cat([bad_out], -1)
+        #
+        final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
-        #####################
-        final_bad_output    = self.final_layer_1(bad_out)
+        #
+        gs_emits            = gs_emits.unsqueeze(-1)
+        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
+        gs_emits            = torch.sigmoid(gs_emits)
+        #
+        final_bad_output    = self.final_layer_1(bad_out_pp)
         final_bad_output    = self.final_activ_1(final_bad_output)
         final_bad_output    = self.final_layer_2(final_bad_output)
-        #####################
-        gs_emits            = torch.sigmoid(gs_emits)
+        #
+        bs_emits            = bs_emits.unsqueeze(-1)
+        # bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
         bs_emits            = torch.sigmoid(bs_emits)
-        #####################
+        #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
@@ -1382,9 +1408,6 @@ b_size              = 32
 max_epoch           = 30
 early_stop          = 4
 
-# import sys
-# run_from    = int(sys.argv[1])
-# run_to      = int(sys.argv[2])
 run_from    = 0
 run_to      = 1
 hdlr        = None
@@ -1394,7 +1417,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #############################################
-    odir    = 'nodocextra_bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir    = 'noallextra_bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
