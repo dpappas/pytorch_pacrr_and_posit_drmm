@@ -1233,7 +1233,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             oh_pooled           = self.pooling_method(sim_oh)
             #
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            if(use_sent_extra):
+                sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            else:
+                sent_add_feats = torch.cat([sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
         if(self.sentence_out_method == 'MLP'):
