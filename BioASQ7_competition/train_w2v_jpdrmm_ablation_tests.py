@@ -1440,7 +1440,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #############################################
-    odir    = 'abblation_{}{}{}{}{}{}{}_bioasq_jpdrmm_2L_0p01_run_{}/'.format(
+    odir    = 'ablation_{}{}{}{}{}{}{}_bioasq_jpdrmm_2L_0p01_run_{}/'.format(
         int(use_sent_extra), int(use_doc_extra),
         int(use_OH_sim), int(use_W2V_sim), int(use_context_sim),
         int(use_last_layer),
@@ -1489,19 +1489,19 @@ for run in range(run_from, run_to):
 
 '''
 ###########################################################
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 1 1 1 0
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 1 1 0 1
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 1 0 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 0 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 0 1 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 0 1 1 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 0 1 1 1 1 1 1
+CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 1 1 0
+CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 1 0 1
+CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 0 1 1
+CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 0 1 1 1
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 0 1 1 1 1
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 1 1 1 1
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 1 1 1 1
 ###########################################################
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 1 0 1 0
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 1 0 1 1 0
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 1 0 1 1 1 0
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 1 0 1 1 1 1 0
-CUDA_VISIBLE_DEVICES=1 python3.6 abblation.py 0 1 1 1 1 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 1 0 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 0 1 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 0 1 1 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 1 1 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 1 1 1 0
 
 
 
