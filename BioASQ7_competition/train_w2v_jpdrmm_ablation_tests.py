@@ -1232,7 +1232,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sensitive_pooled    = self.pooling_method(sim_sens)
             oh_pooled           = self.pooling_method(sim_oh)
             #
-            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+            the_inputs          = []
+            if(use_OH_sim):
+                the_inputs.append(oh_pooled)
+            if(use_W2V_sim):
+                the_inputs.append(insensitive_pooled)
+            if(use_context_sim):
+                the_inputs.append(sensitive_pooled)
+            sent_emit           = self.get_output(the_inputs, q_weights)
             if(use_sent_extra):
                 sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             else:
@@ -1422,6 +1429,7 @@ print(avgdl, mean, deviation)
 use_sent_extra  = True
 use_doc_extra   = True
 use_OH_sim      = True
+use_W2V_sim     = True
 use_context_sim = True
 use_sent_loss   = True
 use_last_layer  = True
@@ -1443,7 +1451,13 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #############################################
-    odir    = 'noOHsim_bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir    = 'abblation_{}_{}_{}_{}_{}_{}_{}_bioasq_jpdrmm_2L_0p01_run_{}/'.format(
+        int(use_sent_extra), int(use_doc_extra),
+        int(use_OH_sim), int(use_W2V_sim), int(use_context_sim),
+        int(use_last_layer),
+        int(use_sent_loss),
+        run
+    )
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
