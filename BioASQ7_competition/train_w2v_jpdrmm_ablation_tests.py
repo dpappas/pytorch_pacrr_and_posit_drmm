@@ -775,7 +775,6 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         if(two_losses):
             sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss                       = sn_d1_l + sn_d2_l
-            # snip_loss = sn_d1_l
             l                               = 0.5
             cost_                           = ((1 - l) * snip_loss) + (l * cost_)
         #
@@ -1467,7 +1466,7 @@ for run in range(run_from, run_to):
     waited_for  = 0
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
+        train_one(epoch+1, bioasq7_data, two_losses=use_sent_loss, use_sent_tokenizer=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
@@ -1489,7 +1488,7 @@ for run in range(run_from, run_to):
 '''
 ###########################################################
 # exclude one at a time
-CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 1 1 0
+CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 1 1 0 
 CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 1 0 1
 CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 0 1 1
 CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 0 1 1 1
