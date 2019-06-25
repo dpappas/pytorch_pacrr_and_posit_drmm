@@ -1082,7 +1082,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
             gs_emits            = torch.sigmoid(gs_emits)
         else:
-            gs_emits            = gs_emits.unsqueeze(-1)
             gs_emits            = torch.sigmoid(gs_emits)
         #
         return final_good_output, gs_emits
@@ -1133,9 +1132,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
             bs_emits            = torch.sigmoid(bs_emits)
         else:
-            gs_emits            = gs_emits.unsqueeze(-1)
             gs_emits            = torch.sigmoid(gs_emits)
-            bs_emits            = bs_emits.unsqueeze(-1)
             bs_emits            = torch.sigmoid(bs_emits)
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
