@@ -1221,11 +1221,11 @@ print(test_map)
 
 '''
 
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 1 1110111 &
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 2 1110111 &
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 3 1110111 &
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 4 1110111 &
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 1110111
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 1 1111110 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 2 1111110 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 3 1111110 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 4 1111110 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 1111110 
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
