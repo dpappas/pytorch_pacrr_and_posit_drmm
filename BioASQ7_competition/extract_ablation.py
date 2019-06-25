@@ -1269,5 +1269,7 @@ java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.E
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_5/jpdrmm.json"
 
+===============================================================================================================
+
 
 '''
