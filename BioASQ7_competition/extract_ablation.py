@@ -1234,4 +1234,15 @@ CUDA_VISIBLE_DEVICES=0 python3.6 extract_ablation.py 4 1111011 &
 CUDA_VISIBLE_DEVICES=0 python3.6 extract_ablation.py 5 1111011
 
 
+java \
+-Xmx10G \
+-cp \
+/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b \
+-phaseA \
+-e \
+5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/test_ablation_1111011_batch1/v3 test_emit_bioasq.json"
+
 '''
