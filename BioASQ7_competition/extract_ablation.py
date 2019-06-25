@@ -1150,7 +1150,6 @@ use_cuda                    = torch.cuda.is_available()
 ###########################################################
 eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                         = '/home/dpappas/'
 ###########################################################
 ablation_patern             = sys.argv[2]
 use_sent_extra              = bool(int(ablation_patern[0])) # True
@@ -1213,10 +1212,10 @@ words = {}
 GetWords(test_data, test_docs, words)
 ###########################################################
 print('loading idfs')
-idf, max_idf = load_idfs(idf_pickle_path, words)
+idf, max_idf    = load_idfs(idf_pickle_path, words)
 print('loading w2v')
-wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
+wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 ###########################################################
 test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 ###########################################################
