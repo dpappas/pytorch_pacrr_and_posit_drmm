@@ -1143,15 +1143,15 @@ retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.ja
 odd                         = '/home/dpappas/'
 ###########################################################
 ablation_patern             = sys.argv[2]
-use_sent_extra  = bool(int(sys.argv[1])) # True
-use_doc_extra   = bool(int(sys.argv[2])) # True
-use_OH_sim      = bool(int(sys.argv[3])) # True
-use_W2V_sim     = bool(int(sys.argv[4])) # True
-use_context_sim = bool(int(sys.argv[5])) # True
-use_sent_loss   = bool(int(sys.argv[6])) # True
-use_last_layer  = bool(int(sys.argv[7])) # True
+use_sent_extra              = bool(int(ablation_patern[0])) # True
+use_doc_extra               = bool(int(ablation_patern[1])) # True
+use_OH_sim                  = bool(int(ablation_patern[2])) # True
+use_W2V_sim                 = bool(int(ablation_patern[3])) # True
+use_context_sim             = bool(int(ablation_patern[4])) # True
+use_sent_loss               = bool(int(ablation_patern[5])) # True
+use_last_layer              = bool(int(ablation_patern[6])) # True
 ###########################################################
-resume_from                 = '/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
+resume_from                 = '/home/dpappas/ablation_{}_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'.format(ablation_patern)
 ###########################################################
 b                           = sys.argv[1]
 f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(b, b)
