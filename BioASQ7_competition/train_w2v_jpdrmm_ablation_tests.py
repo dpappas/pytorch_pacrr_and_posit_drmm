@@ -1108,7 +1108,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         if(use_cuda):
             self.q_weights_mlp  = self.q_weights_mlp.cuda()
     def init_mlps_for_pooled_attention(self):
-        how_many = 1
+        how_many = 0
+        if(use_W2V_sim):
+            how_many += 1
         if(use_OH_sim):
             how_many += 1
         if(use_context_sim):
