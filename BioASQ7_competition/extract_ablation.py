@@ -231,6 +231,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
     jar_path = retrieval_jar_path
     #
+
     fgold   = '{}_data_for_revision.json'.format(prefix)
     fgold   = os.path.join(odir, fgold)
     fgold   = os.path.abspath(fgold)
@@ -1166,11 +1167,11 @@ b                           = sys.argv[1]
 f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(b, b)
 f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
 f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
-odir                        = '/home/dpappas/test_jpdrmm_high_batch{}/'.format(b)
 ###########################################################
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
+odir                        = '/home/dpappas/test_ablation_{}_batch{}/'.format(ablation_patern, b)
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
