@@ -1080,6 +1080,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
             gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
             gs_emits            = torch.sigmoid(gs_emits)
+        else:
+            gs_emits            = gs_emits.unsqueeze(-1)
+            gs_emits            = torch.sigmoid(gs_emits)
         #
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
@@ -1119,14 +1122,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_bad_output    = self.final_layer_2(final_bad_output)
         ###################
         if(use_last_layer):
-            gs_emits = gs_emits.unsqueeze(-1)
-            gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-            gs_emits = self.oo_layer(gs_emits).squeeze(-1)
-            gs_emits = torch.sigmoid(gs_emits)
+            gs_emits        = gs_emits.unsqueeze(-1)
+            gs_emits        = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+            gs_emits        = self.oo_layer(gs_emits).squeeze(-1)
+            gs_emits        = torch.sigmoid(gs_emits)
             #####################
             bs_emits            = bs_emits.unsqueeze(-1)
             bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
             bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
+            bs_emits            = torch.sigmoid(bs_emits)
+        else:
+            gs_emits            = gs_emits.unsqueeze(-1)
+            gs_emits            = torch.sigmoid(gs_emits)
+            bs_emits            = bs_emits.unsqueeze(-1)
             bs_emits            = torch.sigmoid(bs_emits)
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
