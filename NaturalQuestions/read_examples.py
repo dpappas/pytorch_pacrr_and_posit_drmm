@@ -187,7 +187,6 @@ examples = {}
 with open('/media/dpappas/dpappas_data/NaturalQuestions/v1.0_sample_nq-train-sample.jsonl.gz') as fileobj:
     _load(examples, gzip.GzipFile(fileobj=fileobj), 'train', 200)
 
-
 examples = {}
 with open('/media/dpappas/dpappas_data/NaturalQuestions/v1.0_sample_nq-dev-sample.jsonl.gz') as fileobj:
     _load(examples, gzip.GzipFile(fileobj=fileobj), 'dev', 200)
