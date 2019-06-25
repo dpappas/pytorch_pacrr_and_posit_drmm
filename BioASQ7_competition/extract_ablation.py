@@ -1223,9 +1223,9 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 print(test_map)
 
 '''
-CUDA_VISIBLE_DEVICES=0 python3.6 t.py 1 &
-CUDA_VISIBLE_DEVICES=0 python3.6 t.py 2 &
-CUDA_VISIBLE_DEVICES=1 python3.6 t.py 3 &
-CUDA_VISIBLE_DEVICES=1 python3.6 t.py 4 &
-CUDA_VISIBLE_DEVICES=1 python3.6 t.py 5
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_ablation.py 1 1111101 &
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_ablation.py 2 1111101 &
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_ablation.py 3 1111101 &
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_ablation.py 4 1111101 &
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_ablation.py 5 1111101 
 '''
