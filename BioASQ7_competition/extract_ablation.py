@@ -1229,23 +1229,23 @@ CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 1111110
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/home/dpappas/test_ablation_1110111_batch1/v3 test_emit_bioasq.json"
+"/home/dpappas/test_ablation_1111110_batch1/v3 test_emit_bioasq.json"
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/home/dpappas/test_ablation_1110111_batch2/v3 test_emit_bioasq.json"
+"/home/dpappas/test_ablation_1111110_batch2/v3 test_emit_bioasq.json"
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
-"/home/dpappas/test_ablation_1110111_batch3/v3 test_emit_bioasq.json"
+"/home/dpappas/test_ablation_1111110_batch3/v3 test_emit_bioasq.json"
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
-"/home/dpappas/test_ablation_1110111_batch4/v3 test_emit_bioasq.json"
+"/home/dpappas/test_ablation_1111110_batch4/v3 test_emit_bioasq.json"
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"/home/dpappas/test_ablation_1110111_batch5/v3 test_emit_bioasq.json"
+"/home/dpappas/test_ablation_1111110_batch5/v3 test_emit_bioasq.json"
 
 ===============================================================================================================
 

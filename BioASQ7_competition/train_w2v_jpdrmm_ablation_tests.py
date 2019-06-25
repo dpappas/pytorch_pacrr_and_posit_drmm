@@ -1508,9 +1508,9 @@ CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 1 1 1 1
 CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 1 1 1
 CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 1 1 0
 CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 1 0 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 0 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 0 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 0 1 1 1 1
+CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 0 0 1 1 0 1 1
+CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 0 0 1 0 1 1 1
+CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 0 0 0 1 1 1 1
 ###########################################################
 # no sent extra
 CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 0 1 1 1 1
