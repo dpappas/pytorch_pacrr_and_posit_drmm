@@ -1158,7 +1158,8 @@ use_context_sim             = bool(int(ablation_patern[4])) # True
 use_sent_loss               = bool(int(ablation_patern[5])) # True
 use_last_layer              = bool(int(ablation_patern[6])) # True
 ###########################################################
-resume_from                 = '/home/dpappas/ablation_{}_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'.format(ablation_patern)
+# resume_from                 = '/home/dpappas/ablation_{}_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'.format(ablation_patern)
+resume_from                 = '/media/dpappas/dpappas_data/models_out/ablation_{}_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'.format(ablation_patern)
 ###########################################################
 b                           = sys.argv[1]
 f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(b, b)
