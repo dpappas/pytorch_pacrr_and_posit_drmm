@@ -27,6 +27,10 @@ CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 0 1 1 1 &
 CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 0 1 1 &
 CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 1 0 1 &
 CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 1 1 0
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 0 0 1 1 &
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 0 0 1 1 1 &
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 0 1 1 1 &
+CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 0 1 1 1
 
 ##############################################
 
@@ -155,6 +159,27 @@ CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 2 0011110 &
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 3 0011110 &
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 4 0011110 &
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 0011110
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 1 1110011 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 2 1110011 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 3 1110011 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 4 1110011 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 1110011
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 1 1100111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 2 1100111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 3 1100111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 4 1100111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 1100111
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 1 1010111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 2 1010111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 3 1010111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 4 1010111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 1010111
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 1 0110111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 2 0110111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 3 0110111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 4 0110111 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 0110111
+
 
 
 
