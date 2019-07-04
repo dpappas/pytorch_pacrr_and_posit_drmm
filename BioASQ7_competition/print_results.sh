@@ -26,4 +26,4 @@ java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.E
 "/media/dpappas/dpappas_data/models_out/test_ablation_"$1"_batch5/v3 test_emit_bioasq.json" | grep "^MAP documents:\|^MAP snippets:"
 
 # sh print_res.sh 1111101 | tail -10 | awk '{split($0,a," "); print a[3]}' | tr '\n' '\t'
-
+# grep "v3 dev MAP documents:" -A 4 /media/dpappas/dpappas_data/models_out/ablation_0111110_bioasq_jpdrmm_2L_0p01_run_0/model.log
