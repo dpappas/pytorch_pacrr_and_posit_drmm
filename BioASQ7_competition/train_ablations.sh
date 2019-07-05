@@ -211,6 +211,13 @@ CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 4 1111010 &
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 1111010
 
 
+# ls -d /media/dpappas/dpappas_data/models_out/ablation_* | wc -l
+# ls -d /media/dpappas/dpappas_data/models_out/test_ablation_* | wc -l
+
+
+
+
+
 
 
 
