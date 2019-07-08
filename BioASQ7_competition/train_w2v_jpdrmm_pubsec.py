@@ -650,6 +650,12 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         good_sents      = [the_doc['title'] + the_doc['abstractText']]
         sent_sections   = [6*[0]]
     ####################
+    # pprint(good_sents)
+    # pprint(sent_sections)
+    # print(len(good_sents))
+    # print(len(sent_sections))
+    # print(np.array(sent_sections).shape)
+    ####################
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
@@ -702,7 +708,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     ####################
     return {
         'sents_embeds'     : good_sents_embeds,
-        # 'sents_secs'       : np.array(sent_sections),
         'sents_escores'    : good_sents_escores,
         'doc_af'           : good_doc_af,
         'sent_tags'        : good_sent_tags,
