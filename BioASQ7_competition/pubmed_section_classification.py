@@ -226,13 +226,17 @@ def get_all_pubs_paths(folder):
                 ret.append(pp)
     return ret
 
+def do_for_sents(sents):
+    splitted_sents  = [bioclean(s) for s in sents]
+    input_feats     = vectorize_doc(splitted_sents, w2i, MAX_SENTS, MAX_SENT_LENGTH)
+    preds           = model.predict(np.stack([input_feats], 0))[0]
+    pred_class      = np.argmax(preds, axis=1)
+    ret             = [{'type': tt[0], 'text': tt[1]} for tt in zip(class_encoder.inverse_transform(pred_class), sents)]
+    return ret
+
 class_enc_name      = '/home/dpappas/sections_classification/pubsec_class_encoder_5classes.npy'
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 checkpoint_fpath    = '/home/dpappas/weights-improvement-5classes-20-0.98.hdf5'
-
-# model_json_path     = "/home/dpappas/sections_classification/classification_model_5classes.json"
-# model_weights_path  = "/home/dpappas/sections_classification/classification_model_5classes.h5"
-# checkpoint_fpath    = "/home/dpappas/weights-improvement-5classes-{epoch:02d}-{val_acc:.2f}.hdf5"
 
 class_encoder           = LabelEncoder()
 class_encoder.classes_  = np.load(class_enc_name)
@@ -259,19 +263,4 @@ print(model.summary())
 
 model.load_weights(checkpoint_fpath)
 
-diri  = '/home/dpappas/orgs_all_data_18_03_19'
 
-def do_for_text(text):
-    if (len(text.strip()) > 0):
-        sents = get_sents(text)
-        splitted_sents  = [bioclean(s) for s in sents]
-        input_feats     = vectorize_doc(splitted_sents, w2i, MAX_SENTS, MAX_SENT_LENGTH)
-        preds           = model.predict(np.stack([input_feats], 0))[0]
-        pred_class      = np.argmax(preds, axis=1)
-        ret             = [
-            {'type': tt[0], 'text': tt[1]}
-            for tt in zip(class_encoder.inverse_transform(pred_class), sents)
-        ]
-    else:
-        ret = []
-    return ret
