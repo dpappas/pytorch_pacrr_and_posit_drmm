@@ -330,9 +330,13 @@ class_enc_name      = '/home/dpappas/sections_classification/pubsec_class_encode
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 checkpoint_fpath    = '/home/dpappas/weights-improvement-5classes-20-0.98.hdf5'
 
+####################
+
 class_encoder           = LabelEncoder()
 class_encoder.classes_  = np.load(class_enc_name)
 print(class_encoder.classes_)
+
+####################
 
 wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 embeds              = [np.zeros(wv.vector_size), np.average(wv.vectors, 0)]
@@ -344,6 +348,9 @@ for w in tqdm(sorted(wv.vocab.keys())):
     embeds.append(wv[w])
 
 embeddings      = np.stack(embeds)
+
+####################
+
 EMB_SIZE        = 30
 MAX_SENTS       = 30
 MAX_SENT_LENGTH = 50
@@ -355,4 +362,5 @@ print(model.summary())
 
 model.load_weights(checkpoint_fpath)
 
+####################
 
