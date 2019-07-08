@@ -757,14 +757,12 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'good_doc_af'           : good_doc_af,
                 'good_sent_tags'        : good_sent_tags,
                 'good_held_out_sents'   : good_held_out_sents,
-                'good_sent_secs'        : good_sent_secs,
                 #
                 'bad_sents_embeds'      : bad_sents_embeds,
                 'bad_sents_escores'     : bad_sents_escores,
                 'bad_doc_af'            : bad_doc_af,
                 'bad_sent_tags'         : bad_sent_tags,
                 'bad_held_out_sents'    : bad_held_out_sents,
-                'bad_sent_secs'         : bad_sent_secs,
                 #
                 'quest_embeds'          : quest_embeds,
                 'q_idfs'                : q_idfs,
@@ -1090,7 +1088,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.k                                      = k_for_maxpool
         self.k_sent_maxpool                         = k_sent_maxpool
         self.doc_add_feats                          = 11
-        self.sent_add_feats                         = 10
+        self.sent_add_feats                         = 10+6
         #
         self.embedding_dim                          = embedding_dim
         self.sentence_out_method                    = sentence_out_method
