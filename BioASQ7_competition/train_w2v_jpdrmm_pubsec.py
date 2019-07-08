@@ -667,6 +667,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     sent_sections = do_for_sents(good_sents)
     pprint(good_sents)
     pprint(sent_sections)
+    pprint(sent_sections.shape)
     exit()
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
