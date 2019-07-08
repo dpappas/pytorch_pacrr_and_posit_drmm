@@ -340,9 +340,7 @@ print(class_encoder.classes_)
 
 wv                  = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 embeds              = [np.zeros(wv.vector_size), np.average(wv.vectors, 0)]
-w2i                 = {}
-w2i['<pad>']        = 0
-w2i['<unk>']        = 1
+w2i                 = {'<pad>': 0, '<unk>': 1}
 for w in tqdm(sorted(wv.vocab.keys())):
     w2i[w] = len(w2i)
     embeds.append(wv[w])
