@@ -664,7 +664,10 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     ]
     good_doc_af.extend(features)
     ####
-    sent_sections = [s['type'] for s in do_for_sents(good_sents)]
+    sent_sections = do_for_sents(good_sents)
+    pprint(good_sents)
+    pprint(sent_sections)
+    exit()
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
@@ -1401,20 +1404,7 @@ w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 ##########################################
-# eval_path           = '/content/drive/My Drive/data_for_colab/bioasq7/eval (1)/run_eval.py'
-# retrieval_jar_path  = '/content/drive/My Drive/data_for_colab/bioasq7/dist/my_bioasq_eval_2.jar'
-# odd                 = '/content/drive/My Drive/data_for_colab/bioasq7/outputs/'
-##########################################
-# w2v_bin_path    = '/content/drive/My Drive/data_for_colab/pubmed2018_w2v_30D.bin'
-# idf_pickle_path = '/content/drive/My Drive/data_for_colab/idf.pkl'
-# dataloc         = '/content/drive/My Drive/data_for_colab/bioasq7/data/'
-##########################################
-(
-    dev_data, dev_docs,
-    train_data, train_docs,
-    idf, max_idf,
-    wv, bioasq7_data
-) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
+(dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 ##########################################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 print(avgdl, mean, deviation)
@@ -1428,8 +1418,6 @@ b_size              = 32
 max_epoch           = 30
 early_stop          = 4
 
-# run_from    = int(sys.argv[1])
-# run_to      = int(sys.argv[2])
 run_from    = 0
 run_to      = 1
 hdlr        = None
@@ -1439,7 +1427,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir    = 'sec_jpdrmm_2L_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):

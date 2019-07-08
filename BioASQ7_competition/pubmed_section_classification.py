@@ -323,8 +323,8 @@ def do_for_sents(sents):
     input_feats     = vectorize_doc(splitted_sents, w2i, MAX_SENTS, MAX_SENT_LENGTH)
     preds           = model.predict(np.stack([input_feats], 0))[0]
     pred_class      = np.argmax(preds, axis=1)
-    ret             = [{'type': tt[0], 'text': tt[1]} for tt in zip(class_encoder.inverse_transform(pred_class), sents)]
-    return ret
+    # ret             = [{'type': tt[0], 'text': tt[1]} for tt in zip(class_encoder.inverse_transform(pred_class), sents)]
+    return pred_class
 
 class_enc_name      = '/home/dpappas/sections_classification/pubsec_class_encoder_5classes.npy'
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
