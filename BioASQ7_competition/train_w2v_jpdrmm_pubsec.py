@@ -644,18 +644,11 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         good_sents      = tit_sents + abs_sents
         #################
         tit_secs        = len(tit_sents) * [[1, 0, 0, 0, 0, 0]]
-        abs_secs        = [
-            [0]+t for t in
-            do_for_sents(abs_sents).tolist()
-        ]
+        abs_secs        = [[0]+t for t in do_for_sents(abs_sents).tolist()]
         sent_sections   = tit_secs + abs_secs
     else:
         good_sents      = [the_doc['title'] + the_doc['abstractText']]
         sent_sections   = [6*[0]]
-    ####################
-    pprint(good_sents)
-    pprint(sent_sections)
-    exit()
     ####################
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -679,7 +672,8 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_doc_af.extend(features)
     ####################
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
-    for good_text in good_sents:
+    for i in range(len(good_sents)):
+        good_text                   = good_sents[i]
         sent_toks                   = tokenize(good_text)
         good_tokens, good_embeds    = get_embeds(sent_toks, wv)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
@@ -702,13 +696,13 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             ]
             #
             good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores+features)
+            good_sents_escores.append(good_escores+features+sent_sections[i])
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####################
     return {
         'sents_embeds'     : good_sents_embeds,
-        'sents_secs'       : sent_sections,
+        # 'sents_secs'       : np.array(sent_sections),
         'sents_escores'    : good_sents_escores,
         'doc_af'           : good_doc_af,
         'sent_tags'        : good_sent_tags,
@@ -745,7 +739,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
-        good_sent_secs              = datum['sents_secs']
         #
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds            = datum['sents_embeds']
@@ -753,7 +746,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_doc_af                  = datum['doc_af']
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
-        bad_sent_secs               = datum['sents_secs']
         #
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
