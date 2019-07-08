@@ -639,14 +639,28 @@ def snip_is_relevant(one_sent, gold_snips):
 
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     if(use_sent_tokenizer):
-        good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+        tit_sents       = sent_tokenize(the_doc['title'])
+        abs_sents       = sent_tokenize(the_doc['abstractText'])
+        good_sents      = tit_sents + abs_sents
+        #################
+        tit_secs        = len(tit_sents) * [[1, 0, 0, 0, 0, 0]]
+        abs_secs        = [
+            [0]+t for t in
+            do_for_sents(abs_sents).tolist()
+        ]
+        sent_sections   = tit_secs + abs_secs
     else:
-        good_sents  = [the_doc['title'] + the_doc['abstractText']]
-    ####
+        good_sents      = [the_doc['title'] + the_doc['abstractText']]
+        sent_sections   = [6*[0]]
+    ####################
+    pprint(good_sents)
+    pprint(sent_sections)
+    exit()
+    ####################
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
-    #
+    ####################
     doc_toks            = tokenize(the_doc['title'] + the_doc['abstractText'])
     tomi                = (set(doc_toks) & set(quest_toks))
     tomi_no_stop        = tomi - set(stopwords)
@@ -663,13 +677,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         sum(tomi_idfs)                                  / sum(quest_idfs),
     ]
     good_doc_af.extend(features)
-    ####
-    sent_sections = do_for_sents(good_sents)
-    pprint(good_sents)
-    pprint(sent_sections)
-    pprint(sent_sections.shape)
-    exit()
-    ####
+    ####################
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
         sent_toks                   = tokenize(good_text)
@@ -697,7 +705,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             good_sents_escores.append(good_escores+features)
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
-    ####
+    ####################
     return {
         'sents_embeds'     : good_sents_embeds,
         'sents_secs'       : sent_sections,
