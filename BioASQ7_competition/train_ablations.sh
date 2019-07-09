@@ -216,8 +216,26 @@ CUDA_VISIBLE_DEVICES=1 python3.6 extract_ablation.py 5 1111010
 
 
 
-
-
-
+# grep "v3 dev MAP documents:" -A 4 /media/dpappas/dpappas_data/models_out/sec_jpdrmm_2L_0p01_run_0/model.log
+#
+#java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+#"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+#"/home/dpappas/test_sec_jpdrmm_batch1/v3 test_emit_bioasq.json" | grep "^MAP documents:\|^MAP snippets:"
+#
+#java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+#"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
+#"/home/dpappas/test_sec_jpdrmm_batch2/v3 test_emit_bioasq.json" | grep "^MAP documents:\|^MAP snippets:"
+#
+#java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+#"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
+#"/home/dpappas/test_sec_jpdrmm_batch3/v3 test_emit_bioasq.json" | grep "^MAP documents:\|^MAP snippets:"
+#
+#java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+#"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
+#"/home/dpappas/test_sec_jpdrmm_batch4/v3 test_emit_bioasq.json" | grep "^MAP documents:\|^MAP snippets:"
+#
+#java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+#"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
+#"/home/dpappas/test_sec_jpdrmm_batch5/v3 test_emit_bioasq.json" | grep "^MAP documents:\|^MAP snippets:"
 
 
