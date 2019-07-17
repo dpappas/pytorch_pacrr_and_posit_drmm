@@ -14,10 +14,11 @@ mapping = {
     "mappings":{
         map:{
             "properties":{
-                'document_url'    : {"type": "keyword"},
-                'paragraph_index' : {"type": "long"},
-                'paragraph_text'  : {"type": "text", "analyzer": 'english'},
-                'document_title'  : {
+                'document_url'     : {"type": "keyword"},
+                'paragraph_index'  : {"type": "long"},
+                'total_paragraphs' : {"type": "long"},
+                'paragraph_text'   : {"type": "text", "analyzer": 'english'},
+                'document_title'   : {
                     "type": "text",
                     "analyzer": 'english',
                     "fields": {

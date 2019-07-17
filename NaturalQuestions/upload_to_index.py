@@ -107,7 +107,7 @@ all_fs = []
 for subdir in  os.listdir(diri):
     subd = os.path.join(diri, subdir)
     for fpath in tqdm(os.listdir(subd)):
-        all_fs.append(os.path.join(diri, subdir))
+        all_fs.append(os.path.join(subd, fpath))
 
 for nq_jsonl in tqdm(all_fs):
     with open(nq_jsonl, 'rb') as fileobj:
