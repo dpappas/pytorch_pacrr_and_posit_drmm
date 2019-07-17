@@ -1,5 +1,6 @@
 
 import gzip, re, json, hashlib
+from tqdm import tqdm
 from pprint import pprint
 from bs4 import BeautifulSoup
 from elasticsearch import Elasticsearch
@@ -75,7 +76,6 @@ def create_an_action(elk_dato, id):
 def upload_to_elk(finished=False):
     global actions
     global b_size
-    global seen_tweet_ids
     if(len(actions) >= b_size) or (len(actions)>0 and finished):
         flag = True
         while (flag):
@@ -90,7 +90,6 @@ def upload_to_elk(finished=False):
                     print(e)
                     flag = False
         actions         = []
-        seen_tweet_ids  = []
 
 es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
@@ -103,7 +102,7 @@ b_size      = 200
 nq_jsonl = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/sample/nq-train-sample.jsonl.gz'
 with open(nq_jsonl, 'rb') as fileobj:
     f = gzip.GzipFile(fileobj=fileobj)
-    for l in f.readlines():
+    for l in tqdm(f.readlines()):
         dd = json.loads(l.decode('utf-8'))
         ########################
         html = dd['document_html']
@@ -127,6 +126,8 @@ with open(nq_jsonl, 'rb') as fileobj:
             seen_tweet_ids.append(jdata['id_str'])
             ######################################
     fileobj.close()
+    ######################################
+    upload_to_elk(finished=True)
 
 
 
