@@ -110,22 +110,24 @@ with open(nq_jsonl, 'rb') as fileobj:
                 'document_title'    : dd['document_title'],
                 'document_url'      : dd['document_url']
             }
-            pprint(datum)
+            # pprint(datum)
         ########################
-        # # pprint(dd['annotations'])
-        # print(10 * '-')
-        # print('Q: ' + dd['question_text'])
-        # for annot in dd['annotations']:
-        #     if(annot['long_answer']['candidate_index'] != -1):
-        #         s = annot['long_answer']['start_token']
-        #         e = annot['long_answer']['end_token']
-        #         print('L: '+' '.join([t['token'] for t in dd['document_tokens'][s:e+1]]))
-        #     for sa in annot['short_answers']:
-        #         s = sa['start_token']
-        #         e = sa['end_token']
-        #         print('S: '+' '.join([t['token'] for t in dd['document_tokens'][s:e+1]]))
-        # ########################
-        # print(20 * '-')
+        # pprint(dd['annotations'])
+        print(10 * '-')
+        for annot in dd['annotations']:
+            if(annot['long_answer']['candidate_index'] != -1):
+                s = annot['long_answer']['start_token']
+                e = annot['long_answer']['end_token']
+                print('Title: ' + dd['document_title'])
+                print('Link: ' + dd['document_url'])
+                print('Q: ' + dd['question_text'])
+                print('L: '+' '.join([t['token'] for t in dd['document_tokens'][s:e+1]]))
+                for sa in annot['short_answers']:
+                    s = sa['start_token']
+                    e = sa['end_token']
+                    print('S: '+' '.join([t['token'] for t in dd['document_tokens'][s:e+1]]))
+        ########################
+        print(20 * '-')
     fileobj.close()
 
 '''
