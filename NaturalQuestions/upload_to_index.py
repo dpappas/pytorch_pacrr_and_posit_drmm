@@ -126,6 +126,7 @@ for nq_jsonl in tqdm(all_fs):
                 jdata   = {
                     '_id'               : result,
                     'paragraph_index'   : i,
+                    'total_paragraphs'  : len(all_ps),
                     'paragraph_text'    : all_ps[i],
                     'document_title'    : dd['document_title'],
                     'document_url'      : dd['document_url']
