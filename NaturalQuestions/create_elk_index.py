@@ -1,5 +1,6 @@
 
 from elasticsearch import Elasticsearch
+from pprint import pprint
 
 index   = 'natural_questions_0_1'
 map     = 'natural_questions_map_0_1'
@@ -15,7 +16,7 @@ mapping = {
             "properties":{
                 'document_url'    : {"type": "keyword"},
                 'paragraph_index' : {"type": "long"},
-                'paragraph_text'  : {"type": "text", "analyzer": 'english'}},
+                'paragraph_text'  : {"type": "text", "analyzer": 'english'},
                 'document_title'  : {
                     "type": "text",
                     "analyzer": 'english',
@@ -25,8 +26,9 @@ mapping = {
                         }
                     }
                 }
+            }
         }
     }
 }
 
-print(elastic_con.indices.create(index = index, ignore=400, body=mapping))
+pprint(elastic_con.indices.create(index = index, ignore=400, body=mapping))
