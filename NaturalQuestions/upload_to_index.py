@@ -123,7 +123,6 @@ with open(nq_jsonl, 'rb') as fileobj:
             ######################################
             actions.append(create_an_action(jdata, jdata['_id']))
             upload_to_elk(finished=False)
-            seen_tweet_ids.append(jdata['id_str'])
             ######################################
     fileobj.close()
     ######################################
