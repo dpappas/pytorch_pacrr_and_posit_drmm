@@ -1,5 +1,5 @@
 
-import gzip, re, json, hashlib
+import gzip, re, json, hashlib, os
 from tqdm import tqdm
 from pprint import pprint
 from bs4 import BeautifulSoup
@@ -99,34 +99,44 @@ actions     = []
 b_size      = 200
 
 # nq_jsonl = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/sample/nq-dev-sample.jsonl.gz'
-nq_jsonl = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/sample/nq-train-sample.jsonl.gz'
-with open(nq_jsonl, 'rb') as fileobj:
-    f = gzip.GzipFile(fileobj=fileobj)
-    for l in tqdm(f.readlines()):
-        dd = json.loads(l.decode('utf-8'))
-        ########################
-        html = dd['document_html']
-        soupa = clean_soup(html)
-        ########################
-        all_ps = [item.text.strip() for item in soupa.findAll('p') if(len(item.text.strip())>0)]
-        ########################
-        for i in range(len(all_ps)):
-            textt   = '{}:{}'.format(dd['document_title'], i)
-            result  = hashlib.md5(textt.encode()).hexdigest()
-            jdata   = {
-                '_id'               : result,
-                'paragraph_index'   : i,
-                'paragraph_text'    : all_ps[i],
-                'document_title'    : dd['document_title'],
-                'document_url'      : dd['document_url']
-            }
-            ######################################
-            actions.append(create_an_action(jdata, jdata['_id']))
-            upload_to_elk(finished=False)
-            ######################################
-    fileobj.close()
-    ######################################
-    upload_to_elk(finished=True)
+# nq_jsonl = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/sample/nq-train-sample.jsonl.gz'
+
+diri = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/'
+
+all_fs = []
+for subdir in  os.listdir(diri):
+    subd = os.path.join(diri, subdir)
+    for fpath in tqdm(os.listdir(subd)):
+        all_fs.append(os.path.join(diri, subdir))
+
+for nq_jsonl in tqdm(all_fs):
+    with open(nq_jsonl, 'rb') as fileobj:
+        f = gzip.GzipFile(fileobj=fileobj)
+        for l in tqdm(f.readlines()):
+            dd = json.loads(l.decode('utf-8'))
+            ########################
+            html = dd['document_html']
+            soupa = clean_soup(html)
+            ########################
+            all_ps = [item.text.strip() for item in soupa.findAll('p') if(len(item.text.strip())>0)]
+            ########################
+            for i in range(len(all_ps)):
+                textt   = '{}:{}'.format(dd['document_title'], i)
+                result  = hashlib.md5(textt.encode()).hexdigest()
+                jdata   = {
+                    '_id'               : result,
+                    'paragraph_index'   : i,
+                    'paragraph_text'    : all_ps[i],
+                    'document_title'    : dd['document_title'],
+                    'document_url'      : dd['document_url']
+                }
+                ######################################
+                actions.append(create_an_action(jdata, jdata['_id']))
+                upload_to_elk(finished=False)
+                ######################################
+        fileobj.close()
+        ######################################
+        upload_to_elk(finished=True)
 
 
 
