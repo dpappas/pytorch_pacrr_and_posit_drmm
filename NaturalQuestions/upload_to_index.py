@@ -1,5 +1,5 @@
 
-import gzip, re, json, hashlib, os
+import gzip, re, json, hashlib, os, random
 from tqdm import tqdm
 from pprint import pprint
 from bs4 import BeautifulSoup
@@ -109,6 +109,7 @@ for subdir in  os.listdir(diri):
     for fpath in tqdm(os.listdir(subd)):
         all_fs.append(os.path.join(subd, fpath))
 
+random.shuffle(all_fs)
 for nq_jsonl in tqdm(all_fs):
     with open(nq_jsonl, 'rb') as fileobj:
         f = gzip.GzipFile(fileobj=fileobj)
