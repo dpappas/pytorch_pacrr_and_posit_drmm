@@ -15,7 +15,7 @@ mapping = {
         map:{
             "properties": {
                 'example_id'        : {"type": "keyword"},
-                'dataset'           :  {"type": "keyword"},
+                'dataset'           : {"type": "keyword"},
                 'document_url'      : {"type": "keyword"},
                 'document_title'    : {"type": "text", "analyzer": 'english', "fields": {"raw": {"type": "keyword"}}},
                 'question'          : {"type": "text", "analyzer": 'english', "fields": {"raw": {"type": "keyword"}}},
