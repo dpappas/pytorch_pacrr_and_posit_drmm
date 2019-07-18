@@ -129,9 +129,11 @@ for nq_jsonl in tqdm(all_fs):
                 if (annot['long_answer']['candidate_index'] != -1):
                     s = annot['long_answer']['start_token']
                     e = annot['long_answer']['end_token']
+                    long_answer = ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]])
                     for sa in annot['short_answers']:
                         s = sa['start_token']
                         e = sa['end_token']
+                        short_answer = ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]])
                         textt   = '{}:{}:{}'.format(dd['document_title'], dd['question_text'], dd['example_id'])
                         result  = hashlib.md5(textt.encode()).hexdigest()
                         datum = {
@@ -141,8 +143,8 @@ for nq_jsonl in tqdm(all_fs):
                             'document_title' : dd['document_title'],
                             'document_url'   : dd['document_url'],
                             'question'       : dd['question_text'],
-                            'long_answer'    : ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]]),
-                            'short_answer'   : ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]])
+                            'long_answer'    : long_answer,
+                            'short_answer'   : short_answer
                         }
                         actions.append(create_an_action(datum, datum['_id']))
                         upload_to_elk(finished=False)
