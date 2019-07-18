@@ -95,8 +95,8 @@ def upload_to_elk(finished=False):
 
 es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
-index       = 'natural_questions_Q_0_1'
-doc_type    = 'natural_questions_Q_map_0_1'
+index       = 'natural_questions_q_0_1'
+doc_type    = 'natural_questions_q_map_0_1'
 
 ###############################################################################
 

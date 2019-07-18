@@ -2,8 +2,8 @@
 from elasticsearch import Elasticsearch
 from pprint import pprint
 
-index   = 'natural_questions_Q_0_1'
-map     = 'natural_questions_Q_map_0_1'
+index   = 'natural_questions_q_0_1'
+map     = 'natural_questions_q_map_0_1'
 lang    = 'english'
 
 elastic_con = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
@@ -26,4 +26,4 @@ mapping = {
     }
 }
 
-pprint(elastic_con.indices.create(index = index, ignore=400, body=mapping))
+pprint(elastic_con.indices.create(index=index, ignore=400, body=mapping))
