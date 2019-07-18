@@ -110,7 +110,7 @@ for subdir in  os.listdir(diri):
 
 random.shuffle(all_fs)
 
-all_questions = []
+# all_questions = []
 for nq_jsonl in tqdm(all_fs):
     with open(nq_jsonl, 'rb') as fileobj:
         f = gzip.GzipFile(fileobj=fileobj)
@@ -149,7 +149,7 @@ for nq_jsonl in tqdm(all_fs):
                             'short_answer'   : ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]])
                         }
                         # pprint(datum)
-                        all_questions.append(datum)
+                        # all_questions.append(datum)
                         actions.append(create_an_action(datum, datum['_id']))
                         upload_to_elk(finished=False)
                         ######################################
@@ -157,12 +157,13 @@ for nq_jsonl in tqdm(all_fs):
         ######################################
         upload_to_elk(finished=True)
 
-train_questions = [q for q in  all_questions if(q['dataset'] == 'train')]
-dev_questions   = [q for q in  all_questions if(q['dataset'] == 'dev')]
 
-print(len(all_questions))
-print(len(train_questions))
-print(len(dev_questions))
+# train_questions = [q for q in  all_questions if(q['dataset'] == 'train')]
+# dev_questions   = [q for q in  all_questions if(q['dataset'] == 'dev')]
+#
+# print(len(all_questions))
+# print(len(train_questions))
+# print(len(dev_questions))
 
 '''
 
