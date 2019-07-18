@@ -126,16 +126,9 @@ for nq_jsonl in tqdm(all_fs):
                 if (annot['long_answer']['candidate_index'] != -1):
                     s = annot['long_answer']['start_token']
                     e = annot['long_answer']['end_token']
-                    # print(os.path.basename(os.path.abspath(os.path.join(nq_jsonl, os.pardir))))
-                    # print('Title: ' + dd['document_title'])
-                    # print('Link: ' + dd['document_url'])
-                    # print('Q: ' + dd['question_text'])
-                    # print('L: ' + )
                     for sa in annot['short_answers']:
                         s = sa['start_token']
                         e = sa['end_token']
-                        # print('S: ' + ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]]))
-                        # print(10 * '-')
                         textt   = '{}:{}:{}'.format(dd['document_title'], dd['question_text'], dd['example_id'])
                         result  = hashlib.md5(textt.encode()).hexdigest()
                         datum = {
@@ -148,11 +141,8 @@ for nq_jsonl in tqdm(all_fs):
                             'long_answer'    : ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]]),
                             'short_answer'   : ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]])
                         }
-                        # pprint(datum)
-                        # all_questions.append(datum)
                         actions.append(create_an_action(datum, datum['_id']))
                         upload_to_elk(finished=False)
-                        ######################################
         fileobj.close()
         ######################################
         upload_to_elk(finished=True)
