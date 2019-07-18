@@ -3,6 +3,8 @@ import gzip, re, json, hashlib, os, random
 from tqdm import tqdm
 from pprint import pprint
 from bs4 import BeautifulSoup
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
 
 def clean_soup(html):
     #######################################################
@@ -64,6 +66,40 @@ def clean_soup(html):
     #######################
     return soupa
 
+def create_an_action(elk_dato, id):
+    elk_dato['_id']      = id
+    elk_dato['_op_type'] = 'index'
+    elk_dato['_index']   = index
+    elk_dato['_type']    = doc_type
+    return elk_dato
+
+def upload_to_elk(finished=False):
+    global actions
+    global b_size
+    if(len(actions) >= b_size) or (len(actions)>0 and finished):
+        flag = True
+        while (flag):
+            try:
+                result = bulk(es, iter(actions))
+                pprint(result)
+                flag = False
+            except Exception as e:
+                if ('ConnectionTimeout' in str(e) or 'rejected execution of' in str(e)):
+                    print('Retrying')
+                else:
+                    print(e)
+                    flag = False
+        actions         = []
+
+###############################################################################
+
+es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+
+index       = 'natural_questions_0_1'
+doc_type    = 'natural_questions_map_0_1'
+
+###############################################################################
+
 diri = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/'
 
 all_fs = []
@@ -100,7 +136,10 @@ for nq_jsonl in tqdm(all_fs):
                         e = sa['end_token']
                         # print('S: ' + ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]]))
                         # print(10 * '-')
+                        textt   = '{}:{}:{}'.format(dd['document_title'], dd['question_text'], dd['example_id'])
+                        result  = hashlib.md5(textt.encode()).hexdigest()
                         datum = {
+                            '_id'            : result,
                             'example_id'     : dd['example_id'],
                             'dataset'        : os.path.basename(os.path.abspath(os.path.join(nq_jsonl, os.pardir))),
                             'document_title' : dd['document_title'],
@@ -111,8 +150,12 @@ for nq_jsonl in tqdm(all_fs):
                         }
                         # pprint(datum)
                         all_questions.append(datum)
-            ########################
-            fileobj.close()
+                        actions.append(create_an_action(datum, datum['_id']))
+                        upload_to_elk(finished=False)
+                        ######################################
+        fileobj.close()
+        ######################################
+        upload_to_elk(finished=True)
 
 train_questions = [q for q in  all_questions if(q['dataset'] == 'train')]
 dev_questions   = [q for q in  all_questions if(q['dataset'] == 'dev')]
