@@ -104,7 +104,7 @@ b_size      = 200
 diri = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/'
 
 all_fs = []
-for subdir in  os.listdir(diri):
+for subdir in os.listdir(diri):
     subd = os.path.join(diri, subdir)
     for fpath in tqdm(os.listdir(subd)):
         all_fs.append(os.path.join(subd, fpath))

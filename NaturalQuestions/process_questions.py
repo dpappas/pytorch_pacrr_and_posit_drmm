@@ -98,6 +98,9 @@ es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retri
 index       = 'natural_questions_q_0_1'
 doc_type    = 'natural_questions_q_map_0_1'
 
+actions     = []
+b_size      = 200
+
 ###############################################################################
 
 diri = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/'
