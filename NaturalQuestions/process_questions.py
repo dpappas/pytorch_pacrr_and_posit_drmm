@@ -99,7 +99,7 @@ for nq_jsonl in tqdm(all_fs):
                         s = sa['start_token']
                         e = sa['end_token']
                         # print('S: ' + ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]]))
-                        print(10 * '-')
+                        # print(10 * '-')
                         datum = {
                             'example_id'     : dd['example_id'],
                             'dataset'        : os.path.basename(os.path.abspath(os.path.join(nq_jsonl, os.pardir))),
