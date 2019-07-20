@@ -43,8 +43,8 @@ def get_first_n(question, n):
                 }
             }
         )
-    for ngram in get_ngrams(question.split(), 2):
-        the_shoulds.append({"match": {"paragraph_text": ngram}})
+    # for ngram in get_ngrams(question.split(), 2):
+    #     the_shoulds.append({"match": {"paragraph_text": ngram}})
     #####
     bod = {
         "query": {
@@ -57,7 +57,7 @@ def get_first_n(question, n):
                     }
                 ],
                 "should": the_shoulds,
-                "minimum_should_match": 3,
+                "minimum_should_match": len(question)-1,
             }
         }
     }
