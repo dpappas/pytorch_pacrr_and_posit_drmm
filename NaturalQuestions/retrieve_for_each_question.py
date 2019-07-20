@@ -3,6 +3,11 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk, scan
 from pprint import pprint
 import re, pickle
+from nltk.util import ngrams
+
+def get_ngrams(tokens, n):
+    n_grams = ngrams(tokens, n)
+    return [' '.join(grams) for grams in n_grams]
 
 def check_if_doc_exists(document_title):
     bod = {
@@ -38,6 +43,8 @@ def get_first_n(question, n):
                 }
             }
         )
+    for ngram in get_ngrams(question.split(), 2):
+        the_shoulds.append({"match_phrase": {"paragraph_text": ngram}})
     #####
     bod = {
         "query": {
