@@ -41,7 +41,7 @@ for item in tqdm(items, total=total):
 
 pickle.dump(df, open('NQ_df.pkl', 'wb'))
 pickle.dump(df2, open('NQ_bioclean_mine_df.pkl', 'wb'))
-pickle.dump(df2, open('NQ_my_tokenize_df.pkl', 'wb'))
+pickle.dump(df3, open('NQ_my_tokenize_df.pkl', 'wb'))
 
 '''
 import pickle
@@ -55,7 +55,11 @@ d2 = pickle.load(open('NQ_bioclean_mine_df.pkl','rb'))
 d2 = sorted(d2.items(), key=lambda x: x[1], reverse=True)
 pprint(d2[-20:])
 
-print(len(d), len(d2))
+d3 = pickle.load(open('NQ_my_tokenize_df.pkl','rb'))
+d3 = sorted(d3.items(), key=lambda x: x[1], reverse=True)
+pprint(d3[-20:])
+
+print(len(d), len(d2), len(d3))
 
 '''
 
