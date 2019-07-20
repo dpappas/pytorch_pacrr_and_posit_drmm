@@ -6,6 +6,18 @@ from elasticsearch.helpers import bulk, scan
 from collections    import Counter
 import pickle, re
 
+def clean_start_end(word):
+    word = re.sub(r'(^\W+)', r'\1 ', word)
+    word = re.sub(r'(\W+$)', r' \1', word)
+    word = re.sub(r'\s+', ' ', word)
+    return word.strip()
+
+def my_tokenize(text):
+    ret = []
+    for token in word_tokenize(text):
+        ret.extend(clean_start_end(token).split())
+    return ret
+
 bioclean_mine = lambda t: re.sub(u'[.,?;*!%^&_+():-\[\]{}…"\'§£/ˈ‡†ʔ✚=°→€\\\\]', '', t.strip().lower()).split()
 
 ################################################
@@ -19,14 +31,17 @@ items   = scan(es, query=None, index=doc_index, doc_type=doc_map)
 
 df = Counter()
 df2 = Counter()
+df3 = Counter()
 total = es.count(index=doc_index)['count']
 for item in tqdm(items, total=total):
     df.update(Counter(list(set([t.lower()  for t in word_tokenize(item['_source']['paragraph_text'])]))))
     df2.update(Counter(list(set([t.lower() for t in bioclean_mine(item['_source']['paragraph_text'])]))))
+    df3.update(Counter(list(set([t.lower() for t in my_tokenize(item['_source']['paragraph_text'])]))))
 
 
 pickle.dump(df, open('NQ_df.pkl', 'wb'))
 pickle.dump(df2, open('NQ_bioclean_mine_df.pkl', 'wb'))
+pickle.dump(df2, open('NQ_my_tokenize_df.pkl', 'wb'))
 
 '''
 import pickle
