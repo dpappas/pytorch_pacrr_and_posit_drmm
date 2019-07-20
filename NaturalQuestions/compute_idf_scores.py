@@ -25,7 +25,7 @@ for item in tqdm(items, total=total):
     df2.update(Counter(list(set([t.lower() for t in bioclean_mine(item['_source']['paragraph_text'])]))))
 
 
-pickle.dump(df, open('NQ_bioclean.pkl', 'wb'))
+pickle.dump(df, open('NQ_df.pkl', 'wb'))
 pickle.dump(df2, open('NQ_bioclean_mine_df.pkl', 'wb'))
 
 '''
