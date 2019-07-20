@@ -23,6 +23,7 @@ def get_first_n(question, n):
     question    = [t for t in question if t not in stopwords]
     question    = ' '.join(question)
     print(question)
+    print(20 * '-')
     bod = {
         "size": n,
         "query": {"match": {"paragraph_text": question}}
