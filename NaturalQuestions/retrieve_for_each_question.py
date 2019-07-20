@@ -66,6 +66,10 @@ def get_first_n(question, n):
     res = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
+'''
+pattern : '[.,?;*!%^&_+():-\[\]{}…]"\'§£/ˈ‡†*+ʔ✚=°→€'
+'''
+
 bioclean_mod = lambda t: re.sub(
     '[.,?;*!%^&_+():-\[\]{}]', '',
     t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()

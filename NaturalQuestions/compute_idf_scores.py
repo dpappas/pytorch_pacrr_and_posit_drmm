@@ -4,7 +4,9 @@ from nltk.tokenize  import sent_tokenize, word_tokenize
 from elasticsearch  import Elasticsearch
 from elasticsearch.helpers import bulk, scan
 from collections    import Counter
-import pickle
+import pickle, re
+
+bioclean_mine = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}…]"\'§£/ˈ‡†ʔ✚=°→€\\\\', '', t.strip().lower()).split()
 
 ################################################
 doc_index       = 'natural_questions_0_1'
@@ -18,16 +20,22 @@ items   = scan(es, query=None, index=doc_index, doc_type=doc_map)
 df = Counter()
 total = es.count(index=doc_index)['count']
 for item in tqdm(items, total=total):
-    df.update(Counter(list(set([t.lower() for t in word_tokenize(item['_source']['paragraph_text'])]))))
+    # df.update(Counter(list(set([t.lower() for t in word_tokenize(item['_source']['paragraph_text'])]))))
+    df.update(Counter(list(set([t.lower() for t in bioclean_mine(item['_source']['paragraph_text'])]))))
 
-pickle.dump(df, open('NQ_df.pkl', 'wb'))
+pickle.dump(df, open('NQ_bioclean_mine_df.pkl', 'wb'))
 
 '''
 import pickle
 from pprint import pprint
+
 d = pickle.load(open('NQ_df.pkl','rb'))
 d = sorted(d.items(), key=lambda x: x[1], reverse=True)
-pprint(d[:20])
+pprint(d[-20:])
+
+d2 = pickle.load(open('NQ_bioclean_mine_df.pkl','rb'))
+d2 = sorted(d.items(), key=lambda x: x[1], reverse=True)
+pprint(d2[-20:])
 '''
 
 
