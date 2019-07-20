@@ -34,33 +34,34 @@ def get_first_n(question, n):
         "query": {"match": {"paragraph_text": question}}
     }
     ##############
-    the_shoulds = []
-    for qt in question.split():
-        the_shoulds.append(
-            {
-                "match": {
-                    "paragraph_text": qt
-                }
-            }
-        )
-    # for ngram in get_ngrams(question.split(), 2):
-    #     the_shoulds.append({"match": {"paragraph_text": ngram}})
-    #####
-    bod = {
-        "query": {
-            "bool": {
-                "must": [
-                    {
-                        "match": {
-                            "paragraph_text": question
-                        }
-                    }
-                ],
-                "should": the_shoulds,
-                "minimum_should_match": len(question)-1,
-            }
-        }
-    }
+    # the_shoulds = []
+    # for qt in question.split():
+    #     the_shoulds.append(
+    #         {
+    #             "match": {
+    #                 "paragraph_text": qt
+    #             }
+    #         }
+    #     )
+    # # for ngram in get_ngrams(question.split(), 2):
+    # #     the_shoulds.append({"match": {"paragraph_text": ngram}})
+    # #####
+    # bod = {
+    #     "query": {
+    #         "bool": {
+    #             "must": [
+    #                 {
+    #                     "match": {
+    #                         "paragraph_text": question
+    #                     }
+    #                 }
+    #             ],
+    #             "should": the_shoulds,
+    #             "minimum_should_match": len(question.split())-2,
+    #         }
+    #     }
+    # }
+    ##############
     pprint(bod)
     res = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
