@@ -21,3 +21,14 @@ for item in tqdm(items, total=total):
     df.update(Counter(list(set([t.lower() for t in word_tokenize(item['_source']['paragraph_text'])]))))
 
 pickle.dump(df, open('NQ_df.pkl', 'wb'))
+
+'''
+import pickle
+from pprint import pprint
+d = pickle.load(open('NQ_df.pkl','rb'))
+d = sorted(d.items(), key=lambda x: x[1], reverse=True)
+pprint(d[:20])
+'''
+
+
+
