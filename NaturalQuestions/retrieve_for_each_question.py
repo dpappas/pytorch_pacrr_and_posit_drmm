@@ -44,7 +44,7 @@ def get_first_n(question, n):
             }
         )
     for ngram in get_ngrams(question.split(), 2):
-        the_shoulds.append({"match_phrase": {"paragraph_text": ngram}})
+        the_shoulds.append({"match": {"paragraph_text": ngram}})
     #####
     bod = {
         "query": {
