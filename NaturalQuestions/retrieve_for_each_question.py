@@ -4,21 +4,6 @@ from elasticsearch.helpers import bulk, scan
 from pprint import pprint
 import re, pickle
 
-bioclean_mod = lambda t: re.sub(
-    '[.,?;*!%^&_+():-\[\]{}]', '',
-    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()
-).split()
-
-questions_index = 'natural_questions_q_0_1'
-questions_map   = "natural_questions_q_map_0_1"
-doc_index       = 'natural_questions_0_1'
-doc_map         = "natural_questions_map_0_1"
-es          = Elasticsearch(['192.168.188.80:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
-items       = scan(es, query=None, index=questions_index, doc_type=map)
-
-with open('stopwords.pkl', 'rb') as f:
-    stopwords = pickle.load(f)
-
 def check_if_doc_exists(document_title):
     bod = {
         "size": 1,
@@ -44,6 +29,25 @@ def get_first_n(question, n):
     }
     res = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
+
+bioclean_mod = lambda t: re.sub(
+    '[.,?;*!%^&_+():-\[\]{}]', '',
+    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()
+).split()
+
+################################################
+questions_index = 'natural_questions_q_0_1'
+questions_map   = "natural_questions_q_map_0_1"
+################################################
+doc_index       = 'natural_questions_0_1'
+doc_map         = "natural_questions_map_0_1"
+################################################
+es          = Elasticsearch(['192.168.188.80:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+items       = scan(es, query=None, index=questions_index, doc_type=map)
+################################################
+with open('stopwords.pkl', 'rb') as f:
+    stopwords = pickle.load(f)
+################################################
 
 for item in items:
     pprint(item)
