@@ -33,7 +33,7 @@ def get_first_n(question, n):
     for qt in question.split():
         the_shoulds.append(
             {
-                "term": {
+                "match": {
                     "paragraph_text": qt
                 }
             }
