@@ -43,7 +43,7 @@ doc_index       = 'natural_questions_0_1'
 doc_map         = "natural_questions_map_0_1"
 ################################################
 es          = Elasticsearch(['192.168.188.80:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
-items       = scan(es, query=None, index=questions_index, doc_type=map)
+items       = scan(es, query=None, index=questions_index, doc_type=questions_map)
 ################################################
 with open('stopwords.pkl', 'rb') as f:
     stopwords = pickle.load(f)
