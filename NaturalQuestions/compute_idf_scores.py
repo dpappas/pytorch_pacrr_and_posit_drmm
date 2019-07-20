@@ -21,7 +21,7 @@ df = Counter()
 df2 = Counter()
 total = es.count(index=doc_index)['count']
 for item in tqdm(items, total=total):
-    df.update(Counter(list(set([t.lower() for t in word_tokenize(item['_source']['paragraph_text'])]))))
+    df.update(Counter(list(set([t.lower()  for t in word_tokenize(item['_source']['paragraph_text'])]))))
     df2.update(Counter(list(set([t.lower() for t in bioclean_mine(item['_source']['paragraph_text'])]))))
 
 
