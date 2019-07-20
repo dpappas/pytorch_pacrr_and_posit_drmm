@@ -28,6 +28,33 @@ def get_first_n(question, n):
         "size": n,
         "query": {"match": {"paragraph_text": question}}
     }
+    ##############
+    the_shoulds = []
+    for qt in question.split():
+        the_shoulds.append(
+            {
+                "term": {
+                    "paragraph_text": qt
+                }
+            }
+        )
+    #####
+    bod = {
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "match": {
+                            "paragraph_text": question
+                        }
+                    }
+                ],
+                "should": the_shoulds,
+                "minimum_should_match": 3,
+            }
+        }
+    }
+    pprint(bod)
     res = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
