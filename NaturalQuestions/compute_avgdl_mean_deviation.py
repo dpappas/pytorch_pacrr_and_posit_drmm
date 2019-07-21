@@ -157,7 +157,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
 df_path     = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
 stop_path   = '/home/dpappas/bioasq_all/bioasq_data/document_retrieval/stopwords.pkl'
 
-with open(stop_path , 'rb') as f:
+with open(stop_path, 'rb') as f:
     stopwords = pickle.load(f)
 
 idf, max_idf = load_idfs_from_df(df_path)
