@@ -76,7 +76,7 @@ def get_all_quests():
     es              = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
     bod             = {"query": {"bool": {"must": [{"term": {"dataset": 'train'}}]}}}
     items           = scan(es, query=bod, index=questions_index, doc_type=questions_map)
-    total           = es.count(index=questions_index)['count']
+    total           = es.count(index=questions_index, body=bod)['count']
     ################################################
     return items, total
 
