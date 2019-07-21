@@ -126,6 +126,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
                 total_words += len(tokenize(s))
                 total_docs += 1.
         avgdl = float(total_words) / float(total_docs)
+        print('avgdl {} computed'.format(avgdl))
     else:
         print('avgdl {} provided'.format(avgdl))
     #
@@ -149,6 +150,8 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         for score in BM25scores:
             nominator += ((score - mean) ** 2)
         deviation = math.sqrt((nominator) / float(len(BM25scores) - 1))
+        print('mean {} computed'.format(mean))
+        print('deviation {} computed'.format(deviation))
     else:
         print('mean {} provided'.format(mean))
         print('deviation {} provided'.format(deviation))
