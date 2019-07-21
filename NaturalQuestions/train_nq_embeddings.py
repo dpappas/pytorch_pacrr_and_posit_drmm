@@ -67,5 +67,16 @@ model.save("lower_nq_w2v_{}.model".format(size))
 
 ################################################
 
+'''
 
+from    pprint                      import pprint
+import gensim
+
+print('loading w2v')
+w2v_path    = '/home/dpappas/NQ_data/lower_nq_w2v_30.model'
+wv          = gensim.models.Word2Vec.load(w2v_path)
+wv          = dict([(word, wv[word]) for word in wv.wv.vocab.keys()])
+# wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
+
+'''
 
