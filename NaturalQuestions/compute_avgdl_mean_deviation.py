@@ -5,7 +5,8 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 from elasticsearch  import Elasticsearch
 from elasticsearch.helpers import scan
 
-with open('stopwords.pkl', 'rb') as f:
+stop_path = '/home/dpappas/bioasq_all/bioasq_data/document_retrieval/stopwords.pkl'
+with open(stop_path , 'rb') as f:
     stopwords = pickle.load(f)
 
 bioclean_mod = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
@@ -73,7 +74,8 @@ def get_all_quests():
     questions_index = 'natural_questions_q_0_1'
     questions_map   = "natural_questions_q_map_0_1"
     es              = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
-    items           = scan(es, query=None, index=questions_index, doc_type=questions_map)
+    bod             = {"query": {"bool": {"must": [{"term": {"dataset": 'train'}}]}}}
+    items           = scan(es, query=bod, index=questions_index, doc_type=questions_map)
     total           = es.count(index=questions_index)['count']
     ################################################
     return items, total
@@ -110,7 +112,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         total_words = 0
         total_docs  = 0
         docs, total = get_all_docs()
-        for doc in tqdm(docs, ascii=True):
+        for doc in tqdm(docs, total=total):
             sents = sent_tokenize(doc['_source']['paragraph_text'])
             for s in sents:
                 total_words += len(tokenize(s))
@@ -147,3 +149,5 @@ df_path = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
 idf, max_idf = load_idfs_from_df(df_path)
 
 avgdl, mean, deviation = get_bm25_metrics()
+
+print(avgdl, mean, deviation)
