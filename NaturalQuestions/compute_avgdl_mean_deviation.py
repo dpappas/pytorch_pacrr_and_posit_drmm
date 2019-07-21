@@ -1,9 +1,14 @@
 
-import re, math
+import re, math, pickle
 from tqdm import tqdm
 from nltk.tokenize import word_tokenize, sent_tokenize
 from elasticsearch  import Elasticsearch
 from elasticsearch.helpers import scan
+
+with open('stopwords.pkl', 'rb') as f:
+    stopwords = pickle.load(f)
+
+bioclean_mod = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
 
 def clean_start_end(word):
     word = re.sub(r'(^\W+)', r'\1 ', word)
@@ -73,6 +78,33 @@ def get_all_quests():
     ################################################
     return items, total
 
+def get_first_n(question, n):
+    question    = bioclean_mod(question)
+    question    = [t for t in question if t not in stopwords]
+    question    = ' '.join(question)
+    ################################################
+    doc_index   = 'natural_questions_0_1'
+    es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+    ################################################
+    bod = {
+        "size": n,
+        "query": {"match": {"paragraph_text": question}}
+    }
+    res = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
+def load_idfs_from_df(df_path):
+    print('Loading IDF tables')
+    with open(df_path, 'rb') as f:
+        df = pickle.load(f)
+    idf = dict([(item[0], 1.0/(1.0*item[1])) for item in df.items()])
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    return idf, max_idf
+
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
         total_words = 0
@@ -91,19 +123,16 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         BM25scores = []
         k1, b = 1.2, 0.75
         not_found = 0
-        for qid in tqdm(bioasq6_data, ascii=True):
-            qtext           = bioasq6_data[qid]['body']
-            all_retr_ids    = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
-            for dic in all_retr_ids:
-                try:
-                    sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-                    q_toks = tokenize(qtext)
-                    for sent in sents:
-                        BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
-                        BM25scores.append(BM25score)
-                except KeyError:
-                    not_found += 1
-        #
+        quests, total = get_all_quests()
+        for quest in tqdm(quests, total=total):
+            qtext           = quest['_source']['question']
+            q_toks          = tokenize(qtext)
+            all_retr_docs   = get_first_n(qtext, 100)
+            for retr_doc in all_retr_docs:
+                sents = sent_tokenize(retr_doc['_source']['paragraph_text'])
+                for sent in sents:
+                    BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
+                    BM25scores.append(BM25score)
         mean = sum(BM25scores) / float(len(BM25scores))
         nominator = 0
         for score in BM25scores:
@@ -113,5 +142,8 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         print('mean {} provided'.format(mean))
         print('deviation {} provided'.format(deviation))
     return avgdl, mean, deviation
+
+df_path = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
+idf, max_idf = load_idfs_from_df(df_path)
 
 avgdl, mean, deviation = get_bm25_metrics()
