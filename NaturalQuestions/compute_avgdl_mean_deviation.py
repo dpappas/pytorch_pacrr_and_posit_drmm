@@ -123,10 +123,11 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (mean == 0 and deviation == 0):
         BM25scores = []
         k1, b = 1.2, 0.75
-        not_found = 0
         quests, total = get_all_quests()
         for quest in tqdm(quests, total=total):
             qtext           = quest['_source']['question']
+            if('<table>' in quest['_source']['long_answer'].lower()):
+                continue
             q_toks          = tokenize(qtext)
             all_retr_docs   = get_first_n(qtext, 100)
             for retr_doc in all_retr_docs:
