@@ -102,19 +102,13 @@ def load_idfs_from_df(df_path):
         df = pickle.load(f)
     idf = dict([(item[0], 1.0/(1.0*item[1])) for item in df.items()])
     ##############
-    ret = {}
-    for w in words:
-        if w in idf:
-            ret[w] = idf[w]
-    ##############
     max_idf = 0.0
     for w in idf:
         if idf[w] > max_idf:
             max_idf = idf[w]
     ##############
-    del idf
     print('Loaded idf tables with max idf {}'.format(max_idf))
-    return ret, max_idf
+    return idf, max_idf
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
@@ -156,12 +150,6 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
 
 df_path = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
 idf, max_idf = load_idfs_from_df(df_path)
-
-print('loading w2v')
-w2v_path    = '/home/dpappas/NQ_data/lower_nq_w2v_30.model'
-wv          = gensim.models.Word2Vec.load(w2v_path)
-words       = [word for word in wv.wv.vocab.keys()]
-del wv
 
 avgdl, mean, deviation = get_bm25_metrics(avgdl=0, mean=0, deviation=0)
 
