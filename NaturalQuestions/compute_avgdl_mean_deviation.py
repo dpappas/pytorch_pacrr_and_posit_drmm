@@ -6,7 +6,10 @@ from elasticsearch  import Elasticsearch
 from elasticsearch.helpers import scan
 import gensim
 
+df_path = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
+
 stop_path = '/home/dpappas/bioasq_all/bioasq_data/document_retrieval/stopwords.pkl'
+
 with open(stop_path , 'rb') as f:
     stopwords = pickle.load(f)
 
@@ -148,7 +151,6 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         print('deviation {} provided'.format(deviation))
     return avgdl, mean, deviation
 
-df_path = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
 idf, max_idf = load_idfs_from_df(df_path)
 
 avgdl, mean, deviation = get_bm25_metrics(avgdl=0, mean=0, deviation=0)
