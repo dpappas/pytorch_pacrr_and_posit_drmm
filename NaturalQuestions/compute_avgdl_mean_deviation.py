@@ -165,6 +165,7 @@ with open(stop_path, 'rb') as f:
 
 idf, max_idf = load_idfs_from_df(df_path)
 
-avgdl, mean, deviation = get_bm25_metrics(avgdl=0, mean=0, deviation=0)
+# Found 25.516591572602003 0.28064389869036355 0.5202094012283435
+avgdl, mean, deviation = get_bm25_metrics(avgdl=25.516591572602003, mean=0.28064389869036355, deviation=0.5202094012283435)
 
 print(avgdl, mean, deviation)
