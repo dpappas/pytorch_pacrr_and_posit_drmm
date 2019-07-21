@@ -96,7 +96,16 @@ def load_idfs_from_df(df_path):
     print('Loading IDF tables')
     with open(df_path, 'rb') as f:
         df = pickle.load(f)
-    idf = dict([(item[0], 1.0/(1.0*item[1])) for item in df.items()])
+    N   = 2684631
+    idf = dict(
+        [
+            (
+                item[0],
+                math.log((N*1.0) / (1.0*item[1]))
+            )
+            for item in df.items()
+        ]
+    )
     ##############
     max_idf = 0.0
     for w in idf:
