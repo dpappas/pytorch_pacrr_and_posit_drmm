@@ -6,6 +6,7 @@ from pprint import pprint
 from bs4 import BeautifulSoup
 import re, nltk
 from difflib import SequenceMatcher
+import pickle
 
 bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
 
@@ -59,8 +60,6 @@ train_data  = []
 dev_data    = []
 #################
 for quest in pbar:
-    pprint(quest['_source'])
-    exit()
     qtext           = quest['_source']['question']
     short_answer    = quest['_source']['short_answer']
     long_answer     = BeautifulSoup(quest['_source']['long_answer'], 'lxml').text.strip()
@@ -84,9 +83,19 @@ for quest in pbar:
             irrelevant_docs.append(ret_doc)
     if(len(relevant_docs)==0):
         zero_count += 1
+    ####################
+    quest['_source']['relevant_docs']   = relevant_docs
+    quest['_source']['irrelevant_docs'] = irrelevant_docs
+    ####################
+    if(quest['_source']['dataset'] == 'train'):
+        train_data.append(quest)
+    else:
+        dev_data.append(quest)
+    ####################
     pbar.set_description('{} - {}'.format(zero_count, total_train_quests))
 
-
+pickle.dump(train_data, open('/home/dpappas/NQ_data/NQ_train_data.pkl', 'wb'), protocol=2)
+pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data.pkl',   'wb'), protocol=2)
 
 
 
