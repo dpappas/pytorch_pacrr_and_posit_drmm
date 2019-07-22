@@ -54,31 +54,37 @@ train_quests, total_train_quests = get_all_quests()
 my_counter  = 0
 pbar        = tqdm(train_quests, total=total_train_quests)
 zero_count  = 0
+#################
+train_data  = []
+dev_data    = []
+#################
 for quest in pbar:
-        qtext           = quest['_source']['question']
-        short_answer    = quest['_source']['short_answer']
-        long_answer     = BeautifulSoup(quest['_source']['long_answer'], 'lxml').text.strip()
-        ####################
-        if ('<table>' in quest['_source']['long_answer'].lower()):
-            continue
-        ####################
-        all_retr_docs   = get_first_n(qtext, 100)
-        ####################
-        relevant_docs, irrelevant_docs = [], []
-        for ret_doc in all_retr_docs:
-            paragraph_text  = ' '.join(tokenize(ret_doc['_source']['paragraph_text']))
-            ############################################
-            if(short_answer in ret_doc['_source']['paragraph_text']):
-                similarity = similar(paragraph_text, long_answer)
-                if(similarity > 0.8 ):
-                    relevant_docs.append(ret_doc)
-                else:
-                    irrelevant_docs.append(ret_doc)
+    pprint(quest['_source'])
+    exit()
+    qtext           = quest['_source']['question']
+    short_answer    = quest['_source']['short_answer']
+    long_answer     = BeautifulSoup(quest['_source']['long_answer'], 'lxml').text.strip()
+    ####################
+    if ('<table>' in quest['_source']['long_answer'].lower()):
+        continue
+    ####################
+    all_retr_docs   = get_first_n(qtext, 100)
+    ####################
+    relevant_docs, irrelevant_docs = [], []
+    for ret_doc in all_retr_docs:
+        paragraph_text  = ' '.join(tokenize(ret_doc['_source']['paragraph_text']))
+        ############################################
+        if(short_answer in ret_doc['_source']['paragraph_text']):
+            similarity = similar(paragraph_text, long_answer)
+            if(similarity > 0.8 ):
+                relevant_docs.append(ret_doc)
             else:
                 irrelevant_docs.append(ret_doc)
-        if(len(relevant_docs)==0):
-            zero_count += 1
-        pbar.set_description('{} - {}'.format(zero_count, total_train_quests))
+        else:
+            irrelevant_docs.append(ret_doc)
+    if(len(relevant_docs)==0):
+        zero_count += 1
+    pbar.set_description('{} - {}'.format(zero_count, total_train_quests))
 
 
 
