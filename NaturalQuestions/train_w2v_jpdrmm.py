@@ -733,7 +733,7 @@ def get_all_train_quests():
     ################################################
     questions_index = 'natural_questions_q_0_1'
     questions_map   = "natural_questions_q_map_0_1"
-    es              = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+    es              = Elasticsearch(['{}:9200'.format(elk_ip)], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
     # bod             = {
     #       "query": {
     #           "function_score" : {
@@ -764,7 +764,7 @@ def get_first_n(question, n):
     question    = ' '.join(question)
     ################################################
     doc_index   = 'natural_questions_0_1'
-    es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+    es          = Elasticsearch(['{}:9200'.format(elk_ip)], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
     ################################################
     bod         = {
         "size": n,
@@ -779,20 +779,16 @@ def train_one(epoch, two_losses, use_sent_tokenizer):
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     ###############################################################
     train_quests, total_train_quests = get_all_train_quests()
-    random.shuffle(train_quests)
     for quest in tqdm(train_quests, total=total_train_quests):
         qtext = quest['_source']['question']
         if ('<table>' in quest['_source']['long_answer'].lower()):
             continue
         q_toks          = tokenize(qtext)
         all_retr_docs   = get_first_n(qtext, 100)
-        for retr_doc in all_retr_docs:
-            sents = sent_tokenize(retr_doc['_source']['paragraph_text'])
-            for sent in sents:
-                BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
-                BM25scores.append(BM25score)
+        pprint(q_toks)
+        pprint(all_retr_docs[0])
+        exit()
     ###############################################################
-
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
     #
@@ -1391,24 +1387,17 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ##########################################
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
+elk_ip              = '192.168.188.80'
 ##########################################
-# eval_path           = '/content/drive/My Drive/data_for_colab/bioasq7/eval (1)/run_eval.py'
-# retrieval_jar_path  = '/content/drive/My Drive/data_for_colab/bioasq7/dist/my_bioasq_eval_2.jar'
-# odd                 = '/content/drive/My Drive/data_for_colab/bioasq7/outputs/'
-##########################################
-# w2v_bin_path    = '/content/drive/My Drive/data_for_colab/pubmed2018_w2v_30D.bin'
-# idf_pickle_path = '/content/drive/My Drive/data_for_colab/idf.pkl'
-# dataloc         = '/content/drive/My Drive/data_for_colab/bioasq7/data/'
+# df_path     = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
+# w2v_path    = '/home/dpappas/NQ_data/lower_nq_w2v_30.model'
+df_path     = 'C:\\Users\\dvpap\\Downloads\\NQ_data\\NQ_my_tokenize_df.pkl'
+w2v_path    = 'C:\\Users\\dvpap\\Downloads\\NQ_data\\lower_nq_w2v_30.model'
 ##########################################
 
-df_path     = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
 idf, max_idf = load_idfs_from_df(df_path)
 
 print('loading w2v')
-w2v_path    = '/home/dpappas/NQ_data/lower_nq_w2v_30.model'
 wv          = gensim.models.Word2Vec.load(w2v_path)
 wv          = dict([(word, wv[word]) for word in wv.wv.vocab.keys()])
 
@@ -1436,7 +1425,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir    = 'natural_questions_jpdrmm_2L_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
