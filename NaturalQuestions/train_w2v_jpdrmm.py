@@ -742,19 +742,22 @@ def get_all_train_quests():
     #           }
     #     }
     # }
-    bod             = {
-      "query" : {"bool": {"must": [{"term": {"dataset": 'train'}}]}},
-      "sort"  : {
-        "_script" : {
-            "script"    : "org.elasticsearch.common.Digest.md5Hex(doc['_id'].value + salt)",
-            "type"      : "string",
-            "params"    : {"salt" : "some_random_string_{}".format(my_seed)},
-            "order"     : "asc"
-        }
-      }
-    }
+    # bod             = {
+    #   "query" : {"bool": {"must": [{"term": {"dataset": 'train'}}]}},
+    #   "sort"  : {
+    #     "_script" : {
+    #         "script"    : "org.elasticsearch.common.Digest.md5Hex(doc['_id'].value + salt)",
+    #         "type"      : "string",
+    #         "params"    : {"salt" : "some_random_string_{}".format(my_seed)},
+    #         "order"     : "asc"
+    #     }
+    #   }
+    # }
+    bod             = {"query" : {"bool": {"must": [{"term": {"dataset": 'train'}}]}}}
     items           = scan(es, query=bod, index=questions_index, doc_type=questions_map)
     total           = es.count(index=questions_index, body=bod)['count']
+    items           = [item for item in tqdm(items, total=total)]
+    total           = len(items)
     ################################################
     return items, total
 
