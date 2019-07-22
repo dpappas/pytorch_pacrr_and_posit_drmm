@@ -12,6 +12,8 @@ import  random
 import  logging
 import  subprocess
 import  torch
+from elasticsearch  import Elasticsearch
+from elasticsearch.helpers import scan
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  numpy                       as np
@@ -30,9 +32,10 @@ import  math
 from    pprint import pprint
 import  gensim
 
-bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
-softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
-stopwords   = nltk.corpus.stopwords.words("english")
+bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
+bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+softmax         = lambda z: np.exp(z) / np.sum(np.exp(z))
+stopwords       = nltk.corpus.stopwords.words("english")
 
 # Compute the term frequency of a word for a specific document
 def tf(term, document):
@@ -726,11 +729,70 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'q_idfs'                : q_idfs,
             }
 
+def get_all_train_quests():
+    ################################################
+    questions_index = 'natural_questions_q_0_1'
+    questions_map   = "natural_questions_q_map_0_1"
+    es              = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+    # bod             = {
+    #       "query": {
+    #           "function_score" : {
+    #             "query": {"bool": {"must": [{"term": {"dataset": 'train'}}]}},
+    #             "random_score" : {}
+    #           }
+    #     }
+    # }
+    bod             = {
+      "query" : {"bool": {"must": [{"term": {"dataset": 'train'}}]}},
+      "sort"  : {
+        "_script" : {
+            "script"    : "org.elasticsearch.common.Digest.md5Hex(doc['_id'].value + salt)",
+            "type"      : "string",
+            "params"    : {"salt" : "some_random_string_{}".format(my_seed)},
+            "order"     : "asc"
+        }
+      }
+    }
+    items           = scan(es, query=bod, index=questions_index, doc_type=questions_map)
+    total           = es.count(index=questions_index, body=bod)['count']
+    ################################################
+    return items, total
+
+def get_first_n(question, n):
+    question    = bioclean_mod(question)
+    question    = [t for t in question if t not in stopwords]
+    question    = ' '.join(question)
+    ################################################
+    doc_index   = 'natural_questions_0_1'
+    es          = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {"match": {"paragraph_text": question}}
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
 def train_one(epoch, two_losses, use_sent_tokenizer):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
-    #
+    ###############################################################
+    train_quests, total_train_quests = get_all_train_quests()
+    random.shuffle(train_quests)
+    for quest in tqdm(train_quests, total=total_train_quests):
+        qtext = quest['_source']['question']
+        if ('<table>' in quest['_source']['long_answer'].lower()):
+            continue
+        q_toks          = tokenize(qtext)
+        all_retr_docs   = get_first_n(qtext, 100)
+        for retr_doc in all_retr_docs:
+            sents = sent_tokenize(retr_doc['_source']['paragraph_text'])
+            for sent in sents:
+                BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
+                BM25scores.append(BM25score)
+    ###############################################################
+
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
     #
