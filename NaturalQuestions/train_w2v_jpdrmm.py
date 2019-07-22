@@ -782,15 +782,30 @@ def train_one(epoch, two_losses, use_sent_tokenizer):
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     ###############################################################
     train_quests, total_train_quests = get_all_train_quests()
+    random.shuffle(train_quests)
+    my_counter = 0
     for quest in tqdm(train_quests, total=total_train_quests):
-        qtext = quest['_source']['question']
+        qtext           = quest['_source']['question']
+        short_answer    = quest['_source']['short_answer']
         if ('<table>' in quest['_source']['long_answer'].lower()):
             continue
-        q_toks          = tokenize(qtext)
+        ####
         all_retr_docs   = get_first_n(qtext, 100)
-        pprint(q_toks)
-        pprint(all_retr_docs[0])
-        exit()
+        relevant_docs, irrelevant_docs = [], []
+        for ret_doc in all_retr_docs:
+            if(short_answer in ret_doc['_source']['paragraph_text']):
+                relevant_docs.append(ret_doc)
+            else:
+                irrelevant_docs.append(ret_doc)
+        ####
+        if(len(relevant_docs) == 0):
+            # continue
+            pprint(quest)
+            pprint(all_retr_docs)
+            exit()
+        print(len(relevant_docs), len(irrelevant_docs))
+        my_counter += 1
+    print(my_counter, total_train_quests)
     ###############################################################
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
