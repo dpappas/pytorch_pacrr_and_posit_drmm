@@ -86,7 +86,7 @@ for quest in pbar:
         }
         #######################
         q_data          = {
-            "id"            : quest["example_id"],
+            "id"            : str(quest["example_id"]),
             "body"          : quest['question'],
             "documents"     : [],
             "snippets"      : []
@@ -157,19 +157,15 @@ for quest in pbar:
     if(len(bm25_top100_train_pkl['queries'])==2):
         break
 
+#############################################################################
+
 print(20 * '=')
-pprint(bm25_docset_train_pkl)
+pprint(bm25_docset_train_pkl)  # PERFECT
 print(20 * '=')
-pprint(bm25_top100_train_pkl)
+pprint(bm25_top100_train_pkl)  # PERFECT
 print(20 * '=')
 pprint(training7b_train_json)
 print(20 * '=')
-
-
-
-
-
-exit()
 
 # FORMATS
 
