@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import re, nltk
 from difflib import SequenceMatcher
 import pickle
+import json
 
 bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
 
@@ -154,18 +155,28 @@ for quest in pbar:
             bm25_top100_train_pkl['queries'].append(bm25_100_datum)
             # update questions
             training7b_train_json['questions'].append(q_data)
-    if(len(bm25_top100_train_pkl['queries'])==2):
-        break
+    # if(len(bm25_top100_train_pkl['queries'])==2):
+    #     break
 
 #############################################################################
 
-print(20 * '=')
-pprint(bm25_docset_train_pkl)  # PERFECT
-print(20 * '=')
-pprint(bm25_top100_train_pkl)  # PERFECT
-print(20 * '=')
-pprint(training7b_train_json)
-print(20 * '=')
+# print(20 * '=')
+# pprint(bm25_docset_train_pkl)  # PERFECT
+# print(20 * '=')
+# pprint(bm25_top100_train_pkl)  # PERFECT
+# print(20 * '=')
+# pprint(training7b_train_json)
+# print(20 * '=')
+
+#############################################################################
+
+pickle.dump(bm25_docset_train_pkl, open('NQ_bioasq7_bm25_docset_top100.train.pkl','wb'))
+pickle.dump(bm25_top100_train_pkl, open('NQ_bioasq7_bm25_top100.train.pkl','wb'))
+with open('NQ_training7b.train.json','w') as f:
+    f.write(json.dumps(training7b_train_json, indent=4, sort_keys=True))
+
+#############################################################################
+
 
 # FORMATS
 
