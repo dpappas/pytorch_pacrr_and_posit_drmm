@@ -120,7 +120,9 @@ for quest in pbar:
                 if(similarity > 0.8 ):
                     # DOC IS RELEVANT
                     is_relevant                     = True
+                    bm25_100_datum['num_rel']       += 1
                     bm25_100_datum['num_rel_ret']   += 1
+                    bm25_100_datum['relevant_documents'].append(ret_doc['_id'])
                     relevant_docs.append(ret_doc)
                 else:
                     # DOC IS IRRELEVANT
