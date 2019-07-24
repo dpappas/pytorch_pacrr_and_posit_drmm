@@ -79,7 +79,7 @@ for quest in pbar:
             'num_rel'               : 0,
             'num_rel_ret'           : 0,
             'num_ret'               : 100,
-            'query_id'              : quest["example_id"],
+            'query_id'              : str(quest["example_id"]),
             'query_text'            : quest['question'],
             'relevant_documents'    : [],
             'retrieved_documents'   : []
@@ -88,25 +88,17 @@ for quest in pbar:
         q_data          = {
             "id"            : quest["example_id"],
             "body"          : quest['question'],
-            "documents"     : [],  # ["http://www.ncbi.nlm.nih.gov/pubmed/15829955",],
-            "snippets"      : [
-                # {
-                #     "offsetInBeginSection": 131,
-                #     "offsetInEndSection": 358,
-                #     "text": "Hirschsprung disease (HSCR) is a multifactorial, non-mendelian disorder in which rare high-penetrance coding sequence mutations in the receptor tyrosine kinase RET contribute to risk in combination with mutations at other genes",
-                #     "beginSection": "abstract",
-                #     "document": "http://www.ncbi.nlm.nih.gov/pubmed/15829955",
-                #     "endSection": "abstract"
-                # },
-            ]
+            "documents"     : [],
+            "snippets"      : []
         }
         #######################
         all_retr_docs                   = get_first_n(qtext, 100)
-        kept_docs = []
-        rank                            = 0
+        ##########################################
+        kept_docs   = {}
+        rank        = 0
         for ret_doc in all_retr_docs:
             rank += 1
-            pprint(ret_doc)
+            # pprint(ret_doc)
             ##################################################################
             kept_docs[ret_doc['_id']]   = {
                 u'pmid'             : ret_doc['_id'],
@@ -151,14 +143,28 @@ for quest in pbar:
                     u'rank'             : rank
                 })
             ############################################
+        ##########################################
         if(bm25_100_datum['num_rel_ret']==0):
             zero_count += 1
         else:
             # KEEP IT IN THE DATASET
             # update docs
-            bm25_docset_train_pkl.update(keep_docs)
+            bm25_docset_train_pkl.update(kept_docs)
             # update bm25
+            bm25_top100_train_pkl['queries'].append(bm25_100_datum)
             # update questions
+            training7b_train_json['questions'].append(q_data)
+    if(len(bm25_top100_train_pkl['queries'])==2):
+        break
+
+print(20 * '=')
+pprint(bm25_docset_train_pkl)
+print(20 * '=')
+pprint(bm25_top100_train_pkl)
+print(20 * '=')
+pprint(training7b_train_json)
+print(20 * '=')
+
 
 
 
