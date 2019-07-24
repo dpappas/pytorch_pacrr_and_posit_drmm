@@ -99,7 +99,6 @@ for quest in pbar:
             'retrieved_documents'   : []
         }
         all_retr_docs                   = get_first_n(qtext, 100)
-        relevant_docs, irrelevant_docs  = [], []
         keep_docs                       = {}
         rank                            = 0
         for ret_doc in all_retr_docs:
@@ -123,13 +122,12 @@ for quest in pbar:
                     bm25_100_datum['num_rel']       += 1
                     bm25_100_datum['num_rel_ret']   += 1
                     bm25_100_datum['relevant_documents'].append(ret_doc['_id'])
-                    relevant_docs.append(ret_doc)
                 else:
                     # DOC IS IRRELEVANT
-                    irrelevant_docs.append(ret_doc)
+                    pass
             else:
                 # DOC IS IRRELEVANT
-                irrelevant_docs.append(ret_doc)
+                pass
             ############################################
             bm25_100_datum['retrieved_documents'].append({
                     u'bm25_score'       : ret_doc['_score'],
@@ -139,12 +137,15 @@ for quest in pbar:
                     u'rank'             : rank
                 })
             ############################################
-        if(len(relevant_docs)==0):
+        if(bm25_100_datum['num_rel_ret']==0):
             zero_count += 1
         else:
             # KEEP IT IN THE DATASET
             # update docs
             bm25_docset_train_pkl.update(keep_docs)
+
+
+
 
 exit()
 
