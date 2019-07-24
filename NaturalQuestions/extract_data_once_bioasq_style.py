@@ -63,53 +63,88 @@ my_counter, zero_count      = 0, 0
 
 #############################################################################
 
-#################
-train_data  = []
-dev_data    = []
-#################
 for quest in pbar:
-    qtext           = quest['_source']['question']
-    short_answer    = quest['_source']['short_answer']
-    long_answer     = BeautifulSoup(quest['_source']['long_answer'], 'lxml').text.strip()
+    quest           = quest['_source']
+    qtext           = quest['question']
+    short_answer    = quest['short_answer']
+    long_answer     = BeautifulSoup(quest['long_answer'], 'lxml').text.strip()
     ####################
-    if ('<table>' in quest['_source']['long_answer'].lower()):
+    # pprint(quest)
+    # exit()
+    if ('<table>' in quest['long_answer'].lower()):
         continue
-    ####################
-    all_retr_docs   = get_first_n(qtext, 100)
-    ####################
-    relevant_docs, irrelevant_docs = [], []
-    for ret_doc in all_retr_docs:
-        paragraph_text  = ' '.join(tokenize(ret_doc['_source']['paragraph_text']))
-        ############################################
-        if(short_answer in ret_doc['_source']['paragraph_text']):
-            similarity = similar(paragraph_text, long_answer)
-            if(similarity > 0.8 ):
-                relevant_docs.append(ret_doc)
-            else:
-                irrelevant_docs.append(ret_doc)
-        else:
-            irrelevant_docs.append(ret_doc)
-    if(len(relevant_docs)==0):
-        zero_count += 1
-    ####################
-    quest['_source']['relevant_docs']   = relevant_docs
-    quest['_source']['irrelevant_docs'] = irrelevant_docs
-    ####################
-    if(quest['_source']['dataset'] == 'train'):
-        train_data.append(quest)
     else:
-        dev_data.append(quest)
-    ####################
-    pbar.set_description('{} - {}'.format(zero_count, total_train_quests))
+        q_data          = {
+            "id"            : quest["example_id"],
+            "body"          : quest['question'],
+            "documents"     : [],  # ["http://www.ncbi.nlm.nih.gov/pubmed/15829955",],
+            "snippets"      : [
+                # {
+                #     "offsetInBeginSection": 131,
+                #     "offsetInEndSection": 358,
+                #     "text": "Hirschsprung disease (HSCR) is a multifactorial, non-mendelian disorder in which rare high-penetrance coding sequence mutations in the receptor tyrosine kinase RET contribute to risk in combination with mutations at other genes",
+                #     "beginSection": "abstract",
+                #     "document": "http://www.ncbi.nlm.nih.gov/pubmed/15829955",
+                #     "endSection": "abstract"
+                # },
+            ]
+        }
+        bm25_100_datum  = {
+            'num_rel'               : 0,
+            'num_rel_ret'           : 0,
+            'num_ret'               : 100,
+            'query_id'              : quest["example_id"],
+            'query_text'            : quest['question'],
+            'relevant_documents'    : [],
+            'retrieved_documents'   : []
+        }
+        all_retr_docs                   = get_first_n(qtext, 100)
+        relevant_docs, irrelevant_docs  = [], []
+        keep_docs                       = {}
+        rank                            = 0
+        for ret_doc in all_retr_docs:
+            rank += 1
+            pprint(ret_doc)
+            ##################################################################
+            keep_docs[ret_doc['_id']]   = {
+                u'pmid'             : ret_doc['_id'],
+                u'abstractText'     : ret_doc['_source']['paragraph_text'],
+                u'title'            : ret_doc['_source']['document_title']
+            }
+            ##################################################################
+            paragraph_text              = ' '.join(tokenize(ret_doc['_source']['paragraph_text']))
+            ############################################
+            is_relevant     = False
+            if(short_answer in ret_doc['_source']['paragraph_text']):
+                similarity = similar(paragraph_text, long_answer)
+                if(similarity > 0.8 ):
+                    # DOC IS RELEVANT
+                    is_relevant                     = True
+                    bm25_100_datum['num_rel_ret']   += 1
+                    relevant_docs.append(ret_doc)
+                else:
+                    # DOC IS IRRELEVANT
+                    irrelevant_docs.append(ret_doc)
+            else:
+                # DOC IS IRRELEVANT
+                irrelevant_docs.append(ret_doc)
+            ############################################
+            bm25_100_datum['retrieved_documents'].append({
+                    u'bm25_score'       : ret_doc['_score'],
+                    u'doc_id'           : ret_doc['_id'],
+                    u'is_relevant'      : is_relevant,
+                    u'norm_bm25_score'  : -1.0,
+                    u'rank'             : rank
+                })
+            ############################################
+        if(len(relevant_docs)==0):
+            zero_count += 1
+        else:
+            # KEEP IT IN THE DATASET
+            # update docs
+            bm25_docset_train_pkl.update(keep_docs)
 
-#############################################################################
-
-pickle.dump(train_data, open('/home/dpappas/NQ_data/NQ_train_data.pkl', 'wb'), protocol=2)
-pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data.pkl',   'wb'), protocol=2)
-
-
-
-
+exit()
 
 # FORMATS
 
@@ -162,6 +197,7 @@ pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data.pkl',   'wb'), p
 # }
 '''
 
+'''
 ## bioasq7_bm25_docset_top100.train.pkl
 # {
 #     u'20176987' : {
@@ -174,9 +210,54 @@ pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data.pkl',   'wb'), p
 #     },
 #     ...
 # }
+'''
 
+'''
 
+#################
+train_data  = []
+dev_data    = []
+#################
+for quest in pbar:
+    qtext           = quest['_source']['question']
+    short_answer    = quest['_source']['short_answer']
+    long_answer     = BeautifulSoup(quest['_source']['long_answer'], 'lxml').text.strip()
+    ####################
+    if ('<table>' in quest['_source']['long_answer'].lower()):
+        continue
+    ####################
+    all_retr_docs   = get_first_n(qtext, 100)
+    ####################
+    relevant_docs, irrelevant_docs = [], []
+    for ret_doc in all_retr_docs:
+        paragraph_text  = ' '.join(tokenize(ret_doc['_source']['paragraph_text']))
+        ############################################
+        if(short_answer in ret_doc['_source']['paragraph_text']):
+            similarity = similar(paragraph_text, long_answer)
+            if(similarity > 0.8 ):
+                relevant_docs.append(ret_doc)
+            else:
+                irrelevant_docs.append(ret_doc)
+        else:
+            irrelevant_docs.append(ret_doc)
+    if(len(relevant_docs)==0):
+        zero_count += 1
+    ####################
+    quest['_source']['relevant_docs']   = relevant_docs
+    quest['_source']['irrelevant_docs'] = irrelevant_docs
+    ####################
+    if(quest['_source']['dataset'] == 'train'):
+        train_data.append(quest)
+    else:
+        dev_data.append(quest)
+    ####################
+    pbar.set_description('{} - {}'.format(zero_count, total_train_quests))
 
+#############################################################################
+
+pickle.dump(train_data, open('/home/dpappas/NQ_data/NQ_train_data.pkl', 'wb'), protocol=2)
+pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data.pkl',   'wb'), protocol=2)
+'''
 
 
 
