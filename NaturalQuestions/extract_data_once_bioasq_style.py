@@ -74,6 +74,17 @@ for quest in pbar:
     if ('<table>' in quest['long_answer'].lower()):
         continue
     else:
+        # DONE
+        bm25_100_datum  = {
+            'num_rel'               : 0,
+            'num_rel_ret'           : 0,
+            'num_ret'               : 100,
+            'query_id'              : quest["example_id"],
+            'query_text'            : quest['question'],
+            'relevant_documents'    : [],
+            'retrieved_documents'   : []
+        }
+        #######################
         q_data          = {
             "id"            : quest["example_id"],
             "body"          : quest['question'],
@@ -89,23 +100,15 @@ for quest in pbar:
                 # },
             ]
         }
-        bm25_100_datum  = {
-            'num_rel'               : 0,
-            'num_rel_ret'           : 0,
-            'num_ret'               : 100,
-            'query_id'              : quest["example_id"],
-            'query_text'            : quest['question'],
-            'relevant_documents'    : [],
-            'retrieved_documents'   : []
-        }
+        #######################
         all_retr_docs                   = get_first_n(qtext, 100)
-        keep_docs                       = {}
+        kept_docs = []
         rank                            = 0
         for ret_doc in all_retr_docs:
             rank += 1
             pprint(ret_doc)
             ##################################################################
-            keep_docs[ret_doc['_id']]   = {
+            kept_docs[ret_doc['_id']]   = {
                 u'pmid'             : ret_doc['_id'],
                 u'abstractText'     : ret_doc['_source']['paragraph_text'],
                 u'title'            : ret_doc['_source']['document_title']
@@ -113,7 +116,7 @@ for quest in pbar:
             ##################################################################
             paragraph_text              = ' '.join(tokenize(ret_doc['_source']['paragraph_text']))
             ############################################
-            is_relevant     = False
+            is_relevant = False
             if(short_answer in ret_doc['_source']['paragraph_text']):
                 similarity = similar(paragraph_text, long_answer)
                 if(similarity > 0.8 ):
@@ -122,11 +125,22 @@ for quest in pbar:
                     bm25_100_datum['num_rel']       += 1
                     bm25_100_datum['num_rel_ret']   += 1
                     bm25_100_datum['relevant_documents'].append(ret_doc['_id'])
+                    q_data['documents'].append("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(ret_doc['_id']))
+                    q_data['snippets'].append(
+                        {
+                            "offsetInBeginSection"      : ret_doc['_source']['paragraph_text'].index(short_answer), # 131,
+                            "offsetInEndSection"        : ret_doc['_source']['paragraph_text'].index(short_answer)+len(short_answer), # 358,
+                            "text"                      : short_answer,
+                            "beginSection"              : "abstract",
+                            "document"                  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(ret_doc['_id']),
+                            "endSection"                : "abstract"
+                        }
+                    )
                 else:
-                    # DOC IS IRRELEVANT
+                    # DOC IS NOT RELEVANT
                     pass
             else:
-                # DOC IS IRRELEVANT
+                # DOC IS NOT RELEVANT
                 pass
             ############################################
             bm25_100_datum['retrieved_documents'].append({
@@ -143,6 +157,8 @@ for quest in pbar:
             # KEEP IT IN THE DATASET
             # update docs
             bm25_docset_train_pkl.update(keep_docs)
+            # update bm25
+            # update questions
 
 
 
