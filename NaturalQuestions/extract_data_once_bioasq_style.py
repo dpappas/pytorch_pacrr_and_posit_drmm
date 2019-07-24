@@ -55,10 +55,14 @@ training7b_train_json = {'questions': []}
 bm25_top100_train_pkl = {'queries': []}
 bm25_docset_train_pkl = {}
 
-train_quests, total_train_quests = get_all_quests()
-my_counter  = 0
-pbar        = tqdm(train_quests, total=total_train_quests)
-zero_count  = 0
+#############################################################################
+
+all_quests, total_quests    = get_all_quests()
+pbar                        = tqdm(all_quests, total=total_quests)
+my_counter, zero_count      = 0, 0
+
+#############################################################################
+
 #################
 train_data  = []
 dev_data    = []
@@ -97,6 +101,8 @@ for quest in pbar:
         dev_data.append(quest)
     ####################
     pbar.set_description('{} - {}'.format(zero_count, total_train_quests))
+
+#############################################################################
 
 pickle.dump(train_data, open('/home/dpappas/NQ_data/NQ_train_data.pkl', 'wb'), protocol=2)
 pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data.pkl',   'wb'), protocol=2)
