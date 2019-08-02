@@ -1407,10 +1407,10 @@ odd                 = '/home/dpappas/'
 ##########################################
 elk_ip              = '192.168.188.80'
 ##########################################
-# df_path     = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
-# w2v_path    = '/home/dpappas/NQ_data/lower_nq_w2v_30.model'
-df_path     = 'C:\\Users\\dvpap\\Downloads\\NQ_data\\NQ_my_tokenize_df.pkl'
-w2v_path    = 'C:\\Users\\dvpap\\Downloads\\NQ_data\\lower_nq_w2v_30.model'
+df_path     = '/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl'
+w2v_path    = '/home/dpappas/NQ_data/lower_nq_w2v_30.model'
+# df_path     = 'C:\\Users\\dvpap\\Downloads\\NQ_data\\NQ_my_tokenize_df.pkl'
+# w2v_path    = 'C:\\Users\\dvpap\\Downloads\\NQ_data\\lower_nq_w2v_30.model'
 ##########################################
 
 idf, max_idf = load_idfs_from_df(df_path)
