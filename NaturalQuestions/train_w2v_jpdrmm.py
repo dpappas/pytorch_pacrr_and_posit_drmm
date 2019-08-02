@@ -729,84 +729,11 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'q_idfs'                : q_idfs,
             }
 
-def get_all_train_quests():
-    ################################################
-    questions_index = 'natural_questions_q_0_1'
-    questions_map   = "natural_questions_q_map_0_1"
-    es              = Elasticsearch(['{}:9200'.format(elk_ip)], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
-    # bod             = {
-    #       "query": {
-    #           "function_score" : {
-    #             "query": {"bool": {"must": [{"term": {"dataset": 'train'}}]}},
-    #             "random_score" : {}
-    #           }
-    #     }
-    # }
-    # bod             = {
-    #   "query" : {"bool": {"must": [{"term": {"dataset": 'train'}}]}},
-    #   "sort"  : {
-    #     "_script" : {
-    #         "script"    : "org.elasticsearch.common.Digest.md5Hex(doc['_id'].value + salt)",
-    #         "type"      : "string",
-    #         "params"    : {"salt" : "some_random_string_{}".format(my_seed)},
-    #         "order"     : "asc"
-    #     }
-    #   }
-    # }
-    bod             = {"query" : {"bool": {"must": [{"term": {"dataset": 'train'}}]}}}
-    items           = scan(es, query=bod, index=questions_index, doc_type=questions_map)
-    total           = es.count(index=questions_index, body=bod)['count']
-    items           = [item for item in tqdm(items, total=total)]
-    total           = len(items)
-    ################################################
-    return items, total
-
-def get_first_n(question, n):
-    question    = bioclean_mod(question)
-    question    = [t for t in question if t not in stopwords]
-    question    = ' '.join(question)
-    ################################################
-    doc_index   = 'natural_questions_0_1'
-    es          = Elasticsearch(['{}:9200'.format(elk_ip)], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
-    ################################################
-    bod         = {
-        "size": n,
-        "query": {"match": {"paragraph_text": question}}
-    }
-    res         = es.search(index=doc_index, body=bod, request_timeout=120)
-    return res['hits']['hits']
-
-def train_one(epoch, two_losses, use_sent_tokenizer):
+def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
-    ###############################################################
-    train_quests, total_train_quests = get_all_train_quests()
-    random.shuffle(train_quests)
-    my_counter = 0
-    for quest in tqdm(train_quests, total=total_train_quests):
-        qtext           = quest['_source']['question']
-        short_answer    = quest['_source']['short_answer']
-        if ('<table>' in quest['_source']['long_answer'].lower()):
-            continue
-        ####
-        all_retr_docs   = get_first_n(qtext, 100)
-        relevant_docs, irrelevant_docs = [], []
-        for ret_doc in all_retr_docs:
-            if(short_answer in ret_doc['_source']['paragraph_text']):
-                relevant_docs.append(ret_doc)
-            else:
-                irrelevant_docs.append(ret_doc)
-        ####
-        if(len(relevant_docs) == 0):
-            # continue
-            pprint(quest)
-            pprint(all_retr_docs)
-            exit()
-        print(len(relevant_docs), len(irrelevant_docs))
-        my_counter += 1
-    print(my_counter, total_train_quests)
-    ###############################################################
+    #
     train_instances = train_data_step1(train_data)
     random.shuffle(train_instances)
     #
@@ -1036,7 +963,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     #
     return bioasq_snip_res
 
-def get_one_map(prefix, use_sent_tokenizer):
+def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
     #
     ret_data                        = {'questions': []}
@@ -1110,7 +1037,7 @@ def load_all_data(dataloc):
     wv              = gensim.models.Word2Vec.load(dataloc + 'lower_nq_w2v_30.model')
     wv              = dict([(word, wv[word]) for word in wv.wv.vocab.keys()])
     #
-    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
+    return dev_data, dev_docs, test_data, test_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1435,6 +1362,14 @@ retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ##########################################
 dataloc     = '/home/dpappas/NQ_data/'
+(
+    dev_data, dev_docs,
+    test_data, test_docs,
+    train_data, train_docs,
+    idf, max_idf,
+    wv, bioasq7_data
+) = load_all_data(dataloc)
+
 ##########################################
 avgdl       = 25.516591572602003
 mean        = 0.28064389869036355
