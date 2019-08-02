@@ -172,7 +172,7 @@ for quest in pbar:
 
 pickle.dump(bm25_docset_train_pkl, open('NQ_bioasq7_bm25_docset_top100.train.pkl','wb'))
 pickle.dump(bm25_top100_train_pkl, open('NQ_bioasq7_bm25_top100.train.pkl','wb'))
-with open('NQ_training7b.train.json','w') as f:
+with open('NQ_training7b.train.json', 'w') as f:
     f.write(json.dumps(training7b_train_json, indent=4, sort_keys=True))
 
 #############################################################################
