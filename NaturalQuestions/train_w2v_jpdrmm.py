@@ -1369,7 +1369,11 @@ dataloc     = '/home/dpappas/NQ_data/'
     idf, max_idf,
     wv, bioasq7_data
 ) = load_all_data(dataloc)
-
+##########################################
+print('Splitted in: ')
+print('{} training examples'.format(len(train_data['queries'])))
+print('{} development examples'.format(len(dev_data['queries'])))
+print('{} testing examples'.format(len(test_data['queries'])))
 ##########################################
 avgdl       = 25.516591572602003
 mean        = 0.28064389869036355
