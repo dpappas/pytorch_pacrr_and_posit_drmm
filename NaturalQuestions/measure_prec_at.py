@@ -62,7 +62,8 @@ for k in range(1, 11):
     aver_snip_pre       = sum(average_snip_pre_at_k)/ len(average_snip_pre_at_k)
     aver_snip_rec       = sum(average_snip_rec_at_k)/ len(average_snip_rec_at_k)
     #######################
-    print(k, aver_doc_pre, aver_doc_rec, aver_snip_pre, aver_snip_rec)
+    # print(k, aver_doc_pre, aver_doc_rec, aver_snip_pre, aver_snip_rec)
+    print(k, aver_doc_pre, aver_doc_rec)
     #######################
 
 # (# of recommended items @k that are relevant) / (# of recommended items @k)
