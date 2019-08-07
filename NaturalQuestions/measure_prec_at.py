@@ -66,7 +66,6 @@ for k in range(1, 11):
     print(k, aver_doc_pre, aver_doc_rec)
     #######################
 
-# (# of recommended items @k that are relevant) / (# of recommended items @k)
 
 
 
