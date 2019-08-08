@@ -79,7 +79,7 @@ for quest in pbar:
         bm25_100_datum  = {
             'num_rel'               : 0,
             'num_rel_ret'           : 0,
-            'W'               : 100,
+            'num_ret'               : 100,
             'query_id'              : str(quest["example_id"]),
             'query_text'            : quest['question'],
             'relevant_documents'    : [],
