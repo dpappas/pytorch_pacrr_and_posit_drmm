@@ -79,7 +79,7 @@ for quest in pbar:
         bm25_100_datum  = {
             'num_rel'               : 0,
             'num_rel_ret'           : 0,
-            'num_ret'               : 100,
+            'W'               : 100,
             'query_id'              : str(quest["example_id"]),
             'query_text'            : quest['question'],
             'relevant_documents'    : [],
@@ -101,7 +101,7 @@ for quest in pbar:
             rank += 1
             # pprint(ret_doc)
             ##################################################################
-            kept_docs[ret_doc['_id']] = {
+            kept_docs[ret_doc['_id']]   = {
                 u'pmid'             : ret_doc['_id'],
                 u'abstractText'     : ret_doc['_source']['paragraph_text'],
                 u'title'            : ret_doc['_source']['document_title']
