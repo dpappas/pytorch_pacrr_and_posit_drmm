@@ -93,7 +93,7 @@ for quest in pbar:
             "snippets"      : []
         }
         #######################
-        all_retr_docs                   = get_first_n(qtext, 100)
+        all_retr_docs   = get_first_n(qtext, 100)
         ##########################################
         kept_docs   = {}
         rank        = 0
@@ -101,7 +101,7 @@ for quest in pbar:
             rank += 1
             # pprint(ret_doc)
             ##################################################################
-            kept_docs[ret_doc['_id']]   = {
+            kept_docs[ret_doc['_id']] = {
                 u'pmid'             : ret_doc['_id'],
                 u'abstractText'     : ret_doc['_source']['paragraph_text'],
                 u'title'            : ret_doc['_source']['document_title']
