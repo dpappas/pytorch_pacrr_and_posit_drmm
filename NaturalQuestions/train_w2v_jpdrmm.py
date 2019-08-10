@@ -701,6 +701,9 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         #
+        if(sum(datum['sent_tags']) == 0):
+            print(datum['sent_tags'])
+            exit()
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
@@ -771,9 +774,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            pbar.set_description(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
+            pbar.set_description('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
