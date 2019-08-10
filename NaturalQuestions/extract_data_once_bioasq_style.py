@@ -196,11 +196,11 @@ train_docs      = bm25_docset_train_pkl
 dev_from    = int(len(train_data['queries']) * 0.8)
 dev_to      = int(len(train_data['queries']) * 0.9)
 
-dev_data    = {'queries' : train_data['queries'][dev_from:dev_to]}
-test_data   = {'queries' : train_data['queries'][dev_to:]}
-train_data  = {'queries' : train_data['queries'][:dev_from]}
+dev_data    = {'queries': train_data['queries'][dev_from:dev_to]}
+test_data   = {'queries': train_data['queries'][dev_to:]}
+train_data  = {'queries': train_data['queries'][:dev_from]}
 
-#################
+########################################################
 
 odir = '/home/dpappas/NQ_data/'
 
