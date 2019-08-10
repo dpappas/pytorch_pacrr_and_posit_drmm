@@ -1032,13 +1032,13 @@ def load_all_data(dataloc):
     # As einai ola mazi... Siga!
     dev_docs    = train_docs
     test_docs   = train_docs
-    ##################################################
+    ########################################################
     print('loading idf')
     idf, max_idf    = load_idfs_from_df(dataloc + 'NQ_my_tokenize_df.pkl')
     print('loading w2v')
     wv              = gensim.models.Word2Vec.load(dataloc + 'lower_nq_w2v_30.model')
     wv              = dict([(word, wv[word]) for word in wv.wv.vocab.keys()])
-    ##################################################
+    ########################################################
     return dev_data, dev_docs, test_data, test_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
