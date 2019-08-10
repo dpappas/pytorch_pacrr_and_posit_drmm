@@ -189,7 +189,9 @@ bioasq7_data    = training7b_train_json
 train_data      = bm25_top100_train_pkl
 train_docs      = bm25_docset_train_pkl
 
-#################
+########################################################
+# SPLIT: train | dev | test : 0.8 | 0.1 | 0.1
+########################################################
 
 dev_from    = int(len(train_data['queries']) * 0.8)
 dev_to      = int(len(train_data['queries']) * 0.9)

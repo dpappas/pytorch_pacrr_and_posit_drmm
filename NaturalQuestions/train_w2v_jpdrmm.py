@@ -1013,22 +1013,19 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
 def load_all_data(dataloc):
     print('loading pickle data')
     ########################################################
-    with open(dataloc+'NQ_training7b.train.json', 'r') as f:
+    with open(dataloc+'NQ_training7b.train.dev.test.json', 'r') as f:
         bioasq7_data    = json.load(f)
         bioasq7_data    = dict((q['id'], q) for q in bioasq7_data['questions'])
     ########################################################
     with open(dataloc + 'NQ_bioasq7_bm25_top100.train.pkl', 'rb') as f:
         train_data      = pickle.load(f)
+    with open(dataloc + 'NQ_bioasq7_bm25_top100.dev.pkl', 'rb') as f:
+        dev_data        = pickle.load(f)
+    with open(dataloc + 'NQ_bioasq7_bm25_top100.test.pkl', 'rb') as f:
+        test_data       = pickle.load(f)
     ########################################################
     with open(dataloc + 'NQ_bioasq7_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs      = pickle.load(f)
-    ########################################################
-    # SPLIT: train | dev | test : 0.8 | 0.1 | 0.1
-    dev_from    = int(len(train_data['queries']) * 0.8)
-    dev_to      = int(len(train_data['queries']) * 0.9)
-    dev_data    = {'queries' : train_data['queries'][dev_from:dev_to]}
-    test_data   = {'queries' : train_data['queries'][dev_to:]}
-    train_data  = {'queries' : train_data['queries'][:dev_from]}
     ########################################################
     # As einai ola mazi... Siga!
     dev_docs    = train_docs
