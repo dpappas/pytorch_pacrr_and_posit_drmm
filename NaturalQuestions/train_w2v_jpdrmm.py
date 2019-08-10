@@ -1014,13 +1014,14 @@ def load_all_data(dataloc):
     print('loading pickle data')
     ########################################################
     with open(dataloc+'NQ_training7b.train.json', 'r') as f:
-        bioasq7_data = json.load(f)
-        bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
+        bioasq7_data    = json.load(f)
+        bioasq7_data    = dict((q['id'], q) for q in bioasq7_data['questions'])
     ########################################################
     with open(dataloc + 'NQ_bioasq7_bm25_top100.train.pkl', 'rb') as f:
-        train_data = pickle.load(f)
+        train_data      = pickle.load(f)
+    ########################################################
     with open(dataloc + 'NQ_bioasq7_bm25_docset_top100.train.pkl', 'rb') as f:
-        train_docs = pickle.load(f)
+        train_docs      = pickle.load(f)
     ########################################################
     # SPLIT: train | dev | test : 0.8 | 0.1 | 0.1
     dev_from    = int(len(train_data['queries']) * 0.8)
@@ -1363,13 +1364,9 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ##########################################
-dataloc     = '/home/dpappas/NQ_data/'
+dataloc             = '/home/dpappas/NQ_data/'
 (
-    dev_data, dev_docs,
-    test_data, test_docs,
-    train_data, train_docs,
-    idf, max_idf,
-    wv, bioasq7_data
+    dev_data, dev_docs, test_data, test_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 ) = load_all_data(dataloc)
 ##########################################
 print('Splitted in: ')
