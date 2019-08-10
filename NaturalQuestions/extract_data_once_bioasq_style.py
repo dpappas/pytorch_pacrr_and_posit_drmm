@@ -38,12 +38,15 @@ def get_first_n(question, n):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-def get_all_quests():
+def get_all_quests(dataset):
     ################################################
     questions_index = 'natural_questions_q_0_1'
     questions_map   = "natural_questions_q_map_0_1"
     es              = Elasticsearch(['{}:9200'.format(elk_ip)], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
-    bod             = {}
+    if(dataset is None):
+        bod = {}
+    else:
+        bod             = {"query": {"bool": {"must": [{"term": {"dataset": dataset}}]}}}
     items           = scan(es, query=bod, index=questions_index, doc_type=questions_map)
     total           = es.count(index=questions_index, body=bod)['count']
     ################################################
@@ -58,9 +61,20 @@ bm25_docset_train_pkl = {}
 
 #############################################################################
 
-all_quests, total_quests    = get_all_quests()
-pbar                        = tqdm(all_quests, total=total_quests)
-my_counter, zero_count      = 0, 0
+# all_dev_quests,     total_dev_quests    = get_all_quests('dev')
+# all_train_quests,   total_train_quests  = get_all_quests('train')
+all_quests,         total_quests        = get_all_quests(None)
+
+#############################################################################
+
+# print(total_dev_quests)
+# print(total_train_quests)
+print(total_quests)
+
+#############################################################################
+
+pbar                                    = tqdm(all_quests, total=total_quests)
+my_counter, zero_count                  = 0, 0
 
 #############################################################################
 
@@ -170,8 +184,8 @@ for quest in pbar:
 
 #############################################################################
 
-pickle.dump(bm25_docset_train_pkl, open('NQ_bioasq7_bm25_docset_top100.train.pkl','wb'))
-pickle.dump(bm25_top100_train_pkl, open('NQ_bioasq7_bm25_top100.train.pkl','wb'))
+pickle.dump(bm25_docset_train_pkl, open('NQ_bioasq7_bm25_docset_top100.train.pkl',  'wb'))
+pickle.dump(bm25_top100_train_pkl, open('NQ_bioasq7_bm25_top100.train.pkl',         'wb'))
 with open('NQ_training7b.train.json', 'w') as f:
     f.write(json.dumps(training7b_train_json, indent=4, sort_keys=True))
 
