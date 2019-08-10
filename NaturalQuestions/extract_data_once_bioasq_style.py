@@ -184,10 +184,27 @@ for quest in pbar:
 
 #############################################################################
 
-pickle.dump(bm25_docset_train_pkl, open('NQ_bioasq7_bm25_docset_top100.train.pkl',  'wb'))
-pickle.dump(bm25_top100_train_pkl, open('NQ_bioasq7_bm25_top100.train.pkl',         'wb'))
-with open('NQ_training7b.train.json', 'w') as f:
+bioasq7_data    = training7b_train_json
+train_data      = bm25_top100_train_pkl
+train_docs      = bm25_docset_train_pkl
+
+#################
+
+dev_from    = int(len(train_data['queries']) * 0.8)
+dev_to      = int(len(train_data['queries']) * 0.9)
+dev_data    = {'queries' : train_data['queries'][dev_from:dev_to]}
+test_data   = {'queries' : train_data['queries'][dev_to:]}
+train_data  = {'queries' : train_data['queries'][:dev_from]}
+
+#################
+
+with open('NQ_training7b.train.dev.test.json', 'w') as f:
     f.write(json.dumps(training7b_train_json, indent=4, sort_keys=True))
+
+pickle.dump(bm25_docset_train_pkl,  open('NQ_bioasq7_bm25_docset_top100.train.dev.test.pkl',  'wb'))
+pickle.dump(train_data,             open('NQ_bioasq7_bm25_top100.train.pkl', 'wb'))
+pickle.dump(dev_data,               open('NQ_bioasq7_bm25_top100.dev.pkl',   'wb'))
+pickle.dump(test_data,              open('NQ_bioasq7_bm25_top100.test.pkl',  'wb'))
 
 #############################################################################
 
