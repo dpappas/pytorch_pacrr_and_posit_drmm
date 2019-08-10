@@ -1012,31 +1012,33 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
 
 def load_all_data(dataloc):
     print('loading pickle data')
-    #
+    ########################################################
     with open(dataloc+'NQ_training7b.train.json', 'r') as f:
         bioasq7_data = json.load(f)
         bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
-    #
+    ########################################################
     with open(dataloc + 'NQ_bioasq7_bm25_top100.train.pkl', 'rb') as f:
         train_data = pickle.load(f)
     with open(dataloc + 'NQ_bioasq7_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs = pickle.load(f)
+    ########################################################
     # SPLIT: train | dev | test : 0.8 | 0.1 | 0.1
     dev_from    = int(len(train_data['queries']) * 0.8)
     dev_to      = int(len(train_data['queries']) * 0.9)
     dev_data    = {'queries' : train_data['queries'][dev_from:dev_to]}
     test_data   = {'queries' : train_data['queries'][dev_to:]}
     train_data  = {'queries' : train_data['queries'][:dev_from]}
+    ########################################################
     # As einai ola mazi... Siga!
     dev_docs    = train_docs
     test_docs   = train_docs
-    #
+    ##################################################
     print('loading idf')
     idf, max_idf    = load_idfs_from_df(dataloc + 'NQ_my_tokenize_df.pkl')
     print('loading w2v')
     wv              = gensim.models.Word2Vec.load(dataloc + 'lower_nq_w2v_30.model')
     wv              = dict([(word, wv[word]) for word in wv.wv.vocab.keys()])
-    #
+    ##################################################
     return dev_data, dev_docs, test_data, test_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
