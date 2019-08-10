@@ -213,7 +213,6 @@ pickle.dump(test_data,              open(os.path.join(odir, 'NQ_bioasq7_bm25_top
 
 #############################################################################
 
-
 # FORMATS
 
 '''
