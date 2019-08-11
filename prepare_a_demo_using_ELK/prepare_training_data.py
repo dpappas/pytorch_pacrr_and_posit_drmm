@@ -1283,6 +1283,56 @@ def get_first_n_19(question_tokens, n, idf_scores, entities, abbreviations):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
+# recall:
+def get_first_n_20(question_tokens, n, idf_scores, entities, abbreviations):
+    if(len(entities+abbreviations)>1):
+        question = ' '.join(entities + abbreviations)
+    else:
+        question = ' '.join(question_tokens)
+    ################################################
+    the_shoulds = []
+    for q_tok, idf_score in zip(question_tokens, idf_scores):
+        the_shoulds.append({"match": {"AbstractText"                : {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"Chemicals.NameOfSubstance"   : {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"MeshHeadings.text"           : {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"SupplMeshList.text"          : {"query": q_tok, "boost": idf_score}}})
+        ################################################
+        the_shoulds.append({"terms": {"AbstractText"                : [q_tok], "boost": idf_score}})
+        the_shoulds.append({"terms": {"Chemicals.NameOfSubstance"   : [q_tok], "boost": idf_score}})
+        the_shoulds.append({"terms": {"MeshHeadings.text"           : [q_tok], "boost": idf_score}})
+        the_shoulds.append({"terms": {"AbstractText"                : [q_tok], "boost": idf_score}})
+    ################################################
+    if(len(question_tokens) > 1):
+        the_shoulds.append({"span_near": {"clauses": [{"span_term": {"AbstractText": w}} for w in question_tokens], "slop": 5, "in_order": False}})
+    ################################################
+    for phrase in entities+abbreviations:
+        # print("|{}|".format(phrase))
+        idf_score =  sum([idf_val(t, idf, max_idf) for t in phrase.lower().split()])
+        the_shoulds.append({"match_phrase": {"AbstractText"                 : {"query": phrase, "boost": idf_score}}})
+        the_shoulds.append({"match_phrase": {"Chemicals.NameOfSubstance"    : {"query": phrase, "boost": idf_score}}})
+        the_shoulds.append({"match_phrase": {"MeshHeadings.text"            : {"query": phrase, "boost": idf_score}}})
+        the_shoulds.append({"match_phrase": {"SupplMeshList.text"           : {"query": phrase, "boost": idf_score}}})
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool": {
+                "must": [{"range":{"DateCompleted": {"gte": "1800", "lte": "2016", "format": "dd/MM/yyyy||yyyy"}}}],
+                "should": [
+                    {"match":{"AbstractText": {"query": question, "boost": sum(idf_scores)}}},
+                    {"match":{"ArticleTitle": {"query": question, "boost": sum(idf_scores)}}},
+                    {"multi_match":{"query": question, "type": "most_fields", "fields": ["AbstractText", "ArticleTitle"], "operator": "and", "boost": sum(idf_scores)}},
+                    {"multi_match":{"query": question, "type": "most_fields", "fields": ["AbstractText", "ArticleTitle"], "minimum_should_match": "30%"}},
+                    {"multi_match":{"query": question, "type": "most_fields", "fields": ["AbstractText", "ArticleTitle"], "minimum_should_match": "50%"}},
+                    {"multi_match":{"query": question, "type": "most_fields", "fields": ["AbstractText", "ArticleTitle"], "minimum_should_match": "75%"}},
+                ]+the_shoulds,
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
 ################################################################################
 
 def get_scispacy(qtext):
@@ -1367,7 +1417,7 @@ for question in tqdm(training_data['questions']):
     idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
     ########################################
     retrieved_pmids = []
-    for retr_doc in get_first_n_18(qtext, fetch_no, idf_scores, entities, abbreviations):
+    for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
         retrieved_pmids.append(u'http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(retr_doc['_source']['pmid']))
         # print(5 * '-')
         # print(retr_doc['_score'])
