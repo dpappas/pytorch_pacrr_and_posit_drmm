@@ -1234,7 +1234,7 @@ def get_first_n_18(question_tokens, n, idf_scores, entities, abbreviations):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-# recall:
+# recall: 0.5903940829779357
 def get_first_n_19(question_tokens, n, idf_scores, entities, abbreviations):
     if(len(entities+abbreviations)>1):
         question = ' '.join(entities + abbreviations)
@@ -1364,7 +1364,7 @@ for question in tqdm(training_data['questions']):
     idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
     ########################################
     retrieved_pmids = []
-    for retr_doc in get_first_n_19(qtext, fetch_no, idf_scores, entities, abbreviations):
+    for retr_doc in get_first_n_18(qtext, fetch_no, idf_scores, entities, abbreviations):
         retrieved_pmids.append(u'http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(retr_doc['_source']['pmid']))
         # print(5 * '-')
         # print(retr_doc['_score'])
