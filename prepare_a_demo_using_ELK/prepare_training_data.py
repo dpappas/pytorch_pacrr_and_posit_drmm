@@ -9,6 +9,8 @@ nlp.add_pipe(abbreviation_pipe)
 linker = UmlsEntityLinker(resolve_abbreviations=True)
 nlp.add_pipe(linker)
 
+################################################################################
+
 import  json
 from    pprint import pprint
 import  nltk
@@ -16,7 +18,8 @@ import  re
 from elasticsearch import Elasticsearch
 from tqdm import tqdm
 import pickle
-##########
+
+################################################################################
 
 # recall: 0.554446184347
 def get_first_n_1(question_tokens, n):
@@ -1280,6 +1283,8 @@ def get_first_n_19(question_tokens, n, idf_scores, entities, abbreviations):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
+################################################################################
+
 def get_scispacy(qtext):
     doc             = nlp(qtext)
     abbreviations   = []
@@ -1310,9 +1315,13 @@ def load_idfs(idf_path):
     ###############################
     return idf, max_idf
 
+################################################################################
+
 bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
 
 stopwords       = nltk.corpus.stopwords.words("english")
+
+################################################################################
 
 doc_index = 'pubmed_abstracts_0_1'
 es = Elasticsearch(
@@ -1335,6 +1344,8 @@ es = Elasticsearch(
     max_retries      = 10,
     retry_on_timeout = True
 )
+
+################################################################################
 
 fpath           = '/home/dpappas/bioasq_all/bioasq7/data/trainining7b.json'
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
