@@ -383,6 +383,12 @@ def idf_val(w, idf, max_idf):
         return idf[w]
     return max_idf
 
+def has_embeds(tokens, wv):
+    for tok in tokens:
+        if(tok in wv):
+            return True
+    return False
+
 def get_embeds(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
@@ -670,6 +676,14 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         'held_out_sents'   : held_out_sents,
     }
 
+def could_be_used(the_doc, wv):
+    good_sents = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    for good_text in good_sents:
+        sent_toks = tokenize(good_text)
+        if(has_embeds(sent_toks, wv)):
+            return True
+    return False
+
 def train_data_step1(train_data, train_docs):
     ret = []
     for dato in tqdm(train_data['queries']):
@@ -678,15 +692,7 @@ def train_data_step1(train_data, train_docs):
         bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids   = [
-            t for t in ret_pmids
-            if(
-                    t not in dato[u'relevant_documents']
-                    and
-                    len(train_docs[t]['abstractText'].strip() + ' ' + train_docs[t]['title'].strip())>0
-            )
-
-        ]
+        bad_pmids   = [t for t in ret_pmids if(t not in dato[u'relevant_documents'] and could_be_used(train_docs[t], wv))]
         if(len(bad_pmids)>0):
             for gid in good_pmids:
                 bid = random.choice(bad_pmids)
