@@ -1091,7 +1091,7 @@ def get_first_n_16(question_tokens, n, idf_scores, entities, abbreviations):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-# recall:
+# recall: 0.6061334920933832
 def get_first_n_17(question_tokens, n, idf_scores, entities, abbreviations):
     if(len(entities+abbreviations)>1):
         question = ' '.join(entities + abbreviations)
