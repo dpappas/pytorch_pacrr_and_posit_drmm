@@ -916,9 +916,98 @@ def get_first_n_14(question_tokens, n, idf_scores, entities, abbreviations):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-# recall:
+# recall: 0.5915700385340271
 def get_first_n_15(question_tokens, n, idf_scores, entities, abbreviations):
     question = ' '.join(entities + abbreviations)
+    ################################################
+    the_shoulds = []
+    for q_tok, idf_score in zip(question_tokens, idf_scores):
+        the_shoulds.append({"match": {"AbstractText": {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"Chemicals.NameOfSubstance": {"query": q_tok,"boost": idf_score}}})
+        the_shoulds.append({"match": {"MeshHeadings.text": {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"SupplMeshList.text": {"query": q_tok,"boost": idf_score}}})
+    ################################################
+    if(len(question_tokens) > 1):
+        the_shoulds.append(
+            {
+                "span_near": {
+                    "clauses": [{"span_term": {"AbstractText": w}} for w in question_tokens],
+                    "slop": 5,
+                    "in_order": False
+                }
+            }
+        )
+    ################################################
+    for phrase in entities+abbreviations:
+        # print("|{}|".format(phrase))
+        the_shoulds.append({"match_phrase": {"AbstractText": {"query": phrase, "boost": sum(idf_scores)}}})
+        the_shoulds.append({"match_phrase": {"Chemicals.NameOfSubstance": {"query": phrase, "boost": sum(idf_scores)}}})
+        the_shoulds.append({"match_phrase": {"MeshHeadings.text": {"query": phrase, "boost": sum(idf_scores)}}})
+        the_shoulds.append({"match_phrase": {"SupplMeshList.text": {"query": phrase, "boost": sum(idf_scores)}}})
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool" : {
+                "must": [
+                    {
+                        "range": {
+                            "DateCompleted": {
+                                "gte": "1800",
+                                "lte": "2016",
+                                "format": "dd/MM/yyyy||yyyy"
+                            }
+                        }
+                    }
+                ],
+                "should": [
+                    {
+                        "match": {
+                            "AbstractText": {
+                                "query": question,
+                                "boost": sum(idf_scores)
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "ArticleTitle": {
+                                "query": question,
+                                "boost": sum(idf_scores)
+                            }
+                        }
+                    },
+                    {
+                        "multi_match": {
+                            "query": question,
+                            "type": "most_fields",
+                            "fields": ["AbstractText", "ArticleTitle"],
+                            "operator": "and",
+                            "boost": sum(idf_scores)
+                        }
+                    },
+                   {
+                       "multi_match": {
+                           "query"                : question,
+                           "type"                 : "most_fields",
+                           "fields"               : ["AbstractText", "ArticleTitle"],
+                           "minimum_should_match" : "50%"
+                       }
+                   }
+                ]+the_shoulds,
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
+# recall:
+def get_first_n_16(question_tokens, n, idf_scores, entities, abbreviations):
+    if(len(entities+abbreviations)>1):
+        question = ' '.join(entities + abbreviations)
+    else:
+        question = ' '.join(question_tokens)
     ################################################
     the_shoulds = []
     for q_tok, idf_score in zip(question_tokens, idf_scores):
@@ -1078,7 +1167,7 @@ for question in tqdm(training_data['questions']):
     idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
     ########################################
     retrieved_pmids = []
-    for retr_doc in get_first_n_15(qtext, fetch_no, idf_scores, entities, abbreviations):
+    for retr_doc in get_first_n_16(qtext, fetch_no, idf_scores, entities, abbreviations):
         retrieved_pmids.append(u'http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(retr_doc['_source']['pmid']))
         # print(5 * '-')
         # print(retr_doc['_score'])
@@ -1093,10 +1182,12 @@ for question in tqdm(training_data['questions']):
     if(verbose):
         if(recall<1):
             print(20 * '=')
+            print(recall)
             print(question['body'])
+            print('ENTITIES:')
+            print(entities)
             print(qtext)
             print(idf_scores)
-            print(recall)
             print('SHOULD FETCH:')
             pprint(set(question['documents']) - set(retrieved_pmids))
             print(recall)
