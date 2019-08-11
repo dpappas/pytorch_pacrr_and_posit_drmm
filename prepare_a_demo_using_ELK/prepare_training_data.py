@@ -598,13 +598,166 @@ def get_first_n_10(question_tokens, n, idf_scores):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-# recall:
+# recall: 0.574698935197
 def get_first_n_11(question_tokens, n, idf_scores):
     question    = ' '.join(question_tokens)
     ################################################
     the_shoulds = []
     for q_tok, idf_score in zip(question_tokens, idf_scores):
         the_shoulds.append({"match": {"AbstractText": {"query": q_tok, "boost": idf_score}}})
+    if(len(question_tokens) > 1):
+        the_shoulds.append(
+            {
+                "span_near": {
+                    "clauses": [{"span_term": {"AbstractText": w}} for w in question_tokens],
+                    "slop": 5,
+                    "in_order": False
+                }
+            }
+        )
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool" : {
+                "must": [
+                    {
+                        "range": {
+                            "DateCompleted": {
+                                "gte": "1800",
+                                "lte": "2016",
+                                "format": "dd/MM/yyyy||yyyy"
+                            }
+                        }
+                    }
+                ],
+                "should": [
+                    {
+                        "match": {
+                            "AbstractText": {
+                                "query": question,
+                                "boost": sum(idf_scores)
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "ArticleTitle": {
+                                "query": question,
+                                "boost": sum(idf_scores)
+                            }
+                        }
+                    },
+                    {
+                        "multi_match": {
+                            "query": question,
+                            "type": "most_fields",
+                            "fields": ["AbstractText", "ArticleTitle"],
+                            "operator": "and",
+                            "boost": sum(idf_scores)
+                        }
+                    },
+                   {
+                       "multi_match": {
+                           "query"                : question,
+                           "type"                 : "most_fields",
+                           "fields"               : ["AbstractText", "ArticleTitle"],
+                           "minimum_should_match" : "50%"
+                       }
+                   }
+                ]+the_shoulds,
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
+# recall: 0.515151622758
+def get_first_n_12(question_tokens, n, idf_scores):
+    question    = ' '.join(question_tokens)
+    ################################################
+    the_shoulds = []
+    for q_tok, idf_score in zip(question_tokens, idf_scores):
+        the_shoulds.append({"match": {"AbstractText": {"query": q_tok, "boost": idf_score}}})
+    if(len(question_tokens) > 1):
+        the_shoulds.append(
+            {
+                "span_near": {
+                    "clauses": [{"span_term": {"AbstractText": w}} for w in question_tokens],
+                    "slop": 5,
+                    "in_order": False
+                }
+            }
+        )
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool" : {
+                "must": [
+                    {
+                        "range": {
+                            "DateCompleted": {
+                                "gte": "1800",
+                                "lte": "2015",
+                                "format": "dd/MM/yyyy||yyyy"
+                            }
+                        }
+                    }
+                ],
+                "should": [
+                    {
+                        "match": {
+                            "AbstractText": {
+                                "query": question,
+                                "boost": sum(idf_scores)
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "ArticleTitle": {
+                                "query": question,
+                                "boost": sum(idf_scores)
+                            }
+                        }
+                    },
+                    {
+                        "multi_match": {
+                            "query": question,
+                            "type": "most_fields",
+                            "fields": ["AbstractText", "ArticleTitle"],
+                            "operator": "and",
+                            "boost": sum(idf_scores)
+                        }
+                    },
+                   {
+                       "multi_match": {
+                           "query"                : question,
+                           "type"                 : "most_fields",
+                           "fields"               : ["AbstractText", "ArticleTitle"],
+                           "minimum_should_match" : "50%"
+                       }
+                   }
+                ]+the_shoulds,
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
+# recall: 0.57380594438
+def get_first_n_13(question_tokens, n, idf_scores):
+    question    = ' '.join(question_tokens)
+    ################################################
+    the_shoulds = []
+    for q_tok, idf_score in zip(question_tokens, idf_scores):
+        the_shoulds.append({"match": {"AbstractText": {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"Chemicals.NameOfSubstance": {"query": q_tok,"boost": idf_score}}})
+        the_shoulds.append({"match": {"MeshHeadings.text": {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"SupplMeshList.text": {"query": q_tok,"boost": idf_score}}})
     if(len(question_tokens) > 1):
         the_shoulds.append(
             {
@@ -736,7 +889,7 @@ for question in tqdm(training_data['questions']):
     idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
     ########################################
     retrieved_pmids = []
-    for retr_doc in get_first_n_11(qtext, fetch_no, idf_scores):
+    for retr_doc in get_first_n_13(qtext, fetch_no, idf_scores):
         retrieved_pmids.append(u'http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(retr_doc['_source']['pmid']))
         # print(5 * '-')
         # print(retr_doc['_score'])
