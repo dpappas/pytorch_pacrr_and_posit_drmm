@@ -670,7 +670,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         'held_out_sents'   : held_out_sents,
     }
 
-def train_data_step1(train_data):
+def train_data_step1(train_data, train_docs):
     ret = []
     for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
@@ -678,7 +678,15 @@ def train_data_step1(train_data):
         bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
         ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        bad_pmids   = [
+            t for t in ret_pmids
+            if(
+                    t not in dato[u'relevant_documents']
+                    and
+                    len(train_docs[t]['abstractText'].strip() + ' ' + train_docs[t]['title'].strip())>0
+            )
+
+        ]
         if(len(bad_pmids)>0):
             for gid in good_pmids:
                 bid = random.choice(bad_pmids)
@@ -714,7 +722,11 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
-        if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
+        if(
+            use_sent_tokenizer == False
+            or
+            sum(good_sent_tags)>0
+        ):
             yield {
                 'good_sents_embeds'     : good_sents_embeds,
                 'good_sents_escores'    : good_sents_escores,
@@ -737,7 +749,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     #
-    train_instances = train_data_step1(train_data)
+    train_instances = train_data_step1(train_data, train_docs)
     random.shuffle(train_instances)
     #
     start_time      = time.time()
