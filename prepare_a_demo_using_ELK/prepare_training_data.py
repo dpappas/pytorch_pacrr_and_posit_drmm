@@ -11,13 +11,10 @@ nlp.add_pipe(linker)
 
 ################################################################################
 
-import  json
+import  pickle, json, nltk, re, os
 from    pprint import pprint
-import  nltk
-import  re
 from elasticsearch import Elasticsearch
 from tqdm import tqdm
-import pickle
 
 ################################################################################
 
@@ -1448,25 +1445,17 @@ es = Elasticsearch(
 )
 
 ################################################################################
-
-fpath           = '/home/dpappas/bioasq_all/bioasq7/data/trainining7b.json'
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-
 idf, max_idf    = load_idfs(idf_pickle_path)
-training_data   = json.load(open(fpath))
 
 ################################################################################
 
+fpath                   = '/home/dpappas/bioasq_all/bioasq7/data/trainining7b.json'
+training_data           = json.load(open(fpath))
 bm25_top100_train_pkl   = {'queries': []}
 bm25_docset_train_pkl   = {}
-bm25_top100_dev_pkl     = {'queries': []}
-bm25_docset_dev_pkl     = {}
 
-################################################################################
-
-fetch_no        = 100
-counter         = 0
-verbose         = False
+fetch_no, counter       = 100, 0
 for question in tqdm(training_data['questions']):
     ########################################
     abbreviations, entities = get_scispacy(question['body'])
@@ -1511,6 +1500,87 @@ for question in tqdm(training_data['questions']):
     counter += 1
     if(counter == 200):
         break
+
+################################################################################
+
+dev_data                = {'questions':[]}
+for batchno in range(1, 6):
+    fpath       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batchno, batchno)
+    temp_data   = json.load(open(fpath))
+    dev_data['questions'].extend(temp_data['questions'])
+
+bm25_top100_dev_pkl     = {'queries': []}
+bm25_docset_dev_pkl     = {}
+
+fetch_no, counter       = 100, 0
+for question in tqdm(dev_data['questions']):
+    ########################################
+    abbreviations, entities = get_scispacy(question['body'])
+    ########################################
+    qtext       = bioclean_mod(question['body'])
+    qtext       = [t for t in qtext if t not in stopwords]
+    ########################################
+    idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
+    ########################################
+    top100_datum = {
+        'num_rel'               : len(question['documents']),
+        'num_rel_ret'           : 0,
+        'num_ret'               : 0,
+        'query_id'              : question['id'],
+        'query_text'            : question['body'],
+        'relevant_documents'    : [d.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for d in question['documents']],
+        'retrieved_documents'   : []
+    }
+    ########################################
+    rank = 0
+    for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
+        rank += 1
+        retr_doc = {
+            'bm25_score'        : retr_doc['_score'],
+            'doc_id'            : retr_doc['_source']['pmid'],
+            'is_relevant'       : retr_doc['_source']['pmid'] in top100_datum['relevant_documents'],
+            'norm_bm25_score'   : -1,
+            'rank'              : rank
+        }
+        top100_datum['retrieved_documents'].append(retr_doc)
+        top100_datum['num_ret'] += 1
+        if(retr_doc['is_relevant']):
+            top100_datum['num_rel_ret'] += 1
+        bm25_docset_dev_pkl[retr_doc['_source']['pmid']] = {
+            'abstractText'      : retr_doc['_source']['AbstractText'],
+            'title'             : retr_doc['_source']['ArticleTitle'],
+            'pmid'              : retr_doc['_source']['pmid'],
+            'publicationDate'   : retr_doc['_source']['DateCompleted'],
+        }
+    bm25_top100_dev_pkl['queries'].append(top100_datum)
+    ########################################
+    counter += 1
+    if(counter == 200):
+        break
+
+################################################################################
+
+odir = '/home/dpappas/bioasq_demo/data/'
+if(not os.path.exists(odir)):
+    os.makedirs(odir)
+
+with open(os.path.join(odir, 'traininng.json'), 'w') as f:
+    f.write(json.dumps(training_data, indent=4, sort_keys=False))
+
+with open(os.path.join(odir, 'dev.json'), 'w') as f:
+    f.write(json.dumps(dev_data, indent=4, sort_keys=False))
+
+with open(os.path.join(odir, 'bm25_top100.train.json'), 'w') as f:
+    f.write(json.dumps(bm25_top100_train_pkl, indent=4, sort_keys=False))
+
+with open(os.path.join(odir, 'bm25_top100.dev.json'), 'w') as f:
+    f.write(json.dumps(bm25_top100_dev_pkl, indent=4, sort_keys=False))
+
+with open(os.path.join(odir, 'bm25_docset.train.json'), 'w') as f:
+    f.write(json.dumps(bm25_docset_train_pkl, indent=4, sort_keys=False))
+
+with open(os.path.join(odir, 'bm25_docset.dev.json'), 'w') as f:
+    f.write(json.dumps(bm25_docset_dev_pkl, indent=4, sort_keys=False))
 
 ################################################################################
 
