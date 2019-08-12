@@ -1415,7 +1415,7 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
     wv, bioasq7_data
 ) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 ##########################################
-avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
+avgdl, mean, deviation = get_bm25_metrics(avgdl=20.4708, mean= , deviation= )
 print(avgdl, mean, deviation)
 ##########################################
 
