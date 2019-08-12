@@ -1417,7 +1417,6 @@ print(avgdl, mean, deviation)
 ##########################################
 
 k_for_maxpool       = 5
-k_sent_maxpool      = 5
 embedding_dim       = 30 #200
 lr                  = 0.01
 b_size              = 32
