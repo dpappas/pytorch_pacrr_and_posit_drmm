@@ -11,7 +11,7 @@ nlp.add_pipe(linker)
 
 ################################################################################
 
-import  pickle, json, nltk, re, os
+import  pickle, json, nltk, re, os, traceback
 from    pprint import pprint
 from elasticsearch import Elasticsearch
 from tqdm import tqdm
@@ -1385,16 +1385,19 @@ def get_first_n_21(question_tokens, n, idf_scores, entities, abbreviations):
 ################################################################################
 
 def get_scispacy(qtext):
-    doc             = nlp(qtext)
-    abbreviations   = []
-    for abrv in doc._.abbreviations:
-        abbreviations.append(abrv)
-        abbreviations.append(abrv._.long_form)
-    #
-    entities        = list(doc.ents)
-    entities        = [str(ent) for ent in entities]
-    abbreviations   = [str(abr) for abr in abbreviations]
-    return abbreviations, entities
+    try:
+        doc             = nlp(qtext)
+        abbreviations   = []
+        for abrv in doc._.abbreviations:
+            abbreviations.append(abrv)
+            abbreviations.append(abrv._.long_form)
+        #
+        entities        = list(doc.ents)
+        entities        = [str(ent) for ent in entities]
+        abbreviations   = [str(abr) for abr in abbreviations]
+        return abbreviations, entities
+    except:
+        return [], []
 
 def idf_val(w, idf, max_idf):
     if w in idf:
@@ -1458,45 +1461,51 @@ bm25_docset_train_pkl   = {}
 fetch_no                = 100
 for question in tqdm(training_data['questions']):
     ########################################
-    abbreviations, entities = get_scispacy(question['body'])
-    ########################################
-    qtext       = bioclean_mod(question['body'])
-    qtext       = [t for t in qtext if t not in stopwords]
-    ########################################
-    idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
-    ########################################
-    top100_datum = {
-        'num_rel'               : len(question['documents']),
-        'num_rel_ret'           : 0,
-        'num_ret'               : 0,
-        'query_id'              : question['id'],
-        'query_text'            : question['body'],
-        'relevant_documents'    : [d.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for d in question['documents']],
-        'retrieved_documents'   : []
-    }
-    ########################################
-    rank = 0
-    for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
-        rank += 1
-        temp_doc = {
-            'bm25_score'        : retr_doc['_score'],
-            'doc_id'            : retr_doc['_source']['pmid'],
-            'is_relevant'       : retr_doc['_source']['pmid'] in top100_datum['relevant_documents'],
-            'norm_bm25_score'   : -1,
-            'rank'              : rank
+    try:
+        abbreviations, entities = get_scispacy(question['body'])
+        ########################################
+        qtext       = bioclean_mod(question['body'])
+        qtext       = [t for t in qtext if t not in stopwords]
+        ########################################
+        idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
+        ########################################
+        top100_datum = {
+            'num_rel'               : len(question['documents']),
+            'num_rel_ret'           : 0,
+            'num_ret'               : 0,
+            'query_id'              : question['id'],
+            'query_text'            : question['body'],
+            'relevant_documents'    : [d.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for d in question['documents']],
+            'retrieved_documents'   : []
         }
-        top100_datum['retrieved_documents'].append(temp_doc)
-        top100_datum['num_ret'] += 1
-        if(temp_doc['is_relevant']):
-            top100_datum['num_rel_ret'] += 1
-        bm25_docset_train_pkl[retr_doc['_source']['pmid']] = {
-            'abstractText'      : retr_doc['_source']['AbstractText'],
-            'title'             : retr_doc['_source']['ArticleTitle'],
-            'pmid'              : retr_doc['_source']['pmid'],
-            'publicationDate'   : retr_doc['_source']['DateCompleted'],
-        }
-    bm25_top100_train_pkl['queries'].append(top100_datum)
-    ########################################
+        ########################################
+        rank = 0
+        for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
+            rank += 1
+            temp_doc = {
+                'bm25_score'        : retr_doc['_score'],
+                'doc_id'            : retr_doc['_source']['pmid'],
+                'is_relevant'       : retr_doc['_source']['pmid'] in top100_datum['relevant_documents'],
+                'norm_bm25_score'   : -1,
+                'rank'              : rank
+            }
+            top100_datum['retrieved_documents'].append(temp_doc)
+            top100_datum['num_ret'] += 1
+            if(temp_doc['is_relevant']):
+                top100_datum['num_rel_ret'] += 1
+            bm25_docset_train_pkl[retr_doc['_source']['pmid']] = {
+                'abstractText'      : retr_doc['_source']['AbstractText'],
+                'title'             : retr_doc['_source']['ArticleTitle'],
+                'pmid'              : retr_doc['_source']['pmid'],
+                'publicationDate'   : retr_doc['_source']['DateCompleted'],
+            }
+        bm25_top100_train_pkl['queries'].append(top100_datum)
+        ########################################
+    except:
+        traceback.print_exc()
+        tb = traceback.format_exc()
+        print(tb)
+        pprint(question)
 
 ################################################################################
 
@@ -1512,45 +1521,51 @@ bm25_docset_dev_pkl     = {}
 fetch_no                = 100
 for question in tqdm(dev_data['questions']):
     ########################################
-    abbreviations, entities = get_scispacy(question['body'])
-    ########################################
-    qtext       = bioclean_mod(question['body'])
-    qtext       = [t for t in qtext if t not in stopwords]
-    ########################################
-    idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
-    ########################################
-    top100_datum = {
-        'num_rel'               : len(question['documents']),
-        'num_rel_ret'           : 0,
-        'num_ret'               : 0,
-        'query_id'              : question['id'],
-        'query_text'            : question['body'],
-        'relevant_documents'    : [d.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for d in question['documents']],
-        'retrieved_documents'   : []
-    }
-    ########################################
-    rank = 0
-    for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
-        rank += 1
-        temp_doc = {
-            'bm25_score'        : retr_doc['_score'],
-            'doc_id'            : retr_doc['_source']['pmid'],
-            'is_relevant'       : retr_doc['_source']['pmid'] in top100_datum['relevant_documents'],
-            'norm_bm25_score'   : -1,
-            'rank'              : rank
+    try:
+        abbreviations, entities = get_scispacy(question['body'])
+        ########################################
+        qtext       = bioclean_mod(question['body'])
+        qtext       = [t for t in qtext if t not in stopwords]
+        ########################################
+        idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
+        ########################################
+        top100_datum = {
+            'num_rel'               : len(question['documents']),
+            'num_rel_ret'           : 0,
+            'num_ret'               : 0,
+            'query_id'              : question['id'],
+            'query_text'            : question['body'],
+            'relevant_documents'    : [d.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for d in question['documents']],
+            'retrieved_documents'   : []
         }
-        top100_datum['retrieved_documents'].append(temp_doc)
-        top100_datum['num_ret'] += 1
-        if(temp_doc['is_relevant']):
-            top100_datum['num_rel_ret'] += 1
-        bm25_docset_dev_pkl[retr_doc['_source']['pmid']] = {
-            'abstractText'      : retr_doc['_source']['AbstractText'],
-            'title'             : retr_doc['_source']['ArticleTitle'],
-            'pmid'              : retr_doc['_source']['pmid'],
-            'publicationDate'   : retr_doc['_source']['DateCompleted'],
-        }
-    bm25_top100_dev_pkl['queries'].append(top100_datum)
-    ########################################
+        ########################################
+        rank = 0
+        for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
+            rank += 1
+            temp_doc = {
+                'bm25_score'        : retr_doc['_score'],
+                'doc_id'            : retr_doc['_source']['pmid'],
+                'is_relevant'       : retr_doc['_source']['pmid'] in top100_datum['relevant_documents'],
+                'norm_bm25_score'   : -1,
+                'rank'              : rank
+            }
+            top100_datum['retrieved_documents'].append(temp_doc)
+            top100_datum['num_ret'] += 1
+            if(temp_doc['is_relevant']):
+                top100_datum['num_rel_ret'] += 1
+            bm25_docset_dev_pkl[retr_doc['_source']['pmid']] = {
+                'abstractText'      : retr_doc['_source']['AbstractText'],
+                'title'             : retr_doc['_source']['ArticleTitle'],
+                'pmid'              : retr_doc['_source']['pmid'],
+                'publicationDate'   : retr_doc['_source']['DateCompleted'],
+            }
+        bm25_top100_dev_pkl['queries'].append(top100_datum)
+        ########################################
+    except:
+        traceback.print_exc()
+        tb = traceback.format_exc()
+        print(tb)
+        pprint(question)
 
 ################################################################################
 
