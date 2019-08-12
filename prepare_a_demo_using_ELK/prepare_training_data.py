@@ -1455,7 +1455,7 @@ training_data           = json.load(open(fpath))
 bm25_top100_train_pkl   = {'queries': []}
 bm25_docset_train_pkl   = {}
 
-fetch_no, counter       = 100, 0
+fetch_no                = 100
 for question in tqdm(training_data['questions']):
     ########################################
     abbreviations, entities = get_scispacy(question['body'])
@@ -1497,9 +1497,6 @@ for question in tqdm(training_data['questions']):
         }
     bm25_top100_train_pkl['queries'].append(top100_datum)
     ########################################
-    counter += 1
-    if(counter == 200):
-        break
 
 ################################################################################
 
@@ -1512,7 +1509,7 @@ for batchno in range(1, 6):
 bm25_top100_dev_pkl     = {'queries': []}
 bm25_docset_dev_pkl     = {}
 
-fetch_no, counter       = 100, 0
+fetch_no                = 100
 for question in tqdm(dev_data['questions']):
     ########################################
     abbreviations, entities = get_scispacy(question['body'])
@@ -1554,9 +1551,6 @@ for question in tqdm(dev_data['questions']):
         }
     bm25_top100_dev_pkl['queries'].append(top100_datum)
     ########################################
-    counter += 1
-    if(counter == 200):
-        break
 
 ################################################################################
 
