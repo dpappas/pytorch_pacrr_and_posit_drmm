@@ -1409,10 +1409,7 @@ w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 (
-    dev_data, dev_docs,
-    train_data, train_docs,
-    idf, max_idf,
-    wv, bioasq7_data
+    dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 ) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 ##########################################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=20.4708, mean= , deviation= )
