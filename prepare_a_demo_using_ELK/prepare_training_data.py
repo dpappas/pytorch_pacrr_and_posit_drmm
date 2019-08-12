@@ -1478,16 +1478,16 @@ for question in tqdm(training_data['questions']):
     rank = 0
     for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
         rank += 1
-        retr_doc = {
+        temp_doc = {
             'bm25_score'        : retr_doc['_score'],
             'doc_id'            : retr_doc['_source']['pmid'],
             'is_relevant'       : retr_doc['_source']['pmid'] in top100_datum['relevant_documents'],
             'norm_bm25_score'   : -1,
             'rank'              : rank
         }
-        top100_datum['retrieved_documents'].append(retr_doc)
+        top100_datum['retrieved_documents'].append(temp_doc)
         top100_datum['num_ret'] += 1
-        if(retr_doc['is_relevant']):
+        if(temp_doc['is_relevant']):
             top100_datum['num_rel_ret'] += 1
         bm25_docset_train_pkl[retr_doc['_source']['pmid']] = {
             'abstractText'      : retr_doc['_source']['AbstractText'],
@@ -1535,16 +1535,16 @@ for question in tqdm(dev_data['questions']):
     rank = 0
     for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
         rank += 1
-        retr_doc = {
+        temp_doc = {
             'bm25_score'        : retr_doc['_score'],
             'doc_id'            : retr_doc['_source']['pmid'],
             'is_relevant'       : retr_doc['_source']['pmid'] in top100_datum['relevant_documents'],
             'norm_bm25_score'   : -1,
             'rank'              : rank
         }
-        top100_datum['retrieved_documents'].append(retr_doc)
+        top100_datum['retrieved_documents'].append(temp_doc)
         top100_datum['num_ret'] += 1
-        if(retr_doc['is_relevant']):
+        if(temp_doc['is_relevant']):
             top100_datum['num_rel_ret'] += 1
         bm25_docset_dev_pkl[retr_doc['_source']['pmid']] = {
             'abstractText'      : retr_doc['_source']['AbstractText'],
