@@ -1455,6 +1455,11 @@ idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 idf, max_idf    = load_idfs(idf_pickle_path)
 training_data   = json.load(open(fpath))
 
+####
+bm25_top100_train_pkl = {'queries': []}
+bm25_docset_train_pkl = {}
+####
+
 fetch_no        = 100
 recalls         = []
 counter         = 0
@@ -1468,15 +1473,36 @@ for question in tqdm(training_data['questions']):
     ########################################
     idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
     ########################################
-    retrieved_pmids = []
+    top100_datum = {
+        'num_rel'               : -1,
+        'num_rel_ret'           : len(question['documents']),
+        'num_ret'               : fetch_no,
+        'query_id'              : question['id'],
+        'query_text'            : question['body'],
+        'relevant_documents'    : [d.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for d in question['documents']],
+        'retrieved_documents'   : []
+    }
+    ########################################
+    retrieved_pmids     = []
+    rank = 0
     for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
+        rank += 1
         retrieved_pmids.append(u'http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(retr_doc['_source']['pmid']))
-        # print(5 * '-')
-        # print(retr_doc['_score'])
-        # print(10 * '-')
-        # print(retr_doc['_source']['ArticleTitle'])
-        # print(20 * '-')
-        # print(retr_doc['_source']['AbstractText'])
+        top100_datum['retrieved_documents'].append(
+            {
+                'bm25_score'        : retr_doc['_score'],
+                'doc_id'            : retr_doc['_source']['pmid'],
+                'is_relevant'       : retr_doc['_source']['pmid'] in top100_datum['relevant_documents'],
+                'norm_bm25_score'   : -1,
+                'rank'              : rank
+            }
+        )
+        bm25_docset_train_pkl[retr_doc['_source']['pmid']] = {
+            'abstractText'      : retr_doc['_source']['AbstractText'],
+            'title'             : retr_doc['_source']['ArticleTitle'],
+            'pmid'              : retr_doc['_source']['pmid'],
+            'publicationDate'   : retr_doc['_source']['DateCompleted'],
+        }
     ########################################
     recall = float(len(set(question['documents']).intersection(set(retrieved_pmids)))) / float(len(question['documents']))
     recalls.append(recall)
@@ -1502,6 +1528,7 @@ for question in tqdm(training_data['questions']):
 
 print(sum(recalls) / float(len(recalls)))
 
+################################################################################
 
 
 '''
@@ -1515,5 +1542,19 @@ GET /pubmed_abstracts_0_1/_explain/0
 '''
 
 
+'''
+{'num_rel': 9,
+ 'num_rel_ret': 6,
+ 'num_ret': 100,
+ 'query_id': '55031181e9bde69634000014',
+ 'query_text': 'Is Hirschsprung disease a mendelian or a multifactorial disorder?',
+ 'relevant_documents': ['12239580', '15617541', ... ],
+ 'retrieved_documents': [{'bm25_score': 7.02374051,
+                          'doc_id': '15617541',
+                          'is_relevant': True,
+                          'norm_bm25_score': 3.7238850702205664,
+                          'rank': 1},
+                          ...
 
+'''
 
