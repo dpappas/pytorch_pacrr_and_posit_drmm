@@ -1455,11 +1455,66 @@ idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 idf, max_idf    = load_idfs(idf_pickle_path)
 training_data   = json.load(open(fpath))
 
-####
-bm25_top100_train_pkl = {'queries': []}
-bm25_docset_train_pkl = {}
-####
+################################################################################
 
+bm25_top100_train_pkl   = {'queries': []}
+bm25_docset_train_pkl   = {}
+bm25_top100_dev_pkl     = {'queries': []}
+bm25_docset_dev_pkl     = {}
+
+################################################################################
+
+fetch_no        = 100
+counter         = 0
+verbose         = False
+for question in tqdm(training_data['questions']):
+    ########################################
+    abbreviations, entities = get_scispacy(question['body'])
+    ########################################
+    qtext       = bioclean_mod(question['body'])
+    qtext       = [t for t in qtext if t not in stopwords]
+    ########################################
+    idf_scores  = [idf_val(w, idf, max_idf) for w in qtext]
+    ########################################
+    top100_datum = {
+        'num_rel'               : len(question['documents']),
+        'num_rel_ret'           : 0,
+        'num_ret'               : 0,
+        'query_id'              : question['id'],
+        'query_text'            : question['body'],
+        'relevant_documents'    : [d.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for d in question['documents']],
+        'retrieved_documents'   : []
+    }
+    ########################################
+    rank = 0
+    for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
+        rank += 1
+        retr_doc = {
+            'bm25_score'        : retr_doc['_score'],
+            'doc_id'            : retr_doc['_source']['pmid'],
+            'is_relevant'       : retr_doc['_source']['pmid'] in top100_datum['relevant_documents'],
+            'norm_bm25_score'   : -1,
+            'rank'              : rank
+        }
+        top100_datum['retrieved_documents'].append(retr_doc)
+        top100_datum['num_ret'] += 1
+        if(retr_doc['is_relevant']):
+            top100_datum['num_rel_ret'] += 1
+        bm25_docset_train_pkl[retr_doc['_source']['pmid']] = {
+            'abstractText'      : retr_doc['_source']['AbstractText'],
+            'title'             : retr_doc['_source']['ArticleTitle'],
+            'pmid'              : retr_doc['_source']['pmid'],
+            'publicationDate'   : retr_doc['_source']['DateCompleted'],
+        }
+    bm25_top100_train_pkl['queries'].append(top100_datum)
+    ########################################
+    counter += 1
+    if(counter == 200):
+        break
+
+################################################################################
+
+'''
 fetch_no        = 100
 recalls         = []
 counter         = 0
@@ -1527,9 +1582,9 @@ for question in tqdm(training_data['questions']):
         break
 
 print(sum(recalls) / float(len(recalls)))
+'''
 
 ################################################################################
-
 
 '''
 GET /pubmed_abstracts_0_1/_explain/0
