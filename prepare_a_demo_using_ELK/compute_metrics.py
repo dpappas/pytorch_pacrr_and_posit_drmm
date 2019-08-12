@@ -142,16 +142,19 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
         return score
 
 def get_scispacy(qtext):
-    doc             = nlp(qtext)
-    abbreviations   = []
-    for abrv in doc._.abbreviations:
-        abbreviations.append(abrv)
-        abbreviations.append(abrv._.long_form)
-    #
-    entities        = list(doc.ents)
-    entities        = [str(ent) for ent in entities]
-    abbreviations   = [str(abr) for abr in abbreviations]
-    return abbreviations, entities
+    try:
+        doc             = nlp(qtext)
+        abbreviations   = []
+        for abrv in doc._.abbreviations:
+            abbreviations.append(abrv)
+            abbreviations.append(abrv._.long_form)
+        #
+        entities        = list(doc.ents)
+        entities        = [str(ent) for ent in entities]
+        abbreviations   = [str(abr) for abr in abbreviations]
+        return abbreviations, entities
+    except:
+        return [], []
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     ######################################################
