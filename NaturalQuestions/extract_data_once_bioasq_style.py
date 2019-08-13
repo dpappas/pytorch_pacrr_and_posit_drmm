@@ -9,6 +9,7 @@ from difflib import SequenceMatcher
 import pickle
 import json
 import os
+import math
 
 bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
 
@@ -39,6 +40,64 @@ def get_first_n(question, n):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
+def get_first_n_11(question_tokens, n, idf_scores):
+    question    = ' '.join(question_tokens)
+    ################################################
+    the_shoulds = []
+    for q_tok, idf_score in zip(question_tokens, idf_scores):
+        the_shoulds.append({"match": {"paragraph_text": {"query": q_tok, "boost": idf_score}}})
+    if(len(question_tokens) > 1):
+        the_shoulds.append(
+            {
+                "span_near": {
+                    "clauses": [{"span_term": {"paragraph_text": w}} for w in question_tokens],
+                    "slop": 5,
+                    "in_order": False
+                }
+            }
+        )
+    ################################################
+    doc_index   = 'natural_questions_0_1'
+    es          = Elasticsearch(['{}:9200'.format(elk_ip)], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool" : {
+                "should": [
+                    {
+                        "match": {
+                            "paragraph_text": {
+                                "query": question,
+                                "boost": sum(idf_scores)
+                            }
+                        }
+                    },
+                    {
+                        "multi_match": {
+                            "query": question,
+                            "type": "most_fields",
+                            "fields": ["paragraph_text"],
+                            "operator": "and",
+                            "boost": sum(idf_scores)
+                        }
+                    },
+                   {
+                       "multi_match": {
+                           "query"                : question,
+                           "type"                 : "most_fields",
+                           "fields"               : ["paragraph_text"],
+                           "minimum_should_match" : "50%"
+                       }
+                   }
+                ]+the_shoulds,
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
 def get_all_quests(dataset):
     ################################################
     questions_index = 'natural_questions_q_0_1'
@@ -55,6 +114,31 @@ def get_all_quests(dataset):
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
+
+def load_idfs_from_df(df_path):
+    print('Loading IDF tables')
+    with open(df_path, 'rb') as f:
+        df = pickle.load(f)
+    N   = 2684631
+    idf = dict(
+        [
+            (
+                item[0],
+                math.log((N*1.0) / (1.0*item[1]))
+            )
+            for item in df.items()
+        ]
+    )
+    ##############
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    ##############
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    return idf, max_idf
+
+idf, max_idf    = load_idfs_from_df('/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl')
 
 training7b_train_json = {'questions': []}
 bm25_top100_train_pkl = {'queries': []}
