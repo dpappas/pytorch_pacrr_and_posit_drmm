@@ -350,19 +350,6 @@ def similar(upstream_seq, downstream_seq):
     r1              = SequenceMatcher(None, to_match, longest_match).ratio()
     return r1
 
-def get_pseudo_retrieved(dato):
-    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq7_data[dato['query_id']]['snippets']]
-    pseudo_retrieved            = [
-        {
-            'bm25_score'        : 7.76,
-            'doc_id'            : id,
-            'is_relevant'       : True,
-            'norm_bm25_score'   : 3.85
-        }
-        for id in set(some_ids)
-    ]
-    return pseudo_retrieved
-
 def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
     wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
     wrong  = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
@@ -703,7 +690,8 @@ def train_data_step1(train_data):
     for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
         quest_id    = dato['query_id']
-        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        # bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        bm25s       = {t['doc_id']: t['bm25_score'] for t in dato[u'retrieved_documents']}
         ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
         bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
@@ -897,7 +885,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
+        # datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
@@ -1403,11 +1392,11 @@ use_cuda = torch.cuda.is_available()
 ##########################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
+odd                 = '/home/dpappas/bioasq_demo/demo_models_output/'
 ##########################################
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
+dataloc             = '/home/dpappas/bioasq_demo/data/'
 (
     dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
 ) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
