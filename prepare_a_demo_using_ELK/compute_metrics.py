@@ -212,7 +212,7 @@ idf, max_idf            = load_idfs(idf_pickle_path)
 fpath                   = '/home/dpappas/bioasq_all/bioasq7/data/trainining7b.json'
 training_data           = json.load(open(fpath))
 
-avgdl, mean, deviation  = get_bm25_metrics(avgdl=20.47079583909152)
+avgdl, mean, deviation  = get_bm25_metrics(avgdl=20.47079583909152, mean=0.6158675062087192, deviation=1.205199607538813)
 
 print(avgdl, mean, deviation)
 
