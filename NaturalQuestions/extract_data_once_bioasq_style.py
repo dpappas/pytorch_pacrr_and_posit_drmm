@@ -28,17 +28,17 @@ def tokenize(text):
         ret.extend(clean_start_end(token).split())
     return ret
 
-def get_first_n(question, n):
-    question    = bioclean_mod(question)
-    question    = [t for t in question if t not in stopwords]
-    question    = ' '.join(question)
-    ################################################
-    doc_index   = 'natural_questions_0_1'
-    es          = Elasticsearch(['{}:9200'.format(elk_ip)], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
-    ################################################
-    bod         = {"size": n, "query": {"match": {"paragraph_text": question}}}
-    res         = es.search(index=doc_index, body=bod, request_timeout=120)
-    return res['hits']['hits']
+# def get_first_n(question, n):
+#     question    = bioclean_mod(question)
+#     question    = [t for t in question if t not in stopwords]
+#     question    = ' '.join(question)
+#     ################################################
+#     doc_index   = 'natural_questions_0_1'
+#     es          = Elasticsearch(['{}:9200'.format(elk_ip)], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
+#     ################################################
+#     bod         = {"size": n, "query": {"match": {"paragraph_text": question}}}
+#     res         = es.search(index=doc_index, body=bod, request_timeout=120)
+#     return res['hits']['hits']
 
 def get_first_n_11(question_tokens, n, idf_scores):
     question    = ' '.join(question_tokens)
@@ -97,6 +97,11 @@ def get_first_n_11(question_tokens, n, idf_scores):
     }
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
+
+def idf_val(w, idf, max_idf):
+    if w in idf:
+        return idf[w]
+    return max_idf
 
 def get_all_quests(dataset):
     ################################################
@@ -192,7 +197,10 @@ for quest in pbar:
             "snippets"      : []
         }
         #######################
-        all_retr_docs   = get_first_n(qtext, 100)
+        qtoks           = tokenize(qtext)
+        idf_scores      = [idf_val(w, idf, max_idf) for w in qtoks]
+        all_retr_docs   = get_first_n_11(qtoks, 100, idf_scores)
+        # all_retr_docs   = get_first_n(qtext, 100)
         ##########################################
         kept_docs   = {}
         rank        = 0
