@@ -1281,7 +1281,7 @@ def get_first_n_19(question_tokens, n, idf_scores, entities, abbreviations):
     return res['hits']['hits']
 
 # recall: 0.6123646029503693
-def get_first_n_20(question_tokens, n, idf_scores, entities, abbreviations):
+def get_first_n_20(question_tokens, n, idf_scores, entities, abbreviations, max_year):
     if(len(entities+abbreviations)>1):
         question = ' '.join(entities + abbreviations)
     else:
@@ -1314,7 +1314,7 @@ def get_first_n_20(question_tokens, n, idf_scores, entities, abbreviations):
         "size": n,
         "query": {
             "bool": {
-                "must": [{"range":{"DateCompleted": {"gte": "1800", "lte": "2016", "format": "dd/MM/yyyy||yyyy"}}}],
+                "must": [{"range":{"DateCompleted": {"gte": "1800", "lte": max_year, "format": "dd/MM/yyyy||yyyy"}}}],
                 "should": [
                     {"match":{"AbstractText": {"query": question, "boost": sum(idf_scores)}}},
                     {"match":{"ArticleTitle": {"query": question, "boost": sum(idf_scores)}}},
@@ -1459,6 +1459,7 @@ bm25_top100_train_pkl   = {'queries': []}
 bm25_docset_train_pkl   = {}
 
 fetch_no                = 100
+recalls                 = []
 for question in tqdm(training_data['questions']):
     ########################################
     try:
@@ -1480,7 +1481,7 @@ for question in tqdm(training_data['questions']):
         }
         ########################################
         rank = 0
-        for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
+        for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations, max_year=2016):
             rank += 1
             temp_doc = {
                 'bm25_score'        : retr_doc['_score'],
@@ -1501,11 +1502,17 @@ for question in tqdm(training_data['questions']):
             }
         bm25_top100_train_pkl['queries'].append(top100_datum)
         ########################################
+        recall = float(top100_datum['num_rel_ret']) / float(top100_datum['num_rel'])
+        recalls.append(recall)
+        ########################################
     except:
         traceback.print_exc()
         tb = traceback.format_exc()
         print(tb)
         pprint(question)
+
+print('TRAIN RECALL')
+print(sum(recalls) / float(len(recalls)))
 
 ################################################################################
 
@@ -1519,6 +1526,7 @@ bm25_top100_dev_pkl     = {'queries': []}
 bm25_docset_dev_pkl     = {}
 
 fetch_no                = 100
+recalls                 = []
 for question in tqdm(dev_data['questions']):
     ########################################
     try:
@@ -1540,7 +1548,7 @@ for question in tqdm(dev_data['questions']):
         }
         ########################################
         rank = 0
-        for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations):
+        for retr_doc in get_first_n_20(qtext, fetch_no, idf_scores, entities, abbreviations, max_year=2018):
             rank += 1
             temp_doc = {
                 'bm25_score'        : retr_doc['_score'],
@@ -1561,11 +1569,17 @@ for question in tqdm(dev_data['questions']):
             }
         bm25_top100_dev_pkl['queries'].append(top100_datum)
         ########################################
+        recall = float(top100_datum['num_rel_ret']) / float(top100_datum['num_rel'])
+        recalls.append(recall)
+        ########################################
     except:
         traceback.print_exc()
         tb = traceback.format_exc()
         print(tb)
         pprint(question)
+
+print('DEV RECALL')
+print(sum(recalls) / float(len(recalls)))
 
 ################################################################################
 
