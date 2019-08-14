@@ -803,7 +803,7 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
 def get_factoid_losses(emitted, truth):
     all_losses = []
     for e, t in zip(emitted, truth):
-        t = torch.FloatTensor(t).expand_as(e)
+        t = torch.FloatTensor(t).unsqueeze(-1)
         if(use_cuda):
             t = t.cuda()
         all_losses.append(F.binary_cross_entropy(e, t, size_average=False, reduce=True))
