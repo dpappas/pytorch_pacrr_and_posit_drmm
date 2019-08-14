@@ -255,8 +255,6 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             esnip_res["offsetInBeginSection"]   = ind_from
             esnip_res["offsetInEndSection"]     = ind_to
         except:
-            # print(the_text)
-            # pprint(docs[pid])
             ind_from                            = docs[pid]['abstractText'].index(the_text)
             ind_to                              = ind_from + len(the_text)
             esnip_res["beginSection"]           = "abstract"
@@ -304,8 +302,6 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
         return score
 
 def snip_is_relevant(one_sent, gold_snips):
-    # print one_sent
-    # pprint(gold_snips)
     return int(
         any(
             [
@@ -840,7 +836,6 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
             good_snips              = []
         #
         exact_answers               = get_exact_answers(quest_id, bioasq7_data)
-        print(exact_answers)
         #
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, exact_answers)
         good_sents_embeds           = datum['sents_embeds']
@@ -1078,7 +1073,6 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         return output.squeeze(-1).squeeze(-1)
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2, factoid_tags):
         res = []
-        print(question_embeds.size())
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
@@ -1088,8 +1082,6 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
                 gaf             = gaf.cuda()
                 fact_tags       = fact_tags.cuda()
             #
-            print(fact_tags.size())
-            print(fact_tags.size())
             # exit()
             #
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
