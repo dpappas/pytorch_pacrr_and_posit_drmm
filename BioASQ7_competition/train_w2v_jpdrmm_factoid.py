@@ -1127,8 +1127,11 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
             # Factoid extraction
-            c1                  = torch.stack(conv_res.size(0)*[sent_add_feats.unsqueeze(0)], dim=0)
+            c1                  = torch.stack(conv_res.size(0)*[sent_add_feats], dim=0)
             c2                  = quest_attented.unsqueeze(0).expand_as(conv_res)
+            # print(c1.size())
+            # print(c2.size())
+            # print(conv_res.size())
             sent_quest_input            = torch.cat([c1, c2, conv_res], -1)
             factoid_bigru_output, hn    = self.factoid_bigru(sent_quest_input.unsqueeze(1), self.factoid_bigru_h0)
             factoid_output              = self.factoid_out_mlp(factoid_bigru_output).squeeze(-1)
