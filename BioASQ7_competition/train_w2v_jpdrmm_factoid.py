@@ -679,6 +679,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
         )
+        for k in range(len(datum['sents_tokens'])):
+            print(datum['sents_tokens'][k])
+            print(gs_fact_[k])
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
         )
@@ -1291,7 +1294,6 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 print(avgdl, mean, deviation)
 ##########################################
-
 use_cuda = torch.cuda.is_available()
 ##########################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
