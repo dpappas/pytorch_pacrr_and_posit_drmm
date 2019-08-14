@@ -672,7 +672,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, exact_answers)
-        doc_emit_, gs_emits_    = model.emit_one(
+        doc_emit_, gs_emits_, gs_fact_ = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
@@ -800,6 +800,15 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2,         size_average=False, reduce=True)
     return sn_d1_l, sn_d2_l
 
+def get_factoid_losses(emitted, truth):
+    all_losses = []
+    for e, t in zip(emitted, truth):
+        t = torch.FloatTensor(t)
+        if(use_cuda):
+            t = t.cuda()
+        all_losses.append(F.binary_cross_entropy(e, t, size_average=False, reduce=True))
+    return sum(all_losses) / float(len(all_losses))
+
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
     batch_cost.backward()
@@ -890,7 +899,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         total       = 14288 # 17850
     )
     for datum in pbar:
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
+        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_, gs_fact_, bs_fact_ = model(
             doc1_sents_embeds   = datum['good_sents_embeds'],
             doc2_sents_embeds   = datum['bad_sents_embeds'],
             question_embeds     = datum['quest_embeds'],
@@ -899,17 +908,18 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             sents_baf           = datum['bad_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
             doc_baf             = datum['bad_doc_af'],
-            doc1_factoid_tags   = datum['good_sents_factoid_tags'],
-            doc2_factoid_tags   = datum['bad_sents_factoid_tags'],
+            # doc1_factoid_tags   = datum['good_sents_factoid_tags'],
+            # doc2_factoid_tags   = datum['bad_sents_factoid_tags'],
         )
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
         if(two_losses):
             sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            factoid_loss                    = get_factoid_losses(gs_fact_, datum['good_sents_factoid_tags'])
             snip_loss                       = sn_d1_l + sn_d2_l
             # snip_loss = sn_d1_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
+            l                               = 0.33
+            cost_                           = l * snip_loss + l * cost_ + l * factoid_loss
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -957,9 +967,19 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
-        self.margin_loss        = nn.MarginRankingLoss(margin=1.0)
+        self.margin_loss                            = nn.MarginRankingLoss(margin=1.0)
+        # ADDITIONS
+        self.attention_linear                       = nn.Linear(self.embedding_dim, self.embedding_dim, bias=True)
+        self.factoid_bigru_size                     = 25
+        self.factoid_bigru_h0                       = autograd.Variable(torch.randn(2, 1, self.factoid_bigru_size))
+        self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
+        self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 1, bias=True)
+        #
         if(use_cuda):
-            self.margin_loss    = self.margin_loss.cuda()
+            self.factoid_bigru_h0   = self.factoid_bigru_h0.cuda()
+            self.factoid_bigru      = self.factoid_bigru.cuda()
+            self.factoid_out_mlp    = self.factoid_out_mlp.cuda()
+            self.margin_loss        = self.margin_loss.cuda()
     def init_mesh_module(self):
         self.mesh_h0    = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
         self.mesh_gru   = nn.GRU(self.embedding_dim, self.embedding_dim)
@@ -1071,18 +1091,19 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output          = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2, factoid_tags):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
+        doc_factoid_outputs = []
+        #
+        quest_attention = F.tanh(self.attention_linear(q_conv_res_trigram))
+        quest_attented  = torch.sum(quest_attention*q_conv_res_trigram, dim=0)
+        #
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            fact_tags           = autograd.Variable(torch.FloatTensor(factoid_tags[i]), requires_grad=False)
             if(use_cuda):
                 sent_embeds     = sent_embeds.cuda()
                 gaf             = gaf.cuda()
-                fact_tags       = fact_tags.cuda()
-            #
-            # exit()
             #
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1098,6 +1119,13 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
+            # Factoid extraction
+            sent_quest_input            = torch.cat([conv_res, quest_attented.unsqueeze(0).expand_as(conv_res)], -1)
+            factoid_bigru_output, hn    = self.factoid_bigru(sent_quest_input.unsqueeze(1), self.factoid_bigru_h0)
+            factoid_output              = self.factoid_out_mlp(factoid_bigru_output).squeeze(-1)
+            factoid_output              = F.sigmoid(factoid_output)
+            doc_factoid_outputs.append(factoid_output)
+            #
         res = torch.stack(res)
         if(self.sentence_out_method == 'MLP'):
             res = self.sent_out_layer_1(res)
@@ -1107,7 +1135,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
         ret = self.get_kmax(res, k2)
-        return ret, res
+        return ret, res, doc_factoid_outputs
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         hn  = self.context_h0
@@ -1196,7 +1224,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        good_out, gs_emits, doc1_factoid_output = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         #
@@ -1205,18 +1233,12 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         final_good_output   = self.final_layer_2(final_good_output)
         #
         gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
+        # gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        # gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits            = torch.sigmoid(gs_emits)
         #
-        return final_good_output, gs_emits
-    def forward(self,
-        doc1_sents_embeds, doc2_sents_embeds,
-        question_embeds, q_idfs,
-        sents_gaf, sents_baf,
-        doc_gaf, doc_baf,
-        doc1_factoid_tags, doc2_factoid_tags
-    ):
+        return final_good_output, gs_emits, doc1_factoid_output
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
@@ -1234,11 +1256,11 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(
-            doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool, doc1_factoid_tags
+        good_out, gs_emits, doc1_factoid_output = self.do_for_one_doc_cnn(
+            doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool
         )
-        bad_out, bs_emits   = self.do_for_one_doc_cnn(
-            doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool, doc2_factoid_tags
+        bad_out, bs_emits, doc2_factoid_output = self.do_for_one_doc_cnn(
+            doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool
         )
         #
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
@@ -1263,7 +1285,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         bs_emits            = torch.sigmoid(bs_emits)
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits, doc1_factoid_output, doc2_factoid_output
 
 ##########################################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
