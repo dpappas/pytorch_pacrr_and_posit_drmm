@@ -348,6 +348,30 @@ def get_embeds_use_only_unk(tokens, wv):
         ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
+def get_exact_answers(qid, bioasq7_data):
+    if('exact_answer' not in bioasq7_data[qid]):
+        return []
+    if(bioasq7_data[qid]['type'].lower().strip() != 'factoid'):
+        return []
+    exact_answers = bioasq7_data[qid]['exact_answer']
+    if(type(exact_answers) == str):
+        exact_answers = [exact_answers]
+    flat_list = []
+    for item in exact_answers:
+        if(type(item) == list):
+            flat_list.extend(item)
+        else:
+            flat_list.append(item)
+    exact_answers = flat_list
+    flat_list = []
+    for item in exact_answers:
+        if(type(item) == list):
+            flat_list.extend(item)
+        else:
+            flat_list.append(item)
+    exact_answers = flat_list
+    return exact_answers
+
 def get_sent_tags_factoid(sent_tokens, exact_answers_tokenized):
     tags = len(sent_tokens) * [0]
     for exact_answer in exact_answers_tokenized:
@@ -646,11 +670,12 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips                  = get_gold_snips(dato['query_id'], bioasq7_data)
+    exact_answers               = get_exact_answers(dato['query_id'], bioasq7_data)
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, exact_answers)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
@@ -814,7 +839,10 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         else:
             good_snips              = []
         #
-        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
+        exact_answers               = get_exact_answers(quest_id, bioasq7_data)
+        print(exact_answers)
+        #
+        datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, exact_answers)
         good_sents_embeds           = datum['sents_embeds']
         good_sents_factoid_tags     = datum['factoid_sents_tags']
         good_sents_escores          = datum['sents_escores']
@@ -822,7 +850,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         good_sent_tags              = datum['sent_tags']
         good_held_out_sents         = datum['held_out_sents']
         #
-        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
+        datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, exact_answers)
         bad_sents_embeds            = datum['sents_embeds']
         bad_sents_escores           = datum['sents_escores']
         bad_doc_af                  = datum['doc_af']
@@ -1062,7 +1090,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             #
             print(fact_tags.size())
             print(fact_tags.size())
-            exit()
+            # exit()
             #
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1231,7 +1259,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         gs_emits            = gs_emits.unsqueeze(-1)
         # gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
         # gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        # gs_emits            = torch.sigmoid(gs_emits)
+        gs_emits            = torch.sigmoid(gs_emits)
         #
         final_bad_output    = self.final_layer_1(bad_out_pp)
         final_bad_output    = self.final_activ_1(final_bad_output)
@@ -1240,7 +1268,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         bs_emits            = bs_emits.unsqueeze(-1)
         # bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
         # bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
-        # bs_emits            = torch.sigmoid(bs_emits)
+        bs_emits            = torch.sigmoid(bs_emits)
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
@@ -1279,7 +1307,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir    = 'bioasq_jpdrmm_factoid_2L_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
@@ -1320,7 +1348,7 @@ for run in range(run_from, run_to):
 
 
 
-# pprint([ item for item in bioasq7_data.values() if(item['type'] == 'factoid')][2])
+# pprint([ item for item in bioasq7_data.values() if(item['type'] != 'factoid')][2])
 
 ##########################################
 
