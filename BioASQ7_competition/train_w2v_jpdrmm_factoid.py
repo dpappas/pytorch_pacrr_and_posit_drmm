@@ -679,9 +679,13 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
         )
-        for k in range(len(datum['sents_tokens'])):
-            print(datum['sents_tokens'][k])
-            print(gs_fact_[k])
+        #
+        for sent_toks, fact_emit in zip(datum['sents_tokens'], gs_fact_.tolist()):
+            if(any([v>0.5 for v in fact_emit])):
+                print(quest_text)
+                print(sent_toks)
+                print(fact_emit)
+        #
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
         )
@@ -975,7 +979,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         self.attention_linear                       = nn.Linear(self.embedding_dim, self.embedding_dim, bias=True)
         self.factoid_bigru_size                     = 25
         self.factoid_bigru_h0                       = autograd.Variable(torch.randn(2, 1, self.factoid_bigru_size))
-        self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
+        self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+self.sent_add_feats+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
         self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 1, bias=True)
         #
         if(use_cuda):
@@ -1097,7 +1101,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         doc_factoid_outputs = []
-        #
+        # for factoid
         quest_attention = F.tanh(self.attention_linear(q_conv_res_trigram))
         quest_attented  = torch.sum(quest_attention*q_conv_res_trigram, dim=0)
         #
@@ -1123,7 +1127,9 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
             # Factoid extraction
-            sent_quest_input            = torch.cat([conv_res, quest_attented.unsqueeze(0).expand_as(conv_res)], -1)
+            c1                  = torch.stack(conv_res.size(0)*[sent_add_feats.unsqueeze(0)], dim=0)
+            c2                  = quest_attented.unsqueeze(0).expand_as(conv_res)
+            sent_quest_input            = torch.cat([c1, c2, conv_res], -1)
             factoid_bigru_output, hn    = self.factoid_bigru(sent_quest_input.unsqueeze(1), self.factoid_bigru_h0)
             factoid_output              = self.factoid_out_mlp(factoid_bigru_output).squeeze(-1)
             factoid_output              = F.sigmoid(factoid_output)
