@@ -1232,7 +1232,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
-        gs_emits            = gs_emits.unsqueeze(-1)
+        # gs_emits            = gs_emits.unsqueeze(-1)
         # gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
         # gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits            = torch.sigmoid(gs_emits)
@@ -1270,7 +1270,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
-        gs_emits            = gs_emits.unsqueeze(-1)
+        # gs_emits            = gs_emits.unsqueeze(-1)
         # gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
         # gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits            = torch.sigmoid(gs_emits)
@@ -1279,7 +1279,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         final_bad_output    = self.final_activ_1(final_bad_output)
         final_bad_output    = self.final_layer_2(final_bad_output)
         #
-        bs_emits            = bs_emits.unsqueeze(-1)
+        # bs_emits            = bs_emits.unsqueeze(-1)
         # bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
         # bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
         bs_emits            = torch.sigmoid(bs_emits)
@@ -1343,7 +1343,7 @@ for run in range(run_from, run_to):
     waited_for  = 0
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
+        # train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
