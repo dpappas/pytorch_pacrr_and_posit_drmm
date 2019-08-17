@@ -552,6 +552,15 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
+def get_sent_tags_factoid(sent_tokens, exact_answers_tokenized):
+    tags = len(sent_tokens) * [0]
+    for exact_answer in exact_answers_tokenized:
+        for i in range(len(sent_tokens) - len(exact_answer)):
+            if(sent_tokens[i:i+len(exact_answer)] == exact_answer):
+                for j in range(i, i+len(exact_answer)):
+                    tags[j] = 1
+    return tags
+
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, exact_answers):
     good_sents              = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
