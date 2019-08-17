@@ -984,7 +984,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         self.attention_linear                       = nn.Linear(self.embedding_dim, self.embedding_dim, bias=True)
         self.factoid_bigru_size                     = 25
         self.factoid_bigru_h0                       = autograd.Variable(torch.randn(2, 1, self.factoid_bigru_size))
-        self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+self.sent_add_feats+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
+        self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+3*3+self.sent_add_feats+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
         self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 1, bias=True)
         #
         if(use_cuda):
@@ -1132,12 +1132,20 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
             # Factoid extraction
+            doc_based_ins_pool  = self.pooling_method(sim_insens.transpose(0,1))
+            doc_based_sen_pool  = self.pooling_method(sim_sens.transpose(0,1))
+            doc_based_oh_pool   = self.pooling_method(sim_oh.transpose(0,1))
+            #
             c1                  = torch.stack(conv_res.size(0)*[sent_add_feats], dim=0)
             c2                  = quest_attented.unsqueeze(0).expand_as(conv_res)
             # print(c1.size())
             # print(c2.size())
             # print(conv_res.size())
-            sent_quest_input            = torch.cat([c1, c2, conv_res], -1)
+            # print(doc_based_ins_pool.size())
+            # print(doc_based_sen_pool.size())
+            # print(doc_based_oh_pool.size())
+            # exit()
+            sent_quest_input            = torch.cat([doc_based_ins_pool, doc_based_sen_pool, doc_based_oh_pool, c1, c2, conv_res], -1)
             factoid_bigru_output, hn    = self.factoid_bigru(sent_quest_input.unsqueeze(1), self.factoid_bigru_h0)
             factoid_output              = self.factoid_out_mlp(factoid_bigru_output).squeeze(-1)
             factoid_output              = F.sigmoid(factoid_output)
