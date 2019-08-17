@@ -685,8 +685,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
                 print(20 * '-')
                 print(quest_text)
                 print(exact_answers)
-                print(sent_toks)
-                print(fact_emit.squeeze().tolist())
+                print([item for item in zip(sent_toks, fact_emit.squeeze().tolist())])
+                # print(sent_toks)
+                # print(fact_emit.squeeze().tolist())
         #
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
