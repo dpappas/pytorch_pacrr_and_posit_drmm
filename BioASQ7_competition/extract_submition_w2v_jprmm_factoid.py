@@ -684,6 +684,37 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
 
+def get_gold_snips(quest_id, bioasq6_data):
+    gold_snips                  = []
+    if ('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            gold_snips.extend(sent_tokenize(sn['text']))
+    return list(set(gold_snips))
+
+def get_exact_answers(qid, bioasq7_data):
+    if('exact_answer' not in bioasq7_data[qid]):
+        return []
+    if(bioasq7_data[qid]['type'].lower().strip() != 'factoid'):
+        return []
+    exact_answers = bioasq7_data[qid]['exact_answer']
+    if(type(exact_answers) == str):
+        exact_answers = [exact_answers]
+    flat_list = []
+    for item in exact_answers:
+        if(type(item) == list):
+            flat_list.extend(item)
+        else:
+            flat_list.append(item)
+    exact_answers = flat_list
+    flat_list = []
+    for item in exact_answers:
+        if(type(item) == list):
+            flat_list.extend(item)
+        else:
+            flat_list.append(item)
+    exact_answers = flat_list
+    return exact_answers
+
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions                    = {
         'body': dato['query_text'],
@@ -692,52 +723,91 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     #
     quest_text                  = dato['query_text']
+    #
     quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
     q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    gold_snips                  = get_gold_snips(dato['query_id'], bioasq7_data)
+    exact_answers               = get_exact_answers(dato['query_id'], bioasq7_data)
     #
     doc_res, extracted_snippets         = {}, []
+    extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, [], idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
-        doc_emit_, gs_emits_    = model.emit_one(
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, exact_answers)
+        doc_emit_, gs_emits_, gs_fact_ = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
             q_idfs              = q_idfs,
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
         )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, [])
+        #
+        for sent_toks, fact_emit in zip(datum['sents_tokens'], gs_fact_):
+            if(any([v>0.5 for v in fact_emit])):
+                print(20 * '-')
+                print(quest_text)
+                print(exact_answers)
+                print([pitem for pitem in zip(sent_toks, fact_emit.squeeze().tolist())])
+        #
+        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
+            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
+        )
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
+        total_relevant = sum([1 for em in all_emits if(em[0]==True)])
+        if (total_relevant > 0):
+            extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
         if (dato['query_id'] not in data_for_revision):
             data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets'  : {retr['doc_id']: all_emits}}
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
-    doc_res                                 = sorted([item for item in doc_res.items() if(item[1]>min_doc_score)], key = lambda x: x[1], reverse = True)
+    doc_res                                 = sorted(doc_res.items(), key=lambda x: x[1], reverse=True)
     the_doc_scores                          = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
     doc_res                                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
     emitions['documents']                   = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
     extracted_snippets                      = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+    extracted_snippets_known_rel_num        = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
     if(use_sent_tokenizer):
         extracted_snippets_v1               = select_snippets_v1(extracted_snippets)
         extracted_snippets_v2               = select_snippets_v2(extracted_snippets)
         extracted_snippets_v3               = select_snippets_v3(extracted_snippets, the_doc_scores)
+        extracted_snippets_known_rel_num_v1 = select_snippets_v1(extracted_snippets_known_rel_num)
+        extracted_snippets_known_rel_num_v2 = select_snippets_v2(extracted_snippets_known_rel_num)
+        extracted_snippets_known_rel_num_v3 = select_snippets_v3(extracted_snippets_known_rel_num, the_doc_scores)
     else:
         extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3 = [], [], []
+        extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3 = [], [], []
     #
+    # pprint(extracted_snippets_v1)
+    # pprint(extracted_snippets_v2)
+    # pprint(extracted_snippets_v3)
+    # exit()
     snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    # pprint(snips_res_v1)
+    # pprint(snips_res_v2)
+    # pprint(snips_res_v3)
+    # exit()
+    #
+    snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     #
     snips_res = {
         'v1' : snips_res_v1,
         'v2' : snips_res_v2,
         'v3' : snips_res_v3,
     }
-    return data_for_revision, ret_data, snips_res
+    snips_res_known = {
+        'v1' : snips_res_known_rel_num_v1,
+        'v2' : snips_res_known_rel_num_v2,
+        'v3' : snips_res_known_rel_num_v3,
+    }
+    return data_for_revision, ret_data, snips_res, snips_res_known
 
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
@@ -760,22 +830,16 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     #
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
     #
-    print_the_results('v1 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, data_for_revision)
-    print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, data_for_revision)
-    print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, data_for_revision)
+    v1_bioasq_snip_res = print_the_results('v1 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, data_for_revision)
+    v2_bioasq_snip_res = print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, data_for_revision)
+    v3_bioasq_snip_res = print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, data_for_revision)
     #
-    if (prefix == 'dev'):
-        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-    else:
-        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-    return None
+    return v3_bioasq_snip_res['MAP documents']
 
 class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
     def __init__(self,
@@ -1150,7 +1214,7 @@ f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_
 f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
 f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
 resume_from                 = '/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
-odir                        = '/home/dpappas/test_jpdrmm_high_batch{}/'.format(b)
+odir                        = '/home/dpappas/test_w2v_jpdrmm_factoid_batch{}/'.format(b)
 ###########################################################
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1170,7 +1234,7 @@ random.seed(my_seed)
 torch.manual_seed(my_seed)
 ###########################################################
 print('Compiling model...')
-model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
+model       = Sent_Posit_Drmm_Factoid_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 if(use_cuda):
     model   = model.cuda()
 ###########################################################
