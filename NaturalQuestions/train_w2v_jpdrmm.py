@@ -345,8 +345,10 @@ def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     bs_emits_       = bs_emits_.squeeze(-1)
     gs_emits_       = gs_emits_.squeeze(-1)
-    good_sent_tags  = torch.FloatTensor(good_sent_tags).squeeze().squeeze()
+    good_sent_tags  = torch.FloatTensor(good_sent_tags)
+    good_sent_tags  = good_sent_tags.squeeze().squeeze()
     tags_2          = torch.zeros_like(bs_emits_).squeeze().squeeze()
+    tags_2          = tags_2.squeeze().squeeze()
     if(use_cuda):
         good_sent_tags  = good_sent_tags.cuda()
         tags_2          = tags_2.cuda()
