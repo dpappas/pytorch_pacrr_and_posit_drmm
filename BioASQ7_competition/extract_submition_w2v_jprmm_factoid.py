@@ -1206,6 +1206,7 @@ def load_model_from_checkpoint(resume_from):
 # min_doc_score               = float(sys.argv[1])
 # min_sent_score              = float(sys.argv[2])
 # emit_only_abstract_sents    = bool(int(sys.argv[3]))
+###########################################################
 min_doc_score               = -1000.
 min_sent_score              = -1000.
 emit_only_abstract_sents    = False
