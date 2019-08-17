@@ -685,7 +685,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
                 print(20 * '-')
                 print(quest_text)
                 print(exact_answers)
-                print([item for item in zip(sent_toks, fact_emit.squeeze().tolist())])
+                print([pitem for pitem in zip(sent_toks, fact_emit.squeeze().tolist())])
                 # print(sent_toks)
                 # print(fact_emit.squeeze().tolist())
         #
