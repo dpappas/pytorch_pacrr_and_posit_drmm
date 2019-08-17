@@ -552,11 +552,10 @@ def snip_is_relevant(one_sent, gold_snips):
         )
     )
 
-def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
-    if(emit_only_abstract_sents):
-        good_sents = sent_tokenize(the_doc['abstractText'])
-    else:
-        good_sents      = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, exact_answers):
+    good_sents              = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    ####
+    exact_answers_tokenized = [tokenize(ea) for ea in exact_answers]
     ####
     quest_toks      = tokenize(quest)
     good_doc_af     = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -580,12 +579,16 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_doc_af.extend(features)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    sents_tokens, factoid_sents_tags = [], []
     for good_text in good_sents:
         sent_toks                   = tokenize(good_text)
         good_tokens, good_embeds    = get_embeds(sent_toks, wv)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
-        good_escores.append(len(sent_toks)/ 342.)
+        good_escores.append(len(sent_toks) / 342.)
         if (len(good_embeds) > 0):
+            #
+            factoid_sents_tags.append(get_sent_tags_factoid(good_tokens, exact_answers_tokenized))
+            sents_tokens.append(good_tokens)
             #
             tomi                = (set(sent_toks) & set(quest_toks))
             tomi_no_stop        = tomi - set(stopwords)
@@ -593,14 +596,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
             tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
             quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
-            features            = [
-                len(quest)              / 300.,
-                len(good_text)          / 300.,
-                len(tomi_no_stop)       / 100.,
-                BM25score,
-                sum(tomi_no_stop_idfs)  / 100.,
-                sum(tomi_idfs)          / sum(quest_idfs),
-            ]
+            features            = [len(quest)/300., len(good_text)/300., len(tomi_no_stop)/100., BM25score, sum(tomi_no_stop_idfs)/100., sum(tomi_idfs)/sum(quest_idfs)]
             #
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores+features)
@@ -608,11 +604,13 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
     return {
-        'sents_embeds'     : good_sents_embeds,
-        'sents_escores'    : good_sents_escores,
-        'doc_af'           : good_doc_af,
-        'sent_tags'        : good_sent_tags,
-        'held_out_sents'   : held_out_sents,
+        'sents_embeds'          : good_sents_embeds,
+        'sents_escores'         : good_sents_escores,
+        'doc_af'                : good_doc_af,
+        'sents_tokens'          : sents_tokens,
+        'factoid_sents_tags'    : factoid_sents_tags,
+        'sent_tags'             : good_sent_tags,
+        'held_out_sents'        : held_out_sents,
     }
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
@@ -1254,7 +1252,7 @@ with open(f_in2, 'rb') as f:
     test_data = pickle.load(f)
 with open(f_in3, 'rb') as f:
     test_docs = pickle.load(f)
-
+###########################################################
 words = {}
 GetWords(test_data, test_docs, words)
 ###########################################################
