@@ -753,7 +753,11 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
                 print(20 * '-')
                 print(quest_text)
                 print(exact_answers)
-                print([pitem for pitem in zip(sent_toks, fact_emit.squeeze().tolist())])
+                toks = sent_toks
+                ems  = fact_emit.squeeze().tolist()
+                if(type(ems) != list):
+                    ems = [ems]
+                print([pitem for pitem in zip(toks, ems)])
         #
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
@@ -1220,7 +1224,7 @@ b                           = sys.argv[1]
 f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(b, b)
 f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
 f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
-resume_from                 = '/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
+resume_from                 = '/home/dpappas/bioasq_jpdrmm_factoid_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
 odir                        = '/home/dpappas/test_w2v_jpdrmm_factoid_batch{}/'.format(b)
 ###########################################################
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
