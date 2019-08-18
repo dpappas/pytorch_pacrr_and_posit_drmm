@@ -758,7 +758,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
                 if(type(ems) != list):
                     ems = [ems]
                 print([pitem for pitem in zip(toks, ems)])
-                print([pitem[0] for pitem in zip(toks, ems) if(pitem[1]>0.5)])
+                print(' '.join([pitem[0] for pitem in zip(toks, ems) if(pitem[1]>0.5)]))
         #
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
