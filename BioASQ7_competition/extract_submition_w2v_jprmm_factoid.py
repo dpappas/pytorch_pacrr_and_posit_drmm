@@ -1282,4 +1282,24 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 ###########################################################
 print(test_map)
 
+'''
 
+
+java -Xmx10G -cp \
+/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1
+
+
+
+java -Xmx10G -cp \
+/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b \
+-phaseB -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1
+
+
+'''
