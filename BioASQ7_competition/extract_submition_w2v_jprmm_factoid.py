@@ -752,6 +752,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             if(any([v>0.5 for v in fact_emit])):
                 print(20 * '-')
                 print(quest_text)
+                print(retr['doc_id'], doc_emit_.squeeze().tolist())
                 print(exact_answers)
                 toks = sent_toks
                 ems  = fact_emit.squeeze().tolist()
