@@ -918,7 +918,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         self.attention_linear                       = nn.Linear(self.embedding_dim, self.embedding_dim, bias=True)
         self.factoid_bigru_size                     = 25
         self.factoid_bigru_h0                       = autograd.Variable(torch.randn(2, 1, self.factoid_bigru_size))
-        self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+3*3+self.sent_add_feats+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
+        self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+3*3+self.sent_add_feats+1+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
         self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 1, bias=True)
         #
         if(use_cuda):
@@ -1039,7 +1039,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         return output.squeeze(-1).squeeze(-1)
     def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
-        doc_factoid_outputs = []
+        doc_factoid_inputs = []
         # for factoid
         quest_attention = F.tanh(self.attention_linear(q_conv_res_trigram))
         quest_attented  = torch.sum(quest_attention*q_conv_res_trigram, dim=0)
@@ -1072,18 +1072,9 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             #
             c1                  = torch.stack(conv_res.size(0)*[sent_add_feats], dim=0)
             c2                  = quest_attented.unsqueeze(0).expand_as(conv_res)
-            # print(c1.size())
-            # print(c2.size())
-            # print(conv_res.size())
-            # print(doc_based_ins_pool.size())
-            # print(doc_based_sen_pool.size())
-            # print(doc_based_oh_pool.size())
-            # exit()
-            sent_quest_input            = torch.cat([doc_based_ins_pool, doc_based_sen_pool, doc_based_oh_pool, c1, c2, conv_res], -1)
-            factoid_bigru_output, hn    = self.factoid_bigru(sent_quest_input.unsqueeze(1), self.factoid_bigru_h0)
-            factoid_output              = self.factoid_out_mlp(factoid_bigru_output).squeeze(-1)
-            factoid_output              = F.sigmoid(factoid_output)
-            doc_factoid_outputs.append(factoid_output)
+            #
+            sent_quest_input    = torch.cat([doc_based_ins_pool, doc_based_sen_pool, doc_based_oh_pool, c1, c2, conv_res], -1)
+            doc_factoid_inputs.append(sent_quest_input)
             #
         res = torch.stack(res)
         if(self.sentence_out_method == 'MLP'):
@@ -1093,6 +1084,19 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         else:
             res = self.apply_sent_res_bigru(res)
         # ret = self.get_max(res).unsqueeze(0)
+        #
+        # Factoid handling using the sentence score as well
+        doc_factoid_outputs = []
+        for i in range(len(doc_factoid_inputs)):
+            factoid_input               = doc_factoid_inputs[i]
+            expanded_sent_score         = torch.stack(factoid_input.size(0)*[res[i]], dim=0).unsqueeze(-1)
+            bigru_input                 = torch.cat([factoid_input, expanded_sent_score], dim=-1)
+            factoid_bigru_output, hn    = self.factoid_bigru(bigru_input.unsqueeze(1), self.factoid_bigru_h0)
+            factoid_bigru_output        = F.tanh(factoid_bigru_output)
+            factoid_output              = self.factoid_out_mlp(factoid_bigru_output).squeeze(-1)
+            factoid_output              = F.sigmoid(factoid_output)
+            doc_factoid_outputs.append(factoid_output)
+        #
         ret = self.get_kmax(res, k2)
         return ret, res, doc_factoid_outputs
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
