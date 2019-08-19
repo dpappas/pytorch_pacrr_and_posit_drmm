@@ -658,16 +658,15 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
-        fact_ems = factoid_emits[ind].squeeze(1)
-        values, indices = torch.max(fact_ems, 1)
-        #
+        fact_ems = factoid_emits[ind]#.squeeze(1)
+        fact_ems = model.factoid_crf.decode(fact_ems)[0]
         t = (
             snip_is_relevant(held_out_sents[ind], gold_snips),
             emitss[ind],
             "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
             held_out_sents[ind],
             tokens_per_sent[ind],
-            indices.tolist()
+            fact_ems
         )
         all_emits.append(t)
         # extracted_from_one.append(t)
