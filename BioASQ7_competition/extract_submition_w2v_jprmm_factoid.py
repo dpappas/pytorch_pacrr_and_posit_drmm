@@ -1335,6 +1335,12 @@ print(test_map)
 
 '''
 
+grep "5c588d0986df2b9174000003" -B 13 -A 70 /home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1
+
+
+
+
+
 java -Xmx10G -cp \
 /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
 evaluation.EvaluatorTask1b \
