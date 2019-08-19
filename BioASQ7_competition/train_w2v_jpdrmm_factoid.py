@@ -232,13 +232,30 @@ def get_gold_snips(quest_id, bioasq6_data):
             gold_snips.extend(sent_tokenize(sn['text']))
     return list(set(gold_snips))
 
-def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
+def prep_exact_answers(tokens, emits, thres):
+    ret = []
+    if(len(tokens) == 1):
+        emits = [emits]
+    for i in range(len(tokens)):
+        if(emits[i]>thres):
+            if(len(ret) == 0):
+                ret.append(tokens[i])
+            elif(emits[i-1]>thres):
+                ret[-1] = ret[-1] + ' ' + tokens[i]
+            else:
+                ret.append(tokens[i])
+    return ret
+
+def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body, qtype):
     ret = {
-        'body'      : quest_body,
-        'documents' : top10docs,
-        'id'        : qid,
-        'snippets'  : [],
+        'body'          : quest_body,
+        'documents'     : top10docs,
+        'type'          : qtype,
+        'id'            : qid,
+        'snippets'      : [],
+        'exact_answer'  : []
     }
+    exact_answers       = []
     for esnip in extracted_snippets:
         pid         = esnip[2].split('/')[-1]
         the_text    = esnip[3]
@@ -247,6 +264,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
             "text"      : the_text
         }
+        exact_answers.extend(prep_exact_answers(esnip[4], esnip[5], 0.5))
         try:
             ind_from                            = docs[pid]['title'].index(the_text)
             ind_to                              = ind_from + len(the_text)
@@ -255,6 +273,8 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             esnip_res["offsetInBeginSection"]   = ind_from
             esnip_res["offsetInEndSection"]     = ind_to
         except:
+            # print(the_text)
+            # pprint(docs[pid])
             ind_from                            = docs[pid]['abstractText'].index(the_text)
             ind_to                              = ind_from + len(the_text)
             esnip_res["beginSection"]           = "abstract"
@@ -262,6 +282,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             esnip_res["offsetInBeginSection"]   = ind_from
             esnip_res["offsetInEndSection"]     = ind_to
         ret['snippets'].append(esnip_res)
+    ret['exact_answer'] = list(set(exact_answers))
     return ret
 
 # Compute the term frequency of a word for a specific document
@@ -627,7 +648,7 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
 
-def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
+def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips, tokens_per_sent, factoid_emits):
     emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
     mmax                    = max(emitss)
@@ -637,20 +658,25 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
             snip_is_relevant(held_out_sents[ind], gold_snips),
             emitss[ind],
             "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind]
+            held_out_sents[ind],
+            tokens_per_sent[ind],
+            factoid_emits[ind].squeeze().tolist()
         )
         all_emits.append(t)
+        # extracted_from_one.append(t)
         # if(emitss[ind] == mmax):
         #     extracted_from_one.append(t)
-        extracted_from_one.append(t)
+        if(emitss[ind]> min_sent_score):
+            extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer, qtype):
     emitions                    = {
         'body': dato['query_text'],
         'id': dato['query_id'],
+        'type': qtype,
         'documents': []
     }
     #
@@ -673,21 +699,21 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             doc_gaf             = datum['doc_af']
         )
         #
-        for sent_toks, fact_emit in zip(datum['sents_tokens'], gs_fact_):
-            if(any([v>0.5 for v in fact_emit])):
-                print(20 * '-')
-                print(quest_text)
-                print(retr['doc_id'], doc_emit_.squeeze().tolist())
-                print(exact_answers)
-                toks = sent_toks
-                ems  = fact_emit.squeeze().tolist()
-                if(type(ems) != list):
-                    ems = [ems]
-                print([pitem for pitem in zip(toks, ems)])
-                print(' '.join([pitem[0] for pitem in zip(toks, ems) if(pitem[1]>0.5)]))
+        # for sent_toks, fact_emit in zip(datum['sents_tokens'], gs_fact_):
+        #     if(any([v>0.5 for v in fact_emit])):
+        #         print(20 * '-')
+        #         print(quest_text)
+        #         print(retr['doc_id'], doc_emit_.squeeze().tolist())
+        #         print(exact_answers)
+        #         toks = sent_toks
+        #         ems  = fact_emit.squeeze().tolist()
+        #         if(type(ems) != list):
+        #             ems = [ems]
+        #         print([pitem for pitem in zip(toks, ems)])
+        #         print(' '.join([pitem[0] for pitem in zip(toks, ems) if(pitem[1]>0.5)]))
         #
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
-            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
+            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips, datum['sents_tokens'], gs_fact_
         )
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
@@ -723,17 +749,17 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     # pprint(extracted_snippets_v2)
     # pprint(extracted_snippets_v3)
     # exit()
-    snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
+    snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
+    snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
     # pprint(snips_res_v1)
     # pprint(snips_res_v2)
     # pprint(snips_res_v3)
     # exit()
     #
-    snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
+    snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
+    snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
     #
     snips_res = {
         'v1' : snips_res_v1,
@@ -752,46 +778,23 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     #
     ret_data                        = {'questions': []}
     all_bioasq_subm_data_v1         = {"questions": []}
-    all_bioasq_subm_data_known_v1   = {"questions": []}
     all_bioasq_subm_data_v2         = {"questions": []}
-    all_bioasq_subm_data_known_v2   = {"questions": []}
     all_bioasq_subm_data_v3         = {"questions": []}
-    all_bioasq_subm_data_known_v3   = {"questions": []}
     all_bioasq_gold_data            = {'questions': []}
     data_for_revision               = {}
     #
     for dato in tqdm(data['queries']):
+        qtype = bioasq7_data[dato['query_id']]['type']
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer, qtype)
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
-        all_bioasq_subm_data_known_v1['questions'].append(snips_res_known['v1'])
-        all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
-        all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
     #
-    v1_bioasq_snip_res = print_the_results('v1 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1, data_for_revision)
-    v2_bioasq_snip_res = print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
-    v3_bioasq_snip_res = print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
+    v1_bioasq_snip_res = print_the_results('v1 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, data_for_revision)
+    v2_bioasq_snip_res = print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, data_for_revision)
+    v3_bioasq_snip_res = print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, data_for_revision)
     #
-    '''
-    if (prefix == 'dev'):
-        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 dev_gold_bioasq.json'),
-            # dataloc +'bioasq.dev.json',
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
-        )
-    else:
-        with open(os.path.join(odir,'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 test_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
-        )
-    return res_map
-    '''
     return v3_bioasq_snip_res['MAP documents']
 
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
@@ -1309,6 +1312,9 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits, doc1_factoid_output, doc2_factoid_output
 
+min_doc_score               = -1000.
+min_sent_score              = -1000.
+emit_only_abstract_sents    = False
 ##########################################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 print(avgdl, mean, deviation)
