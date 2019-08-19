@@ -534,13 +534,13 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
         f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
         f.close()
     #
-    for tt in data_gold['questions']:
-        if ('exact_answer' in tt):
-            del (tt['exact_answer'])
-        if ('ideal_answer' in tt):
-            del (tt['ideal_answer'])
-        if ('type' in tt):
-            del (tt['type'])
+    # for tt in data_gold['questions']:
+    #     if ('exact_answer' in tt):
+    #         del (tt['exact_answer'])
+    #     if ('ideal_answer' in tt):
+    #         del (tt['ideal_answer'])
+    #     if ('type' in tt):
+    #         del (tt['type'])
     fgold    = '{}_gold_bioasq.json'.format(prefix)
     fgold   = os.path.join(odir, fgold)
     fgold   = os.path.abspath(fgold)
@@ -786,7 +786,9 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     for dato in tqdm(data['queries']):
         qtype = bioasq7_data[dato['query_id']]['type']
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer, qtype)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(
+            docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer, qtype
+        )
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
