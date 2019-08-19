@@ -593,6 +593,15 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_f
     print('{} Fact Lenient Acc: {}'.format(prefix, bioasq_snip_res['Factoid Lenient Acc']))
     print('{} Fact MRR: {}'.format(prefix, bioasq_snip_res['Factoid MRR']))
     #
+    logger.info('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
+    logger.info('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
+    logger.info('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
+    logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
+    logger.info('{} Fact Strict Acc: {}'.format(prefix, bioasq_snip_res['Factoid Strict Acc']))
+    logger.info('{} Fact Lenient Acc: {}'.format(prefix, bioasq_snip_res['Factoid Lenient Acc']))
+    logger.info('{} Fact MRR: {}'.format(prefix, bioasq_snip_res['Factoid MRR']))
+    #
+    return bioasq_snip_res
 
 def get_norm_doc_scores(the_doc_scores):
     ks = list(the_doc_scores.keys())
