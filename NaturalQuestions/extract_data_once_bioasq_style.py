@@ -143,7 +143,7 @@ def load_idfs_from_df(df_path):
     print('Loaded idf tables with max idf {}'.format(max_idf))
     return idf, max_idf
 
-idf, max_idf    = load_idfs_from_df('/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl')
+# idf, max_idf    = load_idfs_from_df('/home/dpappas/NQ_data/NQ_my_tokenize_df.pkl')
 
 training7b_train_json = {'questions': []}
 bm25_top100_train_pkl = {'queries': []}
@@ -198,7 +198,7 @@ for quest in pbar:
         }
         #######################
         qtoks           = tokenize(qtext)
-        idf_scores      = [idf_val(w, idf, max_idf) for w in qtoks]
+        # idf_scores      = [idf_val(w, idf, max_idf) for w in qtoks]
         # all_retr_docs   = get_first_n_11(qtoks, 100, idf_scores)
         all_retr_docs   = get_first_n(qtext, 100)
         ##########################################
