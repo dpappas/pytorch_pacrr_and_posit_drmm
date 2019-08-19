@@ -583,6 +583,7 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     return measures
 
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision):
+    #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
