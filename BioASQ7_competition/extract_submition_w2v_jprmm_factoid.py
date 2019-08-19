@@ -489,6 +489,20 @@ def GetWords(data, doc_text, words):
       for w in dwds:
         words[w] = 1
 
+def prep_exact_answers(tokens, emits, thres):
+    ret = []
+    if(len(tokens) == 1):
+        emits = [emits]
+    for i in range(len(tokens)):
+        if(emits[i]>thres):
+            if(len(ret) == 0):
+                ret.append(tokens[i])
+            elif(emits[i-1]>thres):
+                ret[-1] = ret[-1] + ' ' + tokens[i]
+            else:
+                ret.append(tokens[i])
+    return ret
+
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
         'body'          : quest_body,
@@ -506,8 +520,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
             "text"      : the_text
         }
-        pprint([item for item in zip(esnip[4], esnip[5])])
-        exit()
+        exact_answers.extend(prep_exact_answers(esnip[4], esnip[5], 0.5))
         try:
             ind_from                            = docs[pid]['title'].index(the_text)
             ind_to                              = ind_from + len(the_text)
