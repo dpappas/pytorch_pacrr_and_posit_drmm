@@ -865,6 +865,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_f
     print('{} Fact Lenient Acc: {}'.format(prefix, bioasq_snip_res['Factoid Lenient Acc']))
     print('{} Fact MRR: {}'.format(prefix, bioasq_snip_res['Factoid MRR']))
     #
+    return bioasq_snip_res
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
