@@ -764,7 +764,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     emitions                    = {
         'body': dato['query_text'],
         'id': dato['query_id'],
-        'type': dato['type'],
+        'type': qtype,
         'documents': []
     }
     #
@@ -1339,7 +1339,7 @@ java -Xmx10G -cp \
 /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
 evaluation.EvaluatorTask1b \
 -phaseA -e 5  \
-/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseA-testset1 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1 \
 "/home/dpappas/test_w2v_jpdrmm_factoid_batch1/v3 test_emit_bioasq.json"
 
 
