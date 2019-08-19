@@ -534,17 +534,8 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
         f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
         f.close()
     #
-    print('command:')
-    print([
-            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
-            '-phaseA', '-e', '5', fgold, femit
-        ])
-    logger.info('command:')
-    logger.info([
-            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
-            '-phaseA', '-e', '5', fgold, femit
-        ]
-    )
+    measures = {}
+    #
     bioasq_eval_res = subprocess.Popen(
         [
             'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
@@ -554,38 +545,40 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     )
     (out, err)  = bioasq_eval_res.communicate()
     lines       = out.decode("utf-8").split('\n')
-    ret = {}
     for line in lines:
         if(':' in line):
             k       = line.split(':')[0].strip()
             v       = line.split(':')[1].strip()
-            ret[k]  = float(v)
-    return ret
-
-def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
-    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
-    pprint(bioasq_snip_res)
-    print('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    print('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    print('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    logger.info('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    logger.info('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    logger.info('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    logger.info('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
+            measures[k]  = float(v)
     #
+    bioasq_eval_res = subprocess.Popen(
+        [
+            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
+            '-phaseB', '-e', '5', fgold, femit
+        ],
+        stdout=subprocess.PIPE, shell=False
+    )
+    (out, err)  = bioasq_eval_res.communicate()
+    lines       = out.decode("utf-8").split('\n')
+    for line in lines:
+        if(':' in line):
+            k       = line.split(':')[0].strip()
+            v       = line.split(':')[1].strip()
+            measures[k]  = float(v)
+    #
+    return measures
+
+def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    logger.info('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    logger.info('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
-    logger.info('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
+    print('{} Fact Strict Acc: {}'.format(prefix, bioasq_snip_res['Factoid Strict Acc']))
+    print('{} Fact Lenient Acc: {}'.format(prefix, bioasq_snip_res['Factoid Lenient Acc']))
+    print('{} Fact MRR: {}'.format(prefix, bioasq_snip_res['Factoid MRR']))
     #
-    return bioasq_snip_res
 
 def get_norm_doc_scores(the_doc_scores):
     ks = list(the_doc_scores.keys())

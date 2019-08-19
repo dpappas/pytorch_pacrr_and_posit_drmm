@@ -259,6 +259,8 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
         f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
         f.close()
     #
+    measures = {}
+    #
     bioasq_eval_res = subprocess.Popen(
         [
             'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
@@ -268,13 +270,28 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     )
     (out, err)  = bioasq_eval_res.communicate()
     lines       = out.decode("utf-8").split('\n')
-    ret = {}
     for line in lines:
         if(':' in line):
             k       = line.split(':')[0].strip()
             v       = line.split(':')[1].strip()
-            ret[k]  = float(v)
-    return ret
+            measures[k]  = float(v)
+    #
+    bioasq_eval_res = subprocess.Popen(
+        [
+            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
+            '-phaseB', '-e', '5', fgold, femit
+        ],
+        stdout=subprocess.PIPE, shell=False
+    )
+    (out, err)  = bioasq_eval_res.communicate()
+    lines       = out.decode("utf-8").split('\n')
+    for line in lines:
+        if(':' in line):
+            k       = line.split(':')[0].strip()
+            v       = line.split(':')[1].strip()
+            measures[k]  = float(v)
+    #
+    return measures
 
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
@@ -826,9 +843,12 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_f
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
+    print('{} Fact Strict Acc: {}'.format(prefix, bioasq_snip_res['Factoid Strict Acc']))
+    print('{} Fact Lenient Acc: {}'.format(prefix, bioasq_snip_res['Factoid Lenient Acc']))
+    print('{} Fact MRR: {}'.format(prefix, bioasq_snip_res['Factoid MRR']))
     #
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
