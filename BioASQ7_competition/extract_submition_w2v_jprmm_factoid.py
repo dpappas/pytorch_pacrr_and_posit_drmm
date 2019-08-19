@@ -27,8 +27,9 @@ from    difflib                     import SequenceMatcher
 import  re
 import  nltk
 import  math
-from sklearn.preprocessing          import minmax_scale
+from    sklearn.preprocessing       import minmax_scale
 import  sys
+from    torchcrf                    import CRF
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
@@ -651,30 +652,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, exact_answ
         'held_out_sents'        : held_out_sents,
     }
 
-def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips, tokens_per_sent, factoid_emits):
-    emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_.tolist()
-    mmax                    = max(emitss)
-    all_emits, extracted_from_one = [], []
-    for ind in range(len(emitss)):
-        t = (
-            snip_is_relevant(held_out_sents[ind], gold_snips),
-            emitss[ind],
-            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind],
-            tokens_per_sent[ind],
-            factoid_emits[ind].squeeze().tolist()
-        )
-        all_emits.append(t)
-        # extracted_from_one.append(t)
-        # if(emitss[ind] == mmax):
-        #     extracted_from_one.append(t)
-        if(emitss[ind]> min_sent_score):
-            extracted_from_one.append(t)
-    doc_res[retr['doc_id']] = float(emition)
-    all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
-    return doc_res, extracted_from_one, all_emits
-
 def get_norm_doc_scores(the_doc_scores):
     ks = list(the_doc_scores.keys())
     vs = [the_doc_scores[k] for k in ks]
@@ -752,6 +729,32 @@ def get_exact_answers(qid, bioasq7_data):
             flat_list.append(item)
     exact_answers = flat_list
     return exact_answers
+
+def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips, tokens_per_sent, factoid_emits):
+    emition                 = doc_emit_.cpu().item()
+    emitss                  = gs_emits_.tolist()
+    mmax                    = max(emitss)
+    all_emits, extracted_from_one = [], []
+    for ind in range(len(emitss)):
+        fact_ems = factoid_emits[ind]#.squeeze(1)
+        fact_ems = model.factoid_crf.decode(fact_ems)[0]
+        t = (
+            snip_is_relevant(held_out_sents[ind], gold_snips),
+            emitss[ind],
+            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
+            held_out_sents[ind],
+            tokens_per_sent[ind],
+            fact_ems
+        )
+        all_emits.append(t)
+        # extracted_from_one.append(t)
+        # if(emitss[ind] == mmax):
+        #     extracted_from_one.append(t)
+        if(emitss[ind]> min_sent_score):
+            extracted_from_one.append(t)
+    doc_res[retr['doc_id']] = float(emition)
+    all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
+    return doc_res, extracted_from_one, all_emits
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer, qtype):
     emitions                    = {
@@ -880,7 +883,9 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     for dato in tqdm(data['queries']):
         qtype = bioasq7_data[dato['query_id']]['type']
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer, qtype)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(
+            docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer, qtype
+        )
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
@@ -919,9 +924,11 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         self.factoid_bigru_size                     = 25
         self.factoid_bigru_h0                       = autograd.Variable(torch.randn(2, 1, self.factoid_bigru_size))
         self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+3*3+self.sent_add_feats+1+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
-        self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 1, bias=True)
+        self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 2, bias=True)
+        self.factoid_crf                            = CRF(2)
         #
         if(use_cuda):
+            self.factoid_crf        = self.factoid_crf.cuda()
             self.factoid_bigru_h0   = self.factoid_bigru_h0.cuda()
             self.factoid_bigru      = self.factoid_bigru.cuda()
             self.factoid_out_mlp    = self.factoid_out_mlp.cuda()
@@ -1094,8 +1101,8 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             bigru_input                 = torch.cat([factoid_input, expanded_sent_score], dim=-1)
             factoid_bigru_output, hn    = self.factoid_bigru(bigru_input.unsqueeze(1), self.factoid_bigru_h0)
             factoid_bigru_output        = torch.tanh(factoid_bigru_output)
-            factoid_output              = self.factoid_out_mlp(factoid_bigru_output).squeeze(-1)
-            factoid_output              = torch.sigmoid(factoid_output)
+            factoid_output              = self.factoid_out_mlp(factoid_bigru_output)
+            factoid_output              = F.softmax(factoid_output, dim=-1)
             doc_factoid_outputs.append(factoid_output)
         #
         ret = self.get_kmax(res, k2)
