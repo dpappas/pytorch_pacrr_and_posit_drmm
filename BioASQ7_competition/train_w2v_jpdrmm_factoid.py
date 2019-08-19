@@ -534,13 +534,6 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
         f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
         f.close()
     #
-    # for tt in data_gold['questions']:
-    #     if ('exact_answer' in tt):
-    #         del (tt['exact_answer'])
-    #     if ('ideal_answer' in tt):
-    #         del (tt['ideal_answer'])
-    #     if ('type' in tt):
-    #         del (tt['type'])
     fgold    = '{}_gold_bioasq.json'.format(prefix)
     fgold   = os.path.join(odir, fgold)
     fgold   = os.path.abspath(fgold)
