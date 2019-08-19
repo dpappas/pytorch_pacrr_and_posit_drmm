@@ -485,8 +485,6 @@ def GetWords(data, doc_text, words):
 
 def prep_exact_answers(tokens, emits, thres):
     ret = []
-    if(len(tokens) == 1):
-        emits = [emits]
     for i in range(len(tokens)):
         if(emits[i]>thres):
             if(len(ret) == 0):
