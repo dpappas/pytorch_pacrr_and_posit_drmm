@@ -238,13 +238,13 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
         f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
         f.close()
     #
-    for tt in data_gold['questions']:
-        if ('exact_answer' in tt):
-            del (tt['exact_answer'])
-        if ('ideal_answer' in tt):
-            del (tt['ideal_answer'])
-        if ('type' in tt):
-            del (tt['type'])
+    # for tt in data_gold['questions']:
+    #     if ('exact_answer' in tt):
+    #         del (tt['exact_answer'])
+    #     if ('ideal_answer' in tt):
+    #         del (tt['ideal_answer'])
+    #     if ('type' in tt):
+    #         del (tt['type'])
     fgold    = '{}_gold_bioasq.json'.format(prefix)
     fgold   = os.path.join(odir, fgold)
     fgold   = os.path.abspath(fgold)
@@ -760,7 +760,7 @@ def get_exact_answers(qid, bioasq7_data):
     exact_answers = flat_list
     return exact_answers
 
-def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer, qtype):
     emitions                    = {
         'body': dato['query_text'],
         'id': dato['query_id'],
@@ -837,17 +837,17 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     # pprint(extracted_snippets_v2)
     # pprint(extracted_snippets_v3)
     # exit()
-    snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
-    snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
-    snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
+    snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
+    snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
+    snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
     # pprint(snips_res_v1)
     # pprint(snips_res_v2)
     # pprint(snips_res_v3)
     # exit()
     #
-    snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
-    snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
-    snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
+    snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
+    snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
+    snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'], qtype)
     #
     snips_res = {
         'v1' : snips_res_v1,
@@ -884,8 +884,9 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     data_for_revision               = {}
     #
     for dato in tqdm(data['queries']):
+        qtype = bioasq7_data[dato['query_id']]['type']
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer, qtype)
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
