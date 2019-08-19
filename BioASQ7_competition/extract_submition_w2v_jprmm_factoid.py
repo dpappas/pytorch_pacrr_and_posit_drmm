@@ -72,66 +72,6 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
     else:
         return score
 
-# Compute the average length from a collection of documents
-def compute_avgdl(documents):
-    total_words = 0
-    for document in documents:
-        total_words += len(document)
-    avgdl = total_words / len(documents)
-    return avgdl
-
-def weighted_binary_cross_entropy(output, target, weights=None):
-    if weights is not None:
-        assert len(weights) == 2
-        loss = weights[1] * (target * torch.log(output)) + weights[0] * ((1 - target) * torch.log(1 - output))
-    else:
-        loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
-    return torch.neg(torch.mean(loss))
-
-def RemoveTrainLargeYears(data, doc_text):
-  data['queries'] = [q for q in data['queries'] if (len(q['retrieved_documents']) > 0)]
-  for i in tqdm(range(len(data['queries']))):
-    hyear = 1900
-    for j in range(len(data['queries'][i]['retrieved_documents'])):
-      if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
-        doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-        year = doc_text[doc_id]['publicationDate'].split('-')[0]
-        if year[:1] == '1' or year[:1] == '2':
-          if int(year) > hyear:
-            hyear = int(year)
-    # if(len(data['queries'][i]['retrieved_documents'])>0):
-    j = 0
-    while True:
-      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
-      if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
-        del data['queries'][i]['retrieved_documents'][j]
-      else:
-        j += 1
-      if j == len(data['queries'][i]['retrieved_documents']):
-        break
-  return data
-
-def RemoveBadYears(data, doc_text, train):
-  for i in range(len(data['queries'])):
-    j = 0
-    while True:
-      doc_id    = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      year      = doc_text[doc_id]['publicationDate'].split('-')[0]
-      ##########################
-      # Skip 2017/2018 docs always. Skip 2016 docs for training.
-      # Need to change for final model - 2017 should be a train year only.
-      # Use only for testing.
-      if year == '2017' or year == '2018' or (train and year == '2016'):
-      #if year == '2018' or (train and year == '2017'):
-        del data['queries'][i]['retrieved_documents'][j]
-      else:
-        j += 1
-      ##########################
-      if j == len(data['queries'][i]['retrieved_documents']):
-        break
-  return data
-
 def print_params(model):
     '''
     It just prints the number of parameters in the model.
@@ -203,25 +143,6 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
         'optimizer':        optimizer.state_dict(),
     }
     torch.save(state, filename)
-
-def get_map_res(fgold, femit):
-    trec_eval_res   = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
-    (out, err)      = trec_eval_res.communicate()
-    lines           = out.decode("utf-8").split('\n')
-    map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
-    map_res         = float(map_res[-1])
-    return map_res
-
-def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
-    batch_cost = sum(batch_costs) / float(len(batch_costs))
-    batch_cost.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-    batch_aver_cost = batch_cost.cpu().item()
-    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    batch_aver_acc  = sum(batch_acc) / float(len(batch_acc))
-    epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
-    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
@@ -488,14 +409,6 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         ret['snippets'].append(esnip_res)
     ret['exact_answer'] = list(set(exact_answers))
     return ret
-
-def get_snips(quest_id, gid, bioasq6_data):
-    good_snips = []
-    if('snippets' in bioasq6_data[quest_id]):
-        for sn in bioasq6_data[quest_id]['snippets']:
-            if(sn['document'].endswith(gid)):
-                good_snips.extend(sent_tokenize(sn['text']))
-    return good_snips
 
 def get_the_mesh(the_doc):
     good_meshes = []
