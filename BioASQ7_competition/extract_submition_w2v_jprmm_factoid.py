@@ -287,51 +287,6 @@ def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     #
     return measures
 
-def similar(upstream_seq, downstream_seq):
-    upstream_seq    = upstream_seq.encode('ascii','ignore')
-    downstream_seq  = downstream_seq.encode('ascii','ignore')
-    s               = SequenceMatcher(None, upstream_seq, downstream_seq)
-    match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
-    upstream_start  = match[0]
-    upstream_end    = match[0]+match[2]
-    longest_match   = upstream_seq[upstream_start:upstream_end]
-    to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
-    r1              = SequenceMatcher(None, to_match, longest_match).ratio()
-    return r1
-
-def get_pseudo_retrieved(dato):
-    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq7_data[dato['query_id']]['snippets']]
-    pseudo_retrieved            = [
-        {
-            'bm25_score'        : 7.76,
-            'doc_id'            : id,
-            'is_relevant'       : True,
-            'norm_bm25_score'   : 3.85
-        }
-        for id in set(some_ids)
-    ]
-    return pseudo_retrieved
-
-def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
-    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
-    wrong  = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
-    wrong  = torch.cat(wrong + [bs_emits_.squeeze(-1)])
-    losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
-    return sum(losses) / float(len(losses))
-
-def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
-    bs_emits_       = bs_emits_.squeeze(-1)
-    gs_emits_       = gs_emits_.squeeze(-1)
-    good_sent_tags  = torch.FloatTensor(good_sent_tags)
-    tags_2          = torch.zeros_like(bs_emits_)
-    if(use_cuda):
-        good_sent_tags  = good_sent_tags.cuda()
-        tags_2          = tags_2.cuda()
-    #
-    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
-    sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2,         size_average=False, reduce=True)
-    return sn_d1_l, sn_d2_l
-
 def get_words(s, idf, max_idf):
     sl  = tokenize(s)
     sl  = [s for s in sl]
@@ -856,6 +811,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     return data_for_revision, ret_data, snips_res, snips_res_known
 
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision):
+    #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
