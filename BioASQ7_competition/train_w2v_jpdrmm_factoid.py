@@ -822,14 +822,19 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
 
 def get_factoid_losses(emitted, truth):
     all_losses = []
+    factoid_acc = []
     for e, t in zip(emitted, truth):
         t = torch.LongTensor(t).unsqueeze(-1)
         if(use_cuda):
             t = t.cuda()
         temp_loss = model.factoid_crf(e, t)
         all_losses.append(temp_loss)
-        # all_losses.append(F.binary_cross_entropy(e, t, size_average=False, reduce=True))
-    return sum(all_losses) / float(len(all_losses))
+        #
+        if(sum(t)>0):
+            labels      = model.factoid_crf.decode(e)[0]
+            factoid_acc.extend([x==y for (x,y) in zip(labels, t)])
+    fact_acc = np.average(factoid_acc) if(len(factoid_acc)>0) else 0.0
+    return sum(all_losses) / float(len(all_losses)), fact_acc
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
@@ -910,6 +915,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
     batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
+    batch_fact_acc = []
     batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
     #
     train_instances = train_data_step1(train_data)
@@ -935,14 +941,16 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         )
         #
         good_sent_tags, bad_sent_tags       = datum['good_sent_tags'], datum['bad_sent_tags']
+        factoid_acc = -1.
         if(two_losses):
             sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            factoid_loss                    = get_factoid_losses(gs_fact_, datum['good_sents_factoid_tags'])
+            factoid_loss, factoid_acc       = get_factoid_losses(gs_fact_, datum['good_sents_factoid_tags'])
             snip_loss                       = sn_d1_l + sn_d2_l
             # snip_loss = sn_d1_l
             l                               = 0.33
             cost_                           = l * snip_loss + l * cost_ + l * factoid_loss
         #
+        batch_fact_acc.append(factoid_acc)
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_costs.append(cost_.cpu().item())
@@ -952,18 +960,19 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
             elapsed_time    = time.time() - start_time
             start_time      = time.time()
-            pbar.set_description(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+            pbar.set_description('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time, np.average(batch_fact_acc)))
+            logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format( batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time, np.average(batch_fact_acc)))
             batch_costs, batch_acc = [], []
+            batch_fact_acc = []
     if (len(batch_costs) > 0):
         batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc)
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
+            batch_costs, epoch_costs, batch_acc, epoch_acc
+        )
         elapsed_time = time.time() - start_time
         start_time = time.time()
-        print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
-        logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time))
+        print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time, np.average(batch_fact_acc)))
+        logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time, np.average(batch_fact_acc)))
     print('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
     logger.info('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
