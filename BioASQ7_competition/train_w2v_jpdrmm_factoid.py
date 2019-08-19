@@ -1404,11 +1404,6 @@ for run in range(run_from, run_to):
             logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
             break
 
-
-
-
-# pprint([ item for item in bioasq7_data.values() if(item['type'] != 'factoid')][2])
-
 ##########################################
 
 
