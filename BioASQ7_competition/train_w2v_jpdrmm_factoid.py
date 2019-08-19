@@ -1112,7 +1112,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         res = []
         doc_factoid_inputs = []
         # for factoid
-        quest_attention = F.tanh(self.attention_linear(q_conv_res_trigram))
+        quest_attention = torch.tanh(self.attention_linear(q_conv_res_trigram))
         quest_attented  = torch.sum(quest_attention*q_conv_res_trigram, dim=0)
         #
         for i in range(len(doc_sents_embeds)):
@@ -1161,11 +1161,12 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         for i in range(len(doc_factoid_inputs)):
             factoid_input               = doc_factoid_inputs[i]
             expanded_sent_score         = torch.stack(factoid_input.size(0)*[res[i]], dim=0).unsqueeze(-1)
+            expanded_sent_score         = torch.sigmoid(expanded_sent_score)
             bigru_input                 = torch.cat([factoid_input, expanded_sent_score], dim=-1)
             factoid_bigru_output, hn    = self.factoid_bigru(bigru_input.unsqueeze(1), self.factoid_bigru_h0)
-            factoid_bigru_output        = F.tanh(factoid_bigru_output)
+            factoid_bigru_output        = torch.tanh(factoid_bigru_output)
             factoid_output              = self.factoid_out_mlp(factoid_bigru_output).squeeze(-1)
-            factoid_output              = F.sigmoid(factoid_output)
+            factoid_output              = torch.sigmoid(factoid_output)
             doc_factoid_outputs.append(factoid_output)
         #
         ret = self.get_kmax(res, k2)
