@@ -503,10 +503,11 @@ def prep_exact_answers(tokens, emits, thres):
                 ret.append(tokens[i])
     return ret
 
-def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
+def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body, qtype):
     ret = {
         'body'          : quest_body,
         'documents'     : top10docs,
+        'type'          : qtype,
         'id'            : qid,
         'snippets'      : [],
         'exact_answer'  : []
@@ -763,6 +764,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     emitions                    = {
         'body': dato['query_text'],
         'id': dato['query_id'],
+        'type': dato['type'],
         'documents': []
     }
     #
@@ -835,17 +837,17 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     # pprint(extracted_snippets_v2)
     # pprint(extracted_snippets_v3)
     # exit()
-    snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
+    snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
+    snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
     # pprint(snips_res_v1)
     # pprint(snips_res_v2)
     # pprint(snips_res_v3)
     # exit()
     #
-    snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num_v1  = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
+    snips_res_known_rel_num_v2  = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
+    snips_res_known_rel_num_v3  = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'], dato['type'])
     #
     snips_res = {
         'v1' : snips_res_v1,
@@ -1332,13 +1334,12 @@ print(test_map)
 
 '''
 
-
 java -Xmx10G -cp \
 /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
 evaluation.EvaluatorTask1b \
 -phaseA -e 5  \
-/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1 \
-/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseA-testset1 \
+"/home/dpappas/test_w2v_jpdrmm_factoid_batch1/v3 test_emit_bioasq.json"
 
 
 
