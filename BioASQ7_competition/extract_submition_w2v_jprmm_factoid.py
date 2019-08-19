@@ -491,11 +491,13 @@ def GetWords(data, doc_text, words):
 
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
-        'body'      : quest_body,
-        'documents' : top10docs,
-        'id'        : qid,
-        'snippets'  : [],
+        'body'          : quest_body,
+        'documents'     : top10docs,
+        'id'            : qid,
+        'snippets'      : [],
+        'exact_answer'  : []
     }
+    exact_answers       = []
     for esnip in extracted_snippets:
         pid         = esnip[2].split('/')[-1]
         the_text    = esnip[3]
@@ -504,6 +506,8 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             "document"  : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pid),
             "text"      : the_text
         }
+        pprint([item for item in zip(esnip[4], esnip[5])])
+        exit()
         try:
             ind_from                            = docs[pid]['title'].index(the_text)
             ind_to                              = ind_from + len(the_text)
@@ -521,6 +525,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
             esnip_res["offsetInBeginSection"]   = ind_from
             esnip_res["offsetInEndSection"]     = ind_to
         ret['snippets'].append(esnip_res)
+    ret['exact_answer'] = list(set(exact_answers))
     return ret
 
 def get_snips(quest_id, gid, bioasq6_data):
@@ -639,7 +644,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, exact_answ
         'held_out_sents'        : held_out_sents,
     }
 
-def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
+def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips, tokens_per_sent, factoid_emits):
     emition                 = doc_emit_.cpu().item()
     emitss                  = gs_emits_.tolist()
     mmax                    = max(emitss)
@@ -649,7 +654,9 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
             snip_is_relevant(held_out_sents[ind], gold_snips),
             emitss[ind],
             "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind]
+            held_out_sents[ind],
+            tokens_per_sent[ind],
+            factoid_emits[ind].squeeze().tolist()
         )
         all_emits.append(t)
         # extracted_from_one.append(t)
@@ -765,21 +772,21 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
             doc_gaf             = datum['doc_af']
         )
         #
-        for sent_toks, fact_emit in zip(datum['sents_tokens'], gs_fact_):
-            if(any([v>0.5 for v in fact_emit])):
-                print(20 * '-')
-                print(quest_text)
-                print(retr['doc_id'], doc_emit_.squeeze().tolist())
-                print(exact_answers)
-                toks = sent_toks
-                ems  = fact_emit.squeeze().tolist()
-                if(type(ems) != list):
-                    ems = [ems]
-                print([pitem for pitem in zip(toks, ems)])
-                print(' '.join([pitem[0] for pitem in zip(toks, ems) if(pitem[1]>0.5)]))
+        # for sent_toks, fact_emit in zip(datum['sents_tokens'], gs_fact_):
+        #     if(any([v>0.5 for v in fact_emit])):
+        #         print(20 * '-')
+        #         print(quest_text)
+        #         print(retr['doc_id'], doc_emit_.squeeze().tolist())
+        #         print(exact_answers)
+        #         toks = sent_toks
+        #         ems  = fact_emit.squeeze().tolist()
+        #         if(type(ems) != list):
+        #             ems = [ems]
+        #         print([pitem for pitem in zip(toks, ems)])
+        #         print(' '.join([pitem[0] for pitem in zip(toks, ems) if(pitem[1]>0.5)]))
         #
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
-            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
+            doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips, datum['sents_tokens'], gs_fact_
         )
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
@@ -901,7 +908,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         self.attention_linear                       = nn.Linear(self.embedding_dim, self.embedding_dim, bias=True)
         self.factoid_bigru_size                     = 25
         self.factoid_bigru_h0                       = autograd.Variable(torch.randn(2, 1, self.factoid_bigru_size))
-        self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+self.sent_add_feats+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
+        self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+3*3+self.sent_add_feats+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
         self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 1, bias=True)
         #
         if(use_cuda):
@@ -1049,12 +1056,20 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
             # Factoid extraction
+            doc_based_ins_pool  = self.pooling_method(sim_insens.transpose(0,1))
+            doc_based_sen_pool  = self.pooling_method(sim_sens.transpose(0,1))
+            doc_based_oh_pool   = self.pooling_method(sim_oh.transpose(0,1))
+            #
             c1                  = torch.stack(conv_res.size(0)*[sent_add_feats], dim=0)
             c2                  = quest_attented.unsqueeze(0).expand_as(conv_res)
             # print(c1.size())
             # print(c2.size())
             # print(conv_res.size())
-            sent_quest_input            = torch.cat([c1, c2, conv_res], -1)
+            # print(doc_based_ins_pool.size())
+            # print(doc_based_sen_pool.size())
+            # print(doc_based_oh_pool.size())
+            # exit()
+            sent_quest_input            = torch.cat([doc_based_ins_pool, doc_based_sen_pool, doc_based_oh_pool, c1, c2, conv_res], -1)
             factoid_bigru_output, hn    = self.factoid_bigru(sent_quest_input.unsqueeze(1), self.factoid_bigru_h0)
             factoid_output              = self.factoid_out_mlp(factoid_bigru_output).squeeze(-1)
             factoid_output              = F.sigmoid(factoid_output)
