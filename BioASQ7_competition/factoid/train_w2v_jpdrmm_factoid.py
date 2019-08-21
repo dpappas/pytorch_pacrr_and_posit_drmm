@@ -233,6 +233,7 @@ def get_gold_snips(quest_id, bioasq6_data):
     return list(set(gold_snips))
 
 def prep_exact_answers(tokens, emits, thres):
+    # print([t for t in zip(tokens, emits)])
     ret = []
     for i in range(len(tokens)):
         if(emits[i]>thres):
@@ -655,7 +656,8 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
-        fact_ems = factoid_emits[ind].squeeze().squeeze()
+        fact_ems    = factoid_emits[ind].squeeze().squeeze()
+        fact_ems    = fact_ems.tolist()
         t = (
             snip_is_relevant(held_out_sents[ind], gold_snips),
             emitss[ind],
@@ -1393,7 +1395,7 @@ for run in range(run_from, run_to):
     waited_for  = 0
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        # train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
+        train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
