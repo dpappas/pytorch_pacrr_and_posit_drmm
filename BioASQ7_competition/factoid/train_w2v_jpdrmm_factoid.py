@@ -17,7 +17,6 @@ from    pprint                      import pprint
 from    gensim.models.keyedvectors  import KeyedVectors
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
-from    torchcrf                    import CRF
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
@@ -656,8 +655,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
-        fact_ems = factoid_emits[ind]#.squeeze(1)
-        fact_ems = model.factoid_crf.decode(fact_ems)[0]
+        fact_ems = factoid_emits[ind].squeeze().squeeze()
         t = (
             snip_is_relevant(held_out_sents[ind], gold_snips),
             emitss[ind],
@@ -822,16 +820,17 @@ def get_factoid_losses(emitted, truth):
     all_losses = []
     factoid_acc = []
     for e, t in zip(emitted, truth):
-        t = torch.LongTensor(t).unsqueeze(-1)
+        e = e.squeeze().squeeze()
+        t = torch.FloatTensor(t)
         if(use_cuda):
             t = t.cuda()
-        temp_loss = model.factoid_crf(e, t)
+        #
+        temp_loss = F.binary_cross_entropy(e, t, size_average=False, reduce=True)
         all_losses.append(temp_loss)
         #
         if(sum(t)>0):
-            labels      = model.factoid_crf.decode(e)[0]
+            labels      = [int(l>=0.5) for l in e]
             temp_accs   = [int(x==y) for (x,y) in zip(labels, t)]
-            # print(temp_accs)
             factoid_acc.extend(temp_accs)
     fact_acc = np.average(factoid_acc) if(len(factoid_acc)>0) else 0.0
     return sum(all_losses) / float(len(all_losses)), fact_acc
@@ -1004,11 +1003,9 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         self.factoid_bigru_size                     = 25
         self.factoid_bigru_h0                       = autograd.Variable(torch.randn(2, 1, self.factoid_bigru_size))
         self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+3*3+self.sent_add_feats+1+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
-        self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 2, bias=True)
-        self.factoid_crf                            = CRF(2)
+        self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 1, bias=True)
         #
         if(use_cuda):
-            self.factoid_crf        = self.factoid_crf.cuda()
             self.factoid_bigru_h0   = self.factoid_bigru_h0.cuda()
             self.factoid_bigru      = self.factoid_bigru.cuda()
             self.factoid_out_mlp    = self.factoid_out_mlp.cuda()
@@ -1182,7 +1179,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             factoid_bigru_output, hn    = self.factoid_bigru(bigru_input.unsqueeze(1), self.factoid_bigru_h0)
             factoid_bigru_output        = torch.tanh(factoid_bigru_output)
             factoid_output              = self.factoid_out_mlp(factoid_bigru_output)
-            factoid_output              = F.softmax(factoid_output, dim=-1)
+            factoid_output              = torch.sigmoid(factoid_output)
             doc_factoid_outputs.append(factoid_output)
         #
         ret = self.get_kmax(res, k2)
@@ -1396,7 +1393,7 @@ for run in range(run_from, run_to):
     waited_for  = 0
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
-        train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
+        # train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
         epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if(best_dev_map is None or epoch_dev_map>=best_dev_map):
             best_dev_map    = epoch_dev_map
