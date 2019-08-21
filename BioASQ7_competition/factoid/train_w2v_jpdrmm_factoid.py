@@ -235,6 +235,8 @@ def get_gold_snips(quest_id, bioasq6_data):
 def prep_exact_answers(tokens, emits, thres):
     # print([t for t in zip(tokens, emits)])
     ret = []
+    if(len(tokens)==1):
+        emits = [emits]
     for i in range(len(tokens)):
         if(emits[i]>thres):
             if(len(ret) == 0):
