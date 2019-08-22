@@ -12,17 +12,18 @@ from    pprint                  import pprint
 bert_tokenizer  = None
 bert_model      = None
 model           = None
-avgdl           = None
-mean            = None
-deviation       = None
 idf             = None
-max_idf         = None
-embedding_dim   = None
-max_seq_length  = None
 device          = None
 bioasq6_data    = None
 logger          = None
 train_docs      = None
+odir            = None
+avgdl           = 0.0
+mean            = 0.0
+deviation       = 0.0
+max_idf         = 0.0
+embedding_dim   = 0
+max_seq_length  = 0
 
 softmax         = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords       = nltk.corpus.stopwords.words("english")
@@ -71,7 +72,7 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def init_the_logger(hdlr, odir):
+def init_the_logger(hdlr):
     if not os.path.exists(odir):
         os.makedirs(odir)
     od = odir.split('/')[-1]  # 'sent_posit_drmm_MarginRankingLoss_0p001'
@@ -129,14 +130,14 @@ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
         else:
             tokens_b.pop()
 
-def convert_examples_to_features(examples, max_seq_length, tokenizer):
+def convert_examples_to_features(examples):
     """Loads a data file into a list of `InputBatch`s."""
     features = []
     for (ex_index, example) in enumerate(examples):
-        tokens_a = tokenizer.tokenize(example.text_a)
+        tokens_a = bert_tokenizer.tokenize(example.text_a)
         tokens_b = None
         if example.text_b:
-            tokens_b = tokenizer.tokenize(example.text_b)
+            tokens_b = bert_tokenizer.tokenize(example.text_b)
             _truncate_seq_pair(tokens_a, tokens_b, max_seq_length - 3)
         else:
             if len(tokens_a) > max_seq_length - 2:
@@ -148,7 +149,7 @@ def convert_examples_to_features(examples, max_seq_length, tokenizer):
         if tokens_b:
             tokens      += tokens_b + ["[SEP]"]
             segment_ids += [1] * (len(tokens_b) + 1)
-        input_ids       = tokenizer.convert_tokens_to_ids(tokens)
+        input_ids       = bert_tokenizer.convert_tokens_to_ids(tokens)
         ####
         input_mask      = [1] * len(input_ids)
         ####
@@ -186,7 +187,7 @@ def compute_the_cost(optimizer, costs, back_prop=True):
     the_cost = cost_.cpu().item()
     return the_cost
 
-def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
+def similarity_score(query, document, k1, b, idf_scores, normalize, rare_word):
     score = 0
     for query_term in query:
         if query_term not in idf_scores:
@@ -263,9 +264,9 @@ def RemoveBadYears(data, doc_text, train):
     return data
 
 def get_words(s):
-    sl = tokenize(s, bert_tokenizer)
+    sl = tokenize(s)
     sl = [s for s in sl]
-    sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
+    sl2 = [s for s in sl if idf_val(s) >= 2.0]
     return sl, sl2
 
 def fix_bert_tokens(tokens):
@@ -354,10 +355,10 @@ def query_doc_overlap(qwords, dwords):
     idf_qwords_in_doc = 0.0
     idf_qwords = 0.0
     for qword in uwords(qwords):
-        idf_qwords += idf_val(qword, idf, max_idf)
+        idf_qwords += idf_val(qword)
         for dword in uwords(dwords):
             if qword == dword:
-                idf_qwords_in_doc += idf_val(qword, idf, max_idf)
+                idf_qwords_in_doc += idf_val(qword)
                 qwords_in_doc += 1
                 break
     if len(qwords) <= 0:
@@ -375,11 +376,11 @@ def query_doc_overlap(qwords, dwords):
     idf_bigrams = 0.0
     for qword in ubigrams(qwords):
         wrds = qword.split('_')
-        idf_bigrams += idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf)
+        idf_bigrams += idf_val(wrds[0]) * idf_val(wrds[1])
         for dword in ubigrams(dwords):
             if qword == dword:
                 qwords_bigrams_in_doc += 1
-                idf_qwords_bigrams_in_doc += (idf_val(wrds[0], idf, max_idf) * idf_val(wrds[1], idf, max_idf))
+                idf_qwords_bigrams_in_doc += (idf_val(wrds[0]) * idf_val(wrds[1]))
                 break
     if len(qwords) <= 0:
         qwords_bigrams_in_doc_val = 0.0
@@ -397,15 +398,15 @@ def query_doc_overlap(qwords, dwords):
     ]
 
 def GetScores(qtext, dtext, bm25):
-    qwords, qw2 = get_words(qtext, idf, max_idf)
-    dwords, dw2 = get_words(dtext, idf, max_idf)
-    qd1 = query_doc_overlap(qwords, dwords, idf, max_idf)
+    qwords, qw2 = get_words(qtext)
+    dwords, dw2 = get_words(dtext)
+    qd1 = query_doc_overlap(qwords, dwords)
     bm25 = [bm25]
     return qd1[0:3] + bm25
 
 def GetWords(data, doc_text, words):
     for i in tqdm(range(len(data['queries'])), ascii=True):
-        qwds = tokenize(data['queries'][i]['query_text'], bert_tokenizer)
+        qwds = tokenize(data['queries'][i]['query_text'])
         for w in qwds:
             words[w] = 1
         for j in range(len(data['queries'][i]['retrieved_documents'])):
@@ -419,7 +420,7 @@ def GetWords(data, doc_text, words):
                         ]
                     )
             )
-            dwds = tokenize(dtext, bert_tokenizer)
+            dwds = tokenize(dtext)
             for w in dwds:
                 words[w] = 1
 
@@ -613,7 +614,7 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
 
 def embed_the_sent(sent):
     eval_examples   = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
-    eval_features   = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
+    eval_features   = convert_examples_to_features(eval_examples)
     eval_feat       = eval_features[0]
     input_ids       = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
     input_mask      = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
@@ -635,7 +636,7 @@ def get_map_res(fgold, femit, eval_path):
     map_res = float(map_res[-1])
     return map_res
 
-def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision, retrieval_jar_path, odir):
+def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision, retrieval_jar_path):
     '''
     java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
     evaluation.EvaluatorTask1b -phaseA -e 5
@@ -738,20 +739,20 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
+def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
-    good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
+    good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25)
     good_doc_af.append(len(good_sents) / 60.)
     #
     all_doc_text        = the_doc['title'] + ' ' + the_doc['abstractText']
     doc_toks            = tokenize(all_doc_text, bert_tokenizer)
     tomi                = (set(doc_toks) & set(quest_toks))
     tomi_no_stop        = tomi - set(stopwords)
-    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
-    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, True, max_idf)
+    tomi_no_stop_idfs   = [idf_val(w) for w in tomi_no_stop]
+    tomi_idfs           = [idf_val(w) for w in tomi]
+    quest_idfs          = [idf_val(w) for w in quest_toks]
     features            = [
         len(quest) / 300.,
         len(all_doc_text) / 300.,
@@ -767,14 +768,14 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
         sent_toks, sent_embeds  = embed_the_sent(' '.join(bioclean(good_text)))
         oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
-        good_escores            = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        good_escores            = GetScores(quest, good_text, the_bm25)[:-1]
         good_escores.append(len(sent_toks) / 342.)
         tomi                    = (set(sent_toks) & set(quest_toks))
         tomi_no_stop            = tomi - set(stopwords)
-        BM25score               = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-        tomi_no_stop_idfs       = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-        tomi_idfs               = [idf_val(w, idf, max_idf) for w in tomi]
-        quest_idfs              = [idf_val(w, idf, max_idf) for w in quest_toks]
+        BM25score               = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, True, max_idf)
+        tomi_no_stop_idfs       = [idf_val(w) for w in tomi_no_stop]
+        tomi_idfs               = [idf_val(w) for w in tomi]
+        quest_idfs              = [idf_val(w) for w in quest_toks]
         features                = [
             len(quest) / 300.,
             len(good_text) / 300.,
@@ -809,13 +810,13 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
     quest_tokens, qemb  = embed_the_sent(quest_text)
     ####
-    q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    gold_snips          = get_gold_snips(dato['query_id'], bioasq6_data)
+    q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+    gold_snips          = get_gold_snips(dato['query_id'])
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf, quest_tokens)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, quest_tokens)
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             doc1_oh_sim         = datum['oh_sims'],
@@ -965,7 +966,7 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         for dic in tqdm(train_docs, ascii=True):
             sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
             for s in sents:
-                total_words += len(tokenize(s, bert_tokenizer))
+                total_words += len(tokenize(s))
                 total_docs += 1.
         avgdl = float(total_words) / float(total_docs)
     else:
@@ -981,9 +982,9 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
             for dic in all_retr_ids:
                 try:
                     sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-                    q_toks = tokenize(qtext, bert_tokenizer)
+                    q_toks = tokenize(qtext)
                     for sent in sents:
-                        BM25score = similarity_score(q_toks, tokenize(sent, bert_tokenizer), k1, b, idf, avgdl, False, 0, 0, max_idf)
+                        BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
                         BM25scores.append(BM25score)
                 except KeyError:
                     not_found += 1
