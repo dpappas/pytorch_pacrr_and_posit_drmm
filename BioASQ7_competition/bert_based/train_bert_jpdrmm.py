@@ -457,7 +457,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         ret['snippets'].append(esnip_res)
     return ret
 
-def get_snips(quest_id, gid):
+def get_snips(quest_id, gid, bioasq6_data):
     good_snips = []
     if ('snippets' in bioasq6_data[quest_id]):
         for sn in bioasq6_data[quest_id]['snippets']:
@@ -991,16 +991,16 @@ def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
         print('deviation {} provided'.format(deviation))
     return avgdl, mean, deviation
 
-def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         ####
         good_snips          = get_snips(quest_id, gid, bioasq6_data)
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
         quest_tokens, qemb  = embed_the_sent(quest_text)
-        q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         ####
-        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf, quest_tokens)
+        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens)
         good_sents_embeds   = datum['sents_embeds']
         good_sents_escores  = datum['sents_escores']
         good_doc_af         = datum['doc_af']
@@ -1008,7 +1008,7 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         good_held_out_sents = datum['held_out_sents']
         good_oh_sims        = datum['oh_sims']
         #
-        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf, quest_tokens)
+        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], quest_tokens)
         bad_sents_embeds    = datum['sents_embeds']
         bad_sents_escores   = datum['sents_escores']
         bad_doc_af          = datum['doc_af']
@@ -1047,7 +1047,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     #
     start_time = time.time()
     pbar = tqdm(
-        iterable= train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
+        iterable= train_data_step2(train_instances, train_docs, bioasq6_data, use_sent_tokenizer),
         total   = 14288, #9684, # 378,
         ascii   = True
     )
@@ -1141,14 +1141,16 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
         res_map = get_map_res(
             os.path.join(odir, 'v3 dev_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'),
+            eval_path
         )
     else:
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
         res_map = get_map_res(
             os.path.join(odir, 'v3 test_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'),
+            eval_path
         )
     return res_map
 
@@ -1515,7 +1517,7 @@ for run in range(0, 5):
     model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
     params      = list(model.parameters())
     params      += list(bert_model.parameters())
-    print_params(model)
+    print_params()
     optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     #
     best_dev_map, test_map = None, None
