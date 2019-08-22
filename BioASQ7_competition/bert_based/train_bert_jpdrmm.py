@@ -1490,7 +1490,9 @@ b_size              = 32
 max_epoch           = 4
 #####################
 
-(dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
+(dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(
+    dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
+)
 
 hdlr = None
 for run in range(0, 5):
