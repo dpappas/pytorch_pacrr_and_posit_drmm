@@ -267,10 +267,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         k_max_pooled = sorted_res[:, -self.k:]  # select the last k of each instance in our data
         average_k_max_pooled = k_max_pooled.sum(-1) / float(self.k)  # average these k values
         the_maximum = k_max_pooled[:, -1]  # select the maximum value of each instance
-        the_average_over_all = sorted_res.sum(-1) / float(
-            sim_matrix.size(1))  # add average of all elements as long sentences might have more matches
-        the_concatenation = torch.stack([the_maximum, average_k_max_pooled, the_average_over_all],
-                                        dim=-1)  # concatenate maximum value and average of k-max values
+        the_average_over_all = sorted_res.sum(-1) / float(sim_matrix.size(1))  # add average of all elements as long sentences might have more matches
+        the_concatenation = torch.stack([the_maximum, average_k_max_pooled, the_average_over_all],dim=-1)  # concatenate maximum value and average of k-max values
         return the_concatenation  # return the concatenation
 
     def get_output(self, input_list, weights):
@@ -288,8 +286,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
 
-    def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights,
-                           k2):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
             sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False).to(device)
