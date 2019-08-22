@@ -115,7 +115,7 @@ def average_precision(r):
     Returns:
         Average precision
     """
-    r = np.asarray(r) != 0
+    r   = np.asarray(r) != 0
     out = [precision_at_k(r, k + 1) for k in range(r.size) if r[k]]
     if not out:
         return 0.
