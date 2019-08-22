@@ -1147,7 +1147,7 @@ class JBERT_Modeler(nn.Module):
         doc_sents_embeds        = torch.stack(doc_sents_embeds, dim=0).to(device)
         intermediate_sent_score = self.sent_layer(doc_sents_embeds)
         intermediate_sent_score = torch.sigmoid(intermediate_sent_score)
-        return intermediate_sent_score
+        return intermediate_sent_score.squeeze()
     ##########################
     def emit_one(self, doc1_sents_embeds, sents_gaf, doc_gaf):
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
