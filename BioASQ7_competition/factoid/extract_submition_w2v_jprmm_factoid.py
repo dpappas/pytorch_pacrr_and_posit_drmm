@@ -29,7 +29,6 @@ import  nltk
 import  math
 from    sklearn.preprocessing       import minmax_scale
 import  sys
-from    torchcrf                    import CRF
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
