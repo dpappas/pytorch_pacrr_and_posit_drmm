@@ -1196,9 +1196,6 @@ class JBERT_Modeler(nn.Module):
         return loss1, doc1_out, doc2_out, sents1_out, sents2_out
     ##########################
 
-use_cuda = torch.cuda.is_available()
-
-# atlas , cslab243
 #####################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1209,7 +1206,7 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 #####################
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 #####################
-use_cuda            = True
+use_cuda            = torch.cuda.is_available()
 max_seq_length      = 40
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 bert_model          = 'bert-base-uncased'
