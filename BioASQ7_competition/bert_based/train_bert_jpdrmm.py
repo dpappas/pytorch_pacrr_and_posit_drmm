@@ -1,20 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# import sys
-# reload(sys)
-# sys.setdefaultencoding("utf-8")
-
-import  json
 import  time
-import  random
-import  subprocess
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  torch.optim                 as optim
 import  torch.autograd              as autograd
-from    pprint import pprint
-import  math
 from    pytorch_pretrained_bert.tokenization import BertTokenizer
 from    pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from    pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
