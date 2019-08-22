@@ -1,8 +1,16 @@
 
-import  torch, pickle
-import  numpy           as np
-from    nltk.tokenize   import sent_tokenize
-from    tqdm            import tqdm
+import  torch, pickle, os, re, nltk, logging
+import  torch.nn.functional     as F
+import  numpy                   as np
+from    nltk.tokenize           import sent_tokenize
+from    tqdm                    import tqdm
+from    sklearn.preprocessing   import LabelEncoder
+from    sklearn.preprocessing   import OneHotEncoder
+from    difflib                 import SequenceMatcher
+
+softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
+stopwords   = nltk.corpus.stopwords.words("english")
+bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class InputExample(object):
     """A single training/test example for simple sequence classification."""
@@ -31,6 +39,101 @@ class InputFeatures(object):
         self.segment_ids = segment_ids
         self.label_id = label_id
 
+def init_the_logger(hdlr, odir):
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+    od = odir.split('/')[-1]  # 'sent_posit_drmm_MarginRankingLoss_0p001'
+    logger = logging.getLogger(od)
+    if (hdlr is not None):
+        logger.removeHandler(hdlr)
+    hdlr = logging.FileHandler(os.path.join(odir, 'model.log'))
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+    return logger, hdlr
+
+def create_one_hot_and_sim(tokens1, tokens2):
+    '''
+    :param tokens1:
+    :param tokens2:
+    :return:
+    exxample call : create_one_hot_and_sim('c d e'.split(), 'a b c'.split())
+    '''
+    label_encoder = LabelEncoder()
+    onehot_encoder = OneHotEncoder(sparse=False, categories='auto')
+    #
+    values = list(set(tokens1 + tokens2))
+    integer_encoded = label_encoder.fit_transform(values)
+    #
+    integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
+    onehot_encoder.fit(integer_encoded)
+    #
+    lab1 = label_encoder.transform(tokens1)
+    lab1 = np.expand_dims(lab1, axis=1)
+    oh1 = onehot_encoder.transform(lab1)
+    #
+    lab2 = label_encoder.transform(tokens2)
+    lab2 = np.expand_dims(lab2, axis=1)
+    oh2 = onehot_encoder.transform(lab2)
+    #
+    ret = np.matmul(oh1, np.transpose(oh2), out=None)
+    #
+    return oh1, oh2, ret
+
+def _truncate_seq_pair(tokens_a, tokens_b, max_length):
+    """Truncates a sequence pair in place to the maximum length."""
+    ####
+    # This is a simple heuristic which will always truncate the longer sequence
+    # one token at a time. This makes more sense than truncating an equal percent
+    # of tokens from each, since if one sequence is very short then each token
+    # that's truncated likely contains more information than a longer sequence.
+    while True:
+        total_length = len(tokens_a) + len(tokens_b)
+        if total_length <= max_length:
+            break
+        if len(tokens_a) > len(tokens_b):
+            tokens_a.pop()
+        else:
+            tokens_b.pop()
+
+def convert_examples_to_features(examples, max_seq_length, tokenizer):
+    """Loads a data file into a list of `InputBatch`s."""
+    features = []
+    for (ex_index, example) in enumerate(examples):
+        tokens_a = tokenizer.tokenize(example.text_a)
+        tokens_b = None
+        if example.text_b:
+            tokens_b = tokenizer.tokenize(example.text_b)
+            _truncate_seq_pair(tokens_a, tokens_b, max_seq_length - 3)
+        else:
+            if len(tokens_a) > max_seq_length - 2:
+                tokens_a = tokens_a[:(max_seq_length - 2)]
+        ####
+        tokens          = ["[CLS]"] + tokens_a + ["[SEP]"]
+        segment_ids     = [0] * len(tokens)
+        ####
+        if tokens_b:
+            tokens      += tokens_b + ["[SEP]"]
+            segment_ids += [1] * (len(tokens_b) + 1)
+        input_ids       = tokenizer.convert_tokens_to_ids(tokens)
+        ####
+        input_mask      = [1] * len(input_ids)
+        ####
+        padding         = [0] * (max_seq_length - len(input_ids))
+        input_ids       += padding
+        input_mask      += padding
+        segment_ids     += padding
+        ####
+        assert len(input_ids)   == max_seq_length
+        assert len(input_mask)  == max_seq_length
+        assert len(segment_ids) == max_seq_length
+        ####
+        in_f        = InputFeatures(input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=0)
+        in_f.tokens = tokens
+        features.append(in_f)
+    return features
+
 def tf(term, document):
     tf = 0
     for word in document:
@@ -40,6 +143,16 @@ def tf(term, document):
         return tf
     else:
         return tf / len(document)
+
+def compute_the_cost(optimizer, costs, back_prop=True):
+    cost_ = torch.stack(costs)
+    cost_ = cost_.sum() / (1.0 * cost_.size(0))
+    if (back_prop):
+        cost_.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+    the_cost = cost_.cpu().item()
+    return the_cost
 
 def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
     score = 0
@@ -362,3 +475,95 @@ def snip_is_relevant(one_sent, gold_snips):
             ]
         )
     )
+
+def get_norm_doc_scores(the_doc_scores):
+    ks = list(the_doc_scores.keys())
+    vs = [the_doc_scores[k] for k in ks]
+    vs = softmax(vs)
+    norm_doc_scores = {}
+    for i in range(len(ks)):
+        norm_doc_scores[ks[i]] = vs[i]
+    return norm_doc_scores
+
+def select_snippets_v1(extracted_snippets):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return: returns the best 10 snippets of all docs (0..n from each doc)
+    '''
+    sorted_snips = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
+    return sorted_snips[:10]
+
+def select_snippets_v2(extracted_snippets):
+    '''
+    :param extracted_snippets:
+    :param doc_res:
+    :return: returns the best snippet of each doc  (1 from each doc)
+    '''
+    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
+    ret = {}
+    for es in extracted_snippets:
+        if (es[2] in ret):
+            if (es[1] > ret[es[2]][1]):
+                ret[es[2]] = es
+        else:
+            ret[es[2]] = es
+    sorted_snips = sorted(ret.values(), key=lambda x: x[1], reverse=True)
+    return sorted_snips[:10]
+
+def select_snippets_v3(extracted_snippets, the_doc_scores):
+    '''
+    :param      extracted_snippets:
+    :param      doc_res:
+    :return:    returns the top 10 snippets across all documents (0..n from each doc)
+    '''
+    norm_doc_scores = get_norm_doc_scores(the_doc_scores)
+    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
+    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
+    sorted_snips = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
+    return sorted_snips[:10]
+
+def similar(upstream_seq, downstream_seq):
+    upstream_seq = upstream_seq.encode('ascii', 'ignore')
+    downstream_seq = downstream_seq.encode('ascii', 'ignore')
+    s = SequenceMatcher(None, upstream_seq, downstream_seq)
+    match = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
+    upstream_start = match[0]
+    upstream_end = match[0] + match[2]
+    longest_match = upstream_seq[upstream_start:upstream_end]
+    to_match = upstream_seq if (len(downstream_seq) > len(upstream_seq)) else downstream_seq
+    r1 = SequenceMatcher(None, to_match, longest_match).ratio()
+    return r1
+
+def get_pseudo_retrieved(dato, bioasq6_data):
+    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq6_data[dato['query_id']]['snippets']]
+    pseudo_retrieved = [
+        {
+            'bm25_score': 7.76,
+            'doc_id': id,
+            'is_relevant': True,
+            'norm_bm25_score': 3.85
+        }
+        for id in set(some_ids)
+    ]
+    return pseudo_retrieved
+
+def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_, model):
+    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
+    wrong = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
+    wrong = torch.cat(wrong + [bs_emits_.squeeze(-1)])
+    losses = [model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
+    return sum(losses) / float(len(losses))
+
+def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_, device):
+    bs_emits_ = bs_emits_.squeeze(-1)
+    gs_emits_ = gs_emits_.squeeze(-1)
+    good_sent_tags = torch.FloatTensor(good_sent_tags).to(device)
+    tags_2 = torch.zeros_like(bs_emits_).to(device)
+    #
+    sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, reduction='sum')
+    sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
+    return sn_d1_l, sn_d2_l
+
+
+
