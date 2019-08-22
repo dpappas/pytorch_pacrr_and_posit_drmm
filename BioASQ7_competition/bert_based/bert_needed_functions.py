@@ -9,6 +9,7 @@ from    sklearn.preprocessing   import OneHotEncoder
 from    difflib                 import SequenceMatcher
 from    pprint                  import pprint
 
+retrieval_jar_path = None
 bert_tokenizer  = None
 bert_model      = None
 model           = None
@@ -187,7 +188,7 @@ def compute_the_cost(optimizer, costs, back_prop=True):
     the_cost = cost_.cpu().item()
     return the_cost
 
-def similarity_score(query, document, k1, b, idf_scores, normalize, rare_word):
+def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
     score = 0
     for query_term in query:
         if query_term not in idf_scores:
@@ -581,7 +582,7 @@ def get_pseudo_retrieved(dato, bioasq6_data):
     ]
     return pseudo_retrieved
 
-def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_, model):
+def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
     wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
     wrong = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
     wrong = torch.cat(wrong + [bs_emits_.squeeze(-1)])
@@ -636,7 +637,7 @@ def get_map_res(fgold, femit, eval_path):
     map_res = float(map_res[-1])
     return map_res
 
-def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision, retrieval_jar_path):
+def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
     java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
     evaluation.EvaluatorTask1b -phaseA -e 5
@@ -746,10 +747,10 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     good_doc_af.append(len(good_sents) / 60.)
     #
     all_doc_text        = the_doc['title'] + ' ' + the_doc['abstractText']
-    doc_toks            = tokenize(all_doc_text, bert_tokenizer)
+    doc_toks            = tokenize(all_doc_text)
     tomi                = (set(doc_toks) & set(quest_toks))
     tomi_no_stop        = tomi - set(stopwords)
-    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, True, max_idf)
+    BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
     tomi_no_stop_idfs   = [idf_val(w) for w in tomi_no_stop]
     tomi_idfs           = [idf_val(w) for w in tomi]
     quest_idfs          = [idf_val(w) for w in quest_toks]
@@ -772,7 +773,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
         good_escores.append(len(sent_toks) / 342.)
         tomi                    = (set(sent_toks) & set(quest_toks))
         tomi_no_stop            = tomi - set(stopwords)
-        BM25score               = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, True, max_idf)
+        BM25score               = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
         tomi_no_stop_idfs       = [idf_val(w) for w in tomi_no_stop]
         tomi_idfs               = [idf_val(w) for w in tomi]
         quest_idfs              = [idf_val(w) for w in quest_toks]
