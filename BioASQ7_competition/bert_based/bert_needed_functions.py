@@ -9,9 +9,24 @@ from    sklearn.preprocessing   import OneHotEncoder
 from    difflib                 import SequenceMatcher
 from    pprint                  import pprint
 
-softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
-stopwords   = nltk.corpus.stopwords.words("english")
-bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+bert_tokenizer  = None
+bert_model      = None
+model           = None
+avgdl           = None
+mean            = None
+deviation       = None
+idf             = None
+max_idf         = None
+embedding_dim   = None
+max_seq_length  = None
+device          = None
+bioasq6_data    = None
+logger          = None
+train_docs      = None
+
+softmax         = lambda z: np.exp(z) / np.sum(np.exp(z))
+stopwords       = nltk.corpus.stopwords.words("english")
+bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
 class InputExample(object):
     """A single training/test example for simple sequence classification."""
@@ -231,7 +246,7 @@ def RemoveBadYears(data, doc_text, train):
                 break
     return data
 
-def get_words(s, idf, max_idf):
+def get_words(s):
     sl = tokenize(s, bert_tokenizer)
     sl = [s for s in sl]
     sl2 = [s for s in sl if idf_val(s, idf, max_idf) >= 2.0]
@@ -246,12 +261,12 @@ def fix_bert_tokens(tokens):
             ret.append(t)
     return ret
 
-def tokenize(x, bert_tokenizer):
+def tokenize(x):
     x_tokens = bert_tokenizer.tokenize(x)
     x_tokens = fix_bert_tokens(x_tokens)
     return x_tokens
 
-def idf_val(w, idf, max_idf):
+def idf_val(w):
     if w in idf:
         return idf[w]
     return max_idf
@@ -264,7 +279,7 @@ def get_embeds(tokens, wv):
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
-def get_embeds_use_unk(tokens, wv, embedding_dim):
+def get_embeds_use_unk(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
         if (tok in wv):
@@ -276,7 +291,7 @@ def get_embeds_use_unk(tokens, wv, embedding_dim):
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
-def get_embeds_use_only_unk(tokens, wv, embedding_dim):
+def get_embeds_use_only_unk(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
         wv[tok] = np.random.randn(embedding_dim)
@@ -317,7 +332,7 @@ def ubigrams(words):
         prevw = w
     return [w for w in uw]
 
-def query_doc_overlap(qwords, dwords, idf, max_idf):
+def query_doc_overlap(qwords, dwords):
     # % Query words in doc.
     qwords_in_doc = 0
     idf_qwords_in_doc = 0.0
@@ -365,14 +380,14 @@ def query_doc_overlap(qwords, dwords, idf, max_idf):
         idf_qwords_bigrams_in_doc_val
     ]
 
-def GetScores(qtext, dtext, bm25, idf, max_idf):
+def GetScores(qtext, dtext, bm25):
     qwords, qw2 = get_words(qtext, idf, max_idf)
     dwords, dw2 = get_words(dtext, idf, max_idf)
     qd1 = query_doc_overlap(qwords, dwords, idf, max_idf)
     bm25 = [bm25]
     return qd1[0:3] + bm25
 
-def GetWords(data, doc_text, words, bert_tokenizer):
+def GetWords(data, doc_text, words):
     for i in tqdm(range(len(data['queries'])), ascii=True):
         qwds = tokenize(data['queries'][i]['query_text'], bert_tokenizer)
         for w in qwds:
@@ -392,7 +407,7 @@ def GetWords(data, doc_text, words, bert_tokenizer):
             for w in dwds:
                 words[w] = 1
 
-def get_gold_snips(quest_id, bioasq6_data):
+def get_gold_snips(quest_id):
     gold_snips = []
     if ('snippets' in bioasq6_data[quest_id]):
         for sn in bioasq6_data[quest_id]['snippets']:
@@ -433,7 +448,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         ret['snippets'].append(esnip_res)
     return ret
 
-def get_snips(quest_id, gid, bioasq6_data):
+def get_snips(quest_id, gid):
     good_snips = []
     if ('snippets' in bioasq6_data[quest_id]):
         for sn in bioasq6_data[quest_id]['snippets']:
@@ -556,7 +571,7 @@ def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_, model):
     losses = [model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
     return sum(losses) / float(len(losses))
 
-def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_, device):
+def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     bs_emits_ = bs_emits_.squeeze(-1)
     gs_emits_ = gs_emits_.squeeze(-1)
     good_sent_tags = torch.FloatTensor(good_sent_tags).to(device)
@@ -580,7 +595,7 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     }
     torch.save(state, filename)
 
-def embed_the_sent(sent, max_seq_length, bert_tokenizer, bert_model, device):
+def embed_the_sent(sent):
     eval_examples   = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
     eval_features   = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
     eval_feat       = eval_features[0]
@@ -707,7 +722,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks, avgdl, mean, deviation, bert_tokenizer):
+def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks):
     good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
@@ -767,7 +782,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf, quest_toks, av
         'oh_sims': good_oh_sim
     }
 
-def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer, bioasq6_data, idf, max_idf, model):
+def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
     emitions = {
         'body': dato['query_text'],
         'id': dato['query_id'],
@@ -861,7 +876,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     return data_for_revision, ret_data, snips_res, snips_res_known
 
-def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision, logger):
+def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
@@ -896,7 +911,7 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc, optimizer):
     epoch_aver_acc = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
-def print_params(model, bert_model, logger):
+def print_params():
     '''
     It just prints the number of parameters in the model.
     :param model:   The pytorch model
@@ -927,7 +942,7 @@ def print_params(model, bert_model, logger):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def get_bm25_metrics(bioasq6_data, train_docs, bert_tokenizer, idf, max_idf, avgdl=0., mean=0., deviation=0.):
+def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
         total_words = 0
         total_docs = 0
