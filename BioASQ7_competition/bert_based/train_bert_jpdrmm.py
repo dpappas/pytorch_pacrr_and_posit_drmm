@@ -20,22 +20,6 @@ from    pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from    pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 from    BioASQ7_competition.bert_based.bert_needed_functions import *
 
-def train_data_step1(train_data):
-    ret = []
-    for dato in tqdm(train_data['queries'], ascii=True):
-        quest = dato['query_text']
-        quest_id = dato['query_id']
-        bm25s = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        ret_pmids = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-        good_pmids = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-        if (len(bad_pmids) > 0):
-            for gid in good_pmids:
-                bid = random.choice(bad_pmids)
-                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
-    print('')
-    return ret
-
 def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         ####

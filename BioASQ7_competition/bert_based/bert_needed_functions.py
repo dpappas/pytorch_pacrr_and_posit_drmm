@@ -1,5 +1,5 @@
 
-import  torch, pickle, os, re, nltk, logging, subprocess, json, math
+import  torch, pickle, os, re, nltk, logging, subprocess, json, math, random
 import  torch.nn.functional     as F
 import  numpy                   as np
 from    nltk.tokenize           import sent_tokenize
@@ -54,6 +54,22 @@ class InputFeatures(object):
         self.input_mask = input_mask
         self.segment_ids = segment_ids
         self.label_id = label_id
+
+def train_data_step1(train_data):
+    ret = []
+    for dato in tqdm(train_data['queries'], ascii=True):
+        quest = dato['query_text']
+        quest_id = dato['query_id']
+        bm25s = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        if (len(bad_pmids) > 0):
+            for gid in good_pmids:
+                bid = random.choice(bad_pmids)
+                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
+    print('')
+    return ret
 
 def init_the_logger(hdlr, odir):
     if not os.path.exists(odir):
