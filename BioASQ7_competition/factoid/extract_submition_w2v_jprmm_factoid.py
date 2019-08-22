@@ -360,7 +360,10 @@ def GetWords(data, doc_text, words):
         words[w] = 1
 
 def prep_exact_answers(tokens, emits, thres):
+    # print([t for t in zip(tokens, emits)])
     ret = []
+    if(len(tokens)==1):
+        emits = [emits]
     for i in range(len(tokens)):
         if(emits[i]>thres):
             if(len(ret) == 0):
@@ -435,8 +438,6 @@ def get_the_mesh(the_doc):
     return good_mesh
 
 def snip_is_relevant(one_sent, gold_snips):
-    # print one_sent
-    # pprint(gold_snips)
     return int(
         any(
             [
@@ -602,8 +603,8 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
-        fact_ems = factoid_emits[ind]#.squeeze(1)
-        fact_ems = model.factoid_crf.decode(fact_ems)[0]
+        fact_ems    = factoid_emits[ind].squeeze().squeeze()
+        fact_ems    = fact_ems.tolist()
         t = (
             snip_is_relevant(held_out_sents[ind], gold_snips),
             emitss[ind],
@@ -735,6 +736,14 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_f
     print('{} Fact Lenient Acc: {}'.format(prefix, bioasq_snip_res['Factoid Lenient Acc']))
     print('{} Fact MRR: {}'.format(prefix, bioasq_snip_res['Factoid MRR']))
     #
+    logger.info('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
+    logger.info('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
+    logger.info('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
+    logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
+    logger.info('{} Fact Strict Acc: {}'.format(prefix, bioasq_snip_res['Factoid Strict Acc']))
+    logger.info('{} Fact Lenient Acc: {}'.format(prefix, bioasq_snip_res['Factoid Lenient Acc']))
+    logger.info('{} Fact MRR: {}'.format(prefix, bioasq_snip_res['Factoid MRR']))
+    #
     return bioasq_snip_res
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
@@ -791,11 +800,9 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
         self.factoid_bigru_size                     = 25
         self.factoid_bigru_h0                       = autograd.Variable(torch.randn(2, 1, self.factoid_bigru_size))
         self.factoid_bigru                          = nn.GRU(input_size=2*self.embedding_dim+3*3+self.sent_add_feats+1+1, hidden_size=self.factoid_bigru_size, bidirectional=True, batch_first=False)
-        self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 2, bias=True)
-        self.factoid_crf                            = CRF(2)
+        self.factoid_out_mlp                        = nn.Linear(2*self.factoid_bigru_size, 1, bias=True)
         #
         if(use_cuda):
-            self.factoid_crf        = self.factoid_crf.cuda()
             self.factoid_bigru_h0   = self.factoid_bigru_h0.cuda()
             self.factoid_bigru      = self.factoid_bigru.cuda()
             self.factoid_out_mlp    = self.factoid_out_mlp.cuda()
@@ -969,7 +976,7 @@ class Sent_Posit_Drmm_Factoid_Modeler(nn.Module):
             factoid_bigru_output, hn    = self.factoid_bigru(bigru_input.unsqueeze(1), self.factoid_bigru_h0)
             factoid_bigru_output        = torch.tanh(factoid_bigru_output)
             factoid_output              = self.factoid_out_mlp(factoid_bigru_output)
-            factoid_output              = F.softmax(factoid_output, dim=-1)
+            factoid_output              = torch.sigmoid(factoid_output)
             doc_factoid_outputs.append(factoid_output)
         #
         ret = self.get_kmax(res, k2)

@@ -225,13 +225,6 @@ def get_snips(quest_id, gid, bioasq6_data):
     good_snips = [sn.strip() for sn in good_snips]
     return good_snips
 
-def get_gold_snips(quest_id, bioasq6_data):
-    gold_snips                  = []
-    if ('snippets' in bioasq6_data[quest_id]):
-        for sn in bioasq6_data[quest_id]['snippets']:
-            gold_snips.extend(sent_tokenize(sn['text']))
-    return list(set(gold_snips))
-
 def prep_exact_answers(tokens, emits, thres):
     # print([t for t in zip(tokens, emits)])
     ret = []
@@ -365,30 +358,6 @@ def get_embeds_use_only_unk(tokens, wv):
         ret1.append(tok)
         ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
-
-def get_exact_answers(qid, bioasq7_data):
-    if('exact_answer' not in bioasq7_data[qid]):
-        return []
-    if(bioasq7_data[qid]['type'].lower().strip() != 'factoid'):
-        return []
-    exact_answers = bioasq7_data[qid]['exact_answer']
-    if(type(exact_answers) == str):
-        exact_answers = [exact_answers]
-    flat_list = []
-    for item in exact_answers:
-        if(type(item) == list):
-            flat_list.extend(item)
-        else:
-            flat_list.append(item)
-    exact_answers = flat_list
-    flat_list = []
-    for item in exact_answers:
-        if(type(item) == list):
-            flat_list.extend(item)
-        else:
-            flat_list.append(item)
-    exact_answers = flat_list
-    return exact_answers
 
 def get_sent_tags_factoid(sent_tokens, exact_answers_tokenized):
     tags = len(sent_tokens) * [0]
@@ -651,6 +620,37 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
+
+def get_gold_snips(quest_id, bioasq6_data):
+    gold_snips                  = []
+    if ('snippets' in bioasq6_data[quest_id]):
+        for sn in bioasq6_data[quest_id]['snippets']:
+            gold_snips.extend(sent_tokenize(sn['text']))
+    return list(set(gold_snips))
+
+def get_exact_answers(qid, bioasq7_data):
+    if('exact_answer' not in bioasq7_data[qid]):
+        return []
+    if(bioasq7_data[qid]['type'].lower().strip() != 'factoid'):
+        return []
+    exact_answers = bioasq7_data[qid]['exact_answer']
+    if(type(exact_answers) == str):
+        exact_answers = [exact_answers]
+    flat_list = []
+    for item in exact_answers:
+        if(type(item) == list):
+            flat_list.extend(item)
+        else:
+            flat_list.append(item)
+    exact_answers = flat_list
+    flat_list = []
+    for item in exact_answers:
+        if(type(item) == list):
+            flat_list.extend(item)
+        else:
+            flat_list.append(item)
+    exact_answers = flat_list
+    return exact_answers
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips, tokens_per_sent, factoid_emits):
     emition                 = doc_emit_.cpu().item()
