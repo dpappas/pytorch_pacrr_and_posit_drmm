@@ -138,7 +138,7 @@ def embed_the_sent(sent, quest):
     input_mask                  = torch.tensor([eval_feat.input_mask], dtype=torch.long)#.to(device)
     segment_ids                 = torch.tensor([eval_feat.segment_ids], dtype=torch.long)#.to(device)
     token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=True)
-    return token_embeds
+    return pooled_output
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
