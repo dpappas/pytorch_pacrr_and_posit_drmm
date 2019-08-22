@@ -717,7 +717,8 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
         sent_toks               = bioclean(good_text)
         sent_embeds_1           = embed_the_sent(' '.join(bioclean(good_text)), ' '.join(bioclean(quest)))
         sent_embeds_2           = embed_the_sent(' '.join(bioclean(quest)), ' '.join(bioclean(good_text)))
-        sent_embeds             = [item for item in zip(sent_embeds_1, sent_embeds_2)]
+        # sent_embeds             = torch.cat([sent_embeds_1, sent_embeds_2])
+        sent_embeds             = sent_embeds_1 + sent_embeds_2
         good_escores            = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
         tomi                    = (set(sent_toks) & set(quest_toks))
@@ -1127,12 +1128,6 @@ class JBERT_Modeler(nn.Module):
         self.doc_add_feats      = 11
         self.sent_add_feats     = 10
         #
-        self.total_bert_layers       = 12
-        self.layer_weights      = nn.Parameter(torch.Tensor(self.total_bert_layers))
-        self.att_head_per_layer = []
-        for _ in range(self.total_bert_layers):
-            self.att_head_per_layer.append(nn.Linear(embedding_dim, 1, bias=True).to(device))
-        #
         self.sent_layer         = nn.Linear(embedding_dim, 1, bias=True).to(device)
         #
         self.sent_out_layer_1   = nn.Linear(1 + self.sent_add_feats, 8, bias=True).to(device)
@@ -1149,43 +1144,20 @@ class JBERT_Modeler(nn.Module):
         return loss_q_pos
     ##########################
     def do_for_doc(self, doc_sents_embeds):
-        sent_embeds_per_layer   = []
-        for sent in doc_sents_embeds:
-            sent_embs = []
-            for l in range(len(sent)):
-                sent_quest_embed, quest_sent_embed = sent[l]
-                sent_quest_embed = sent_quest_embed.to(device)
-                quest_sent_embed = quest_sent_embed.to(device)
-                #############################################
-                att_sent    = self.att_head_per_layer[l](sent_quest_embed)
-                att_quest   = self.att_head_per_layer[l](quest_sent_embed)
-                #############################################
-                sent_overall    = torch.sum(att_sent.expand_as(sent_quest_embed)  * sent_quest_embed, dim=1)
-                quest_overall   = torch.sum(att_quest.expand_as(quest_sent_embed) * quest_sent_embed, dim=1)
-                sent_overall    = sent_overall.squeeze()
-                quest_overall   = quest_overall.squeeze()
-                #############################################
-                qs_attended     = quest_overall + sent_overall
-                sent_embs.append(qs_attended)
-                #############################################
-            sent_embeds_per_layer.append(torch.stack(sent_embs, dim=0))
-        sent_embeds_per_layer   = torch.stack(sent_embeds_per_layer, dim=0)
-        average_sent_embeds     = (sent_embeds_per_layer * self.layer_weights.unsqueeze(0).unsqueeze(-1).expand_as(sent_embeds_per_layer))
-        average_sent_embeds     = torch.sum(average_sent_embeds, dim=1) / (1.0 * average_sent_embeds.size(1))
-        #
-        average_sent_embeds     = self.sent_layer(average_sent_embeds)
-        average_sent_embeds     = torch.sigmoid(average_sent_embeds)
-        return average_sent_embeds
+        doc_sents_embeds        = torch.stack(doc_sents_embeds, dim=0).to(device)
+        intermediate_sent_score = self.sent_layer(doc_sents_embeds)
+        intermediate_sent_score = torch.sigmoid(intermediate_sent_score)
+        return intermediate_sent_score
     ##########################
     def emit_one(self, doc1_sents_embeds, sents_gaf, doc_gaf):
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
         sents_gaf = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
         #
-        average_sent_embeds1    = self.do_for_doc(doc1_sents_embeds)
+        doc1_int_sent_scores    = self.do_for_doc(doc1_sents_embeds)
         #
-        doc1_sents_embeds_af    = torch.cat([average_sent_embeds1, sents_gaf], -1)
+        doc1_int_sent_scores_af = torch.cat([doc1_int_sent_scores, sents_gaf], -1)
         #
-        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_sents_embeds_af), negative_slope=0.1)
+        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_int_sent_scores_af), negative_slope=0.1)
         sents1_out              = F.sigmoid(self.sent_out_layer_2(sents1_out))
         #
         max_feats_of_sents_1    = torch.max(sents1_out, 0)[0].unsqueeze(0)
@@ -1204,15 +1176,15 @@ class JBERT_Modeler(nn.Module):
         sents_gaf               = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
         sents_baf               = autograd.Variable(torch.FloatTensor(sents_baf), requires_grad=False).to(device)
         #
-        average_sent_embeds1    = self.do_for_doc(doc1_sents_embeds)
-        average_sent_embeds2    = self.do_for_doc(doc2_sents_embeds)
+        doc1_int_sent_scores    = self.do_for_doc(doc1_sents_embeds)
+        doc2_int_sent_scores    = self.do_for_doc(doc2_sents_embeds)
         #
-        doc1_sents_embeds_af    = torch.cat([average_sent_embeds1, sents_gaf], -1)
-        doc2_sents_embeds_af    = torch.cat([average_sent_embeds2, sents_baf], -1)
+        doc1_int_sent_scores_af = torch.cat([doc1_int_sent_scores, sents_gaf], -1)
+        doc2_int_sent_scores_af = torch.cat([doc2_int_sent_scores, sents_baf], -1)
         #
-        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_sents_embeds_af), negative_slope=0.1)
+        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_int_sent_scores_af), negative_slope=0.1)
         sents1_out              = F.sigmoid(self.sent_out_layer_2(sents1_out))
-        sents2_out              = F.leaky_relu(self.sent_out_layer_1(doc2_sents_embeds_af), negative_slope=0.1)
+        sents2_out              = F.leaky_relu(self.sent_out_layer_1(doc2_int_sent_scores_af), negative_slope=0.1)
         sents2_out              = F.sigmoid(self.sent_out_layer_2(sents2_out))
         #
         max_feats_of_sents_1    = torch.max(sents1_out, 0)[0].unsqueeze(0)
@@ -1225,10 +1197,6 @@ class JBERT_Modeler(nn.Module):
         doc2_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_2_af), negative_slope=0.1)
         doc2_out                = self.doc_layer_2(doc2_out)
         #
-        # final_in_1      = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
-        # final_in_2      = torch.cat([sents2_out, doc2_out.expand_as(sents2_out)], -1)
-        # sents1_out      = F.sigmoid(self.oo_layer(final_in_1))
-        # sents2_out      = F.sigmoid(self.oo_layer(final_in_2))
         loss1           = self.my_hinge_loss(doc1_out, doc2_out)
         # print(loss1)
         sents1_out      = sents1_out.squeeze(-1)
