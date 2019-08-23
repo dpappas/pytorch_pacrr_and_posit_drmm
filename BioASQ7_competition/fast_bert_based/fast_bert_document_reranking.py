@@ -1,9 +1,10 @@
 
-import torch, datetime, logging
+import sys, torch, datetime, logging
 from fast_bert.data_cls     import BertDataBunch
 from fast_bert.learner_cls  import BertLearner
 from fast_bert.metrics      import accuracy
 from pathlib                import Path
+from fast_bert.metrics      import accuracy_multilabel, accuracy_thresh, fbeta, roc_auc
 
 torch.cuda.empty_cache()
 run_start_time = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
@@ -41,8 +42,42 @@ databunch = BertDataBunch(
     max_seq_length=512,
     multi_gpu=True,
     multi_label=False,
-    model_type='bert')
+    model_type='bert'
+)
 
+device = torch.device('cuda')
+if torch.cuda.device_count() > 1:
+    multi_gpu = True
+else:
+    multi_gpu = False
+
+metrics = []
+metrics.append({'name': 'accuracy_thresh', 'function': accuracy_thresh})
+metrics.append({'name': 'roc_auc', 'function': roc_auc})
+metrics.append({'name': 'fbeta', 'function': fbeta})
+
+learner = BertLearner.from_pretrained_model(
+    databunch,
+    pretrained_path='bert-base-uncased',
+    metrics=metrics,
+    device=device,
+    logger=logger,
+    output_dir=OUTPUT_PATH,
+    finetuned_wgts_path=None,
+    warmup_steps=500,
+    multi_gpu=multi_gpu,
+    is_fp16=True,
+    multi_label=False,
+    logging_steps=50
+)
+
+learner.fit(
+    epochs=6,
+	lr=6e-5,
+    validate=True, 	# Evaluate the model after each epoch
+    schedule_type="warmup_cosine",
+	optimizer_type="lamb"
+)
 
 
 
