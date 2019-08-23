@@ -14,6 +14,8 @@ LABEL_PATH  = Path('/home/dpappas/fast_bert_models/doc_rerank/labels/')
 MODEL_PATH  = Path('/home/dpappas/fast_bert_models/doc_rerank/models/')
 OUTPUT_PATH = Path('/home/dpappas/fast_bert_models/doc_rerank/models/output')
 LOG_PATH    = Path('/home/dpappas/fast_bert_models/doc_rerank/logs/')
+DATA_PATH.mkdir(exist_ok=True)
+LABEL_PATH.mkdir(exist_ok=True)
 MODEL_PATH.mkdir(exist_ok=True)
 LOG_PATH.mkdir(exist_ok=True)
 OUTPUT_PATH.mkdir(exist_ok=True)
@@ -79,7 +81,7 @@ learner.fit(
 	optimizer_type="lamb"
 )
 
-
+# CUDA_VISIBLE_DEVICES=1 python3.6 train_fast_bert_doc_rerank.py
 
 
 
