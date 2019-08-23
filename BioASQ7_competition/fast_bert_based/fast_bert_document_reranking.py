@@ -9,6 +9,12 @@ from fast_bert.metrics      import accuracy_multilabel, accuracy_thresh, fbeta, 
 torch.cuda.empty_cache()
 run_start_time = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
 
+device = torch.device('cuda')
+if torch.cuda.device_count() > 1:
+    multi_gpu = True
+else:
+    multi_gpu = False
+
 DATA_PATH   = Path('/home/dpappas/fast_bert_models/doc_rerank/data/')
 LABEL_PATH  = Path('/home/dpappas/fast_bert_models/doc_rerank/labels/')
 MODEL_PATH  = Path('/home/dpappas/fast_bert_models/doc_rerank/models/')
@@ -40,18 +46,12 @@ databunch = BertDataBunch(
     label_file='/home/dpappas/fast_bert_models/doc_rerank/labels.csv',
     text_col='text',
     label_col='label',
-    batch_size_per_gpu=16,
+    batch_size_per_gpu=6,
     max_seq_length=512,
-    multi_gpu=True,
+    multi_gpu=multi_gpu,
     multi_label=False,
     model_type='bert'
 )
-
-device = torch.device('cuda')
-if torch.cuda.device_count() > 1:
-    multi_gpu = True
-else:
-    multi_gpu = False
 
 metrics = []
 metrics.append({'name': 'accuracy_thresh', 'function': accuracy_thresh})
