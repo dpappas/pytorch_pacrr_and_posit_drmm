@@ -49,6 +49,13 @@ for query in train_data['queries']:
         lines.append(line)
     index += 1
 
+pos_lines = [line for line in lines if(line[-1] == 'pos')]
+neg_lines = [line for line in lines if(line[-1] == 'neg')]
+random.shuffle(pos_lines)
+random.shuffle(neg_lines)
+
+lines = pos_lines
+lines.extend(neg_lines[:len(pos_lines)])
 random.shuffle(lines)
 
 with open(os.path.join(odir, 'train.csv'), 'w') as f:
