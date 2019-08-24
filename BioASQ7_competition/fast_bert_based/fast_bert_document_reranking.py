@@ -58,7 +58,7 @@ def roc_auc_2(y_pred: Tensor, y_true: Tensor):
     return (roc_auc(y_pred[:,1], y_true))
 
 def fbeta_2(y_pred: Tensor, y_true: Tensor):
-    return (fbeta(y_pred[:,1], y_true))
+    return (fbeta(y_pred[:,1].squeeze().unsqueeze(-1), y_true.unsqueeze(-1)))
 
 metrics = []
 metrics.append({'name': 'accuracy', 'function': accuracy})
