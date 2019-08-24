@@ -1,10 +1,11 @@
 
 import sys, torch, datetime, logging
+from torch                  import Tensor
 from fast_bert.data_cls     import BertDataBunch
 from fast_bert.learner_cls  import BertLearner
 from fast_bert.metrics      import accuracy
 from pathlib                import Path
-from fast_bert.metrics      import accuracy_multilabel, accuracy_thresh, fbeta, roc_auc
+from fast_bert.metrics      import accuracy_multilabel, accuracy, fbeta, roc_auc
 
 torch.cuda.empty_cache()
 run_start_time = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
@@ -53,10 +54,16 @@ databunch = BertDataBunch(
     model_type='bert'
 )
 
+def roc_auc_2(y_pred: Tensor, y_true: Tensor):
+    return (roc_auc(y_pred[:,1], y_true))
+
+def fbeta_2(y_pred: Tensor, y_true: Tensor):
+    return (fbeta(y_pred[:,1], y_true))
+
 metrics = []
-metrics.append({'name': 'accuracy_thresh', 'function': accuracy_thresh})
-metrics.append({'name': 'roc_auc', 'function': roc_auc})
-metrics.append({'name': 'fbeta', 'function': fbeta})
+metrics.append({'name': 'accuracy', 'function': accuracy})
+metrics.append({'name': 'roc_auc',  'function': roc_auc_2})
+metrics.append({'name': 'fbeta',    'function': fbeta_2})
 
 learner = BertLearner.from_pretrained_model(
     databunch,
