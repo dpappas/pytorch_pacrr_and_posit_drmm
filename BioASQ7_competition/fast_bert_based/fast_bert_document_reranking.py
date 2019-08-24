@@ -77,7 +77,7 @@ learner = BertLearner.from_pretrained_model(
     multi_gpu=multi_gpu,
     is_fp16=False,
     multi_label=False,
-    logging_steps=50
+    logging_steps=2000
 )
 
 learner.fit(
