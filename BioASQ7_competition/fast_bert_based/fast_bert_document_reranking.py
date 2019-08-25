@@ -88,6 +88,8 @@ learner.fit(
 	optimizer_type="lamb"
 )
 
+learner.save_and_reload(MODEL_PATH, "trained_model_name")
+
 # CUDA_VISIBLE_DEVICES=1 python3.6 train_fast_bert_doc_rerank.py
 
 
