@@ -7,6 +7,12 @@ from fast_bert.metrics      import accuracy
 from pathlib                import Path
 from fast_bert.metrics      import accuracy_multilabel, accuracy, fbeta, roc_auc
 
+def roc_auc_2(y_pred: Tensor, y_true: Tensor):
+    return (roc_auc(y_pred[:,1], y_true))
+
+def fbeta_2(y_pred: Tensor, y_true: Tensor):
+    return (fbeta(y_pred[:,1].squeeze().unsqueeze(-1), y_true.unsqueeze(-1)))
+
 my_seed = 1
 random.seed(my_seed)
 torch.manual_seed(my_seed)
@@ -32,14 +38,7 @@ LOG_PATH.mkdir(exist_ok=True)
 OUTPUT_PATH.mkdir(exist_ok=True)
 
 logfile = str(LOG_PATH/'log-{}-{}.txt'.format(run_start_time, 'doc_rerank_bioasq7'))
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
-    datefmt='%m/%d/%Y %H:%M:%S',
-    handlers=[logging.FileHandler(logfile), logging.StreamHandler(sys.stdout)]
-)
-
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s', datefmt='%m/%d/%Y %H:%M:%S', handlers=[logging.FileHandler(logfile), logging.StreamHandler(sys.stdout)])
 logger = logging.getLogger()
 
 databunch = BertDataBunch(
@@ -57,12 +56,6 @@ databunch = BertDataBunch(
     multi_label=False,
     model_type='bert'
 )
-
-def roc_auc_2(y_pred: Tensor, y_true: Tensor):
-    return (roc_auc(y_pred[:,1], y_true))
-
-def fbeta_2(y_pred: Tensor, y_true: Tensor):
-    return (fbeta(y_pred[:,1].squeeze().unsqueeze(-1), y_true.unsqueeze(-1)))
 
 metrics = []
 metrics.append({'name': 'accuracy', 'function': accuracy})
