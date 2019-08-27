@@ -1,11 +1,15 @@
 
-import sys, torch, datetime, logging
+import sys, torch, datetime, logging, random
 from torch                  import Tensor
 from fast_bert.data_cls     import BertDataBunch
 from fast_bert.learner_cls  import BertLearner
 from fast_bert.metrics      import accuracy
 from pathlib                import Path
 from fast_bert.metrics      import accuracy_multilabel, accuracy, fbeta, roc_auc
+
+my_seed = 1
+random.seed(my_seed)
+torch.manual_seed(my_seed)
 
 torch.cuda.empty_cache()
 run_start_time = datetime.datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
