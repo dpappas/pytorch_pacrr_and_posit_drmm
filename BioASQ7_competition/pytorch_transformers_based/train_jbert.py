@@ -1,5 +1,4 @@
 
-
 import torch
 from pytorch_transformers import *
 
@@ -15,5 +14,9 @@ with torch.no_grad():
     last_hidden_states = model(input_ids)[0]  # Models outputs are now tuples
 
 print(last_hidden_states.size())
+
+
+
+
 
 
