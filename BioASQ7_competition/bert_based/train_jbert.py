@@ -1217,8 +1217,8 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 #####################
 use_cuda            = torch.cuda.is_available()
-max_seq_length      = 40
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
+max_seq_length      = 40
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
