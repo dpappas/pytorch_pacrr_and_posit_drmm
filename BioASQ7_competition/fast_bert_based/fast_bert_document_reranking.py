@@ -87,7 +87,7 @@ learner.fit(
 
 learner.save_model()
 
-# CUDA_VISIBLE_DEVICES=1 python3.6 train_fast_bert_doc_rerank.py
+# CUDA_VISIBLE_DEVICES=0 python3.6 train_fast_bert_doc_rerank.py
 
 
 
