@@ -86,10 +86,12 @@ class JBert(nn.Module):
     def __init__(self, embedding_dim=768, initializer_range=0.02):
         super(JBert, self).__init__()
         self.sent_add_feats = 10
+        self.doc_add_feats  = 11
         self.initializer_range = initializer_range
         leaky_relu_lambda   = lambda t: F.leaky_relu(t, negative_slope=0.1)
-        self.snip_MLP       = MLP(input_dim=embedding_dim,          sizes=[100, 1], activation_functions=[leaky_relu_lambda, torch.sigmoid])
-        self.doc_MLP        = MLP(input_dim=self.sent_add_feats+1,  sizes=[8, 1],   activation_functions=[leaky_relu_lambda, torch.sigmoid])
+        self.snip_MLP_1     = MLP(input_dim=embedding_dim,          sizes=[100, 1], activation_functions=[leaky_relu_lambda, torch.sigmoid])
+        self.snip_MLP_2     = MLP(input_dim=self.sent_add_feats+1,  sizes=[8, 1],   activation_functions=[leaky_relu_lambda, torch.sigmoid])
+        self.doc_MLP        = MLP(input_dim=self.doc_add_feats+1,   sizes=[8, 1],   activation_functions=[leaky_relu_lambda, torch.sigmoid])
         self.apply(self.init_weights)
     def init_weights(self, module):
         """ Initialize the weights.
@@ -102,14 +104,14 @@ class JBert(nn.Module):
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_sents_af, doc2_sents_af, doc1_af, doc2_af):
-        doc1_sents_int_score    = self.snip_MLP(doc1_sents_embeds)
-        doc2_sents_int_score    = self.snip_MLP(doc2_sents_embeds)
+        doc1_sents_int_score    = self.snip_MLP_1(doc1_sents_embeds)
+        doc2_sents_int_score    = self.snip_MLP_1(doc2_sents_embeds)
         #########################
         doc1_int_sent_scores_af = torch.cat([doc1_sents_int_score, doc1_sents_af], -1)
         doc2_int_sent_scores_af = torch.cat([doc2_sents_int_score, doc2_sents_af], -1)
         #########################
-        sents1_out              = torch.sigmoid(self.snip_mlp_2(doc1_int_sent_scores_af))
-        sents2_out              = torch.sigmoid(self.snip_mlp_2(doc2_int_sent_scores_af))
+        sents1_out              = self.snip_MLP_2(doc1_int_sent_scores_af)
+        sents2_out              = self.snip_MLP_2(doc2_int_sent_scores_af)
         #########################
         max_feats_of_sents_1    = torch.max(sents1_out, 0)[0].unsqueeze(0)
         max_feats_of_sents_1_af = torch.cat([max_feats_of_sents_1, doc1_af], -1)
