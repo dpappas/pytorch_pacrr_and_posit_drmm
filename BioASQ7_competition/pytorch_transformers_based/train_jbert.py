@@ -5,6 +5,13 @@ from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
 import  torch.nn.functional as F
 
+# (model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
+(model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
+
+bert_tokenizer  = tokenizer_class.from_pretrained(pretrained_weights)
+# bert_model      = model_class.from_pretrained(pretrained_weights, output_hidden_states=True, output_attentions=True)
+bert_model      = model_class.from_pretrained(pretrained_weights, output_hidden_states=False, output_attentions=False)
+
 def encode_sents_faster_but_padding(sents):
     ###############################################################
     tokenized_sents = [bert_tokenizer.encode(sent) for sent in sents]
@@ -110,8 +117,8 @@ class JBert(nn.Module):
         doc1_int_sent_scores_af = torch.cat([doc1_sents_int_score, doc1_sents_af], -1)
         doc2_int_sent_scores_af = torch.cat([doc2_sents_int_score, doc2_sents_af], -1)
         #########################
-        sents1_out              = self.snip_MLP_2(doc1_int_sent_scores_af)
-        sents2_out              = self.snip_MLP_2(doc2_int_sent_scores_af)
+        sents1_out              = self.snip_MLP_2(doc1_int_sent_scores_af).squeeze(-1)
+        sents2_out              = self.snip_MLP_2(doc2_int_sent_scores_af).squeeze(-1)
         #########################
         max_feats_of_sents_1    = torch.max(sents1_out, 0)[0].unsqueeze(0)
         max_feats_of_sents_1_af = torch.cat([max_feats_of_sents_1, doc1_af], -1)
@@ -123,43 +130,21 @@ class JBert(nn.Module):
         #########################
         return doc1_out, sents1_out, doc2_out, sents2_out
 
-def print_params(model):
-    '''
-    It just prints the number of parameters in the model.
-    :param model:   The pytorch model
-    :return:        Nothing.
-    '''
-    print(40 * '=')
-    print(model)
-    print(40 * '=')
-    trainable = 0
-    untrainable = 0
-    for parameter in list(model.parameters()):
-        # print(parameter.size())
-        v = 1
-        for s in parameter.size():
-            v *= s
-        if (parameter.requires_grad):
-            trainable += v
-        else:
-            untrainable += v
-    total_params = trainable + untrainable
-    print(40 * '=')
-    print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
-    print(40 * '=')
-
-# (model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
-(model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
-
-bert_tokenizer  = tokenizer_class.from_pretrained(pretrained_weights)
-# bert_model      = model_class.from_pretrained(pretrained_weights, output_hidden_states=True, output_attentions=True)
-bert_model      = model_class.from_pretrained(pretrained_weights, output_hidden_states=False, output_attentions=False)
 model           = JBert(768)
 
-print_params(bert_model)
-print_params(model)
-sents           = ["Here is some text to encode", "Here is another text to see whether size matters"]
-last_hidden_state, pooler_output = encode_sents(sents)
+doc1_sents_embeds   = torch.zeros((10, 768))
+doc2_sents_embeds   = torch.zeros((10, 768))
+doc1_sents_af       = torch.zeros((10, 10))
+doc2_sents_af       = torch.zeros((10, 10))
+doc1_af             = torch.zeros((11))
+doc2_af             = torch.zeros((11))
+
+s1, d1, s2, d2  = model(doc1_sents_embeds, doc2_sents_embeds, doc1_sents_af, doc2_sents_af, doc1_af, doc2_af)
+
+# print_params(bert_model)
+# print_params(model)
+# sents           = ["Here is some text to encode", "Here is another text to see whether size matters"]
+# last_hidden_state, pooler_output = encode_sents(sents)
 
 # initializer_range   = 0.02
 # lr                  = 1e-3
