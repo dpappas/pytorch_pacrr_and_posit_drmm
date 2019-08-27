@@ -150,34 +150,30 @@ def print_params(model):
 (model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
 
 bert_tokenizer  = tokenizer_class.from_pretrained(pretrained_weights)
-# bert_model       = model_class.from_pretrained(pretrained_weights, output_hidden_states=True, output_attentions=True)
+# bert_model      = model_class.from_pretrained(pretrained_weights, output_hidden_states=True, output_attentions=True)
 bert_model      = model_class.from_pretrained(pretrained_weights, output_hidden_states=False, output_attentions=False)
 model           = JBert(768)
 
 print_params(bert_model)
 print_params(model)
-
 sents           = ["Here is some text to encode", "Here is another text to see whether size matters"]
-
 last_hidden_state, pooler_output = encode_sents(sents)
 
-initializer_range = 0.02
-
-lr = 1e-3
-max_grad_norm = 1.0
-num_total_steps = 1000
-num_warmup_steps = 100
-warmup_proportion = float(num_warmup_steps) / float(num_total_steps)  # 0.1
-
-### In PyTorch-Transformers, optimizer and schedules are splitted and instantiated like this:
-optimizer = AdamW(model.parameters(), lr=lr, correct_bias=False)  # To reproduce BertAdam specific behavior set correct_bias=False
-scheduler = WarmupLinearSchedule(optimizer, warmup_steps=num_warmup_steps, t_total=num_total_steps)  # PyTorch scheduler
-### and used like this:
-for batch in train_data:
-    loss = model(batch)
-    loss.backward()
-    torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)  # Gradient clipping is not in AdamW anymore (so you can use amp without issue)
-    optimizer.step()
-    scheduler.step()
-    optimizer.zero_grad()
+# initializer_range   = 0.02
+# lr                  = 1e-3
+# max_grad_norm       = 1.0
+# num_total_steps     = 1000
+# num_warmup_steps    = 100
+# warmup_proportion   = float(num_warmup_steps) / float(num_total_steps)  # 0.1
+# ### In PyTorch-Transformers, optimizer and schedules are splitted and instantiated like this:
+# optimizer = AdamW(model.parameters(), lr=lr, correct_bias=False)  # To reproduce BertAdam specific behavior set correct_bias=False
+# scheduler = WarmupLinearSchedule(optimizer, warmup_steps=num_warmup_steps, t_total=num_total_steps)  # PyTorch scheduler
+# ### and used like this:
+# for batch in train_data:
+#     loss = model(batch)
+#     loss.backward()
+#     torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)  # Gradient clipping is not in AdamW anymore (so you can use amp without issue)
+#     optimizer.step()
+#     scheduler.step()
+#     optimizer.zero_grad()
 
