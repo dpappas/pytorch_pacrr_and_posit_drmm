@@ -2,7 +2,7 @@
 import torch
 from pytorch_transformers import *
 
-(model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
+# (model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
 (model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
 
 tokenizer   = tokenizer_class.from_pretrained(pretrained_weights)
