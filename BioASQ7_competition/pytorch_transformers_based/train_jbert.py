@@ -1019,8 +1019,8 @@ class JBert(nn.Module):
         return doc1_out, sents1_out, doc2_out, sents2_out
 
 #####################
-# (model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
-(model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
+(model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
+# (model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
 #####################
 bert_tokenizer  = tokenizer_class.from_pretrained(pretrained_weights)
 # bert_model      = model_class.from_pretrained(pretrained_weights, output_hidden_states=True, output_attentions=True)
