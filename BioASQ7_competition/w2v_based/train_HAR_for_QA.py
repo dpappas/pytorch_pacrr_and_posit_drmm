@@ -43,19 +43,15 @@ class HAR_Modeler(nn.Module):
         self.d_h0       = autograd.Variable(torch.randn(2, 1, H)).to(device)
         self.bigru_q    = nn.GRU(input_size=embedding_dim, hidden_size=H, bidirectional=True, batch_first=False).to(device)
         self.bigru_d    = nn.GRU(input_size=embedding_dim, hidden_size=H, bidirectional=True, batch_first=False).to(device)
+        self.wc         = torch.nn.Parameter(torch.randn(1, 3*H))
         #
-    def apply_context_gru(self, the_input, h0):
-        output, hn      = self.context_gru(the_input.unsqueeze(1), h0)
-        output          = self.context_gru_activation(output)
-        out_forward     = output[:, 0, :self.embedding_dim]
-        out_backward    = output[:, 0, self.embedding_dim:]
-        output          = out_forward + out_backward
-        res             = output + the_input
-        return res, hn
     def forward(self, doc_sents_embeds, question_embeds):
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds), requires_grad=False).to(device)
-        q_context           = self.bigru_q(question_embeds)
+        q_context, hn       = self.bigru_q(question_embeds.unsqueeze(1), self.q_h0)
+        d_contexts          = [self.bigru_d(sent_embs.unsqueeze(1), self.d_h0)[0] for sent_embs in doc_sents_embeds]
         print(q_context.size())
+        for s in d_contexts:
+            print(s.size())
 
 
 embedding_dim = 30
@@ -69,7 +65,7 @@ question_embeds     = torch.randn((10, embedding_dim))
 
 
 model = HAR_Modeler(embedding_dim=embedding_dim).to(device)
-print(model(doc_sents_embeds, question_embeds))
+model(doc_sents_embeds, question_embeds)
 
 
 
