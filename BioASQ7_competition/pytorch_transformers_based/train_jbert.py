@@ -926,10 +926,10 @@ class MLP(nn.Module):
     def __init__(self, input_dim=None, sizes=None, activation_functions=None, initializer_range=0.02):
         super(MLP, self).__init__()
         ################################
-        sizes               = [input_dim]+ sizes
-        self.activations    = activation_functions
-        self.linears        = []
-        self.initializer_range = initializer_range
+        sizes                   = [input_dim]+ sizes
+        self.activations        = activation_functions
+        self.linears            = nn.ModuleList()
+        self.initializer_range  = initializer_range
         for i in range(len(sizes)-1):
             one_linear = nn.Linear(sizes[i], sizes[i+1])
             self.linears.append(one_linear)
