@@ -542,7 +542,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         ascii   = True
     )
     for datum in pbar:
-        doc1_emit_, s1, doc2_emit_, s2 = model(
+        doc1_emit_, gs_emits_, doc2_emit_, bs_emits_ = model(
             datum['good_sents_embeds'],
             datum['bad_sents_embeds'],
             datum['good_sents_escores'],
@@ -550,6 +550,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             datum['good_doc_af'],
             datum['bad_doc_af']
         )
+        #
+        cost_ = my_hinge_loss(doc1_emit_, doc2_emit_)
         #
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
         if (two_losses):
