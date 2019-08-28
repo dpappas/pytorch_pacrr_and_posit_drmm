@@ -1038,9 +1038,9 @@ b_size              = 6
 max_epoch           = 10
 #####################
 
-model = JBert(768)
-print(print_params(model))
-exit()
+# model = JBert(768)
+# print(print_params(model))
+# exit()
 
 ####
 
