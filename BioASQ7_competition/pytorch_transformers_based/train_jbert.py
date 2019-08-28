@@ -933,8 +933,6 @@ class MLP(nn.Module):
         for i in range(len(sizes)-1):
             one_linear = nn.Linear(sizes[i], sizes[i+1])
             self.linears.append(one_linear)
-            self._parameters.update(dict(('layer_{}_'.format(i)+name, v) for (name, v) in one_linear._parameters.items()))
-            # trainable_params.extend(one_linear.parameters())
         ################################
         self.apply(self.init_weights)
         for lin in self.linears:
@@ -964,7 +962,7 @@ class BertLayerNorm(nn.Module):
         """
         super(BertLayerNorm, self).__init__()
         self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.bias = nn.Parameter(torch.zeros(hidden_size))
+        self.bias   = nn.Parameter(torch.zeros(hidden_size))
         self.variance_epsilon = eps
     def forward(self, x):
         u = x.mean(-1, keepdim=True)
@@ -983,10 +981,6 @@ class JBert(nn.Module):
         self.snip_MLP_2     = MLP(input_dim=self.sent_add_feats+1,  sizes=[8, 1],   activation_functions=[leaky_relu_lambda, torch.sigmoid])
         self.doc_MLP        = MLP(input_dim=self.doc_add_feats+1,   sizes=[8, 1],   activation_functions=[leaky_relu_lambda, leaky_relu_lambda])
         self.apply(self.init_weights)
-        #
-        self._parameters.update(dict(('snip_MLP_1_'+name, v)    for (name, v)  in self.snip_MLP_1._parameters.items()))
-        self._parameters.update(dict(('snip_MLP_2_'+name, v)    for (name, v)  in self.snip_MLP_2._parameters.items()))
-        self._parameters.update(dict(('doc_MLP_'+name, v)       for (name, v)  in self.doc_MLP._parameters.items()))
         #
     def init_weights(self, module):
         """ Initialize the weights.
@@ -1043,6 +1037,12 @@ lr                  = 1e-03
 b_size              = 6
 max_epoch           = 10
 #####################
+
+model = JBert(768)
+print(print_params(model))
+exit()
+
+####
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
 hdlr = None
