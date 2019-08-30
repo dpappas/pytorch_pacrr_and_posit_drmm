@@ -1061,11 +1061,11 @@ embedding_dim       = 768
 b_size              = 6
 max_epoch           = 10
 #####################
-lr = 1e-3
-max_grad_norm = 1.0
-num_total_steps = 1000
-num_warmup_steps = 100
-warmup_proportion = float(num_warmup_steps) / float(num_total_steps)  # 0.1
+lr                  = 1e-3
+max_grad_norm       = 1.0
+num_total_steps     = 1000
+num_warmup_steps    = 100
+warmup_proportion   = float(num_warmup_steps) / float(num_total_steps)  # 0.1
 #####################
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
@@ -1076,7 +1076,7 @@ for run in range(0, 1):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     ######
-    odir = 'bioasq7_pytorchTransformers_JBERT_2L_{}_run_{}/'.format(str(lr), run)
+    odir = 'bioasq7_pytorchTransformers_JROBERTA_2L_{}_run_{}/'.format(str(lr), run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
