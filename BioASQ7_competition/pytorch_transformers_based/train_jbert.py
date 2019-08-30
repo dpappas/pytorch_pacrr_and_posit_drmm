@@ -977,13 +977,13 @@ class BertLayerNorm(nn.Module):
 class JBert(nn.Module):
     def __init__(self, embedding_dim=768, initializer_range=0.02):
         super(JBert, self).__init__()
-        self.sent_add_feats = 10
-        self.doc_add_feats  = 11
-        self.initializer_range = initializer_range
-        leaky_relu_lambda   = lambda t: F.leaky_relu(t, negative_slope=0.1)
-        self.snip_MLP_1     = MLP(input_dim=embedding_dim,          sizes=[768, 1], activation_functions=[leaky_relu_lambda, torch.sigmoid]).to(device)
-        self.snip_MLP_2     = MLP(input_dim=self.sent_add_feats+1,  sizes=[8, 1],   activation_functions=[leaky_relu_lambda, torch.sigmoid]).to(device)
-        self.doc_MLP        = MLP(input_dim=self.doc_add_feats+1,   sizes=[8, 1],   activation_functions=[leaky_relu_lambda, leaky_relu_lambda]).to(device)
+        self.sent_add_feats     = 10
+        self.doc_add_feats      = 11
+        self.initializer_range  = initializer_range
+        leaky_relu_lambda       = lambda t: F.leaky_relu(t, negative_slope=0.1)
+        self.snip_MLP_1         = MLP(input_dim=embedding_dim,          sizes=[768, 1], activation_functions=[leaky_relu_lambda, torch.sigmoid]).to(device)
+        self.snip_MLP_2         = MLP(input_dim=self.sent_add_feats+1,  sizes=[8, 1],   activation_functions=[leaky_relu_lambda, torch.sigmoid]).to(device)
+        self.doc_MLP            = MLP(input_dim=self.doc_add_feats+1,   sizes=[8, 1],   activation_functions=[leaky_relu_lambda, leaky_relu_lambda]).to(device)
         self.apply(self.init_weights)
         #
     def init_weights(self, module):
