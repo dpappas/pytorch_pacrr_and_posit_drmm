@@ -548,8 +548,8 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     )
     for datum in pbar:
         doc1_emit_, gs_emits_, doc2_emit_, bs_emits_ = model(
-            datum['good_sents_embeds'],
-            datum['bad_sents_embeds'],
+            datum['good_sents_embeds'].to(device),
+            datum['bad_sents_embeds'].to(device),
             datum['good_sents_escores'],
             datum['bad_sents_escores'],
             datum['good_doc_af'],
@@ -809,9 +809,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf)
         doc_emit_, gs_emits_ = model.emit_one(
-            doc1_sents_embeds   = datum['sents_embeds'],
-            sents_gaf           = datum['sents_escores'],
-            doc_gaf             = datum['doc_af']
+            doc1_sents_embeds   = datum['sents_embeds'].to(device),
+            doc1_sents_af       = datum['sents_escores'],
+            doc1_af             = datum['doc_af']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
