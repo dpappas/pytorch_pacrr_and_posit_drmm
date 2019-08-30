@@ -267,15 +267,20 @@ def my_hinge_loss(positives, negatives, margin=1.0):
     return loss_q_pos
 
 def encode_sents(sents):
-    last_hidden_state, pooler_output = [], []
-    for sent in  sents:
-        tokenized_sent = bert_tokenizer.encode(sent, add_special_tokens=True)
-        input_ids       = torch.tensor([tokenized_sent])
-        with torch.no_grad():
-            _last_hidden_state, _pooler_output = bert_model(input_ids)
-            last_hidden_state.append(_last_hidden_state)
-            pooler_output.append(_pooler_output)
-    return last_hidden_state, torch.cat(pooler_output, dim=0)
+    try:
+        last_hidden_state, pooler_output = [], []
+        for sent in sents:
+            tokenized_sent = bert_tokenizer.encode(sent, add_special_tokens=True)
+            input_ids       = torch.tensor([tokenized_sent])
+            with torch.no_grad():
+                _last_hidden_state, _pooler_output = bert_model(input_ids)
+                last_hidden_state.append(_last_hidden_state)
+                pooler_output.append(_pooler_output)
+        return last_hidden_state, torch.cat(pooler_output, dim=0)
+    except:
+        print(20 * '-')
+        pprint(sents)
+        return None, None
 
 def print_params(model):
     '''
