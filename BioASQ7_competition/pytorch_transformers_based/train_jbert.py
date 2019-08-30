@@ -1038,8 +1038,8 @@ class JBert(nn.Module):
         return doc1_out, sents1_out, doc2_out, sents2_out
 
 #####################
-(model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
-# (model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
+# (model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
+(model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
 #####################
 bert_tokenizer  = tokenizer_class.from_pretrained(pretrained_weights)
 # bert_model      = model_class.from_pretrained(pretrained_weights, output_hidden_states=True, output_attentions=True)
@@ -1113,6 +1113,7 @@ for run in range(0, 1):
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
+# CUDA_VISIBLE_DEVICES=1 python3.6 ttt2.py
 
 '''
 initializer_range   = 0.02
