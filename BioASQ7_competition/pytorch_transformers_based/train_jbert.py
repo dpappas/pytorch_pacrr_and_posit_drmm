@@ -1044,8 +1044,8 @@ class JBert(nn.Module):
         return doc1_out, sents1_out, doc2_out, sents2_out
 
 #####################
-# (model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
-(model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
+(model_class, tokenizer_class, pretrained_weights) = (BertModel, BertTokenizer, 'bert-base-uncased')
+# (model_class, tokenizer_class, pretrained_weights) = (RobertaModel, RobertaTokenizer, 'roberta-base')
 #####################
 bert_tokenizer  = tokenizer_class.from_pretrained(pretrained_weights)
 # bert_model      = model_class.from_pretrained(pretrained_weights, output_hidden_states=True, output_attentions=True)
@@ -1082,8 +1082,8 @@ for run in range(0, 1):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     ######
-    odir = 'bioasq7_pytorchTransformers_JROBERTA_2L_{}_run_{}/'.format(str(lr), run)
-    # odir = 'bioasq7_pytorchTransformers_JBERT_2L_{}_run_{}/'.format(str(lr), run)
+    # odir = 'bioasq7_pytorchTransformers_JROBERTA_2L_{}_run_{}/'.format(str(lr), run)
+    odir = 'bioasq7_pytorchTransformers_JBERT_2L_{}_run_{}/'.format(str(lr), run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
