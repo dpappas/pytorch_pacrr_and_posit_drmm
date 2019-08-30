@@ -1121,6 +1121,7 @@ for run in range(0, 1):
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
 # CUDA_VISIBLE_DEVICES=1 python3.6 ttt2.py
+# CUDA_VISIBLE_DEVICES=0 python3.6 ttt.py
 
 '''
 initializer_range   = 0.02
