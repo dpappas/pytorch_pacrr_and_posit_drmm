@@ -269,7 +269,7 @@ def my_hinge_loss(positives, negatives, margin=1.0):
 def encode_sents(sents):
     last_hidden_state, pooler_output = [], []
     for sent in  sents:
-        tokenized_sent = bert_tokenizer.encode(sent,add_special_tokens=True)
+        tokenized_sent = bert_tokenizer.encode(sent, add_special_tokens=True)
         input_ids       = torch.tensor([tokenized_sent])
         with torch.no_grad():
             _last_hidden_state, _pooler_output = bert_model(input_ids)
@@ -414,7 +414,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
     sents_to_embed = []
     for good_text in good_sents:
         sent_toks               = bioclean(good_text)
-        sents_to_embed.append(' '.join(sent_toks))
+        sents_to_embed.append(' '.join(['PAD']+sent_toks))
         # sent_embeds             = torch.cat([sent_embeds_1, sent_embeds_2])
         good_escores            = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
