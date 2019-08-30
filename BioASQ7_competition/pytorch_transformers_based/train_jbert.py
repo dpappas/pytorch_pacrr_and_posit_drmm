@@ -270,7 +270,8 @@ def encode_sents(sents):
     try:
         last_hidden_state, pooler_output = [], []
         for sent in sents:
-            tokenized_sent = bert_tokenizer.encode(sent, add_special_tokens=True)
+            tokenized_sent  = bert_tokenizer.encode(sent, add_special_tokens=True)
+            tokenized_sent  = tokenized_sent[:512]
             input_ids       = torch.tensor([tokenized_sent])
             with torch.no_grad():
                 _last_hidden_state, _pooler_output = bert_model(input_ids)
