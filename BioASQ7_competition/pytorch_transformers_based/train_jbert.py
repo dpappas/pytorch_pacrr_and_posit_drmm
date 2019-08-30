@@ -226,7 +226,7 @@ def idf_val(w, idf, max_idf):
         return idf[w]
     return max_idf
 
-def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
+def save_checkpoint(epoch, model, max_dev_map, optimizer, scheduler, filename='checkpoint.pth.tar'):
     '''
     :param state:       the stete of the pytorch mode
     :param filename:    the name of the file in which we will store the model.
@@ -237,6 +237,7 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
         'state_dict': model.state_dict(),
         'best_valid_score': max_dev_map,
         'optimizer': optimizer.state_dict(),
+        'scheduler': scheduler.state_dict(),
     }
     torch.save(state, filename)
 
@@ -518,7 +519,9 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
     batch_cost.backward()
+    total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
     optimizer.step()
+    scheduler.step()
     optimizer.zero_grad()
     model.zero_grad()
     batch_aver_cost = batch_cost.cpu().item()
@@ -1033,16 +1036,16 @@ use_cuda            = torch.cuda.is_available()
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 #####################
 embedding_dim       = 768
-lr                  = 1e-03
 b_size              = 6
 max_epoch           = 10
 #####################
-
-# model = JBert(768)
-# print(print_params(model))
-# exit()
-
-####
+initializer_range = 0.02
+lr = 1e-3
+max_grad_norm = 1.0
+num_total_steps = 1000
+num_warmup_steps = 100
+warmup_proportion = float(num_warmup_steps) / float(num_total_steps)  # 0.1
+#####################
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc=dataloc, idf_pickle_path=idf_pickle_path)
 hdlr = None
@@ -1074,8 +1077,9 @@ for run in range(0, 1):
     print_params(model)
     print_params(bert_model)
     #####################
-    # optimizer = optim.Adam(list(model.parameters())+list(bert_model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-    optimizer = optim.Adam(list(model.parameters()), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    ### In PyTorch-Transformers, optimizer and schedules are splitted and instantiated like this:
+    optimizer = AdamW(model.parameters(), lr=lr, correct_bias=False)  # To reproduce BertAdam specific behavior set correct_bias=False
+    scheduler = WarmupLinearSchedule(optimizer, warmup_steps=num_warmup_steps, t_total=num_total_steps)  # PyTorch scheduler
     #
     best_dev_map, test_map = None, None
     for epoch in range(max_epoch):
@@ -1083,8 +1087,8 @@ for run in range(0, 1):
         epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
         if (best_dev_map is None or epoch_dev_map >= best_dev_map):
             best_dev_map = epoch_dev_map
-            save_checkpoint(epoch, model,      best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
-            save_checkpoint(epoch, bert_model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar'))
+            save_checkpoint(epoch, model,      best_dev_map, optimizer, scheduler, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
+            save_checkpoint(epoch, bert_model, best_dev_map, optimizer, scheduler, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar'))
         print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
         logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
