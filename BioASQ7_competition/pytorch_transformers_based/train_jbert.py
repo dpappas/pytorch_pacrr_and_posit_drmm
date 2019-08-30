@@ -10,6 +10,7 @@ from    tqdm                    import tqdm
 from    pprint                  import pprint
 import  numpy                   as np
 from    nltk.tokenize           import sent_tokenize
+import  torch.autograd              as autograd
 
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords   = nltk.corpus.stopwords.words("english")
@@ -980,9 +981,9 @@ class JBert(nn.Module):
         self.doc_add_feats  = 11
         self.initializer_range = initializer_range
         leaky_relu_lambda   = lambda t: F.leaky_relu(t, negative_slope=0.1)
-        self.snip_MLP_1     = MLP(input_dim=embedding_dim,          sizes=[768, 1], activation_functions=[leaky_relu_lambda, torch.sigmoid])
-        self.snip_MLP_2     = MLP(input_dim=self.sent_add_feats+1,  sizes=[8, 1],   activation_functions=[leaky_relu_lambda, torch.sigmoid])
-        self.doc_MLP        = MLP(input_dim=self.doc_add_feats+1,   sizes=[8, 1],   activation_functions=[leaky_relu_lambda, leaky_relu_lambda])
+        self.snip_MLP_1     = MLP(input_dim=embedding_dim,          sizes=[768, 1], activation_functions=[leaky_relu_lambda, torch.sigmoid]).to(device)
+        self.snip_MLP_2     = MLP(input_dim=self.sent_add_feats+1,  sizes=[8, 1],   activation_functions=[leaky_relu_lambda, torch.sigmoid]).to(device)
+        self.doc_MLP        = MLP(input_dim=self.doc_add_feats+1,   sizes=[8, 1],   activation_functions=[leaky_relu_lambda, leaky_relu_lambda]).to(device)
         self.apply(self.init_weights)
         #
     def init_weights(self, module):
@@ -995,7 +996,28 @@ class JBert(nn.Module):
             module.weight.data.fill_(1.0)
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
+    def emit_one(self, doc1_sents_embeds, doc1_sents_af, doc1_af):
+        doc1_sents_af   = autograd.Variable(torch.FloatTensor(doc1_sents_af),   requires_grad=False).to(device)
+        doc1_af         = autograd.Variable(torch.FloatTensor(doc1_af),   requires_grad=False).to(device)
+        #########################
+        doc1_sents_int_score    = self.snip_MLP_1(doc1_sents_embeds)
+        #########################
+        doc1_int_sent_scores_af = torch.cat((doc1_sents_int_score, doc1_sents_af), -1)
+        #########################
+        sents1_out              = self.snip_MLP_2(doc1_int_sent_scores_af).squeeze(-1)
+        #########################
+        max_feats_of_sents_1    = torch.max(sents1_out, 0)[0].unsqueeze(0)
+        max_feats_of_sents_1_af = torch.cat((max_feats_of_sents_1, doc1_af), -1)
+        #########################
+        doc1_out                = self.doc_MLP(max_feats_of_sents_1_af)
+        #########################
+        return doc1_out, sents1_out
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_sents_af, doc2_sents_af, doc1_af, doc2_af):
+        doc1_sents_af   = autograd.Variable(torch.FloatTensor(doc1_sents_af),   requires_grad=False).to(device)
+        doc2_sents_af   = autograd.Variable(torch.FloatTensor(doc2_sents_af),   requires_grad=False).to(device)
+        doc1_af         = autograd.Variable(torch.FloatTensor(doc1_af),   requires_grad=False).to(device)
+        doc2_af         = autograd.Variable(torch.FloatTensor(doc2_af),   requires_grad=False).to(device)
+        #########################
         doc1_sents_int_score    = self.snip_MLP_1(doc1_sents_embeds)
         doc2_sents_int_score    = self.snip_MLP_1(doc2_sents_embeds)
         #########################
@@ -1039,7 +1061,6 @@ embedding_dim       = 768
 b_size              = 6
 max_epoch           = 10
 #####################
-initializer_range = 0.02
 lr = 1e-3
 max_grad_norm = 1.0
 num_total_steps = 1000
