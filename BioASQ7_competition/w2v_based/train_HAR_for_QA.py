@@ -69,9 +69,6 @@ class HAR_Modeler(nn.Module):
             aq2d    = torch.mm(aq2d, sent_embed)
             ########
 
-
-
-
 embedding_dim = 30
 doc_sents_embeds   = [
     torch.randn((5, embedding_dim)).to(device),
@@ -80,7 +77,6 @@ doc_sents_embeds   = [
     torch.randn((10, embedding_dim)).to(device),
 ]
 question_embeds     = torch.randn((10, embedding_dim)).to(device)
-
 
 model = HAR_Modeler(embedding_dim=embedding_dim).to(device)
 model(doc_sents_embeds, question_embeds)
