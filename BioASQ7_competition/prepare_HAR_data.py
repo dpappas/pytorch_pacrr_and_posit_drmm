@@ -51,14 +51,6 @@ def get_snips(quest_id, gid, bioasq6_data):
                 good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
 
-dataloc = '/home/dpappas/bioasq_all/bioasq7_data/'
-
-(dev_data, dev_docs, train_data, train_docs, bioasq7_data) = load_all_data(dataloc)
-
-odir = '/home/dpappas/HAR/data/bioasq7/'
-if not os.path.exists(odir):
-    os.makedirs(odir)
-
 def do_one(data, docs, fname):
     lines = []
     for item in tqdm(data['queries']):
@@ -79,6 +71,14 @@ def do_one(data, docs, fname):
     with open(os.path.join(odir, fname), 'w') as fp:
         fp.write('\n'.join(lines))
         fp.close()
+
+dataloc = '/home/dpappas/bioasq_all/bioasq7_data/'
+
+(dev_data, dev_docs, train_data, train_docs, bioasq7_data) = load_all_data(dataloc)
+
+odir = '/home/dpappas/HAR/data/bioasq7/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
 
 do_one(train_data,  train_docs, 'pinfo-mz-train.txt')
 do_one(dev_data,    dev_docs,   'pinfo-mz-dev.txt')
