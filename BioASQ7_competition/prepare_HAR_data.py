@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import  json
+import  os, re, json, random, pickle, nltk
 import  numpy                       as np
-import  pickle
 from    pprint                      import pprint
-import  re
-import  nltk
-from nltk.tokenize import sent_tokenize
+from    nltk.tokenize import sent_tokenize
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
@@ -57,23 +54,33 @@ dataloc = '/home/dpappas/bioasq_all/bioasq7_data/'
 
 (dev_data, dev_docs, train_data, train_docs, bioasq7_data) = load_all_data(dataloc)
 
-pprint(dev_data.keys())
+odir = '/home/dpappas/HAR/data/bioasq7/'
+if not os.path.exists(odir):
+    os.makedirs(odir)
 
-for item in dev_data['queries']:
-    query_text  = item['query_text']
-    quest_id    = item['query_id']
-    for retr in item['retrieved_documents']:
-        good_snips  = get_snips(quest_id, retr['doc_id'], bioasq7_data)
-        good_snips  = [' '.join(bioclean(sn)) for sn in good_snips]
-        # print(good_snips)
-        doc         = dev_docs[retr['doc_id']]
-        title       = doc['title']
-        abs         = doc['abstractText']
-        all_sents   = sent_tokenize(title) + sent_tokenize(abs)
-        for one_sent in all_sents:
-            tag = snip_is_relevant(' '.join(bioclean(one_sent)), good_snips)
-            print('\t'.join([str(tag), query_text, one_sent]))
+def do_one(data, docs, fname):
+    lines = []
+    for item in data['queries']:
+        query_text  = item['query_text']
+        quest_id    = item['query_id']
+        for retr in item['retrieved_documents']:
+            good_snips  = get_snips(quest_id, retr['doc_id'], bioasq7_data)
+            good_snips  = [' '.join(bioclean(sn)) for sn in good_snips]
+            doc         = docs[retr['doc_id']]
+            title       = doc['title']
+            abs         = doc['abstractText']
+            all_sents   = sent_tokenize(title) + sent_tokenize(abs)
+            for one_sent in all_sents:
+                tag     = snip_is_relevant(' '.join(bioclean(one_sent)), good_snips)
+                line    = '\t'.join([str(tag), ' '.join(bioclean(query_text)), ' '.join(bioclean(one_sent))])
+                lines.append(line)
+    random.shuffle(lines)
+    with open(os.path.join(odir, fname), 'w') as fp:
+        fp.write('\n'.join(lines))
+        fp.close()
 
+do_one(train_data,  train_docs, 'pinfo-mz-train.txt')
+do_one(dev_data,    dev_docs,   'pinfo-mz-dev.txt')
+do_one(dev_data,    dev_docs,   'pinfo-mz-test.txt')
 
-pprint(dev_data['queries'][0])
 
