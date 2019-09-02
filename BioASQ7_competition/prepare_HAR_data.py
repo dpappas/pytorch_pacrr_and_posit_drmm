@@ -55,6 +55,10 @@ def do_one(data, docs, fname):
     lines = []
     for item in tqdm(data['queries']):
         query_text  = item['query_text']
+        query_text  = query_text.replace('\t', ' ').replace('\n', ' ')
+        query_text  = ' '.join(bioclean(query_text))
+        if(len(query_text.strip())==0):
+            continue
         quest_id    = item['query_id']
         for retr in item['retrieved_documents']:
             good_snips  = get_snips(quest_id, retr['doc_id'], bioasq7_data)
@@ -64,8 +68,12 @@ def do_one(data, docs, fname):
             abs         = doc['abstractText']
             all_sents   = sent_tokenize(title) + sent_tokenize(abs)
             for one_sent in all_sents:
-                tag     = snip_is_relevant(' '.join(bioclean(one_sent)), good_snips)
-                line    = '\t'.join([str(tag), ' '.join(bioclean(query_text)), ' '.join(bioclean(one_sent))])
+                one_sent    = one_sent.replace('\t', ' ').replace('\n', ' ')
+                one_sent    = ' '.join(bioclean(one_sent))
+                if(len(one_sent.strip())==0):
+                    continue
+                tag         = snip_is_relevant(one_sent, good_snips)
+                line        = '\t'.join([str(tag), query_text, one_sent])
                 lines.append(line)
     random.shuffle(lines)
     with open(os.path.join(odir, fname), 'w') as fp:
