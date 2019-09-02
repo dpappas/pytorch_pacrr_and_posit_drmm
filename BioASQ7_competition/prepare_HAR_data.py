@@ -3,6 +3,7 @@
 
 import  os, re, json, random, pickle, nltk
 import  numpy                       as np
+from    tqdm                        import tqdm
 from    pprint                      import pprint
 from    nltk.tokenize import sent_tokenize
 
@@ -60,7 +61,7 @@ if not os.path.exists(odir):
 
 def do_one(data, docs, fname):
     lines = []
-    for item in data['queries']:
+    for item in tqdm(data['queries']):
         query_text  = item['query_text']
         quest_id    = item['query_id']
         for retr in item['retrieved_documents']:
