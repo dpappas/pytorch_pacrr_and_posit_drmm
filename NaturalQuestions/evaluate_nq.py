@@ -98,3 +98,12 @@ print(doc_precision_at_k(related_lists, 10))  ### 0.0703
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1313
 
 
+'''
+java -Xmx10G -cp \
+/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_gold_bioasq.json" \
+"/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_emit_bioasq.json"
+'''
+
+
