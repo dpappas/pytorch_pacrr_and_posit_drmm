@@ -87,12 +87,13 @@ def load_all_data(dataloc, idf_pickle_path):
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data
 
-# recall:
-def get_first_n_20(qtext, n, idf_scores, max_year=2017):
+# recall: 0.3883
+def get_first_n_20(qtext, n, max_year=2017):
     #
     tokenized_body  = bioclean_mod(qtext)
     question_tokens = [t for t in tokenized_body if t not in stopwords]
-    question        = ' '.join(tokenized_body)
+    idf_scores      = [idf_val(w, idf, max_idf) for w in question_tokens]
+    question        = ' '.join(question_tokens)
     #
     the_shoulds = []
     for q_tok, idf_score in zip(question_tokens, idf_scores):
@@ -143,6 +144,57 @@ def get_first_n_1(qtext, n, max_year=2017):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
+# recall: 0.4144
+def get_first_n_2(qtext, n, max_year=2017):
+    tokenized_body      = bioclean_mod(qtext)
+    question_tokens     = [t for t in tokenized_body if t not in stopwords]
+    question            = ' '.join(question_tokens)
+    ################################################
+    the_shoulds     = []
+    if(len(question_tokens) > 1):
+        the_shoulds.append({"span_near": {"clauses": [{"span_term": {"joint_text": w}} for w in question_tokens], "slop": 5, "in_order": False}})
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool": {
+                "must": [{"range": {"DateCompleted": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
+                "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}] + the_shoulds,
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
+# recall: 0.4150
+def get_first_n_3(qtext, n, max_year=2017):
+    tokenized_body  = bioclean_mod(qtext)
+    question_tokens = [t for t in tokenized_body if t not in stopwords]
+    question        = ' '.join(question_tokens)
+    ################################################
+    the_shoulds = []
+    the_shoulds.append({"match": {"Chemicals.NameOfSubstance"   : {"query": question}}})
+    the_shoulds.append({"match": {"MeshHeadings.text"           : {"query": question}}})
+    the_shoulds.append({"match": {"SupplMeshList.text"          : {"query": question}}})
+    ################################################
+    the_shoulds     = []
+    if(len(question_tokens) > 1):
+        the_shoulds.append({"span_near": {"clauses": [{"span_term": {"joint_text": w}} for w in question_tokens], "slop": 5, "in_order": False}})
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool": {
+                "must": [{"range": {"DateCompleted": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
+                "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}] + the_shoulds,
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
 with open('elk_ips.txt') as fp:
     cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
     fp.close()
@@ -168,9 +220,10 @@ recalls = []
 for q in tqdm(dev_data['queries']):
     qtext           = q['query_text']
     #####
-    q_toks          = tokenize(qtext)
-    idf_scores      = [idf_val(w, idf, max_idf) for w in q_toks]
-    results         = get_first_n_20(qtext, 100, idf_scores)
+    # results         = get_first_n_20(qtext, 100)
+    # results         = get_first_n_1(qtext, 100)
+    # results         = get_first_n_2(qtext, 100)
+    results         = get_first_n_3(qtext, 100)
     #####
     retr_pmids      = [t['_source']['pmid'] for t in results]
     #####
@@ -183,5 +236,29 @@ for q in tqdm(dev_data['queries']):
 
 print('DEV RECALL')
 print(sum(recalls) / float(len(recalls)))
+
+'''
+# TO TUNE BM25 in ELK:
+
+
+b   : a weight for doc length           default 0.75
+k1  : a weight for term frequencies     default 1.2
+
+curl -XPOST 'http://localhost:9201/pubmed_abstracts_joint_0_1/_close'
+curl -XPUT "http://localhost:9201/pubmed_abstracts_joint_0_1/_settings" -d '
+{
+    "similarity": {
+        "my_similarity": { 
+            "type": "BM25",
+            "b"  : 0.1,
+            "k1" : 0.9
+        }
+    }
+}'
+curl -XPOST 'http://localhost:9201/pubmed_abstracts_joint_0_1/_open'
+
+
+
+'''
 
 
