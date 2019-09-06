@@ -144,20 +144,7 @@ def get_first_n_1(qtext, n, max_year=2017):
     return res['hits']['hits']
 
 es = Elasticsearch(
-    [
-        '192.168.188.79:9201', # palomar
-        '192.168.188.86:9200', # judgment
-        '192.168.188.95:9200', # harvester1
-        '192.168.188.101:9200', # harvester3
-        '192.168.188.102:9200', # harvester4
-        '192.168.188.105:9200', # bionlp1
-        '192.168.188.106:9200', # bionlp2
-        '192.168.188.107:9200', # bionlp3
-        '192.168.188.108:9200', # bionlp4
-        '192.168.188.109:9200', # bionlp5
-        # '192.168.188.55:9200',  # bioasq
-        '192.168.188.110:9200', # bionlp6
-    ],
+    [],
     verify_certs        = True,
     timeout             = 150,
     max_retries         = 10,
