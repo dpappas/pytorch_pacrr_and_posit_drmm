@@ -220,10 +220,10 @@ recalls = []
 for q in tqdm(dev_data['queries']):
     qtext           = q['query_text']
     #####
-    # results         = get_first_n_20(qtext, 100)
-    # results         = get_first_n_1(qtext, 100)
+    results         = get_first_n_1(qtext, 100)
     # results         = get_first_n_2(qtext, 100)
-    results         = get_first_n_3(qtext, 100)
+    # results         = get_first_n_3(qtext, 100)
+    # results         = get_first_n_20(qtext, 100)
     #####
     retr_pmids      = [t['_source']['pmid'] for t in results]
     #####
