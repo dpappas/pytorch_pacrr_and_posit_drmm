@@ -64,6 +64,8 @@ dev_data, dev_docs, test_data, test_docs, train_data, train_docs, bioasq7_data =
 test_data   = dict((t['query_id'], t) for t in test_data['queries'])
 dev_data    = dict((t['query_id'], t) for t in dev_data['queries'])
 
+# DEV
+
 related_lists = [[int(tt['is_relevant']) for tt in item['retrieved_documents']][:10] for item in dev_data.values()]
 print(mean_reciprocal_rank(related_lists))  ### 0.3089
 print(doc_precision_at_k(related_lists, 10))  ### 0.0602
@@ -78,5 +80,11 @@ print(mean_reciprocal_rank(related_lists))  ### 0.4056
 print(doc_precision_at_k(related_lists, 10))  ### 0.0710
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1327
 
+# TEST
+
+related_lists = [[int(tt['is_relevant']) for tt in item['retrieved_documents']][:10] for item in test_data.values()]
+print(mean_reciprocal_rank(related_lists)) ### 0.3162
+print(doc_precision_at_k(related_lists, 10)) ### 0.0608
+print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1047
 
 
