@@ -168,7 +168,7 @@ for b_ in tqdm(range(0, 205, 20)):
             recall          = float(rel_ret) / float(len(q['relevant_documents']))
             recalls.append(recall)
         print('DEV RECALL')
-        print(r1['acknowledged'], r2['acknowledged'], r3['acknowledged'], b, k1, sum(recalls) / float(len(recalls)))
+        print(b, k1, sum(recalls) / float(len(recalls)))
 
 '''
 # TO TUNE BM25 in ELK:
