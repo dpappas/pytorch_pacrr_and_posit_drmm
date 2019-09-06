@@ -143,8 +143,12 @@ def get_first_n_1(qtext, n, max_year=2017):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
+with open('elk_ips.txt') as fp:
+    cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
+    fp.close()
+
 es = Elasticsearch(
-    [],
+    cluster_ips,
     verify_certs        = True,
     timeout             = 150,
     max_retries         = 10,
