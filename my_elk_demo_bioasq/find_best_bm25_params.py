@@ -136,13 +136,13 @@ with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
 
 print(stopwords)
 
-for b_ in range(0, 250, 15):
-    for k1_ in range(0, 250, 15):
+for b_ in tqdm(range(0, 205, 20)):
+    for k1_ in tqdm(range(0, 205, 20)):
         b   = b_  / 100.0
         k1  = k1_ / 100.0
         # print(b, k1)
-        r1 = es.indices.close(index = doc_index)
-        r2 = es.indices.put_settings(
+        print(es.indices.close(index = doc_index))
+        print(es.indices.put_settings(
             index = doc_index,
             body  = {
                 "similarity": {
@@ -153,8 +153,8 @@ for b_ in range(0, 250, 15):
                     }
                 }
             }
-        )
-        r3 = print(es.indices.open(index = doc_index))
+        ))
+        print(print(es.indices.open(index = doc_index)))
         recalls = []
         for q in tqdm(dev_data['queries']):
             qtext           = q['query_text']
