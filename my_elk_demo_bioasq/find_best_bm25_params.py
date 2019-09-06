@@ -169,6 +169,8 @@ for b_ in tqdm(range(0, 205, 20)):
             recalls.append(recall)
         print('DEV RECALL')
         print(b, k1, sum(recalls) / float(len(recalls)))
+        sys.stdout.flush()
+
 
 '''
 # TO TUNE BM25 in ELK:
