@@ -154,7 +154,7 @@ for b_ in tqdm(range(0, 205, 20)):
                 }
             }
         ))
-        print(print(es.indices.open(index = doc_index)))
+        print(es.indices.open(index = doc_index))
         recalls = []
         for q in tqdm(dev_data['queries']):
             qtext           = q['query_text']
