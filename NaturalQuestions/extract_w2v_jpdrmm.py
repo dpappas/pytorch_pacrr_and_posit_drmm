@@ -1276,8 +1276,5 @@ load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 print_params(model)
 ###########################################################
-params      = model.parameters()
-print_params(model)
-###########################################################
 epoch_dev_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 
