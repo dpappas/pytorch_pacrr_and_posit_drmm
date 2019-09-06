@@ -155,7 +155,7 @@ with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
 
 print(stopwords)
 
-for b_ in tqdm(range(0, 205, 20)):
+for b_ in tqdm(range(0, 105, 20)):
     for k1_ in tqdm(range(0, 205, 20)):
         b   = b_  / 100.0
         k1  = k1_ / 100.0
@@ -199,18 +199,19 @@ for b_ in tqdm(range(0, 205, 20)):
 b   : a weight for doc length           default 0.75
 k1  : a weight for term frequencies     default 1.2
 
-curl -XPOST 'http://localhost:9201/pubmed_abstracts_joint_0_1/_close'
-curl -XPUT "http://localhost:9201/pubmed_abstracts_joint_0_1/_settings" -d '
+curl -XPOST 'http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_close'
+curl -XPUT "http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_settings" -d '
 {
     "similarity": {
         "my_similarity": { 
             "type": "BM25",
-            "b"  : 0.1,
-            "k1" : 0.9
+            "b"  : "0.1",
+            "k1" : "0.9"
         }
     }
 }'
-curl -XPOST 'http://localhost:9201/pubmed_abstracts_joint_0_1/_open'
+
+curl -XPOST 'http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_open'
 
 
 
