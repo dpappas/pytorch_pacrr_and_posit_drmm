@@ -88,6 +88,25 @@ def load_all_data(dataloc, idf_pickle_path):
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data
 
 # recall:
+def get_first_n_1(qtext, n, max_year=2017):
+    tokenized_body  = bioclean_mod(qtext)
+    tokenized_body  = [t for t in tokenized_body if t not in stopwords]
+    question        = ' '.join(tokenized_body)
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool": {
+                "must": [{"range": {"DateCompleted": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
+                "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}],
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
+# recall:
 def get_first_n_3(qtext, n, max_year=2017):
     tokenized_body  = bioclean_mod(qtext)
     question_tokens = [t for t in tokenized_body if t not in stopwords]
@@ -159,7 +178,8 @@ for b_ in tqdm(range(0, 205, 20)):
         for q in tqdm(dev_data['queries']):
             qtext           = q['query_text']
             #####
-            results         = get_first_n_3(qtext, 100)
+            results         = get_first_n_1(qtext, 100)
+            # results         = get_first_n_3(qtext, 100)
             #####
             retr_pmids      = [t['_source']['pmid'] for t in results]
             #####
