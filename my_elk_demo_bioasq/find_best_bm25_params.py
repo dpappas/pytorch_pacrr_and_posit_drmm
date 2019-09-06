@@ -205,11 +205,13 @@ curl -XPUT "http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_settings" -d 
     "similarity": {
         "my_similarity": { 
             "type": "BM25",
-            "b"  : "0.1",
-            "k1" : "0.9"
+            "b"                 : 0.1,
+            "k1"                : 0.9,
+            "discount_overlaps" : true
         }
     }
 }'
+     
 
 curl -XGET 'http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_settings'
 curl -XPOST 'http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_open'
