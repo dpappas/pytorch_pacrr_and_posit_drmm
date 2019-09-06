@@ -211,6 +211,7 @@ curl -XPUT "http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_settings" -d 
     }
 }'
 
+curl -XGET 'http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_settings'
 curl -XPOST 'http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_open'
 
 
