@@ -133,7 +133,8 @@ def fix_bert_tokens(tokens):
 eval_examples   = [
     InputExample(
         guid='example_dato_1',
-        text_a='i asuyubdwanna beasdasda the very best',
+        # text_a='i asuyubdwanna beasdasda the very best',
+        text_a = 'Neopterin as an indicator of immune activation and prognosis in patients with gynecological malignancies.',
         text_b=None,
         label='1'
     )
