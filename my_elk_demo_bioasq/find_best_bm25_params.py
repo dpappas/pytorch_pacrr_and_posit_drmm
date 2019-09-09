@@ -87,6 +87,44 @@ def load_all_data(dataloc, idf_pickle_path):
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data
 
+# recall: 0.3883
+def get_first_n_20(qtext, n, max_year=2017):
+    #
+    tokenized_body  = bioclean_mod(qtext)
+    question_tokens = [t for t in tokenized_body if t not in stopwords]
+    idf_scores      = [idf_val(w, idf, max_idf) for w in question_tokens]
+    question        = ' '.join(question_tokens)
+    #
+    the_shoulds = []
+    for q_tok, idf_score in zip(question_tokens, idf_scores):
+        the_shoulds.append({"match": {"joint_text"                  : {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"Chemicals.NameOfSubstance"   : {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"MeshHeadings.text"           : {"query": q_tok, "boost": idf_score}}})
+        the_shoulds.append({"match": {"SupplMeshList.text"          : {"query": q_tok, "boost": idf_score}}})
+        ################################################
+        the_shoulds.append({"terms": {"joint_text"                  : [q_tok], "boost": idf_score}})
+        the_shoulds.append({"terms": {"Chemicals.NameOfSubstance"   : [q_tok], "boost": idf_score}})
+        the_shoulds.append({"terms": {"MeshHeadings.text"           : [q_tok], "boost": idf_score}})
+        the_shoulds.append({"terms": {"joint_text"                  : [q_tok], "boost": idf_score}})
+    ################################################
+    if(len(question_tokens) > 1):
+        the_shoulds.append({"span_near": {"clauses": [{"span_term": {"joint_text": w}} for w in question_tokens], "slop": 5, "in_order": False}})
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool": {
+                "must": [{"range":{"DateCompleted": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
+                "should": [
+                    {"match":{"joint_text": {"query": question, "boost": sum(idf_scores)}}},
+                ]+the_shoulds,
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
 # recall:
 def get_first_n_1(qtext, n, max_year=2017):
     tokenized_body  = bioclean_mod(qtext)
@@ -99,6 +137,28 @@ def get_first_n_1(qtext, n, max_year=2017):
             "bool": {
                 "must": [{"range": {"DateCompleted": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
                 "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}],
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
+def get_first_n_2(qtext, n, max_year=2017):
+    tokenized_body      = bioclean_mod(qtext)
+    question_tokens     = [t for t in tokenized_body if t not in stopwords]
+    question            = ' '.join(question_tokens)
+    ################################################
+    the_shoulds     = []
+    if(len(question_tokens) > 1):
+        the_shoulds.append({"span_near": {"clauses": [{"span_term": {"joint_text": w}} for w in question_tokens], "slop": 5, "in_order": False}})
+    ################################################
+    bod         = {
+        "size": n,
+        "query": {
+            "bool": {
+                "must": [{"range": {"DateCompleted": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
+                "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}] + the_shoulds,
                 "minimum_should_match": 1,
             }
         }
@@ -155,40 +215,72 @@ with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
 
 print(stopwords)
 
-for b_ in tqdm(range(0, 105, 20)):
-    for k1_ in tqdm(range(0, 205, 20)):
-        b   = b_  / 100.0
-        k1  = k1_ / 100.0
-        # print(b, k1)
-        print(es.indices.close(index = doc_index))
-        print(es.indices.put_settings(
-            index = doc_index,
-            body  = {
-                "similarity": {
-                    "my_similarity": {
-                        "type": "BM25",
-                        "b"  : b,
-                        "k1" : k1
-                    }
+def get_the_recalls():
+    recalls1 = []
+    recalls2 = []
+    recalls3 = []
+    recalls4 = []
+    for q in tqdm(dev_data['queries']):
+        qtext = q['query_text']
+        #####
+        results1 = get_first_n_1(qtext, 100)
+        results2 = get_first_n_2(qtext, 100)
+        results3 = get_first_n_3(qtext, 100)
+        results4 = get_first_n_20(qtext, 100)
+        #####
+        retr_pmids1 = [t['_source']['pmid'] for t in results1]
+        retr_pmids2 = [t['_source']['pmid'] for t in results2]
+        retr_pmids3 = [t['_source']['pmid'] for t in results3]
+        retr_pmids4 = [t['_source']['pmid'] for t in results4]
+        #####
+        rel_ret1 = sum([1 if (t in q['relevant_documents']) else 0 for t in retr_pmids1])
+        rel_ret2 = sum([1 if (t in q['relevant_documents']) else 0 for t in retr_pmids2])
+        rel_ret3 = sum([1 if (t in q['relevant_documents']) else 0 for t in retr_pmids3])
+        rel_ret4 = sum([1 if (t in q['relevant_documents']) else 0 for t in retr_pmids4])
+        #####
+        recall1 = float(rel_ret1) / float(len(q['relevant_documents']))
+        recall2 = float(rel_ret2) / float(len(q['relevant_documents']))
+        recall3 = float(rel_ret3) / float(len(q['relevant_documents']))
+        recall4 = float(rel_ret4) / float(len(q['relevant_documents']))
+        #####
+        recalls1.append(recall1)
+        recalls2.append(recall2)
+        recalls3.append(recall3)
+        recalls4.append(recall4)
+    #################
+    r1 = sum(recalls1) / float(len(recalls1))
+    r2 = sum(recalls2) / float(len(recalls2))
+    r3 = sum(recalls3) / float(len(recalls3))
+    r4 = sum(recalls4) / float(len(recalls4))
+    return r1, r2, r3, r4
+
+def put_b_k1(b, k1):
+    print(es.indices.close(index = doc_index))
+    print(es.indices.put_settings(
+        index = doc_index,
+        body  = {
+            "similarity": {
+                "my_similarity": {
+                    "type": "BM25",
+                    "b"  : b,
+                    "k1" : k1
                 }
             }
-        ))
-        print(es.indices.open(index = doc_index))
-        recalls = []
-        for q in tqdm(dev_data['queries']):
-            qtext           = q['query_text']
-            #####
-            results         = get_first_n_1(qtext, 100)
-            # results         = get_first_n_3(qtext, 100)
-            #####
-            retr_pmids      = [t['_source']['pmid'] for t in results]
-            #####
-            rel_ret         = sum([1 if (t in q['relevant_documents']) else 0 for t in retr_pmids])
-            #####
-            recall          = float(rel_ret) / float(len(q['relevant_documents']))
-            recalls.append(recall)
-        print('DEV RECALL')
-        print(b, k1, sum(recalls) / float(len(recalls)))
+        }
+    ))
+    print(es.indices.open(index = doc_index))
+
+
+for b_ in tqdm(range(0, 105, 10)):
+    for k1_ in tqdm(range(0, 205, 20)):
+        #################
+        b   = b_  / 100.0
+        k1  = k1_ / 100.0
+        #################
+        put_b_k1(b, k1)
+        #################
+        r1, r2, r3, r4 = get_the_recalls()
+        print(b, k1, r1, r2, r4, r4)
         sys.stdout.flush()
 
 
