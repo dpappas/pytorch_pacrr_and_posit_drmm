@@ -28,7 +28,6 @@ with open(os.path.join(diri, 'v3 dev_emit_bioasq_AT5.json'), 'w') as f:
 
 '''
 
-
 java -Xmx10G -cp \
 "/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
 evaluation.EvaluatorTask1b \

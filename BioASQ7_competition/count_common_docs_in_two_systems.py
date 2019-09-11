@@ -1,22 +1,26 @@
 
 
 import json
+import numpy as np
 
-fpath1  = '/home/DATA/Biomedical/bioasq7/submit_files/test_batch_1/batch1-sys1.json'
-fpath2  = '/home/DATA/Biomedical/bioasq7/submit_files/test_batch_1/batch1-sys2.json'
+# bert-high-conf-0.01.json  bert_jpdrmm.json  bert.json  JBERT_F.json  JBERT.json  jpdrmm.json  pdrmm.json  term-pacrr.json
+
+fpath1  = "/home/dpappas/bioasq_all/bioasq7/document_results/b1234_joined/bert.json"
+fpath2  = "/home/dpappas/bioasq_all/bioasq7/document_results/b1234_joined/JBERT_F.json"
 
 d1      = json.load(open(fpath1))
+d1      = dict((q['id'], q) for q in d1['questions'])
 d2      = json.load(open(fpath2))
+d2      = dict((q['id'], q) for q in d2['questions'])
 
-# common  =
-# total   =
+common  = []
+for k in d1:
+    docs1   = d1[k]['documents']
+    docs2   = d2[k]['documents']
+    comm    = len(set(docs1).intersection(set(docs2)))
+    common.append(float(comm) / float(10.))
 
-
-docs1 = d1['questions'][0]['documents']
-docs2 = d2['questions'][0]['documents']
-
-# set(docs1) - set(docs2)
-len(set(docs1).intersection(set(docs2)))
+print(np.average(common))
 
 
 
