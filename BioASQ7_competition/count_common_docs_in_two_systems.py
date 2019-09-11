@@ -5,8 +5,8 @@ import numpy as np
 
 # bert-high-conf-0.01.json  bert_jpdrmm.json  bert.json  JBERT_F.json  JBERT.json  jpdrmm.json  pdrmm.json  term-pacrr.json
 
-fpath1  = "/home/dpappas/bioasq_all/bioasq7/document_results/b1234_joined/bert.json"
-fpath2  = "/home/dpappas/bioasq_all/bioasq7/document_results/b1234_joined/JBERT_F.json"
+fpath1  = "/home/dpappas/bioasq_all/bioasq7/document_results/b1234_joined/pdrmm.json"
+fpath2  = "/home/dpappas/bioasq_all/bioasq7/document_results/b1234_joined/bert.json"
 
 d1      = json.load(open(fpath1))
 d1      = dict((q['id'], q) for q in d1['questions'])
