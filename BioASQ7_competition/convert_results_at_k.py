@@ -2,7 +2,8 @@
 
 import json, os, copy
 
-diri    = '/media/dpappas/dpappas_data/models_out/frozen_bioasq7_JBERT_2L_0p01_run_0/'
+diri = '/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/'
+# diri    = '/media/dpappas/dpappas_data/models_out/frozen_bioasq7_JBERT_2L_0p01_run_0/'
 # diri    = '/media/dpappas/dpappas_data/models_out/bioasq7_JBERT_2L_0p01_run_0/'
 ddd     = json.load(open(os.path.join(diri, 'v3 dev_emit_bioasq.json')))
 
@@ -42,6 +43,14 @@ evaluation.EvaluatorTask1b \
 "/media/dpappas/dpappas_data/models_out/bioasq7_JBERT_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
 "/media/dpappas/dpappas_data/models_out/bioasq7_JBERT_2L_0p01_run_0/v3 dev_emit_bioasq_AT5.json"
 
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
+"/media/dpappas/dpappas_data/models_out/bioasq7_JBERT_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
+"/media/dpappas/dpappas_data/models_out/bioasq7_JBERT_2L_0p01_run_0/v3 dev_emit_bioasq_AT5.json"
+
+------------------------------------------------------------------------------------
 
 java -Xmx10G -cp \
 "/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
@@ -57,8 +66,39 @@ evaluation.EvaluatorTask1b \
 "/media/dpappas/dpappas_data/models_out/frozen_bioasq7_JBERT_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
 "/media/dpappas/dpappas_data/models_out/frozen_bioasq7_JBERT_2L_0p01_run_0/v3 dev_emit_bioasq_AT5.json"
 
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
+"/media/dpappas/dpappas_data/models_out/frozen_bioasq7_JBERT_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
+"/media/dpappas/dpappas_data/models_out/frozen_bioasq7_JBERT_2L_0p01_run_0/v3 dev_emit_bioasq.json"
+
+------------------------------------------------------------------------------------
 
 
+
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
+"/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
+"/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq_AT3.json"
+
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
+"/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
+"/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq_AT5.json"
+
+java -Xmx10G -cp \
+"/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
+"/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
+"/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq.json"
+
+------------------------------------------------------------------------------------
 
 
 '''
