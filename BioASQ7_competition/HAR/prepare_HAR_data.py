@@ -94,5 +94,16 @@ do_one(train_data,  train_docs, 'pinfo-mz-train.txt')
 do_one(dev_data,    dev_docs,   'pinfo-mz-dev.txt')
 do_one(dev_data,    dev_docs,   'pinfo-mz-test.txt')
 
+'''
 
-# python3.6 /home/dpappas/HAR/matchzoo/main.py --phase train --model_file /home/dpappas/HAR/examples/bioasq7/config//mymodel_pinfo.config
+python \
+/home/dpappas/HAR/matchzoo/main.py \
+--phase train \
+--model_file /home/dpappas/HAR/examples/bioasq7/config/mymodel_pinfo.config
+
+python \
+/home/dpappas/HAR/matchzoo/main.py \
+--phase predict \
+--model_file /home/dpappas/HAR/examples/bioasq7/config/mymodel_pinfo.config
+
+'''
