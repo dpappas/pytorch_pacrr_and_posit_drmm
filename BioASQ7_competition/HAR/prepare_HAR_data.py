@@ -96,6 +96,8 @@ do_one(dev_data,    dev_docs,   'pinfo-mz-test.txt')
 
 '''
 
+cd /home/dpappas/HAR/
+
 python \
 /home/dpappas/HAR/matchzoo/main.py \
 --phase train \
