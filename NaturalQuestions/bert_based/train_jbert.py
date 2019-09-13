@@ -1243,16 +1243,10 @@ odd                 = '/home/dpappas/'
 ##########################################
 dataloc             = '/home/dpappas/NQ_data/'
 bert_all_words_path = '/home/dpappas/NQ_data/bert_all_words.pkl'
-(dev_data, dev_docs, test_data, test_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc) # it is actually bioasq7_data
 ##########################################
-print('Splitted in: ')
-print('{} training examples'.format(len(train_data['queries'])))
-print('{} development examples'.format(len(dev_data['queries'])))
-print('{} testing examples'.format(len(test_data['queries'])))
-##########################################
-avgdl       = 25.516591572602003
-mean        = 0.28064389869036355
-deviation   = 0.5202094012283435
+avgdl               = 25.516591572602003
+mean                = 0.28064389869036355
+deviation           = 0.5202094012283435
 print(avgdl, mean, deviation)
 ##########################################
 
@@ -1268,6 +1262,13 @@ lr                  = 1e-04
 b_size              = 6
 max_epoch           = 10
 #####################
+(dev_data, dev_docs, test_data, test_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(dataloc) # it is actually bioasq7_data
+print('Splitted in: ')
+print('{} training examples'.format(len(train_data['queries'])))
+print('{} development examples'.format(len(dev_data['queries'])))
+print('{} testing examples'.format(len(test_data['queries'])))
+##########################################
+
 
 hdlr = None
 for run in range(0, 1):
@@ -1311,17 +1312,7 @@ for run in range(0, 1):
 
 '''
 
-CUDA_VISIBLE_DEVICES=1 python3.6 train_1.py     Running
-CUDA_VISIBLE_DEVICES=0 python3.6 train_2.py     Done
-CUDA_VISIBLE_DEVICES=1 python3.6 train_3.py     Done
-CUDA_VISIBLE_DEVICES=1 python3.6 train_4.py     Done
-CUDA_VISIBLE_DEVICES=1 python3.6 train_5.py     Done
-
-CUDA_VISIBLE_DEVICES=0 python3.6 train_6.py     Pending     5e-05   unfrozen
-CUDA_VISIBLE_DEVICES=0 python3.6 train_7.py     Pending     5e-04   unfrozen
-CUDA_VISIBLE_DEVICES=1 python3.6 train_8.py     Pending     1e-04   unfrozen
-CUDA_VISIBLE_DEVICES=1 python3.6 train_9.py     Pending     1e-03   unfrozen
-CUDA_VISIBLE_DEVICES=1 python3.6 train_10.py    Pending     5e-06   unfrozen
+CUDA_VISIBLE_DEVICES=1 python3.6 train_nq_jbert_frozen.py     Running
 
 '''
 
