@@ -134,9 +134,9 @@ def embed_the_sent(sent, quest):
     eval_examples               = [InputExample(guid='example_dato_1', text_a=sent, text_b=quest, label='1')]
     eval_features               = convert_examples_to_features(eval_examples, max_seq_length, bert_tokenizer)
     eval_feat                   = eval_features[0]
-    input_ids                   = torch.tensor([eval_feat.input_ids], dtype=torch.long)#.to(device)
-    input_mask                  = torch.tensor([eval_feat.input_mask], dtype=torch.long)#.to(device)
-    segment_ids                 = torch.tensor([eval_feat.segment_ids], dtype=torch.long)#.to(device)
+    input_ids                   = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
+    input_mask                  = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
+    segment_ids                 = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
     token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=True)
     return pooled_output
 
@@ -1254,7 +1254,8 @@ max_seq_length      = 40
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
-bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))#.to(device)
+bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
+bert_model          = bert_model.to(device)
 #####################
 embedding_dim       = 768 # 50  # 30  # 200
 # lrs                  = [1e-03, 1e-04, 5e-04, 5e-05, 5e-06]
