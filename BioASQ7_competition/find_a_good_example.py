@@ -41,7 +41,8 @@ for k in s1:
             if (snip_is_relevant(' '.join(bioclean(snip)), clean_gold)):
                 rel_snips_3 += 1
         # if(rel_snips_1-rel_snips_3>5):
-        if(rel_snips_3-rel_snips_1>1):
+        # if(rel_snips_3-rel_snips_1>1):
+        if(rel_snips_1-rel_snips_3>2 and rel_snips_1<len(clean_gold)):
             print(s1[k]['body'])
             print(20 * '-')
             for s in gt_snips:
