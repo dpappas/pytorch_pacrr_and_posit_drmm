@@ -1177,8 +1177,8 @@ class JBERT_Modeler(nn.Module):
         return intermediate_sent_score.squeeze().unsqueeze(-1)
     ##########################
     def emit_one(self, doc1_sents_embeds, sents_gaf, doc_gaf):
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
-        sents_gaf = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
+        doc_gaf                 = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
+        sents_gaf               = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
         #
         doc1_int_sent_scores    = self.do_for_doc(doc1_sents_embeds)
         #
@@ -1193,8 +1193,8 @@ class JBERT_Modeler(nn.Module):
         doc1_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_1_af), negative_slope=0.1)
         doc1_out                = self.doc_layer_2(doc1_out)
         #
-        sents1_out      = sents1_out.squeeze(-1)
-        doc1_out        = doc1_out.squeeze(-1)
+        sents1_out              = sents1_out.squeeze(-1)
+        doc1_out                = doc1_out.squeeze(-1)
         return doc1_out, sents1_out
     ##########################
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, sents_gaf, sents_baf, doc_gaf, doc_baf):
@@ -1224,12 +1224,12 @@ class JBERT_Modeler(nn.Module):
         doc2_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_2_af), negative_slope=0.1)
         doc2_out                = self.doc_layer_2(doc2_out)
         #
-        loss1           = self.my_hinge_loss(doc1_out, doc2_out)
+        loss1                   = self.my_hinge_loss(doc1_out, doc2_out)
         # print(loss1)
-        sents1_out      = sents1_out.squeeze(-1)
-        sents2_out      = sents2_out.squeeze(-1)
-        doc1_out        = doc1_out.squeeze(-1)
-        doc2_out        = doc2_out.squeeze(-1)
+        sents1_out              = sents1_out.squeeze(-1)
+        sents2_out              = sents2_out.squeeze(-1)
+        doc1_out                = doc1_out.squeeze(-1)
+        doc2_out                = doc2_out.squeeze(-1)
         return loss1, doc1_out, doc2_out, sents1_out, sents2_out
     ##########################
 
