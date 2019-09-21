@@ -633,14 +633,14 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     return bioasq_snip_res
@@ -1045,12 +1045,12 @@ print_params(model)
 import os, sys, pickle, json
 # odir                = './test_bert_pdrmm_batch5/'
 # docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_5/bert.json'
-# f1                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-# f2                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-odir                = './test_pdrmm_pdrmm_batch4/'
-docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/pdrmm.json'
-f1                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f2                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+# odir                = './test_pdrmm_pdrmm_batch4/'
+# docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/pdrmm.json'
+f1                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
+f2                  = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
+odir                = './test_pdrmm_pdrmm_batch5/'
+docs_retrieved_path = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_5/pdrmm.json'
 ###########################################################
 with open(f1, 'rb') as f:
     test_data = pickle.load(f)
@@ -1105,5 +1105,10 @@ java -Xmx10G -cp \
 evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bert.json"
+
+
+cp \
+"./test_pdrmm_pdrmm_batch5/v3 test_emit_bioasq.json" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/pdrmm_pdrmm.json"
 
 '''

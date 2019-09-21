@@ -1018,7 +1018,6 @@ batch                       = 5
 f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch, batch)
 f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch)
 f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch)
-odir                        = './test_frozen_jbert_batch{}/'.format(batch)
 ###########################################################
 bert_resume_from            = '/home/dpappas/frozen_bioasq7_JBERT_2L_0p01_run_0/best_bert_checkpoint.pth.tar'
 model_resume_from           = '/home/dpappas/frozen_bioasq7_JBERT_2L_0p01_run_0/best_checkpoint.pth.tar'
