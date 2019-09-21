@@ -1270,7 +1270,6 @@ print('{} development examples'.format(len(dev_data['queries'])))
 print('{} testing examples'.format(len(test_data['queries'])))
 ##########################################
 
-
 hdlr = None
 for run in range(0, 1):
     ######
