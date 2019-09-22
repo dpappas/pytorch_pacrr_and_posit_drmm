@@ -5,37 +5,19 @@
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 
-import  os
-import  json
-import  time
-import  random
-import  logging
+import  os, sys, pickle, random, json, nltk, re, logging, torch
 import  subprocess
-import  torch
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  numpy                       as np
-import  torch.optim                 as optim
 import  torch.autograd              as autograd
-import  pickle
-from    tqdm import tqdm
-from    pprint import pprint
-from    nltk.tokenize import sent_tokenize
-from    difflib import SequenceMatcher
-import  nltk
-import  math
-from    sklearn.preprocessing import LabelEncoder
-from    sklearn.preprocessing import OneHotEncoder
-import  re
-import  logging
-import  torch
-from    pytorch_pretrained_bert.tokenization import BertTokenizer
-from    torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
-from    torch.utils.data.distributed import DistributedSampler
-from    pytorch_pretrained_bert.tokenization import BertTokenizer
-from    pytorch_pretrained_bert.modeling import BertForSequenceClassification, BertModel, BertForQuestionAnswering
-from    pytorch_pretrained_bert.optimization import BertAdam
-from    pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
+from    tqdm                        import tqdm
+from    pprint                      import pprint
+from    nltk.tokenize               import sent_tokenize
+from    difflib                     import SequenceMatcher
+from    pytorch_pretrained_bert.tokenization    import BertTokenizer
+from    pytorch_pretrained_bert.modeling        import BertForSequenceClassification, BertModel, BertForQuestionAnswering
+from    pytorch_pretrained_bert.file_utils      import PYTORCH_PRETRAINED_BERT_CACHE
 
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords   = nltk.corpus.stopwords.words("english")
@@ -1014,7 +996,7 @@ retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.ja
 ###########################################################
 bert_all_words_path         = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 ###########################################################
-batch                       = 5
+batch                       = int(sys.argv[1])
 f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch, batch)
 f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch)
 f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch)

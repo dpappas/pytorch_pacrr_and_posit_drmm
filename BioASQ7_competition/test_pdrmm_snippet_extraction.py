@@ -632,14 +632,14 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data_known, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
     print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['F1 snippets']))
+    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     return bioasq_snip_res
@@ -1058,9 +1058,21 @@ print(test_map)
 python3.6 tt.py 1 bert
 python3.6 tt.py 2 bert
 python3.6 tt.py 3 bert
+python3.6 tt.py 4 bert
+python3.6 tt.py 5 bert
+
 python3.6 tt.py 1 pdrmm
 python3.6 tt.py 2 pdrmm
 python3.6 tt.py 3 pdrmm
+python3.6 tt.py 4 pdrmm
+python3.6 tt.py 5 pdrmm
+
+python3.6 tt.py 1 bert
+python3.6 tt.py 2 bert
+python3.6 tt.py 3 bert
+python3.6 tt.py 4 bert
+python3.6 tt.py 5 bert
+
 python3.6 tt.py 1 bert-high-conf-0.01
 python3.6 tt.py 2 bert-high-conf-0.01
 python3.6 tt.py 3 bert-high-conf-0.01
