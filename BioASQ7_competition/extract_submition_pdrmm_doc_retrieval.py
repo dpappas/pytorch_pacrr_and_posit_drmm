@@ -972,7 +972,7 @@ f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioas
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                = './test_pdrmm_batch{}/'.format(batch)
+odir                = '/media/dpappas/dpappas_data/models_out/bioasq7_outputs/test_pdrmm_batch{}/'.format(batch)
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
