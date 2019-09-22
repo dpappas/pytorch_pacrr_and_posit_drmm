@@ -846,20 +846,20 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     print_the_results('v2 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
     print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
     #
-    if (prefix == 'dev'):
-        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 dev_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
-        )
-    else:
-        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 test_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
-        )
+    # if (prefix == 'dev'):
+    #     with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
+    #         f.write(json.dumps(ret_data, indent=4, sort_keys=True))
+    #     res_map = get_map_res(
+    #         os.path.join(odir, 'v3 dev_gold_bioasq.json'),
+    #         os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
+    #     )
+    # else:
+    #     with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
+    #         f.write(json.dumps(ret_data, indent=4, sort_keys=True))
+    #     res_map = get_map_res(
+    #         os.path.join(odir, 'v3 test_gold_bioasq.json'),
+    #         os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
+    #     )
     return res_map
 
 def load_all_data(dataloc, idf_pickle_path):
