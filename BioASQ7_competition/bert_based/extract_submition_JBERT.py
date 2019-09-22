@@ -1062,6 +1062,12 @@ print(test_map)
 
 '''
 
+python3.6 tt.py 1
+python3.6 tt.py 2
+python3.6 tt.py 3
+python3.6 tt.py 4
+python3.6 tt.py 5
+
 cp \
 "/home/dpappas/test_frozen_jbert_batch4/v3 test_emit_bioasq.json" \
 "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/JBERT-F.json"
