@@ -73,7 +73,11 @@ print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) 
 
 extracted   = json.load(open("/home/dpappas/natural_questions_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq.json"))
 related_lists = [
-    [int(t.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') in dev_data[item['id']]['relevant_documents']) for t in item['documents']]
+    [
+        int(t.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '')
+        in dev_data[item['id']]['relevant_documents'])
+        for t in item['documents']
+    ]
     for item in extracted['questions']
 ]
 print(mean_reciprocal_rank(related_lists))  ### 0.4056
@@ -89,8 +93,11 @@ print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) 
 
 extracted   = json.load(open("/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_emit_bioasq.json"))
 related_lists = [
-    [int(t.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '')
-    in test_data[item['id']]['relevant_documents']) for t in item['documents']]
+    [
+        int(t.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '')
+        in test_data[item['id']]['relevant_documents'])
+        for t in item['documents']
+    ]
     for item in extracted['questions']
 ]
 print(mean_reciprocal_rank(related_lists))  ### 0.4026
