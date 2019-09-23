@@ -50,20 +50,23 @@ for k in range(1, 11):
     average_snip_pre_at_k   = []
     average_snip_rec_at_k   = []
     for id in ed:
-        gdocs = gd[id][u'documents']
-        edocs = ed[id][u'documents']
+        gdocs   = gd[id][u'documents']
+        edocs   = ed[id][u'documents']
+        gsnips  = gd[id][u'snippets']
+        esnips  = ed[id][u'snippets']
+        ############################
         average_doc_pre_at_k.append(doc_precision_at_k(edocs, gdocs, k))
         average_doc_rec_at_k.append(doc_recall_at_k(edocs, gdocs, k))
-        average_snip_pre_at_k.append(doc_precision_at_k(edocs, gdocs, k))
-        average_snip_rec_at_k.append(doc_recall_at_k(edocs, gdocs, k))
+        average_snip_pre_at_k.append(snip_precision_at_k(esnips, gsnips, k))
+        average_snip_rec_at_k.append(snip_recall_at_k(esnips, gsnips, k))
     #######################
     aver_doc_pre        = sum(average_doc_pre_at_k)/ len(average_doc_pre_at_k)
     aver_doc_rec        = sum(average_doc_rec_at_k)/ len(average_doc_rec_at_k)
     aver_snip_pre       = sum(average_snip_pre_at_k)/ len(average_snip_pre_at_k)
     aver_snip_rec       = sum(average_snip_rec_at_k)/ len(average_snip_rec_at_k)
     #######################
-    # print(k, aver_doc_pre, aver_doc_rec, aver_snip_pre, aver_snip_rec)
-    print(k, aver_doc_pre, aver_doc_rec)
+    print(k, aver_doc_pre, aver_doc_rec, aver_snip_pre, aver_snip_rec)
+    # print(k, aver_doc_pre, aver_doc_rec)
     #######################
 
 
