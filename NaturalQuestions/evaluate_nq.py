@@ -71,11 +71,29 @@ related_lists = [
     ][:10]
     for item in dev_data.values()
 ]
+
 print(mean_reciprocal_rank(related_lists))  ### 0.3089
 print(doc_precision_at_k(related_lists, 10))  ### 0.0602
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1023
-
+#####################################################################################################
 extracted       = json.load(open("/home/dpappas/natural_questions_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq.json"))
+#####################################################################################################
+
+snip_related_lists = []
+for item in extracted['questions']:
+    snip_list = []
+    for retr_snip in item['snippets']:
+        found = False
+        for gold_snip in bioasq7_data[item['id']]['snippets']:
+            if(retr_snip['document'] == gold_snip['document']):
+                if(gold_snip['text'] in retr_snip['text'] or retr_snip['text'] in gold_snip['text']):
+                    found = True
+                    break
+        snip_list.append(int(found))
+    snip_related_lists.append(snip_list)
+
+#####################################################################################################
+
 related_lists   = [
     [
         int(t.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '')
@@ -84,9 +102,16 @@ related_lists   = [
     ]
     for item in extracted['questions']
 ]
+
+#####################################################################################################
 print(mean_reciprocal_rank(related_lists))  ### 0.4056
 print(doc_precision_at_k(related_lists, 10))  ### 0.0710
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1327
+#####################################################################################################
+print(mean_reciprocal_rank(snip_related_lists))  ### 0.4056
+print(doc_precision_at_k(snip_related_lists, 10))  ### 0.0710
+print(np.average([doc_precision_at_k(snip_related_lists, k) for k in range(1, 11)])) ### 0.1327
+#####################################################################################################
 
 # TEST
 related_lists = [
@@ -96,11 +121,29 @@ related_lists = [
     ][:10]
     for item in test_data.values()
 ]
+
 print(mean_reciprocal_rank(related_lists)) ### 0.3162
 print(doc_precision_at_k(related_lists, 10)) ### 0.0608
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1047
-
+#####################################################################################################
 extracted   = json.load(open("/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_emit_bioasq.json"))
+#####################################################################################################
+
+snip_related_lists = []
+for item in extracted['questions']:
+    snip_list = []
+    for retr_snip in item['snippets']:
+        found = False
+        for gold_snip in bioasq7_data[item['id']]['snippets']:
+            if(retr_snip['document'] == gold_snip['document']):
+                if(gold_snip['text'] in retr_snip['text'] or retr_snip['text'] in gold_snip['text']):
+                    found = True
+                    break
+        snip_list.append(int(found))
+    snip_related_lists.append(snip_list)
+
+#####################################################################################################
+
 related_lists = [
     [
         int(t.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '')
@@ -109,9 +152,16 @@ related_lists = [
     ]
     for item in extracted['questions']
 ]
+
+#####################################################################################################
 print(mean_reciprocal_rank(related_lists))                                      ### 0.4026
 print(doc_precision_at_k(related_lists, 10))                                    ### 0.0703
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1313
+#####################################################################################################
+print(mean_reciprocal_rank(snip_related_lists))  ### 0.4056
+print(doc_precision_at_k(snip_related_lists, 10))  ### 0.0710
+print(np.average([doc_precision_at_k(snip_related_lists, k) for k in range(1, 11)])) ### 0.1327
+#####################################################################################################
 
 
 '''
