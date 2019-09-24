@@ -1096,6 +1096,14 @@ class JBERT_Modeler(nn.Module):
         return loss1, doc1_out, doc2_out, sents1_out, sents2_out
     ##########################
 
+def load_model_from_checkpoint(model, resume_from):
+    global start_epoch, optimizer
+    if os.path.isfile(resume_from):
+        print("=> loading checkpoint '{}'".format(resume_from))
+        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
+        model.load_state_dict(checkpoint['state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
 ##########################################
 use_cuda = torch.cuda.is_available()
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
@@ -1137,14 +1145,21 @@ print(odir)
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ##########################################
-avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
 print(avgdl, mean, deviation)
 ##########################################
-
 print('Compiling model...')
 model     = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
 print_params(model)
 print_params(bert_model)
+##########################################
+bert_resume_from            = '/home/dpappas/NQ_JBERT_2L_0.0001_run_0/best_bert_checkpoint.pth.tar'
+model_resume_from           = '/home/dpappas/NQ_JBERT_2L_0.0001_run_0/best_checkpoint.pth.tar'
+###########################################################
+load_model_from_checkpoint(bert_model, bert_resume_from)
+print_params(bert_model)
+load_model_from_checkpoint(model, model_resume_from)
+print_params(model)
+###########################################################
 
 epoch_dev_map = get_one_map('test', dev_data, dev_docs, use_sent_tokenizer=True)
 
