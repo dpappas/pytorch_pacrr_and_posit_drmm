@@ -1288,7 +1288,7 @@ for run in range(0, 1):
     print('random seed: {}'.format(my_seed))
     logger.info('random seed: {}'.format(my_seed))
     ######
-    avgdl, mean, deviation = get_bm25_metrics(avgdl, mean, deviation)
+    # avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
     print(avgdl, mean, deviation)
     ######
     print('Compiling model...')
