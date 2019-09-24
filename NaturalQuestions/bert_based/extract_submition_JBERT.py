@@ -1134,7 +1134,7 @@ print('{} training examples'.format(len(train_data['queries'])))
 print('{} development examples'.format(len(dev_data['queries'])))
 print('{} testing examples'.format(len(test_data['queries'])))
 ##########################################
-odir                        = '/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/'
+odir = '/home/dpappas/test_NQ_JBERT/'
 print(odir)
 if (not os.path.exists(odir)):
     os.makedirs(odir)
