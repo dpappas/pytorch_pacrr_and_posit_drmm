@@ -275,9 +275,6 @@ def print_params(model):
     print(40 * '=')
     print(model)
     print(40 * '=')
-    logger.info(40 * '=')
-    logger.info(model)
-    logger.info(40 * '=')
     trainable = 0
     untrainable = 0
     # for parameter in list(model.parameters()) + list(bert_model.parameters()):
@@ -294,9 +291,6 @@ def print_params(model):
     print(40 * '=')
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
-    logger.info(40 * '=')
-    logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
-    logger.info(40 * '=')
 
 def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
     '''
@@ -1161,6 +1155,6 @@ load_model_from_checkpoint(model, model_resume_from)
 print_params(model)
 ###########################################################
 
-epoch_dev_map = get_one_map('test', dev_data, dev_docs, use_sent_tokenizer=True)
+epoch_dev_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 
 
