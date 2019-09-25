@@ -1278,7 +1278,7 @@ for run in range(0, 1):
     torch.manual_seed(my_seed)
     ######
     # odir = 'frozen_bioasq7_JBERT_2L_{}_run_{}/'.format(str(lr), run)
-    odir = 'NQ_JBERT_2L_{}_run_{}/'.format(str(lr), run)
+    odir = 'NQ_new_JBERT_2L_{}_run_{}/'.format(str(lr), run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
@@ -1312,7 +1312,7 @@ for run in range(0, 1):
 
 '''
 
-CUDA_VISIBLE_DEVICES=1 python3.6 train_nq_jbert_frozen.py     Running
+CUDA_VISIBLE_DEVICES=0 python3.6 train_nq_jbert_2.py 
 
 '''
 
