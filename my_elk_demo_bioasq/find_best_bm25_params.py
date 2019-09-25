@@ -194,27 +194,6 @@ def get_first_n_3(qtext, n, max_year=2017):
     res         = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-with open('/home/dpappas/elk_ips.txt') as fp:
-    cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
-    fp.close()
-
-es = Elasticsearch(
-    cluster_ips,
-    verify_certs        = True,
-    timeout             = 150,
-    max_retries         = 10,
-    retry_on_timeout    = True
-)
-
-dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-(dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data) = load_all_data(dataloc, idf_pickle_path)
-
-with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
-    stopwords = pickle.load(f)
-
-print(stopwords)
-
 def get_the_recalls():
     recalls1 = []
     recalls2 = []
@@ -269,6 +248,33 @@ def put_b_k1(b, k1):
         }
     ))
     print(es.indices.open(index = doc_index))
+
+def measure_existisng_system(dev_data):
+    recalls = []
+    for q in dev_data['queries']:
+        recalls.append(float(q['num_rel_ret']) / float(q['num_rel']))
+    print(sum(recalls) / float(len(recalls)))
+
+with open('/home/dpappas/elk_ips.txt') as fp:
+    cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
+    fp.close()
+
+es = Elasticsearch(
+    cluster_ips,
+    verify_certs        = True,
+    timeout             = 150,
+    max_retries         = 10,
+    retry_on_timeout    = True
+)
+
+dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
+idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+(dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data) = load_all_data(dataloc, idf_pickle_path)
+
+with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
+    stopwords = pickle.load(f)
+
+print(stopwords)
 
 
 for b_ in tqdm(range(0, 105, 10)):

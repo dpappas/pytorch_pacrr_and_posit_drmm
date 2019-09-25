@@ -119,6 +119,53 @@ def put_b_k1(b, k1):
     ))
     print(es.indices.open(index=doc_index))
 
+def get_new(data):
+    new_data = []
+    new_docs = {}
+    for q in tqdm(data['queries']):
+        hits        = get_first_n_1(q['query_text'], 100, max_year=2017)
+        ret_pmids   = set(hit['_source']['pmid'] for hit in hits)
+        num_ret     = len(hits)
+        num_rel_ret = len(ret_pmids.intersection(q['relevant_documents']))
+        datum = {
+            'query_text'            : q['query_text'],
+            'ret_pmids'             : ret_pmids,
+            'num_ret'               : num_ret,
+            'num_rel'               : q['num_rel'],
+            'num_rel_ret'           : num_rel_ret,
+            'query_id'              : q['query_id'],
+            'relevant_documents'    : q['relevant_documents'],
+            'retrieved_documents'   : []
+        }
+        all_mb25s   = [[hit['_score']] for hit in hits]
+        scaler      = StandardScaler()
+        scaler2     = MinMaxScaler()
+        scaler.fit(all_mb25s)
+        scaler2.fit(all_mb25s)
+        print(scaler.mean_)
+        for hit, rank in zip(hits, range(1, len(hits)+1)):
+            datum['retrieved_documents'].append(
+                {
+                  'bm25_score'                  : hit['_score'],
+                  'doc_id'                      : hit['_source']['pmid'],
+                  'is_relevant'                 : hit['_source']['pmid'] in q['relevant_documents'],
+                  'norm_bm25_score_standard'    : scaler.transform([[hit['_score']]])[0][0],
+                  'norm_bm25_score_minmax'      : scaler2.transform([[hit['_score']]])[0][0],
+                  'rank'            : rank
+                }
+            )
+            new_docs[hit['_source']['pmid']] = {
+                'title'             : hit['_source']['joint_text'].split('--------------------')[0].strip(),
+                'abstractText'      : hit['_source']['joint_text'].split('--------------------')[1].strip(),
+                'keywords'          : hit['_source']['Keywords'],
+                'meshHeadingsList'  : hit['_source']['MeshHeadings'],
+                'chemicals'         : hit['_source']['Chemicals'],
+                'pmid'              : hit['_source']['pmid'],
+                'publicationDate'   : hit['_source']['DateCompleted']
+            }
+        new_data.append(datum)
+    return new_data, new_docs
+
 with open('/home/dpappas/elk_ips.txt') as fp:
     cluster_ips = [line.strip() for line in fp.readlines() if (len(line.strip()) > 0)]
     fp.close()
@@ -137,63 +184,8 @@ print(stopwords)
 # b, k1   = 0.3, 0.6
 # put_b_k1(b, k1)
 
-new_train_data = []
-new_train_docs = {}
-for q in tqdm(dev_data['queries']):
-    hits        = get_first_n_1(q['query_text'], 100, max_year=2017)
-    ret_pmids   = set(hit['_source']['pmid'] for hit in hits)
-    num_ret     = len(hits)
-    num_rel_ret = len(ret_pmids.intersection(q['relevant_documents']))
-    datum = {
-        'query_text'            : q['query_text'],
-        'ret_pmids'             : ret_pmids,
-        'num_ret'               : num_ret,
-        'num_rel'               : q['num_rel'],
-        'num_rel_ret'           : num_rel_ret,
-        'query_id'              : q['query_id'],
-        'relevant_documents'    : q['relevant_documents'],
-        'retrieved_documents'   : []
-    }
-    all_mb25s   = [[hit['_score']] for hit in hits]
-    scaler      = StandardScaler()
-    scaler2     = MinMaxScaler()
-    scaler.fit(all_mb25s)
-    scaler2.fit(all_mb25s)
-    print(scaler.mean_)
-    for hit, rank in zip(hits, range(1, len(hits)+1)):
-        datum['retrieved_documents'].append(
-            {
-              'bm25_score'                  : hit['_score'],
-              'doc_id'                      : hit['_source']['pmid'],
-              'is_relevant'                 : hit['_source']['pmid'] in q['relevant_documents'],
-              'norm_bm25_score_standard'    : scaler.transform([[hit['_score']]])[0][0],
-              'norm_bm25_score_minmax'      : scaler2.transform([[hit['_score']]])[0][0],
-              'rank'            : rank
-            }
-        )
-        new_train_docs[hit['_source']['pmid']] = {
-            'title'             : hit['_source']['joint_text'].split('--------------------')[0].strip(),
-            'abstractText'      : hit['_source']['joint_text'].split('--------------------')[1].strip(),
-            'keywords'          : hit['_source']['Keywords'],
-            'meshHeadingsList'  : hit['_source']['MeshHeadings'],
-            'chemicals'         : hit['_source']['Chemicals'],
-            'pmid'              : hit['_source']['pmid'],
-            'publicationDate'   : hit['_source']['DateCompleted']
-            # 'country'           : a,
-            # 'author'            : a,
-            # 'journalName'       : ,
-        }
-    new_train_data.append(datum)
-
-
-# train_data['queries'][0].keys()
-#
-# for q in tqdm(dev_data['queries']):
-#     qtext = q['query_text']
-#     #####
-#     results1 = get_first_n_1(qtext, 100)
-
-
-
+new_train_data, new_train_docs  = get_new(train_data)
+new_dev_data,   new_dev_docs    = get_new(dev_data)
+# new_tests_data, new_test_docs   = get_new(test_data)
 
 
