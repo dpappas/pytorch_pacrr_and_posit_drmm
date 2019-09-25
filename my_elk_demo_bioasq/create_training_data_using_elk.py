@@ -102,21 +102,6 @@ def get_first_n_1(qtext, n, max_year=2017):
     res = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-with open('/home/dpappas/elk_ips.txt') as fp:
-    cluster_ips = [line.strip() for line in fp.readlines() if (len(line.strip()) > 0)]
-    fp.close()
-
-es = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
-
-dataloc = '/home/dpappas/bioasq_all/bioasq7_data/'
-idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-(dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data) = load_all_data(dataloc, idf_pickle_path)
-
-with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
-    stopwords = pickle.load(f)
-
-print(stopwords)
-
 def put_b_k1(b, k1):
     print(es.indices.close(index=doc_index))
     print(es.indices.put_settings(
@@ -133,11 +118,23 @@ def put_b_k1(b, k1):
     ))
     print(es.indices.open(index=doc_index))
 
+with open('/home/dpappas/elk_ips.txt') as fp:
+    cluster_ips = [line.strip() for line in fp.readlines() if (len(line.strip()) > 0)]
+    fp.close()
 
-b, k1   = 0.3, 0.6
-#################
-put_b_k1(b, k1)
-#################
+es = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+
+dataloc = '/home/dpappas/bioasq_all/bioasq7_data/'
+idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
+(dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data) = load_all_data(dataloc, idf_pickle_path)
+
+with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
+    stopwords = pickle.load(f)
+
+print(stopwords)
+
+# b, k1   = 0.3, 0.6
+# put_b_k1(b, k1)
 
 for q in tqdm(dev_data['queries']):
     qtext = q['query_text']
