@@ -2,7 +2,7 @@
 import sys, os, re, json, pickle, ijson
 from elasticsearch import Elasticsearch
 from tqdm import tqdm
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from pprint import pprint
 
 # Modified bioclean: also split on dashes. Works better for retrieval with galago.
@@ -138,7 +138,7 @@ print(stopwords)
 # put_b_k1(b, k1)
 
 new_train_data = []
-new_train_docs = []
+new_train_docs = {}
 for q in tqdm(dev_data['queries']):
     hits        = get_first_n_1(q['query_text'], 100, max_year=2017)
     ret_pmids   = set(hit['_source']['pmid'] for hit in hits)
@@ -156,40 +156,42 @@ for q in tqdm(dev_data['queries']):
     }
     all_mb25s   = [[hit['_score']] for hit in hits]
     scaler      = StandardScaler()
+    scaler2     = MinMaxScaler()
     scaler.fit(all_mb25s)
+    scaler2.fit(all_mb25s)
     print(scaler.mean_)
     for hit, rank in zip(hits, range(1, len(hits)+1)):
         datum['retrieved_documents'].append(
             {
-              'bm25_score'      : hit['_score'],
-              'doc_id'          : hit['_source']['pmid'],
-              'is_relevant'     : hit['_source']['pmid'] in q['relevant_documents'],
-              'norm_bm25_score' : scaler.transform([[hit['_score']]])[0][0],
+              'bm25_score'                  : hit['_score'],
+              'doc_id'                      : hit['_source']['pmid'],
+              'is_relevant'                 : hit['_source']['pmid'] in q['relevant_documents'],
+              'norm_bm25_score_standard'    : scaler.transform([[hit['_score']]])[0][0],
+              'norm_bm25_score_minmax'      : scaler2.transform([[hit['_score']]])[0][0],
               'rank'            : rank
             }
         )
-        break
-    break
-    # retrieved_documents =
-    # '''
-    # {
-    #   'bm25_score': 4.50941048,
-    #   'doc_id': '18162831',
-    #   'is_relevant': False,
-    #   'norm_bm25_score': -0.8893665879842085,
-    #   'rank': 98
-    # },
-    # '''
+        new_train_docs[hit['_source']['pmid']] = {
+            'title'             : hit['_source']['joint_text'].split('--------------------')[0].strip(),
+            'abstractText'      : hit['_source']['joint_text'].split('--------------------')[1].strip(),
+            'keywords'          : hit['_source']['Keywords'],
+            'meshHeadingsList'  : hit['_source']['MeshHeadings'],
+            'chemicals'         : hit['_source']['Chemicals'],
+            'pmid'              : hit['_source']['pmid'],
+            'publicationDate'   : hit['_source']['DateCompleted']
+            # 'country'           : a,
+            # 'author'            : a,
+            # 'journalName'       : ,
+        }
+    new_train_data.append(datum)
 
 
-
-
-train_data['queries'][0].keys()
-
-for q in tqdm(dev_data['queries']):
-    qtext = q['query_text']
-    #####
-    results1 = get_first_n_1(qtext, 100)
+# train_data['queries'][0].keys()
+#
+# for q in tqdm(dev_data['queries']):
+#     qtext = q['query_text']
+#     #####
+#     results1 = get_first_n_1(qtext, 100)
 
 
 
