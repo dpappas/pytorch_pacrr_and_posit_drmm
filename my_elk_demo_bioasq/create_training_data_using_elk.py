@@ -87,7 +87,6 @@ def load_all_data(dataloc, idf_pickle_path):
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data
 
-# recall: 0.4140
 def get_first_n_1(qtext, n, max_year=2017):
     tokenized_body  = bioclean_mod(qtext)
     tokenized_body  = [t for t in tokenized_body if t not in stopwords]
