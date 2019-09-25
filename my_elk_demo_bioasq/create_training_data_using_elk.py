@@ -151,7 +151,7 @@ def get_new(data):
                   'is_relevant'                 : hit['_source']['pmid'] in q['relevant_documents'],
                   'norm_bm25_score_standard'    : scaler.transform([[hit['_score']]])[0][0],
                   'norm_bm25_score_minmax'      : scaler2.transform([[hit['_score']]])[0][0],
-                  'rank'            : rank
+                  'rank'                        : rank
                 }
             )
             new_docs[hit['_source']['pmid']] = {
