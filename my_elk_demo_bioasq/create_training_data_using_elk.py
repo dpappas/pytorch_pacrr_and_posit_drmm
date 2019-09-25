@@ -1,18 +1,14 @@
 
-
 import sys, os, re, json, pickle, ijson
 from elasticsearch import Elasticsearch
 from tqdm import tqdm
 from pprint import pprint
 
 # Modified bioclean: also split on dashes. Works better for retrieval with galago.
-bioclean_mod = lambda t: re.sub(
-    '[.,?;*!%^&_+():-\[\]{}]', '',
-    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()
-).split()
-bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
+bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
-doc_index = 'pubmed_abstracts_joint_0_1'
+doc_index       = 'pubmed_abstracts_joint_0_1'
 
 def idf_val(w, idf, max_idf):
     if w in idf:
@@ -20,28 +16,28 @@ def idf_val(w, idf, max_idf):
     return max_idf
 
 def tokenize(x):
-  return bioclean(x)
+    return bioclean(x)
 
 def GetWords(data, doc_text, words):
-  for i in range(len(data['queries'])):
-    qwds = tokenize(data['queries'][i]['query_text'])
-    for w in qwds:
-      words[w] = 1
-    for j in range(len(data['queries'][i]['retrieved_documents'])):
-      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      dtext = (
-              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText']
-              # +
-              # ' '.join(
-              #     [
-              #         ' '.join(mm) for mm in
-              #         get_the_mesh(doc_text[doc_id])
-              #     ]
-              # )
-      )
-      dwds = tokenize(dtext)
-      for w in dwds:
-        words[w] = 1
+    for i in range(len(data['queries'])):
+        qwds = tokenize(data['queries'][i]['query_text'])
+        for w in qwds:
+            words[w] = 1
+        for j in range(len(data['queries'][i]['retrieved_documents'])):
+            doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
+            dtext = (
+                    doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText']
+                # +
+                # ' '.join(
+                #     [
+                #         ' '.join(mm) for mm in
+                #         get_the_mesh(doc_text[doc_id])
+                #     ]
+                # )
+            )
+            dwds = tokenize(dtext)
+            for w in dwds:
+                words[w] = 1
 
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
@@ -65,7 +61,7 @@ def load_idfs(idf_path, words):
 def load_all_data(dataloc, idf_pickle_path):
     print('loading pickle data')
     #
-    with open(dataloc+'trainining7b.json', 'r') as f:
+    with open(dataloc +'trainining7b.json', 'r') as f:
         bioasq7_data = json.load(f)
         bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
     #
@@ -88,37 +84,32 @@ def load_all_data(dataloc, idf_pickle_path):
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data
 
 def get_first_n_1(qtext, n, max_year=2017):
-    tokenized_body  = bioclean_mod(qtext)
-    tokenized_body  = [t for t in tokenized_body if t not in stopwords]
-    question        = ' '.join(tokenized_body)
+    tokenized_body = bioclean_mod(qtext)
+    tokenized_body = [t for t in tokenized_body if t not in stopwords]
+    question = ' '.join(tokenized_body)
     ################################################
-    bod         = {
+    bod = {
         "size": n,
         "query": {
             "bool": {
-                "must": [{"range": {"DateCompleted": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
+                "must": [
+                    {"range": {"DateCompleted": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
                 "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}],
                 "minimum_should_match": 1,
             }
         }
     }
-    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    res = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-with open('elk_ips.txt') as fp:
-    cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
+with open('/home/dpappas/elk_ips.txt') as fp:
+    cluster_ips = [line.strip() for line in fp.readlines() if (len(line.strip()) > 0)]
     fp.close()
 
-es = Elasticsearch(
-    cluster_ips,
-    verify_certs        = True,
-    timeout             = 150,
-    max_retries         = 10,
-    retry_on_timeout    = True
-)
+es = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
-dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+dataloc = '/home/dpappas/bioasq_all/bioasq7_data/'
+idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq7_data) = load_all_data(dataloc, idf_pickle_path)
 
 with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
@@ -126,44 +117,34 @@ with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
 
 print(stopwords)
 
-recalls = []
-for q in tqdm(dev_data['queries']):
-    qtext           = q['query_text']
-    #####
-    results         = get_first_n_1(qtext, 100)
-    #####
-    retr_pmids      = [t['_source']['pmid'] for t in results]
-    #####
-    rel_ret         = sum([1 if (t in q['relevant_documents']) else 0 for t in retr_pmids])
-    #####
-    recall          = float(rel_ret) / float(len(q['relevant_documents']))
-    recalls.append(recall)
-
-print('DEV RECALL')
-print(sum(recalls) / float(len(recalls)))
-
-'''
-# TO TUNE BM25 in ELK:
-
-
-b   : a weight for doc length           default 0.75
-k1  : a weight for term frequencies     default 1.2
-
-curl -XPOST 'http://localhost:9201/pubmed_abstracts_joint_0_1/_close'
-curl -XPUT "http://localhost:9201/pubmed_abstracts_joint_0_1/_settings" -d '
-{
-    "similarity": {
-        "my_similarity": { 
-            "type": "BM25",
-            "b"  : 0.1,
-            "k1" : 0.9
+def put_b_k1(b, k1):
+    print(es.indices.close(index=doc_index))
+    print(es.indices.put_settings(
+        index=doc_index,
+        body={
+            "similarity": {
+                "my_similarity": {
+                    "type": "BM25",
+                    "b": b,
+                    "k1": k1
+                }
+            }
         }
-    }
-}'
-curl -XPOST 'http://localhost:9201/pubmed_abstracts_joint_0_1/_open'
+    ))
+    print(es.indices.open(index=doc_index))
+
+
+b, k1   = 0.3, 0.6
+#################
+put_b_k1(b, k1)
+#################
+
+for q in tqdm(dev_data['queries']):
+    qtext = q['query_text']
+    #####
+    results1 = get_first_n_1(qtext, 100)
 
 
 
-'''
 
 
