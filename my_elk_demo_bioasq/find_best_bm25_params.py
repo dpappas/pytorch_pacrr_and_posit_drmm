@@ -249,10 +249,10 @@ def put_b_k1(b, k1):
     ))
     print(es.indices.open(index = doc_index))
 
-def measure_existisng_system(dev_data):
+def measure_existisng_system(dev_data, dev_docs):
     recalls = []
     for q in dev_data['queries']:
-        recalls.append(float(q['num_rel_ret']) / float(q['num_rel']))
+        recalls.append(float(q['num_rel_ret']) / float(len(q['relevant_documents']))) # float(q['num_rel']))
     print(sum(recalls) / float(len(recalls)))
 
 with open('/home/dpappas/elk_ips.txt') as fp:
