@@ -184,8 +184,18 @@ print(stopwords)
 # b, k1   = 0.3, 0.6
 # put_b_k1(b, k1)
 
+odir_dataloc = '/home/dpappas/bioasq_all/bioasq7_data_demo/data/'
+
 new_train_data, new_train_docs  = get_new(train_data)
 new_dev_data,   new_dev_docs    = get_new(dev_data)
-# new_tests_data, new_test_docs   = get_new(test_data)
+
+with open(odir_dataloc + 'trainining7b.json', 'w') as f:
+    f.write(json.dumps(bioasq7_data, indent=4, sort_keys=True))
+
+pickle.dump(new_dev_data,   open(odir_dataloc + 'bioasq7_bm25_top100.dev.pkl', 'wb'))
+pickle.dump(new_dev_docs,   open(odir_dataloc + 'bioasq7_bm25_docset_top100.dev.pkl', 'wb'))
+pickle.dump(new_train_data, open(odir_dataloc + 'bioasq7_bm25_top100.train.pkl', 'wb'))
+pickle.dump(new_train_docs, open(odir_dataloc + 'bioasq7_bm25_docset_top100.train.pkl', 'wb'))
+
 
 
