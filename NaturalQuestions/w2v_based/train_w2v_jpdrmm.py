@@ -1048,6 +1048,9 @@ def load_all_data(dataloc):
     with open(dataloc + 'NQ_bioasq7_bm25_docset_top100.train.dev.test.pkl', 'rb') as f:
         train_docs      = pickle.load(f)
     ########################################################
+    dev_data['queries']     = dev_data['queries'][:400] # GIA NA MH MOY PAREI KANA XRONO!
+    test_data['queries']    = test_data['queries'][:400] # GIA NA MH MOY PAREI KANA XRONO!
+    ########################################################
     # As einai ola mazi... Siga!
     dev_docs    = train_docs
     test_docs   = train_docs

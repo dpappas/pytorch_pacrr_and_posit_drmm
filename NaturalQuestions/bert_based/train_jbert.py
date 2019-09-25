@@ -1132,6 +1132,9 @@ def load_all_data(dataloc):
     with open(dataloc + 'NQ_bioasq7_bm25_docset_top100.train.dev.test.pkl', 'rb') as f:
         train_docs      = pickle.load(f)
     ########################################################
+    dev_data['queries']     = dev_data['queries'][:400] # GIA NA MH MOY PAREI KANA XRONO!
+    test_data['queries']    = test_data['queries'][:400] # GIA NA MH MOY PAREI KANA XRONO!
+    ########################################################
     dev_docs    = train_docs
     test_docs   = train_docs
     ########################################################
@@ -1259,7 +1262,7 @@ bert_model          = bert_model.to(device)
 #####################
 embedding_dim       = 768 # 50  # 30  # 200
 # lrs                  = [1e-03, 1e-04, 5e-04, 5e-05, 5e-06]
-lr                  = 1e-04
+lr                  = 1e-03
 b_size              = 6
 max_epoch           = 10
 #####################

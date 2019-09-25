@@ -904,6 +904,8 @@ def load_all_data(dataloc):
     with open(dataloc + 'NQ_bioasq7_bm25_docset_top100.train.dev.test.pkl', 'rb') as f:
         test_docs      = pickle.load(f)
     ########################################################
+    test_data['queries']    = test_data['queries'][:400] # GIA NA MH MOY PAREI KANA XRONO!
+    ########################################################
     print('loading idf')
     idf, max_idf    = load_idfs_from_df(dataloc + 'NQ_my_tokenize_df.pkl')
     print('loading w2v')
