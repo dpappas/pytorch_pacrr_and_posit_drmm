@@ -190,6 +190,8 @@ print(stopwords)
 # put_b_k1(b, k1)
 
 odir_dataloc = '/home/dpappas/bioasq_all/bioasq7_data_demo/data/'
+if(not os.path.exists(odir_dataloc)):
+    os.makedirs(odir_dataloc)
 
 new_train_data, new_train_docs  = get_new(train_data)
 new_dev_data,   new_dev_docs    = get_new(dev_data)
