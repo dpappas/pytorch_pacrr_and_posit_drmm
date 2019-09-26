@@ -132,8 +132,21 @@ for q in tqdm(dev_data['queries']):
     results         = get_first_n_1(qtext, 100)
     #####
     retr_pmids      = [t['_source']['pmid'] for t in results]
+    old_retr_pmids  = [r['doc_id'] for r in q['retrieved_documents']]
+    common          = set(old_retr_pmids).intersection(retr_pmids)
+    difr            = set(old_retr_pmids)-set(retr_pmids)
+    difr2           = set(retr_pmids)-set(old_retr_pmids)
+    rel_in_com      = set(q['relevant_documents']).intersection(common)
+    rel_in_dif      = set(q['relevant_documents']).intersection(difr)
+    rel_in_dif2     = set(q['relevant_documents']).intersection(difr)
+    # print(len(old_retr_pmids))
+    # print(len(retr_pmids))
+    # print(len(common))
+    # print(len(difr))
+    print(len(rel_in_com), len(rel_in_com), len(rel_in_dif2))
+    print(difr)
     #####
-    break
+    # break
 
 
 
