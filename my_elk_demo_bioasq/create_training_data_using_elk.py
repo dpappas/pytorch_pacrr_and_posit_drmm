@@ -138,6 +138,8 @@ def get_new(data):
             'retrieved_documents'   : []
         }
         all_mb25s   = [[hit['_score']] for hit in hits]
+        if(len(all_mb25s)):
+            all_mb25s = [all_mb25s[0], all_mb25s[0]]
         scaler      = StandardScaler()
         scaler2     = MinMaxScaler()
         scaler.fit(all_mb25s)
