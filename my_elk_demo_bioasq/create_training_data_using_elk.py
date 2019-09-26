@@ -4,6 +4,7 @@ from elasticsearch import Elasticsearch
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from pprint import pprint
+import numpy as np
 
 # Modified bioclean: also split on dashes. Works better for retrieval with galago.
 bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
@@ -142,6 +143,7 @@ def get_new(data):
             all_mb25s = all_mb25s + all_mb25s
         scaler      = StandardScaler()
         scaler2     = MinMaxScaler()
+        print(np.array(all_mb25s).shape)
         scaler.fit(all_mb25s)
         scaler2.fit(all_mb25s)
         print(scaler.mean_)
