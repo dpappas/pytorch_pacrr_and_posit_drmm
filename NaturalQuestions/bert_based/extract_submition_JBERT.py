@@ -1149,8 +1149,8 @@ model     = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
 print_params(model)
 print_params(bert_model)
 ##########################################
-bert_resume_from            = '/home/dpappas/NQ_JBERT_2L_0.0001_run_0/best_bert_checkpoint.pth.tar'
-model_resume_from           = '/home/dpappas/NQ_JBERT_2L_0.0001_run_0/best_checkpoint.pth.tar'
+bert_resume_from            = '/home/dpappas/NQ_JBERT_2L_0.001_run_0/best_bert_checkpoint.pth.tar'
+model_resume_from           = '/home/dpappas/NQ_JBERT_2L_0.001_run_0/best_checkpoint.pth.tar'
 ###########################################################
 load_model_from_checkpoint(bert_model, bert_resume_from)
 print_params(bert_model)
