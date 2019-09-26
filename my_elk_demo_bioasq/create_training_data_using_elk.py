@@ -139,8 +139,9 @@ def get_new(data):
             'retrieved_documents'   : []
         }
         all_mb25s   = [[hit['_score']] for hit in hits]
-        if(len(all_mb25s)):
-            all_mb25s = all_mb25s + all_mb25s
+        if(len(all_mb25s) == 0):
+            print('WTF no docs returned for question:\n{}'.format(q['query_text']))
+            continue
         scaler      = StandardScaler()
         scaler2     = MinMaxScaler()
         print(np.array(all_mb25s).shape)
