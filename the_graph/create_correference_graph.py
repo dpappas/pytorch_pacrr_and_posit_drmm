@@ -1,4 +1,5 @@
 
+import pickle
 import gzip
 from lxml import etree
 from xml.dom import minidom
@@ -105,6 +106,7 @@ for path in tqdm(paths):
         tuples      = make_tuples(terms)
         coocurences.update(Counter(terms))
 
+pickle.dump(coocurences, open('/media/dpappas/dpappas_data/pubtator_coocurences.pkl', 'wb'))
 
 
 
