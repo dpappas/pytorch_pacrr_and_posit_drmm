@@ -1,6 +1,6 @@
 
 from py2neo import Graph, Node
-graph = Graph(password="nlp.aueb.group!")
+graph = Graph(password="pass")
 
 
 alice = Node("Person", name="Alice")
