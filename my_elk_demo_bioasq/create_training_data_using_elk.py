@@ -122,8 +122,8 @@ def put_b_k1(b, k1):
 def get_new(data):
     new_data = []
     new_docs = {}
-    for q in tqdm(data['queries']):
-        hits        = get_first_n_1(q['query_text'], 100, max_year=2017)
+    for q in tqdm(data['queries'][1840:]):
+        hits        = get_first_n_1(q['query_text'], 100, max_year=2018)
         ret_pmids   = set(hit['_source']['pmid'] for hit in hits)
         num_ret     = len(hits)
         num_rel_ret = len(ret_pmids.intersection(q['relevant_documents']))
@@ -139,7 +139,7 @@ def get_new(data):
         }
         all_mb25s   = [[hit['_score']] for hit in hits]
         if(len(all_mb25s)):
-            all_mb25s = [all_mb25s[0], all_mb25s[0]]
+            all_mb25s = all_mb25s + all_mb25s
         scaler      = StandardScaler()
         scaler2     = MinMaxScaler()
         scaler.fit(all_mb25s)
