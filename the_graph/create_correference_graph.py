@@ -81,23 +81,29 @@ def create_pmid_body(pmid):
         }
     }
 
+def make_tuples(terms):
+    ret = []
+    for i in range(len(terms)-1):
+        for j in range(i, len(terms)):
+            ret.append((terms[i], terms[j]))
+    return ret
+
 diri        = '/media/dpappas/dpappas_data/PUBTATOR/'
 paths       = [os.path.join(diri,f) for f in os.listdir(diri)]
 random.shuffle(paths)
 b_size      = 1000
 actions     = []
 
-count       = Counter()
-coocurences = []
+coocurences = Counter()
 for path in tqdm(paths):
     root = etree.iterparse(gzip.open(path, 'rb'), tag='document')
     metr    = 0
-    for _, ch_tree in tqdm(root, total=1000000):
+    for _, ch_tree in tqdm(root, total=10000000):
         metr        += 1
         datum       = xml2json()
         terms       = flattened(datum)
-        coocurences.append(terms)
-        count.update(Counter(terms))
+        tuples      = make_tuples(terms)
+        coocurences.update(Counter(terms))
 
 
 
