@@ -144,7 +144,7 @@ def get_new(data):
             continue
         scaler      = StandardScaler()
         scaler2     = MinMaxScaler()
-        print(np.array(all_mb25s).shape)
+        # print(np.array(all_mb25s).shape)
         scaler.fit(all_mb25s)
         scaler2.fit(all_mb25s)
         print(scaler.mean_)
