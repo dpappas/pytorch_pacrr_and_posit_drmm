@@ -1197,12 +1197,12 @@ class JBERT_Modeler(nn.Module):
         doc2_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_2_af), negative_slope=0.1)
         doc2_out                = self.doc_layer_2(doc2_out)
         #
-        loss1           = self.my_hinge_loss(doc1_out, doc2_out)
+        loss1                   = self.my_hinge_loss(doc1_out, doc2_out)
         # print(loss1)
-        sents1_out      = sents1_out.squeeze(-1)
-        sents2_out      = sents2_out.squeeze(-1)
-        doc1_out        = doc1_out.squeeze(-1)
-        doc2_out        = doc2_out.squeeze(-1)
+        sents1_out              = sents1_out.squeeze(-1)
+        sents2_out              = sents2_out.squeeze(-1)
+        doc1_out                = doc1_out.squeeze(-1)
+        doc2_out                = doc2_out.squeeze(-1)
         return loss1, doc1_out, doc2_out, sents1_out, sents2_out
     ##########################
 

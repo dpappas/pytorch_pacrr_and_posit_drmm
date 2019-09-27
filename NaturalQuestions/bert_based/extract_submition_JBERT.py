@@ -1015,44 +1015,38 @@ class JBERT_Modeler(nn.Module):
         self.doc_add_feats      = 11
         self.sent_add_feats     = 10
         #
-        self.sent_layer         = nn.Linear(embedding_dim, 1, bias=True).to(device)
-        #
-        self.sent_out_layer_1   = nn.Linear(1 + self.sent_add_feats, 8, bias=True).to(device)
+        self.sent_out_layer_1   = nn.Linear(embedding_dim + self.sent_add_feats, 8, bias=True).to(device)
         self.sent_out_layer_2   = nn.Linear(8, 1, bias=True).to(device)
         #
-        self.doc_layer_1        = nn.Linear(1 + self.doc_add_feats, 8, bias=True).to(device)
+        self.doc_layer_1        = nn.Linear(embedding_dim + self.doc_add_feats, 8, bias=True).to(device)
         self.doc_layer_2        = nn.Linear(8, 1, bias=True).to(device)
         #
         self.oo_layer           = nn.Linear(2, 1, bias=True).to(device)
     ##########################
     def my_hinge_loss(self, positives, negatives, margin=1.0):
-        delta = negatives - positives
-        loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
+        delta                   = negatives - positives
+        loss_q_pos              = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
-    ##########################
-    def do_for_doc(self, doc_sents_embeds):
-        doc_sents_embeds        = torch.stack(doc_sents_embeds, dim=0).to(device)
-        intermediate_sent_score = self.sent_layer(doc_sents_embeds)
-        intermediate_sent_score = torch.sigmoid(intermediate_sent_score)
-        return intermediate_sent_score.squeeze().unsqueeze(-1)
     ##########################
     def emit_one(self, doc1_sents_embeds, sents_gaf, doc_gaf):
         doc_gaf                 = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).unsqueeze(0).to(device)
         sents_gaf               = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
         #
-        doc1_int_sent_scores    = self.do_for_doc(doc1_sents_embeds)
+        doc1_sents_embeds       = torch.stack(doc1_sents_embeds).squeeze(1)
+        doc1_sents_embeds_af    = torch.cat([doc1_sents_embeds, sents_gaf], -1)
         #
-        doc1_int_sent_scores_af = torch.cat([doc1_int_sent_scores, sents_gaf], -1)
-        #
-        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_int_sent_scores_af), negative_slope=0.1)
+        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_sents_embeds_af), negative_slope=0.1)
         sents1_out              = F.sigmoid(self.sent_out_layer_2(sents1_out))
         #
-        max_feats_of_sents_1    = torch.max(sents1_out, 0)[0].unsqueeze(0)
+        max_feats_of_sents_1    = torch.max(doc1_sents_embeds, 0)[0].unsqueeze(0)
         max_feats_of_sents_1_af = torch.cat([max_feats_of_sents_1, doc_gaf], -1)
         #
         doc1_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_1_af), negative_slope=0.1)
         doc1_out                = self.doc_layer_2(doc1_out)
         #
+        final_in_1              = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
+        sents1_out              = F.sigmoid(self.oo_layer(final_in_1))
+        # print(loss1)
         sents1_out              = sents1_out.squeeze(-1)
         doc1_out                = doc1_out.squeeze(-1)
         return doc1_out, sents1_out
@@ -1063,19 +1057,18 @@ class JBERT_Modeler(nn.Module):
         sents_gaf               = autograd.Variable(torch.FloatTensor(sents_gaf), requires_grad=False).to(device)
         sents_baf               = autograd.Variable(torch.FloatTensor(sents_baf), requires_grad=False).to(device)
         #
-        doc1_int_sent_scores    = self.do_for_doc(doc1_sents_embeds)
-        doc2_int_sent_scores    = self.do_for_doc(doc2_sents_embeds)
+        doc1_sents_embeds       = torch.stack(doc1_sents_embeds).squeeze(1)
+        doc1_sents_embeds_af    = torch.cat([doc1_sents_embeds, sents_gaf], -1)
+        doc2_sents_embeds       = torch.stack(doc2_sents_embeds).squeeze(1)
+        doc2_sents_embeds_af    = torch.cat([doc2_sents_embeds, sents_baf], -1)
         #
-        doc1_int_sent_scores_af = torch.cat([doc1_int_sent_scores, sents_gaf], -1)
-        doc2_int_sent_scores_af = torch.cat([doc2_int_sent_scores, sents_baf], -1)
-        #
-        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_int_sent_scores_af), negative_slope=0.1)
+        sents1_out              = F.leaky_relu(self.sent_out_layer_1(doc1_sents_embeds_af), negative_slope=0.1)
         sents1_out              = F.sigmoid(self.sent_out_layer_2(sents1_out))
-        sents2_out              = F.leaky_relu(self.sent_out_layer_1(doc2_int_sent_scores_af), negative_slope=0.1)
+        sents2_out              = F.leaky_relu(self.sent_out_layer_1(doc2_sents_embeds_af), negative_slope=0.1)
         sents2_out              = F.sigmoid(self.sent_out_layer_2(sents2_out))
         #
-        max_feats_of_sents_1    = torch.max(sents1_out, 0)[0].unsqueeze(0)
-        max_feats_of_sents_2    = torch.max(sents2_out, 0)[0].unsqueeze(0)
+        max_feats_of_sents_1    = torch.max(doc1_sents_embeds, 0)[0].unsqueeze(0)
+        max_feats_of_sents_2    = torch.max(doc2_sents_embeds, 0)[0].unsqueeze(0)
         max_feats_of_sents_1_af = torch.cat([max_feats_of_sents_1, doc_gaf], -1)
         max_feats_of_sents_2_af = torch.cat([max_feats_of_sents_2, doc_baf], -1)
         #
@@ -1084,6 +1077,10 @@ class JBERT_Modeler(nn.Module):
         doc2_out                = F.leaky_relu(self.doc_layer_1(max_feats_of_sents_2_af), negative_slope=0.1)
         doc2_out                = self.doc_layer_2(doc2_out)
         #
+        final_in_1              = torch.cat([sents1_out, doc1_out.expand_as(sents1_out)], -1)
+        final_in_2              = torch.cat([sents2_out, doc2_out.expand_as(sents2_out)], -1)
+        sents1_out              = F.sigmoid(self.oo_layer(final_in_1))
+        sents2_out              = F.sigmoid(self.oo_layer(final_in_2))
         loss1                   = self.my_hinge_loss(doc1_out, doc2_out)
         # print(loss1)
         sents1_out              = sents1_out.squeeze(-1)
