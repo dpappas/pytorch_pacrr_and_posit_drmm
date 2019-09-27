@@ -1100,6 +1100,8 @@ def load_model_from_checkpoint(model, resume_from):
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+    else:
+        print("!!! FILE NOT FOUND {} !!!".format(resume_from))
 
 ##########################################
 use_cuda = torch.cuda.is_available()
@@ -1149,8 +1151,8 @@ model     = JBERT_Modeler(embedding_dim=embedding_dim).to(device)
 print_params(model)
 print_params(bert_model)
 ##########################################
-bert_resume_from            = '/home/dpappas/NQ_JBERT_2L_0.001_run_0/best_bert_checkpoint.pth.tar'
-model_resume_from           = '/home/dpappas/NQ_JBERT_2L_0.001_run_0/best_checkpoint.pth.tar'
+bert_resume_from            = '/home/dpappas/NQ_new_JBERT_2L_0.1_run_0/best_bert_checkpoint.pth.tar'
+model_resume_from           = '/home/dpappas/NQ_new_JBERT_2L_0.1_run_0/best_checkpoint.pth.tar'
 ###########################################################
 load_model_from_checkpoint(bert_model, bert_resume_from)
 print_params(bert_model)

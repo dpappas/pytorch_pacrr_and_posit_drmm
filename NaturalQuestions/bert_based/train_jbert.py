@@ -1263,7 +1263,7 @@ bert_model          = bert_model.to(device)
 #####################
 embedding_dim       = 768 # 50  # 30  # 200
 # lrs                  = [1e-03, 1e-04, 5e-04, 5e-05, 5e-06]
-lr                  = 1e-03
+lr                  = 1e-01
 b_size              = 6
 max_epoch           = 10
 #####################

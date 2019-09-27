@@ -105,8 +105,7 @@ for path in tqdm(paths):
         terms       = flattened(datum)
         tuples      = make_tuples(terms)
         coocurences.update(Counter(terms))
-
-pickle.dump(coocurences, open('/media/dpappas/dpappas_data/pubtator_coocurences.pkl', 'wb'))
+    pickle.dump(coocurences, open('/media/dpappas/dpappas_data/pubtator_coocurences.pkl', 'wb'))
 
 
 
