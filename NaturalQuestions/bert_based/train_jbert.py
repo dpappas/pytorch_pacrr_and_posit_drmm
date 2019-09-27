@@ -1259,8 +1259,8 @@ bert_model          = BertForQuestionAnswering.from_pretrained(bert_model, cache
 bert_model          = bert_model.to(device)
 #####################
 embedding_dim       = 768 # 50  # 30  # 200
-# lrs                  = [1e-03, 1e-04, 5e-04, 5e-05, 5e-06]
-lr                  = 1e-01
+# lrs                  = [1e-01, 1e-02, 1e-03, 1e-04, 5e-04, 5e-05, 5e-06]
+lr                  = 1e-04 #
 b_size              = 6
 max_epoch           = 10
 #####################
@@ -1279,7 +1279,7 @@ for run in range(0, 1):
     torch.manual_seed(my_seed)
     ######
     # odir = 'frozen_bioasq7_JBERT_2L_{}_run_{}/'.format(str(lr), run)
-    odir = 'NQ_new_JBERT_2L_{}_run_{}/'.format(str(lr), run)
+    odir = 'NQ_SAME_JBERT_2L_{}_run_{}/'.format(str(lr), run)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
