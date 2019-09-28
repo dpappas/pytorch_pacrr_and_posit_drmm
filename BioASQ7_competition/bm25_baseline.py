@@ -41,15 +41,37 @@ for q in test_data['queries']:
     ###############################
     q_text      = q['query_text']
     docs        = [d['doc_id'] for d in q['retrieved_documents']][:10]
-    all_sents   = []
+    all_sents       = []
+    all_text_sents  = []
     for did in docs:
-        all_sents.extend(sent_tokenize(test_docs[did]['title']) + sent_tokenize(test_docs[did]['abstractText']))
+        for sent in sent_tokenize(test_docs[did]['title']):
+            all_sents.append(
+                (
+                    "title",
+                    "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(did),
+                    "title",
+                    test_docs[did]['title'].index(sent),
+                    test_docs[did]['title'].index(sent)+len(sent),
+                    sent
+                )
+            )
+            all_text_sents.append(sent)
     ###############################
     bm25_data['questions'].append(
         {
             "body"      : "n/a",
             "id"        : q['query_id'],
-            "documents" : ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(d['doc_id']) for d in docs]
+            "documents" : ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(doc_id) for doc_id in docs],
+            "snippets"  : [
+                # {
+                #     "beginSection": "title",
+                #     "document": "http://www.ncbi.nlm.nih.gov/pubmed/29958099",
+                #     "endSection": "title",
+                #     "offsetInBeginSection": 0,
+                #     "offsetInEndSection": 59,
+                #     "text": "Durvalumab for the treatment of non-small cell lung cancer."
+                # },
+            ]
         }
     )
 
