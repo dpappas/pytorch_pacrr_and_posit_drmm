@@ -5,6 +5,7 @@
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 
+import gensim
 import  os
 import  json
 import  time
@@ -1026,34 +1027,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     '''
     return v3_bioasq_snip_res['MAP snippets']
 
-def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
-    print('loading pickle data')
-    #
-    with open(dataloc+'trainining7b.json', 'r') as f:
-        bioasq7_data = json.load(f)
-        bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
-    #
-    with open(dataloc + 'bioasq7_bm25_top100.dev.pkl', 'rb') as f:
-        dev_data = pickle.load(f)
-    with open(dataloc + 'bioasq7_bm25_docset_top100.dev.pkl', 'rb') as f:
-        dev_docs = pickle.load(f)
-    with open(dataloc + 'bioasq7_bm25_top100.train.pkl', 'rb') as f:
-        train_data = pickle.load(f)
-    with open(dataloc + 'bioasq7_bm25_docset_top100.train.pkl', 'rb') as f:
-        train_docs = pickle.load(f)
-    print('loading words')
-    #
-    words               = {}
-    GetWords(train_data, train_docs, words)
-    GetWords(dev_data,   dev_docs,   words)
-    #
-    print('loading idfs')
-    idf, max_idf    = load_idfs(idf_pickle_path, words)
-    print('loading w2v')
-    wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-    wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
-
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
              embedding_dim          = 30,
@@ -1329,24 +1302,82 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         return gs_emits, bs_emits
 
-use_cuda = torch.cuda.is_available()
+def load_idfs_from_df(df_path):
+    print('Loading IDF tables')
+    with open(df_path, 'rb') as f:
+        df = pickle.load(f)
+    N   = 2684631
+    idf = dict(
+        [
+            (
+                item[0],
+                math.log((N*1.0) / (1.0*item[1]))
+            )
+            for item in df.items()
+        ]
+    )
+    ##############
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    ##############
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    return idf, max_idf
+
+def load_all_data(dataloc):
+    print('loading pickle data')
+    ########################################################
+    with open(dataloc+'NQ_training7b.train.dev.test.json', 'r') as f:
+        bioasq7_data    = json.load(f)
+        bioasq7_data    = dict((q['id'], q) for q in bioasq7_data['questions'])
+    ########################################################
+    with open(dataloc + 'NQ_bioasq7_bm25_top100.train.pkl', 'rb') as f:
+        train_data      = pickle.load(f)
+    with open(dataloc + 'NQ_bioasq7_bm25_top100.dev.pkl', 'rb') as f:
+        dev_data        = pickle.load(f)
+    with open(dataloc + 'NQ_bioasq7_bm25_top100.test.pkl', 'rb') as f:
+        test_data       = pickle.load(f)
+    ########################################################
+    with open(dataloc + 'NQ_bioasq7_bm25_docset_top100.train.dev.test.pkl', 'rb') as f:
+        train_docs      = pickle.load(f)
+    ########################################################
+    train_data['queries']   = train_data['queries'][:4000] # GIA NA MH MOY PAREI KANA XRONO!
+    dev_data['queries']     = dev_data['queries'][:400] # GIA NA MH MOY PAREI KANA XRONO!
+    test_data['queries']    = test_data['queries'][:400] # GIA NA MH MOY PAREI KANA XRONO!
+    ########################################################
+    # As einai ola mazi... Siga!
+    dev_docs    = train_docs
+    test_docs   = train_docs
+    ########################################################
+    print('loading idf')
+    idf, max_idf    = load_idfs_from_df(dataloc + 'NQ_my_tokenize_df.pkl')
+    print('loading w2v')
+    wv              = gensim.models.Word2Vec.load(dataloc + 'lower_nq_w2v_30.model')
+    wv              = dict([(word, wv[word]) for word in wv.wv.vocab.keys()])
+    ########################################################
+    return dev_data, dev_docs, test_data, test_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
+
+use_cuda    = torch.cuda.is_available()
+device      = torch.device("cuda:0") if(use_cuda) else torch.device("cpu")
 ##########################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ##########################################
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
-##########################################
+dataloc             = '/home/dpappas/NQ_data/'
 (
-    dev_data, dev_docs,
-    train_data, train_docs,
-    idf, max_idf,
-    wv, bioasq7_data
-) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
+    dev_data, dev_docs, test_data, test_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
+) = load_all_data(dataloc)
 ##########################################
-avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
+print('Splitted in: ')
+print('{} training examples'.format(len(train_data['queries'])))
+print('{} development examples'.format(len(dev_data['queries'])))
+print('{} testing examples'.format(len(test_data['queries'])))
+##########################################
+avgdl       = 25.516591572602003
+mean        = 0.28064389869036355
+deviation   = 0.5202094012283435
 print(avgdl, mean, deviation)
 ##########################################
 
