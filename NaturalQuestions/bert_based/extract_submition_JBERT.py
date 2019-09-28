@@ -1160,5 +1160,7 @@ print_params(model)
 ###########################################################
 
 epoch_dev_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
+print(epoch_dev_map)
+
 
 
