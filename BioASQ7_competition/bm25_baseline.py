@@ -30,6 +30,10 @@ with open(f_in2, 'rb') as f:
 with open(f_in3, 'rb') as f:
     test_docs = pickle.load(f)
 
+print('loading idfs')
+with open(idf_pickle_path, 'rb') as f:
+    idf = pickle.load(f)
+
 ###########################################################
 
 bm25_data   = {'questions': []}
