@@ -35,7 +35,7 @@ with open(f_in3, 'rb') as f:
 bm25_data   = {'questions': []}
 for q in test_data['queries']:
     docs = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(d['doc_id']) for d in q['retrieved_documents']]
-    bm25_data   = ['questions'].append(
+    bm25_data['questions'].append(
         {
             "body"      : "n/a",
             "id"        : q['query_id'],
@@ -47,6 +47,33 @@ with open(f_out, 'w') as f:
     f.write(json.dumps(bm25_data, indent=4, sort_keys=False))
     f.close()
 
+'''
 
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1 \
+/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/bm25.json \
+| grep "^MAP documents:"
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2 \
+/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_2/bm25.json \
+| grep "^MAP documents:"
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3 \
+/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bm25.json \
+| grep "^MAP documents:"
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4 \
+/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_4/bm25.json \
+| grep "^MAP documents:"
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5 \
+/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_5/bm25.json \
+| grep "^MAP documents:"
+
+'''
 
 
