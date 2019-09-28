@@ -65,77 +65,39 @@ def load_all_data(dataloc):
     ########################################################
     return dev_data, dev_docs, test_data, test_docs, train_data, train_docs, bioasq7_data
 
+def sent_is_rel(sent, relevant_snips):
+    for s in relevant_snips:
+        if(s in sent or sent in s):
+            return True
+    return False
+
 dev_data, dev_docs, test_data, test_docs, train_data, train_docs, bioasq7_data = load_all_data(dataloc)
 
-f_out               = '/home/dpappas/NQ_data/bm25_results.json'
-
-###########################################################
-
-bm25_data   = {'questions': []}
-for q in test_data['queries']:
-    ###############################
+all_emitted = []
+for q in  test_data['queries']:
     q_text      = q['query_text']
+    qid         = q['query_id']
     docs        = [d['doc_id'] for d in q['retrieved_documents']]
-    all_sents       = []
+    ###############################
     all_text_sents  = []
+    relevant_snips = [ll['text'] for ll in bioasq7_data[qid]['snippets']]
     for did in docs:
         for sent in sent_tokenize(test_docs[did]['title']):
-            all_sents.append(
-                (
-                    "title",
-                    "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(did),
-                    "title",
-                    test_docs[did]['title'].index(sent),
-                    test_docs[did]['title'].index(sent)+len(sent),
-                    sent
-                )
-            )
             all_text_sents.append(sent)
         for sent in sent_tokenize(test_docs[did]['abstractText']):
-            all_sents.append(
-                (
-                    "abstract",
-                    "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(did),
-                    "abstract",
-                    test_docs[did]['abstractText'].index(sent),
-                    test_docs[did]['abstractText'].index(sent)+len(sent),
-                    sent
-                )
-            )
             all_text_sents.append(sent)
     ###############################
     tokenized_corpus    = [doc.lower().split() for doc in all_text_sents]
     bm25                = BM25Okapi(tokenized_corpus)
     doc_scores          = bm25.get_scores(q_text.lower().split())
     max_inds            = (np.array(doc_scores)).argsort()[-10:][::-1].tolist()
-    retr_sents          = [all_sents[index] for index in max_inds]
+    retr_sents          = [all_text_sents[index] for index in max_inds]
+    emitted             = [int(sent_is_rel(sent, relevant_snips)) for sent in retr_sents]
     ###############################
-    retr_snips          = [
-        {
-            "beginSection"          : snipi[0],
-            "document"              : snipi[1],
-            "endSection"            : snipi[2],
-            "offsetInBeginSection"  : snipi[3],
-            "offsetInEndSection"    : snipi[4],
-            "text"                  : snipi[5],
-        }
-        for snipi in retr_sents
-    ]
-    bm25_data['questions'].append(
-        {
-            "body"      : "n/a",
-            "id"        : q['query_id'],
-            "documents" : ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(doc_id) for doc_id in docs[:10]],
-            "snippets"  : retr_snips
-        }
-    )
+    all_emitted.append(emitted)
 
-with open(f_out, 'w') as f:
-    f.write(json.dumps(bm25_data, indent=4, sort_keys=False))
-    f.close()
 
-'''
-
-'''
-
+print(mean_reciprocal_rank(all_emitted))
+print(doc_precision_at_k(all_emitted, 10))
+print(np.average([doc_precision_at_k(all_emitted, k) for k in range(1, 11)]))
 
