@@ -775,7 +775,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     batch_costs, epoch_costs = [], []
     batch_counter, epoch_aver_cost = 0, 0.
     #
-    train_instances = train_data_step1(train_data)
+    train_instances = train_data_step1(train_data, train_docs)
     random.shuffle(train_instances)
     #
     start_time      = time.time()
