@@ -1,13 +1,13 @@
 
 import pickle, json, sys
 from pprint import pprint
+from    nltk.tokenize               import sent_tokenize
 
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 
-
-b       = sys.argv[1]
+b       = 1 #sys.argv[1]
 f_in1   = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(b, b)
 f_in2   = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
 f_in3   = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
@@ -34,12 +34,18 @@ with open(f_in3, 'rb') as f:
 
 bm25_data   = {'questions': []}
 for q in test_data['queries']:
-    docs = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(d['doc_id']) for d in q['retrieved_documents']]
+    ###############################
+    q_text      = q['query_text']
+    docs        = [d['doc_id'] for d in q['retrieved_documents']][:10]
+    all_sents   = []
+    for did in docs:
+        all_sents.extend(sent_tokenize(test_docs[did]['title']) + sent_tokenize(test_docs[did]['abstractText']))
+    ###############################
     bm25_data['questions'].append(
         {
             "body"      : "n/a",
             "id"        : q['query_id'],
-            "documents" : docs[:10]
+            "documents" : ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(d['doc_id']) for d in docs]
         }
     )
 
