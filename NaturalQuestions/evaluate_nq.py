@@ -118,20 +118,16 @@ print(np.average([doc_precision_at_k(snip_related_lists, k) for k in range(1, 11
 #####################################################################################################
 
 # TEST
-related_lists = [
-    [
-        int(tt['is_relevant'])
-        for tt in item['retrieved_documents']
-    ][:10]
-    for item in test_data.values()
-]
+related_lists = [[int(tt['is_relevant']) for tt in item['retrieved_documents']][:10] for item in test_data.values()]
 
 print(mean_reciprocal_rank(related_lists)) ### 0.3162
 print(doc_precision_at_k(related_lists, 10)) ### 0.0608
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1047
 #####################################################################################################
+
 # extracted   = json.load(open("/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_emit_bioasq.json"))
-extracted   = json.load(open("/home/dpappas/test_NQ_JBERT/v3 test_emit_bioasq.json"))
+# extracted   = json.load(open("/home/dpappas/test_NQ_JBERT/v3 test_emit_bioasq.json"))
+extracted = json.load(open('/home/dpappas/test_pdrmm_pdrmm_NQ/v3 test_emit_bioasq.json'))
 #####################################################################################################
 
 snip_related_lists = []
