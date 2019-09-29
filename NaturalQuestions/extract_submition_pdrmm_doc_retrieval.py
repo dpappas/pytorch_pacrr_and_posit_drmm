@@ -1002,7 +1002,7 @@ print('{} training examples'.format(len(train_data['queries'])))
 print('{} development examples'.format(len(dev_data['queries'])))
 print('{} testing examples'.format(len(test_data['queries'])))
 ##########################################
-odir                = '/media/dpappas/dpappas_data/models_out/bioasq7_outputs/test_NQ_pdrmm'
+odir                = '/media/dpappas/dpappas_data/models_out/bioasq7_outputs/test_NQ_pdrmm/'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################

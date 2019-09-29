@@ -1076,7 +1076,15 @@ import os, sys, pickle, json
 odir                = '/home/dpappas/test_pdrmm_pdrmm_NQ/'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
+
 docs_retrieved_path = '/media/dpappas/dpappas_data/models_out/bioasq7_outputs/test_NQ_pdrmm/v3 test_emit_bioasq.json'
+with open(docs_retrieved_path, 'r') as f:
+    doc_res = json.load(f)
+    doc_res = dict([(t['id'], t) for t in doc_res['questions']])
+
+for q in test_data['queries']:
+    q['retrieved_documents'] = [d for d in q['retrieved_documents'] if('http://www.ncbi.nlm.nih.gov/pubmed/{}'.format(d['doc_id']) in doc_res[q['query_id']]['documents'])]
+
 ###########################################################
 test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 ###########################################################
