@@ -74,7 +74,7 @@ def sent_is_rel(sent, relevant_snips):
 dev_data, dev_docs, test_data, test_docs, train_data, train_docs, bioasq7_data = load_all_data(dataloc)
 
 all_emitted = []
-for q in  test_data['queries']:
+for q in test_data['queries']:
     q_text      = q['query_text']
     qid         = q['query_id']
     docs        = [d['doc_id'] for d in q['retrieved_documents']]
@@ -95,7 +95,6 @@ for q in  test_data['queries']:
     emitted             = [int(sent_is_rel(sent, relevant_snips)) for sent in retr_sents]
     ###############################
     all_emitted.append(emitted)
-
 
 print(mean_reciprocal_rank(all_emitted))
 print(doc_precision_at_k(all_emitted, 1))
