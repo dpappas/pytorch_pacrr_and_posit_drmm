@@ -128,8 +128,8 @@ print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) 
 
 # extracted   = json.load(open("/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_emit_bioasq.json"))
 # extracted   = json.load(open("/home/dpappas/test_NQ_JBERT/v3 test_emit_bioasq.json"))
-# extracted = json.load(open('/home/dpappas/test_pdrmm_pdrmm_NQ/v3 test_emit_bioasq.json'))
-extracted = json.load(open("/media/dpappas/dpappas_data/models_out/bioasq7_outputs/test_NQ_pdrmm/v3 test_emit_bioasq.json"))
+extracted = json.load(open('/home/dpappas/test_pdrmm_pdrmm_NQ/v3 test_emit_bioasq.json'))
+# extracted = json.load(open("/media/dpappas/dpappas_data/models_out/bioasq7_outputs/test_NQ_pdrmm/v3 test_emit_bioasq.json"))
 
 #####################################################################################################
 
