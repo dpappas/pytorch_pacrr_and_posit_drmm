@@ -41,9 +41,9 @@ for k in s1:
     common_docs     = set(s1[k]['documents']).intersection(s2[k]['documents'])
     ########################################
     clean_gold      = [' '.join(bioclean(sn['text'])) for sn in gt[k]['snippets']]
-    qtext    = gt[k]['body']
-    s1_snips = [(sn['text'], sn['document']) for sn in s1[k]['snippets'] if(sn['document'] in gt[k]['documents'] and gold_counter[sn['document']]<4)]
-    s2_snips = [(sn['text'], sn['document']) for sn in s2[k]['snippets'] if(sn['document'] in gt[k]['documents'] and gold_counter[sn['document']]<4)]
+    qtext           = gt[k]['body']
+    s1_snips        = [(sn['text'], sn['document']) for sn in s1[k]['snippets'] if(sn['document'] in gt[k]['documents'] and gold_counter[sn['document']]<4)]
+    s2_snips        = [(sn['text'], sn['document']) for sn in s2[k]['snippets'] if(sn['document'] in gt[k]['documents'] and gold_counter[sn['document']]<4)]
     ########################################
     found_by_1, found_by_2 = [], []
     for snip in s1_snips:
@@ -57,9 +57,6 @@ for k in s1:
                 if(len(bioclean(snip[0]))<len_max):
                     found_by_2.append(snip)
     ########################################
-    # common_docs = set([t[1] for t in found_by_1]).intersection([t[1] for t in found_by_2])
-    # found_by_1  = [t for t in found_by_1 if(t[1] in common_docs)]
-    # found_by_2  = [t for t in found_by_2 if(t[1] in common_docs)]
     common_snips    = set(found_by_1).intersection(found_by_2)
     found_by_1      = set(found_by_1) - common_snips
     found_by_2      = set(found_by_2) - common_snips
