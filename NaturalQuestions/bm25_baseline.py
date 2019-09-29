@@ -98,6 +98,7 @@ for q in  test_data['queries']:
 
 
 print(mean_reciprocal_rank(all_emitted))
+print(doc_precision_at_k(all_emitted, 1))
 print(doc_precision_at_k(all_emitted, 10))
 print(np.average([doc_precision_at_k(all_emitted, k) for k in range(1, 11)]))
 
