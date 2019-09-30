@@ -29,12 +29,12 @@ for name in names:
 
 names = [
 # 'bert-high-conf-0.01.json',
-# 'bert_jpdrmm.json',
-'bert.json',
-'JBERT_F.json',
-'JBERT.json',
-'jpdrmm.json',
-'pdrmm.json',
+'bert_jpdrmm.json',
+# 'bert.json',
+# 'JBERT_F.json',
+# 'JBERT.json',
+# 'jpdrmm.json',
+# 'pdrmm.json',
 # 'term-pacrr.json'
 ]
 
