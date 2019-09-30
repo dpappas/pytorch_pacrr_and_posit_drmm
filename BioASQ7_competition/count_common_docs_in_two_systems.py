@@ -3,10 +3,10 @@
 import json
 import numpy as np
 
-# bert-high-conf-0.01.json  bert_jpdrmm.json  bert.json  JBERT_F.json  JBERT.json  jpdrmm.json  pdrmm.json  term-pacrr.json
+# bert-high-conf-0.01.json  bert_jpdrmm.json  bert.json  JBERT_F.json  JBERT.json  jpdrmm.json  pdrmm.json  term-pacrr.json bert_jpdrmm.json
 
-fpath1  = "/home/dpappas/bioasq_all/bioasq7/document_results/b12345_joined/jpdrmm.json"
-fpath2  = "/home/dpappas/bioasq_all/bioasq7/document_results/b12345_joined/JBERT_F.json"
+fpath1  = "/home/dpappas/bioasq_all/bioasq7/document_results/b12345_joined/bert_jpdrmm.json"
+fpath2  = "/home/dpappas/bioasq_all/bioasq7/document_results/b12345_joined/bert.json"
 goldf   = '/home/dpappas/bioasq_all/bioasq7/data/BioASQ-task7bPhaseB-testset12345'
 
 d1      = json.load(open(fpath1))
