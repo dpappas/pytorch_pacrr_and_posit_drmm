@@ -61,7 +61,9 @@ for k in s1:
     found_by_1      = set(found_by_1) - common_snips
     found_by_2      = set(found_by_2) - common_snips
     if(len(found_by_1)!=0 and len(found_by_2)!=0):
-        held_out[qtext] = (gt_snips, found_by_1, found_by_2)
+        held_out[qtext] = (gt_snips, found_by_1, found_by_2, common_docs)
+    if(qtext == 'Is ibudilast effective for multiple sclerosis?'):
+        break
 
 print(len(held_out))
 pprint(list(held_out.keys()))
@@ -106,6 +108,9 @@ for k in s1:
             print(20 * '=')
 '''
 
+'''
+
+'''
 
 
 
