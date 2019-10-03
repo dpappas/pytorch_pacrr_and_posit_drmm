@@ -80,8 +80,8 @@ for item in pbar:
         pbar.set_description('{}||{}'.format(pmid, len(connections)))
         get_all_annots(item)
 
-pickle.dump(names,       open('graph_names_{}_{}.p'.format(pmid_from, pmid_to), 'wb'))
-pickle.dump(connections, open('graph_connections_{}_{}.p'.format(pmid_from, pmid_to), 'wb'))
+pickle.dump(names,       open(os.path.join(odir, 'graph_names_{}_{}.p'.format(pmid_from, pmid_to)), 'wb'))
+pickle.dump(connections, open(os.path.join(odir, 'graph_connections_{}_{}.p'.format(pmid_from, pmid_to)), 'wb'))
 
 '''
 python3.6 extr_graph_data.py 15000000 16000000
