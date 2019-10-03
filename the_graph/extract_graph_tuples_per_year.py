@@ -35,9 +35,9 @@ def get_all_annots(item):
                 continue
             annots.append(ident)
             if(ident in names):
-                names[ident].add(name)
+                names[ident].update(Counter([name]))
             else:
-                names[ident] = set([name])
+                names[ident] = Counter([name])
     ############################################################
     t = []
     for i in range(len(annots)-1):
@@ -85,19 +85,32 @@ pickle.dump(connections, open(os.path.join(odir, 'graph_connections_{}_{}.p'.for
 
 '''
 python3.6 extr_graph_data.py 15000000 16000000
-python3.6 extr_graph_data.py 16000000 17000000
+python3.6 extr_graph_data.py 16000000 17000000 DONE
 python3.6 extr_graph_data.py 17000000 18000000
-python3.6 extr_graph_data.py 18000000 19000000
+python3.6 extr_graph_data.py 18000000 19000000 DONE
 python3.6 extr_graph_data.py 19000000 20000000
-python3.6 extr_graph_data.py 20000000 21000000
+python3.6 extr_graph_data.py 20000000 21000000 DONE
 python3.6 extr_graph_data.py 21000000 22000000 
-python3.6 extr_graph_data.py 22000000 23000000 
+python3.6 extr_graph_data.py 22000000 23000000 DONE
 python3.6 extr_graph_data.py 23000000 24000000
-python3.6 extr_graph_data.py 24000000 25000000
+python3.6 extr_graph_data.py 24000000 25000000 DONE
 python3.6 extr_graph_data.py 25000000 26000000
-python3.6 extr_graph_data.py 26000000 27000000
+python3.6 extr_graph_data.py 26000000 27000000 DONE
 python3.6 extr_graph_data.py 27000000 28000000
-python3.6 extr_graph_data.py 28000000 29000000
+python3.6 extr_graph_data.py 28000000 29000000 DONE
+
+
+import pickle
+from pprint import pprint
+connections = pickle.load(open('/home/dpappas/graph_data_pubtator/graph_connections_26000000_27000000.p', 'rb'))
+names       = pickle.load(open('/home/dpappas/graph_data_pubtator/graph_names_26000000_27000000.p', 'rb'))
+pprint(connections.most_common(200000)[-100:])
+
+
+for item in connections.most_common(450000)[-10:]:
+    pprint((item[0][0], names[item[0][0]]))
+
+
 
 '''
 
