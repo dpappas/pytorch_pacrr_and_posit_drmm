@@ -42,7 +42,7 @@ def get_all_annots(item):
     t = []
     for i in range(len(annots)-1):
         for j in range(i+1, len(annots)):
-            id1, id2 = annots[i], annots[j]
+            id1, id2 = sorted([annots[i], annots[j]])
             t.append((id1, id2))
     ############################################################
     connections.update(Counter(t))
@@ -121,6 +121,7 @@ pprint(connections.most_common(200000)[-100:])
 for item in connections.most_common(450000)[-10:]:
     pprint((item[0][0], names[item[0][0]]))
 
+ps -ef | grep "extr_graph_data.py" | awk '{print $3}' | xargs kill -9 $1
 
 
 '''
