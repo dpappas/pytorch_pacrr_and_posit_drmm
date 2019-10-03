@@ -4,7 +4,7 @@ from elasticsearch.helpers import scan
 from collections import Counter
 from tqdm import tqdm
 from pprint import pprint
-import pickle, sys
+import pickle, sys, os
 
 def create_body(pmid_from, pmid_to):
     return {
@@ -58,6 +58,10 @@ es = Elasticsearch(
     max_retries         = 10,
     retry_on_timeout    = True
 )
+
+odir = '/home/dpappas/graph_data_pubtator/'
+if(not os.path.exists(odir)):
+    os.makedirs(odir)
 
 index       = 'pubtator_annotations_0_1'
 doc_type    = 'pubtator_annotations_map_0_1'
