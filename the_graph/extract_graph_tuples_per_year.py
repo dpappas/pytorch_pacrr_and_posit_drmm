@@ -69,7 +69,7 @@ bod         = create_body(str(pmid_from), str(pmid_to))
 items       = scan(es, query=bod, index=index, doc_type=doc_type)
 names       = {}
 connections = Counter()
-pbar        = tqdm(items, total=25000000)
+pbar        = tqdm(items, total=26320366)
 for item in pbar:
     pmid = int(item['_source']['pmid'])
     if(pmid <= pmid_to and pmid >= pmid_from):
@@ -78,4 +78,16 @@ for item in pbar:
 
 pickle.dump(names,       open('graph_names_{}_{}.p'.format(pmid_from, pmid_to)))
 pickle.dump(connections, open('graph_connections_{}_{}.p'.format(pmid_from, pmid_to)))
+
+'''
+python3.6 extr_graph_data.py 20000000 21000000 
+python3.6 extr_graph_data.py 21000000 22000000 
+python3.6 extr_graph_data.py 22000000 23000000 
+python3.6 extr_graph_data.py 23000000 24000000 
+python3.6 extr_graph_data.py 24000000 25000000
+python3.6 extr_graph_data.py 25000000 26000000
+
+'''
+
+
 
