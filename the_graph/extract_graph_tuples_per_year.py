@@ -84,20 +84,31 @@ pickle.dump(names,       open(os.path.join(odir, 'graph_names_{}_{}.p'.format(pm
 pickle.dump(connections, open(os.path.join(odir, 'graph_connections_{}_{}.p'.format(pmid_from, pmid_to)), 'wb'))
 
 '''
-python3.6 extr_graph_data.py 15000000 16000000
-python3.6 extr_graph_data.py 16000000 17000000 DONE
-python3.6 extr_graph_data.py 17000000 18000000
-python3.6 extr_graph_data.py 18000000 19000000 DONE
-python3.6 extr_graph_data.py 19000000 20000000
-python3.6 extr_graph_data.py 20000000 21000000 DONE
+
+python3.6 extr_graph_data.py 5000000  6000000 &
+python3.6 extr_graph_data.py 6000000  7000000 &
+python3.6 extr_graph_data.py 7000000  8000000 &
+python3.6 extr_graph_data.py 8000000  9000000 &
+python3.6 extr_graph_data.py 9000000  10000000
+python3.6 extr_graph_data.py 10000000 11000000 &
+python3.6 extr_graph_data.py 11000000 12000000 &
+python3.6 extr_graph_data.py 12000000 13000000 &
+python3.6 extr_graph_data.py 13000000 14000000 &
+python3.6 extr_graph_data.py 14000000 15000000
+python3.6 extr_graph_data.py 15000000 16000000 &
+python3.6 extr_graph_data.py 16000000 17000000 &
+python3.6 extr_graph_data.py 17000000 18000000 &
+python3.6 extr_graph_data.py 18000000 19000000 &
+python3.6 extr_graph_data.py 19000000 20000000 &
+python3.6 extr_graph_data.py 20000000 21000000 &
 python3.6 extr_graph_data.py 21000000 22000000 
-python3.6 extr_graph_data.py 22000000 23000000 DONE
-python3.6 extr_graph_data.py 23000000 24000000
-python3.6 extr_graph_data.py 24000000 25000000 DONE
-python3.6 extr_graph_data.py 25000000 26000000
-python3.6 extr_graph_data.py 26000000 27000000 DONE
-python3.6 extr_graph_data.py 27000000 28000000
-python3.6 extr_graph_data.py 28000000 29000000 DONE
+python3.6 extr_graph_data.py 22000000 23000000 &
+python3.6 extr_graph_data.py 23000000 24000000 &
+python3.6 extr_graph_data.py 24000000 25000000 &
+python3.6 extr_graph_data.py 25000000 26000000 &
+python3.6 extr_graph_data.py 26000000 27000000 &
+python3.6 extr_graph_data.py 27000000 28000000 &
+python3.6 extr_graph_data.py 28000000 29000000
 
 
 import pickle
