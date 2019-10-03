@@ -80,6 +80,7 @@ pickle.dump(names,       open('graph_names_{}_{}.p'.format(pmid_from, pmid_to), 
 pickle.dump(connections, open('graph_connections_{}_{}.p'.format(pmid_from, pmid_to), 'wb'))
 
 '''
+python3.6 extr_graph_data.py 15000000 16000000 
 python3.6 extr_graph_data.py 20000000 21000000 
 python3.6 extr_graph_data.py 21000000 22000000 
 python3.6 extr_graph_data.py 22000000 23000000 
