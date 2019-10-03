@@ -66,7 +66,7 @@ pmid_from   = int(sys.argv[1])
 pmid_to     = int(sys.argv[2])
 
 bod         = create_body(str(pmid_from), str(pmid_to))
-items       = scan(es, query=bod, index=index, doc_type=doc_type)
+items       = scan(es, query=bod, scroll='35m', index=index, doc_type=doc_type)
 names       = {}
 connections = Counter()
 pbar        = tqdm(items, total=26320366)
@@ -93,6 +93,8 @@ python3.6 extr_graph_data.py 24000000 25000000
 python3.6 extr_graph_data.py 25000000 26000000 DONE
 python3.6 extr_graph_data.py 26000000 27000000
 python3.6 extr_graph_data.py 27000000 28000000
+python3.6 extr_graph_data.py 28000000 29000000
+python3.6 extr_graph_data.py 29000000 30000000
 
 '''
 
