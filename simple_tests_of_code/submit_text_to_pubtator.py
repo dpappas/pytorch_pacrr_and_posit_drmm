@@ -42,7 +42,7 @@ import spacy
 from scispacy.abbreviation import AbbreviationDetector
 from scispacy.umls_linking import UmlsEntityLinker
 
-nlp                 = spacy.load("en_core_sci_lg")
+nlp                 = spacy.load("/home/dpappas/en_core_sci_lg-0.2.3/en_core_sci_lg/en_core_sci_lg-0.2.3/")
 linker              = UmlsEntityLinker(resolve_abbreviations=True)
 # abbreviation_pipe   = AbbreviationDetector(nlp)
 
@@ -50,6 +50,11 @@ linker              = UmlsEntityLinker(resolve_abbreviations=True)
 nlp.add_pipe(linker)
 
 doc = nlp("Is ibudilast effective for multiple sclerosis?")
+
+entity = doc.ents[0]
+print("Name: ", entity)
+for umls_ent in entity._.umls_ents:
+    print(linker.umls.cui_to_entity[umls_ent[0]])
 
 '''
 
