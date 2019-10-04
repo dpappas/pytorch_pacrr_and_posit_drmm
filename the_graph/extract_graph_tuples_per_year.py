@@ -85,6 +85,12 @@ pickle.dump(connections, open(os.path.join(odir, 'graph_connections_{}_{}.p'.for
 
 '''
 
+python3.6 extr_graph_data.py 0        1000000 &
+python3.6 extr_graph_data.py 1000000  2000000 &
+python3.6 extr_graph_data.py 2000000  3000000 &
+python3.6 extr_graph_data.py 3000000  4000000 &
+python3.6 extr_graph_data.py 4000000  5000000
+
 python3.6 extr_graph_data.py 5000000  6000000 &
 python3.6 extr_graph_data.py 6000000  7000000 &
 python3.6 extr_graph_data.py 7000000  8000000 &
