@@ -113,15 +113,19 @@ python3.6 extr_graph_data.py 28000000 29000000
 
 import pickle
 from pprint import pprint
-connections = pickle.load(open('/home/dpappas/graph_data_pubtator/graph_connections_26000000_27000000.p', 'rb'))
-names       = pickle.load(open('/home/dpappas/graph_data_pubtator/graph_names_26000000_27000000.p', 'rb'))
+connections = pickle.load(open('/home/dpappas/graph_data_pubtator/graph_connections_13000000_14000000.p', 'rb'))
+names       = pickle.load(open('/home/dpappas/graph_data_pubtator/graph_names_13000000_14000000.p', 'rb'))
 pprint(connections.most_common(200000)[-100:])
 
-
-for item in connections.most_common(450000)[-10:]:
+for item in connections.most_common(480000)[-10:]:
     pprint((item[0][0], names[item[0][0]]))
 
-ps -ef | grep "extr_graph_data.py" | awk '{print $3}' | xargs kill -9 $1
+
+for item in connections:
+    if(item[0] == 'MESH:D004617' and connections[item]>1):
+        print((list(names[item[0]].keys())[0], list(names[item[1]].keys())[0], connections[item]))
+
+# ps -ef | grep "extr_graph_data.py" | awk '{print $3}' | xargs kill -9 $1
 
 
 '''
