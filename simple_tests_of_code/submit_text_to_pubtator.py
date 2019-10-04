@@ -49,13 +49,24 @@ linker              = UmlsEntityLinker(resolve_abbreviations=True)
 # nlp.add_pipe(abbreviation_pipe)
 nlp.add_pipe(linker)
 
-doc = nlp("Is ibudilast effective for multiple sclerosis?")
+texts = [
+    "Is ibudilast effective for multiple sclerosis?",
+    'Cemiplimab is used for treatment of which cancer?',
+    'What is hemolacria?',
+    'What is the purpose of the Ottawa Ankle Rule?',
+    'Which enzymes are inhibited by Duvelisib?',
+    'What is the mechanism of the drug CRT0066101?',
+    'What is known about the gene MIR140?'
+]
 
-
-for entity in doc.ents:
-    print("Name: ", entity)
-    for umls_ent in entity._.umls_ents:
-        print(linker.umls.cui_to_entity[umls_ent[0]])
+for text in texts:
+    print(text)
+    doc = nlp(text)
+    for entity in doc.ents:
+        print(20 *'-')
+        print("Name: ", entity)
+        for umls_ent in entity._.umls_ents:
+            print(linker.umls.cui_to_entity[umls_ent[0]])
     print(20 *'#')
 
 '''
