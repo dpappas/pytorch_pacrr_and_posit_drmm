@@ -51,10 +51,12 @@ nlp.add_pipe(linker)
 
 doc = nlp("Is ibudilast effective for multiple sclerosis?")
 
-entity = doc.ents[0]
-print("Name: ", entity)
-for umls_ent in entity._.umls_ents:
-    print(linker.umls.cui_to_entity[umls_ent[0]])
+
+for entity in doc.ents:
+    print("Name: ", entity)
+    for umls_ent in entity._.umls_ents:
+        print(linker.umls.cui_to_entity[umls_ent[0]])
+    print(20 *'#')
 
 '''
 
