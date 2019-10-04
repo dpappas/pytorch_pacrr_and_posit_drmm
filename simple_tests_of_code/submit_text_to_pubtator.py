@@ -33,11 +33,25 @@ response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'species
 print(20*'-')
 response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'mutation')
 print(20*'-')
-response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'cellline')
-print(20*'-')
+# response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'cellline')
+# print(20*'-')
 
 
+'''
+import spacy
+from scispacy.abbreviation import AbbreviationDetector
+from scispacy.umls_linking import UmlsEntityLinker
 
+nlp                 = spacy.load("en_core_sci_lg")
+linker              = UmlsEntityLinker(resolve_abbreviations=True)
+# abbreviation_pipe   = AbbreviationDetector(nlp)
+
+# nlp.add_pipe(abbreviation_pipe)
+nlp.add_pipe(linker)
+
+doc = nlp("Is ibudilast effective for multiple sclerosis?")
+
+'''
 
 
 
