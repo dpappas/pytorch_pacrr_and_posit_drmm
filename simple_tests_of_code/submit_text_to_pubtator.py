@@ -23,7 +23,18 @@ def SubmitText(InputSTR,Bioconcept):
         print(response)
         return response
 
-response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'ALL')
+response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'gene')
+print(20*'-')
+response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'disease')
+print(20*'-')
+response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'chemical')
+print(20*'-')
+response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'species')
+print(20*'-')
+response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'mutation')
+print(20*'-')
+response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'cellline')
+print(20*'-')
 
 
 
