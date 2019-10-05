@@ -14,6 +14,12 @@ def doc_precision_at_k(related_lists, k):
         all_precs.append(float(sum(related_list[:k])) / float(k))
     return float(sum(all_precs)) / float(len(all_precs))
 
+def doc_recall_at_k(related_lists, k, nof_relevant):
+    all_recs = []
+    for related_list, tot_rel in zip(related_lists, nof_relevant):
+        all_recs.append(float(sum(related_list[:k])) / float(tot_rel))
+    return float(sum(all_recs)) / float(len(all_recs))
+
 def mean_reciprocal_rank(rs):
     """Score is reciprocal of the rank of the first relevant item
     ###########################################################################################
@@ -73,7 +79,10 @@ def sent_is_rel(sent, relevant_snips):
 
 dev_data, dev_docs, test_data, test_docs, train_data, train_docs, bioasq7_data = load_all_data(dataloc)
 
-all_emitted = []
+all_emitted_snips   = []
+nof_rel_snips       = []
+all_emitted_docs    = []
+nof_rel_docs        = []
 for q in test_data['queries']:
     q_text      = q['query_text']
     qid         = q['query_id']
@@ -94,10 +103,29 @@ for q in test_data['queries']:
     retr_sents          = [all_text_sents[index] for index in max_inds]
     emitted             = [int(sent_is_rel(sent, relevant_snips)) for sent in retr_sents]
     ###############################
-    all_emitted.append(emitted)
+    all_emitted_snips.append(emitted)
+    nof_rel_snips.append(len(relevant_snips))
+    ###
+    all_emitted_docs.append([ int(doc_retr['doc_id'] in q['relevant_documents']) for doc_retr in q['retrieved_documents'][:10]])
+    nof_rel_docs.append(q['num_rel'])
+    ###############################
 
-print(mean_reciprocal_rank(all_emitted))
-print(doc_precision_at_k(all_emitted, 1))
-print(doc_precision_at_k(all_emitted, 10))
-print(np.average([doc_precision_at_k(all_emitted, k) for k in range(1, 11)]))
+
+doc_mrr         = mean_reciprocal_rank(all_emitted_docs)
+doc_pre1        = doc_precision_at_k(all_emitted_docs, 1)
+doc_pre10       = doc_precision_at_k(all_emitted_docs, 10)
+doc_averpreatk  = np.average([doc_precision_at_k(all_emitted_docs, k) for k in range(1, 11)])
+doc_rec1        = doc_recall_at_k(all_emitted_docs, 1, nof_rel_docs)
+doc_rec10       = doc_recall_at_k(all_emitted_docs, 10, nof_rel_docs)
+doc_averrecatk  = np.average([doc_recall_at_k(all_emitted_docs, k, nof_rel_docs) for k in range(1, 11)])
+print(', '.join(str(t) for t in [doc_mrr, doc_pre1, doc_pre10, doc_averpreatk, doc_rec1, doc_rec10, doc_averrecatk]))
+#####################################################################################################
+snip_mrr         = mean_reciprocal_rank(all_emitted_snips)
+snip_pre1        = doc_precision_at_k(all_emitted_snips, 1)
+snip_pre10       = doc_precision_at_k(all_emitted_snips, 10)
+snip_averpreatk  = np.average([doc_precision_at_k(all_emitted_snips, k) for k in range(1, 11)])
+snip_rec1        = doc_recall_at_k(all_emitted_snips, 1, nof_rel_snips)
+snip_rec10       = doc_recall_at_k(all_emitted_snips, 10, nof_rel_snips)
+snip_averrecatk  = np.average([doc_recall_at_k(all_emitted_snips, k, nof_rel_snips) for k in range(1, 11)])
+print(', '.join(str(t) for t in [snip_mrr, snip_pre1, snip_pre10, snip_averpreatk, snip_rec1, snip_rec10, snip_averrecatk]))
 

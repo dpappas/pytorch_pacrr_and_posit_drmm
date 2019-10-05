@@ -132,9 +132,9 @@ print(doc_precision_at_k(related_lists, 10)) ### 0.0608
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1047
 #####################################################################################################
 
-# extracted   = json.load(open("/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_emit_bioasq.json"))
+extracted   = json.load(open("/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_emit_bioasq.json"))
 # extracted   = json.load(open("/home/dpappas/test_NQ_JBERT/v3 test_emit_bioasq.json"))
-extracted = json.load(open('/home/dpappas/test_pdrmm_pdrmm_NQ/v3 test_emit_bioasq.json'))
+# extracted = json.load(open('/home/dpappas/test_pdrmm_pdrmm_NQ/v3 test_emit_bioasq.json'))
 # extracted = json.load(open("/media/dpappas/dpappas_data/models_out/bioasq7_outputs/test_NQ_pdrmm/v3 test_emit_bioasq.json"))
 
 #####################################################################################################
@@ -169,15 +169,23 @@ related_lists = [
 nof_relevant = [len(test_data[item['id']]['relevant_documents']) for item in extracted['questions']]
 
 #####################################################################################################
-print(mean_reciprocal_rank(related_lists))                                      ### 0.4026
-print(doc_precision_at_k(related_lists, 1))                                    ### 0.0703
-print(doc_precision_at_k(related_lists, 10))                                    ### 0.0703
-print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1313
+doc_mrr         = mean_reciprocal_rank(related_lists)
+doc_pre1        = doc_precision_at_k(related_lists, 1)
+doc_pre10       = doc_precision_at_k(related_lists, 10)
+doc_averpreatk  = np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])
+doc_rec1        = doc_recall_at_k(related_lists, 1, nof_relevant)
+doc_rec10       = doc_recall_at_k(related_lists, 10, nof_relevant)
+doc_averrecatk  = np.average([doc_recall_at_k(related_lists, k, nof_relevant) for k in range(1, 11)])
+print(', '.join(str(t) for t in [doc_mrr, doc_pre1, doc_pre10, doc_averpreatk, doc_rec1, doc_rec10, doc_averrecatk]))
 #####################################################################################################
-print(mean_reciprocal_rank(snip_related_lists))  ### 0.4056
-print(doc_precision_at_k(snip_related_lists, 1))  ### 0.0710
-print(doc_precision_at_k(snip_related_lists, 10))  ### 0.0710
-print(np.average([doc_precision_at_k(snip_related_lists, k) for k in range(1, 11)])) ### 0.1327
+snip_mrr         = mean_reciprocal_rank(snip_related_lists)
+snip_pre1        = doc_precision_at_k(snip_related_lists, 1)
+snip_pre10       = doc_precision_at_k(snip_related_lists, 10)
+snip_averpreatk  = np.average([doc_precision_at_k(snip_related_lists, k) for k in range(1, 11)])
+snip_rec1        = doc_recall_at_k(snip_related_lists, 1, snip_nof_relevant)
+snip_rec10       = doc_recall_at_k(snip_related_lists, 10, snip_nof_relevant)
+snip_averrecatk  = np.average([doc_recall_at_k(snip_related_lists, k, snip_nof_relevant) for k in range(1, 11)])
+print(', '.join(str(t) for t in [snip_mrr, snip_pre1, snip_pre10, snip_averpreatk, snip_rec1, snip_rec10, snip_averrecatk]))
 #####################################################################################################
 
 
