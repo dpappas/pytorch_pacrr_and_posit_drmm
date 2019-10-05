@@ -11,6 +11,12 @@ def doc_precision_at_k(related_lists, k):
         all_precs.append(float(sum(related_list[:k])) / float(k))
     return float(sum(all_precs)) / float(len(all_precs))
 
+def doc_recall_at_k(related_lists, k, nof_relevant):
+    all_recs = []
+    for related_list, tot_rel in zip(related_lists, nof_relevant):
+        all_recs.append(float(sum(related_list[:k])) / float(tot_rel))
+    return float(sum(all_recs)) / float(len(all_recs))
+
 def mean_reciprocal_rank(rs):
     """Score is reciprocal of the rank of the first relevant item
     ###########################################################################################
