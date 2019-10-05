@@ -139,18 +139,23 @@ extracted = json.load(open('/home/dpappas/test_pdrmm_pdrmm_NQ/v3 test_emit_bioas
 
 #####################################################################################################
 
-snip_related_lists = []
+snip_related_lists  = []
+snip_nof_relevant   = []
 for item in extracted['questions']:
-    snip_list = []
+    snip_list   = []
+    gold_snips  = bioasq7_data[item['id']]['snippets']
+    # pprint(gold_snips)
+    # exit()
     for retr_snip in item['snippets']:
         found = False
-        for gold_snip in bioasq7_data[item['id']]['snippets']:
+        for gold_snip in gold_snips:
             if(retr_snip['document'] == gold_snip['document']):
                 if(gold_snip['text'] in retr_snip['text'] or retr_snip['text'] in gold_snip['text']):
                     found = True
                     break
         snip_list.append(int(found))
     snip_related_lists.append(snip_list)
+    snip_nof_relevant.append(len(gold_snips))
 
 #####################################################################################################
 
@@ -161,6 +166,7 @@ related_lists = [
     ]
     for item in extracted['questions']
 ]
+nof_relevant = [len(test_data[item['id']]['relevant_documents']) for item in extracted['questions']]
 
 #####################################################################################################
 print(mean_reciprocal_rank(related_lists))                                      ### 0.4026
