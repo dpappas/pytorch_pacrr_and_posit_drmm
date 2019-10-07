@@ -41,7 +41,12 @@ for k in s1:
     # could not be retrieved by IR
     gold_snips_doc                  = set([sn['document'].split('/')[-1].strip() for sn in gt[k]['snippets']])
     retrieved_docs_from_ir          = set(t['doc_id'] for t in test_data[k]['retrieved_documents'])
-    print(gt[k]['body'], gold_snips_doc-retrieved_docs_from_ir)
+    if(len(gold_snips_doc-retrieved_docs_from_ir)>0):
+        print(gt[k]['body'], gold_snips_doc-retrieved_docs_from_ir)
+        for snip in gt[k]['snippets']:
+            if(snip['document'].split('/')[-1].strip() in gold_snips_doc-retrieved_docs_from_ir):
+                pprint(snip)
+        print(20 * '-')
     could_not_be_retrieved_by_ir    = [sn for sn in gt[k]['snippets'] if sn['document'].split('/')[-1].strip() in (gold_snips_doc - retrieved_docs_from_ir)]
     ########################################
     gt_snips = []
