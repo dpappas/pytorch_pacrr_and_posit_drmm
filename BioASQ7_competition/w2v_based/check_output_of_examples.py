@@ -1227,11 +1227,11 @@ wv = dict([(word, wv[word]) for word in wv.vocab.keys() if (word in words)])
 qtext       = 'Is ibudilast effective for multiple sclerosis?'
 test_data2  = {'queries': [q for q in test_data['queries'] if(q['query_text']==qtext)]}
 
-for doc_key in test_docs:
-    test_docs[doc_key]['title']         = test_docs[doc_key]['title'].replace('IBD with a focus on preclinica', 'ibudilast with a focus on preclinica')
-    test_docs[doc_key]['abstractText']  = test_docs[doc_key]['abstractText'].replace('IBD with a focus on preclinica', 'ibudilast with a focus on preclinica')
-    # test_docs[doc_key]['title']         = test_docs[doc_key]['title'].replace('potential therapy for MS', 'potential therapy for Multiple Sclerosis')
-    # test_docs[doc_key]['abstractText']  = test_docs[doc_key]['abstractText'].replace('potential therapy for MS', 'potential therapy for Multiple Sclerosis')
+# for doc_key in test_docs:
+#     test_docs[doc_key]['title']         = test_docs[doc_key]['title'].replace('IBD with a focus on preclinica', 'ibudilast with a focus on preclinica')
+#     test_docs[doc_key]['abstractText']  = test_docs[doc_key]['abstractText'].replace('IBD with a focus on preclinica', 'ibudilast with a focus on preclinica')
+#     # test_docs[doc_key]['title']         = test_docs[doc_key]['title'].replace('potential therapy for MS', 'potential therapy for Multiple Sclerosis')
+#     # test_docs[doc_key]['abstractText']  = test_docs[doc_key]['abstractText'].replace('potential therapy for MS', 'potential therapy for Multiple Sclerosis')
 
 ret_data    = get_one_map('test', test_data2, test_docs, use_sent_tokenizer=True)
 
