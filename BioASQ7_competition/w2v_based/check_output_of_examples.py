@@ -1249,16 +1249,9 @@ for i in range(len(snip_res)):
     if('potential therapy for ' in snip_res[i][1]):
         print(i)
 
-
 pmid_scores = []
 for item, doc_score in zip(ret_data, vs):
     pmid_scores.append((item[4], doc_score))
-
-pmid_scores = sorted(pmid_scores, key=lambda x: x[1], reverse=True)
-# pprint(pmid_scores[:10])
-for i in range(len(pmid_scores)):
-    if(pmid_scores[i][0]=='28258674'):
-        print(i)
 
 tt = test_data2['queries'][0]['retrieved_documents']
 for i in range(len(tt)):
