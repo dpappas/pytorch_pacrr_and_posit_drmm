@@ -1043,14 +1043,15 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     #
     with open(dataloc+'trainining7b.json', 'r') as f:
         bioasq7_data = json.load(f)
-        bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
     #
     with open(dataloc + 'bioasq7_bm25_top100.dev.pkl', 'rb') as f:
         dev_data = pickle.load(f)
+        dev_data = {'queries': dev_data}
     with open(dataloc + 'bioasq7_bm25_docset_top100.dev.pkl', 'rb') as f:
         dev_docs = pickle.load(f)
     with open(dataloc + 'bioasq7_bm25_top100.train.pkl', 'rb') as f:
         train_data = pickle.load(f)
+        train_data = {'queries': train_data}
     with open(dataloc + 'bioasq7_bm25_docset_top100.train.pkl', 'rb') as f:
         train_docs = pickle.load(f)
     print('loading words')
@@ -1410,11 +1411,7 @@ b_size              = 32
 max_epoch           = 30
 early_stop          = 4
 
-import sys
-# run_from    = int(sys.argv[1])
-# run_to      = int(sys.argv[2])
 hdlr        = None
-
 run         = 0
 my_seed     = run
 random.seed(my_seed)
@@ -1446,7 +1443,6 @@ for epoch in range(max_epoch):
     epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
     if(best_dev_map is None or epoch_dev_map>=best_dev_map):
         best_dev_map    = epoch_dev_map
-        # test_map        = get_one_map('test', test_data, all_docs, use_sent_tokenizer=True)
         save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_dev_checkpoint.pth.tar'))
         waited_for = 0
     else:
