@@ -1438,7 +1438,7 @@ best_dev_map, test_map = None, None
 for epoch in range(max_epoch):
     train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
     epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
-    if(best_dev_map is None or epoch_dev_map>=best_dev_map):
+    if(best_dev_map is None or epoch_dev_map >= best_dev_map):
         best_dev_map    = epoch_dev_map
         save_checkpoint(epoch, model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_dev_checkpoint.pth.tar'))
         waited_for = 0
