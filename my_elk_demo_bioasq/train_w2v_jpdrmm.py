@@ -1399,7 +1399,8 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data_demo/data/'
     wv, bioasq7_data
 ) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 ##########################################
-avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
+# avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
+avgdl, mean, deviation = get_bm25_metrics()
 print(avgdl, mean, deviation)
 ##########################################
 
@@ -1435,7 +1436,6 @@ if(use_cuda):
 params      = model.parameters()
 print_params(model)
 optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-
 waited_for  = 0
 best_dev_map, test_map = None, None
 for epoch in range(max_epoch):
