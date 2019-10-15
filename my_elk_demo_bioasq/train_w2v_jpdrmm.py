@@ -1450,3 +1450,4 @@ for epoch in range(max_epoch):
         print('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
         logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
         break
+
