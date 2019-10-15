@@ -898,6 +898,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
+    # print(len(retr_docs))
+    # exit()
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score_standard'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
@@ -997,47 +999,21 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
     #
     ret_data                        = {'questions': []}
-    all_bioasq_subm_data_v1         = {"questions": []}
-    all_bioasq_subm_data_known_v1   = {"questions": []}
-    all_bioasq_subm_data_v2         = {"questions": []}
-    all_bioasq_subm_data_known_v2   = {"questions": []}
     all_bioasq_subm_data_v3         = {"questions": []}
     all_bioasq_subm_data_known_v3   = {"questions": []}
     all_bioasq_gold_data            = {'questions': []}
     data_for_revision               = {}
     #
+    # print(len(data['queries']))
+    # exit()
     for dato in tqdm(data['queries']):
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
         data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
-        all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
-        all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
-        all_bioasq_subm_data_known_v1['questions'].append(snips_res_known['v1'])
-        all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
     #
-    v1_bioasq_snip_res = print_the_results('v1 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1, data_for_revision)
-    v2_bioasq_snip_res = print_the_results('v2 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
     v3_bioasq_snip_res = print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
     #
-    '''
-    if (prefix == 'dev'):
-        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 dev_gold_bioasq.json'),
-            # dataloc +'bioasq.dev.json',
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
-        )
-    else:
-        with open(os.path.join(odir,'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 test_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
-        )
-    return res_map
-    '''
     return v3_bioasq_snip_res['MAP documents']
 
 def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
@@ -1436,7 +1412,7 @@ optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_de
 waited_for  = 0
 best_dev_map, test_map = None, None
 for epoch in range(max_epoch):
-    train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
+    # train_one(epoch+1, bioasq7_data, two_losses=True, use_sent_tokenizer=True)
     epoch_dev_map       = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
     if(best_dev_map is None or epoch_dev_map >= best_dev_map):
         best_dev_map    = epoch_dev_map
