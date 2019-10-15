@@ -354,10 +354,10 @@ def get_pseudo_retrieved(dato):
     some_ids = [item['document'].split('/')[-1].strip() for item in bioasq7_data[dato['query_id']]['snippets']]
     pseudo_retrieved            = [
         {
-            'bm25_score'        : 7.76,
-            'doc_id'            : id,
-            'is_relevant'       : True,
-            'norm_bm25_score'   : 3.85
+            'bm25_score'                : 7.76,
+            'doc_id'                    : id,
+            'is_relevant'               : True,
+            'norm_bm25_score_standard'  : 3.85
         }
         for id in set(some_ids)
     ]
@@ -703,7 +703,9 @@ def train_data_step1(train_data):
     for dato in tqdm(train_data['queries']):
         quest       = dato['query_text']
         quest_id    = dato['query_id']
-        bm25s       = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        # pprint(dato[u'retrieved_documents'][0])
+        # exit()
+        bm25s       = {t['doc_id']: t['norm_bm25_score_standard'] for t in dato[u'retrieved_documents']}
         ret_pmids   = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
         good_pmids  = [t for t in ret_pmids if t in dato[u'relevant_documents']]
         bad_pmids   = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
@@ -897,7 +899,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score_standard'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
