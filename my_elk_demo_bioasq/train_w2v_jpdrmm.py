@@ -1374,7 +1374,7 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data_demo/data/'
 ##########################################
 # avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 # avgdl, mean, deviation  = get_bm25_metrics(avgdl=21.5943, mean=0.7902, deviation=1.4550)
-avgdl, mean, deviation  = get_bm25_metrics()
+avgdl, mean, deviation  = get_bm25_metrics(avgdl=21.688767020746013, mean=0.7375801616020308, deviation=1.3411418040865049)
 print(avgdl, mean, deviation)
 ##########################################
 
