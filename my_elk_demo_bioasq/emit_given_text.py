@@ -437,12 +437,12 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     }
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
-    emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_.tolist()
-    mmax                    = max(emitss)
-    all_emits, extracted_from_one = [], []
+    emition                         = doc_emit_.cpu().item()
+    emitss                          = gs_emits_.tolist()
+    mmax                            = max(emitss)
+    all_emits, extracted_from_one   = [], []
     for ind in range(len(emitss)):
-        t = (0, emitss[ind], "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']), held_out_sents[ind])
+        t = (0, emitss[ind], "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']), held_out_sents[ind], float(emition))
         all_emits.append(t)
         # if(emitss[ind] == mmax):
         #     extracted_from_one.append(t)
@@ -502,7 +502,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         if (total_relevant > 0):
             extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
         if (dato['query_id'] not in data_for_revision):
-            data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets'  : {retr['doc_id']: all_emits}}
+            data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets': {retr['doc_id']: all_emits}}
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
@@ -957,6 +957,7 @@ print('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 if(use_cuda):
     model   = model.cuda()
+
 ###########################################################
 resume_from     = '/home/dpappas/bioasq_w2vjpdrmm_demo_run_0/best_dev_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
@@ -971,10 +972,13 @@ with open('/home/dpappas/elk_ips.txt') as fp:
 doc_index           = 'pubmed_abstracts_joint_0_1'
 es                  = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
+###########################################################
+
 question_text       = 'Is durvalumab used for lung cancer treatment?'
 new_data, new_docs  = get_new(question_text)
 new_data            = {'queries':new_data}
 all_bioasq_subm_data, data_for_revision        = get_one_map(new_data, new_docs, use_sent_tokenizer=True)
+
 ###########################################################
 
 pprint(all_bioasq_subm_data['questions'][0].keys())
@@ -983,8 +987,11 @@ pprint(list(data_for_revision.values())[0]['snippets'].keys())
 all_items       = list(list(data_for_revision.values())[0]['snippets'].items())
 all_items.sort(key=lambda tup: max(t[1] for t in tup[1]), reverse=True)
 
-for sn in all_bioasq_subm_data['questions'][0]['snippets']:
-    print(sn['text'])
+for doc_id, doc in all_items[:10]:
+    print(20 * '-')
+    print(doc_id, )
+    for sn in doc:
+        print(sn[-1], sn[1], sn[3].replace('\n',' ').strip())
 
 
 
