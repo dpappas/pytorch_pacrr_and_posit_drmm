@@ -24,13 +24,16 @@ from    pprint                      import pprint
 from    gensim.models.keyedvectors  import KeyedVectors
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
+from elasticsearch                  import Elasticsearch
+from sklearn.preprocessing          import StandardScaler, MinMaxScaler
 import  re
 import  nltk
 import  math
 
-bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
-softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
-stopwords   = nltk.corpus.stopwords.words("english")
+bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
+bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+softmax         = lambda z: np.exp(z) / np.sum(np.exp(z))
+stopwords       = nltk.corpus.stopwords.words("english")
 
 # Compute the term frequency of a word for a specific document
 def tf(term, document):
@@ -481,7 +484,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score_standard'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             question_embeds     = quest_embeds,
@@ -538,6 +541,72 @@ def load_model_from_checkpoint(resume_from):
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
+def get_first_n_1(qtext, n, max_year=2017):
+    tokenized_body = bioclean_mod(qtext)
+    tokenized_body = [t for t in tokenized_body if t not in stopwords]
+    question = ' '.join(tokenized_body)
+    ################################################
+    bod = {
+        "size": n,
+        "query": {
+            "bool": {
+                "must": [
+                    {"range": {"DateCompleted": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
+                "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}],
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    res = es.search(index=doc_index, body=bod, request_timeout=120)
+    return res['hits']['hits']
+
+def get_new(question_text):
+    new_data = []
+    new_docs = {}
+    hits        = get_first_n_1(question_text, 100, max_year=2018)
+    ret_pmids   = set(hit['_source']['pmid'] for hit in hits)
+    num_ret     = len(hits)
+    datum = {
+        'query_text'            : question_text,
+        'ret_pmids'             : ret_pmids,
+        'num_ret'               : num_ret,
+        'num_rel'               : 0,
+        'num_rel_ret'           : 0,
+        'query_id'              : 12345,
+        'relevant_documents'    : [],
+        'retrieved_documents'   : []
+    }
+    all_mb25s   = [[hit['_score']] for hit in hits]
+    if(len(all_mb25s) == 0):
+        print('WTF no docs returned for question:\n{}'.format(question_text))
+    scaler      = StandardScaler()
+    scaler2     = MinMaxScaler()
+    scaler.fit(all_mb25s)
+    scaler2.fit(all_mb25s)
+    print(scaler.mean_)
+    for hit, rank in zip(hits, range(1, len(hits)+1)):
+        datum['retrieved_documents'].append(
+            {
+              'bm25_score'                  : hit['_score'],
+              'doc_id'                      : hit['_source']['pmid'],
+              'is_relevant'                 : False,
+              'norm_bm25_score_standard'    : scaler.transform([[hit['_score']]])[0][0],
+              'norm_bm25_score_minmax'      : scaler2.transform([[hit['_score']]])[0][0],
+              'rank'                        : rank
+            }
+        )
+        new_docs[hit['_source']['pmid']] = {
+            'title'             : hit['_source']['joint_text'].split('--------------------')[0].strip(),
+            'abstractText'      : hit['_source']['joint_text'].split('--------------------')[1].strip(),
+            'keywords'          : hit['_source']['Keywords'],
+            'meshHeadingsList'  : hit['_source']['MeshHeadings'],
+            'chemicals'         : hit['_source']['Chemicals'],
+            'pmid'              : hit['_source']['pmid'],
+            'publicationDate'   : hit['_source']['DateCompleted']
+        }
+    new_data.append(datum)
+    return new_data, new_docs
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -874,6 +943,12 @@ k_for_maxpool       = 5
 k_sent_maxpool      = 5
 embedding_dim       = 30 #200
 ###########################################################
+print('loading idfs')
+idf, max_idf    = load_idfs(idf_pickle_path)
+print('loading w2v')
+wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
+wv              = dict([(word, wv[word]) for word in wv.vocab.keys()])
+###########################################################
 my_seed     = 1
 random.seed(my_seed)
 torch.manual_seed(my_seed)
@@ -888,20 +963,28 @@ load_model_from_checkpoint(resume_from)
 params      = model.parameters()
 print_params(model)
 ###########################################################
-### TA DATA PREPEI NA ALLAKSW!
-print('loading pickle data')
-with open('/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl', 'rb') as f:
-    test_data = pickle.load(f)
-with open('/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl', 'rb') as f:
-    test_docs = pickle.load(f)
+
+with open('/home/dpappas/elk_ips.txt') as fp:
+    cluster_ips = [line.strip() for line in fp.readlines() if (len(line.strip()) > 0)]
+    fp.close()
+
+doc_index           = 'pubmed_abstracts_joint_0_1'
+es                  = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+
+question_text       = 'Is durvalumab used for lung cancer treatment?'
+new_data, new_docs  = get_new(question_text)
+new_data            = {'queries':new_data}
+all_bioasq_subm_data, data_for_revision        = get_one_map(new_data, new_docs, use_sent_tokenizer=True)
 ###########################################################
-print('loading idfs')
-idf, max_idf    = load_idfs(idf_pickle_path)
-print('loading w2v')
-wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
-wv              = dict([(word, wv[word]) for word in wv.vocab.keys()])
-###########################################################
-test_map        = get_one_map(test_data, test_docs, use_sent_tokenizer=True)
-###########################################################
-print(test_map)
+
+pprint(all_bioasq_subm_data['questions'][0].keys())
+pprint(list(data_for_revision.values())[0]['snippets'].keys())
+
+all_items       = list(list(data_for_revision.values())[0]['snippets'].items())
+all_items.sort(key=lambda tup: max(t[1] for t in tup[1]), reverse=True)
+
+for sn in all_bioasq_subm_data['questions'][0]['snippets']:
+    print(sn['text'])
+
+
 
