@@ -154,104 +154,6 @@ def print_params(model):
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
 
-def dummy_test():
-    doc1_embeds         = np.random.rand(40, 200)
-    doc2_embeds         = np.random.rand(30, 200)
-    question_embeds     = np.random.rand(20, 200)
-    q_idfs              = np.random.rand(20, 1)
-    gaf                 = np.random.rand(4)
-    baf                 = np.random.rand(4)
-    for epoch in range(200):
-        optimizer.zero_grad()
-        cost_, doc1_emit_, doc2_emit_ = model(
-            doc1_embeds     = doc1_embeds,
-            doc2_embeds     = doc2_embeds,
-            question_embeds = question_embeds,
-            q_idfs          = q_idfs,
-            gaf             = gaf,
-            baf             = baf
-        )
-        cost_.backward()
-        optimizer.step()
-        the_cost = cost_.cpu().item()
-        print(the_cost, float(doc1_emit_), float(doc2_emit_))
-    print(20 * '-')
-
-def compute_the_cost(costs, back_prop=True):
-    cost_ = torch.stack(costs)
-    cost_ = cost_.sum() / (1.0 * cost_.size(0))
-    if(back_prop):
-        cost_.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-    the_cost = cost_.cpu().item()
-    return the_cost
-
-def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
-    '''
-    :param state:       the stete of the pytorch mode
-    :param filename:    the name of the file in which we will store the model.
-    :return:            Nothing. It just saves the model.
-    '''
-    state = {
-        'epoch':            epoch,
-        'state_dict':       model.state_dict(),
-        'best_valid_score': max_dev_map,
-        'optimizer':        optimizer.state_dict(),
-    }
-    torch.save(state, filename)
-
-def get_map_res(fgold, femit):
-    trec_eval_res   = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
-    (out, err)      = trec_eval_res.communicate()
-    lines           = out.decode("utf-8").split('\n')
-    map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
-    map_res         = float(map_res[-1])
-    return map_res
-
-def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
-    batch_cost = sum(batch_costs) / float(len(batch_costs))
-    batch_cost.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-    batch_aver_cost = batch_cost.cpu().item()
-    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    batch_aver_acc  = sum(batch_acc) / float(len(batch_acc))
-    epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
-    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
-
-def similar(upstream_seq, downstream_seq):
-    upstream_seq    = upstream_seq.encode('ascii','ignore')
-    downstream_seq  = downstream_seq.encode('ascii','ignore')
-    s               = SequenceMatcher(None, upstream_seq, downstream_seq)
-    match           = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
-    upstream_start  = match[0]
-    upstream_end    = match[0]+match[2]
-    longest_match   = upstream_seq[upstream_start:upstream_end]
-    to_match        = upstream_seq if(len(downstream_seq)>len(upstream_seq)) else downstream_seq
-    r1              = SequenceMatcher(None, to_match, longest_match).ratio()
-    return r1
-
-def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
-    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
-    wrong  = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
-    wrong  = torch.cat(wrong + [bs_emits_.squeeze(-1)])
-    losses = [ model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
-    return sum(losses) / float(len(losses))
-
-def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
-    bs_emits_       = bs_emits_.squeeze(-1)
-    gs_emits_       = gs_emits_.squeeze(-1)
-    good_sent_tags  = torch.FloatTensor(good_sent_tags)
-    tags_2          = torch.zeros_like(bs_emits_)
-    if(use_cuda):
-        good_sent_tags  = good_sent_tags.cuda()
-        tags_2          = tags_2.cuda()
-    #
-    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, size_average=False, reduce=True)
-    sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2,         size_average=False, reduce=True)
-    return sn_d1_l, sn_d2_l
-
 def get_words(s, idf, max_idf):
     sl  = tokenize(s)
     sl  = [s for s in sl]
@@ -468,20 +370,6 @@ def get_the_mesh(the_doc):
     good_mesh = [gm for gm in good_mesh]
     return good_mesh
 
-def snip_is_relevant(one_sent, gold_snips):
-    # print one_sent
-    # pprint(gold_snips)
-    return int(
-        any(
-            [
-                (one_sent.encode('ascii', 'ignore')  in gold_snip.encode('ascii','ignore'))
-                or
-                (gold_snip.encode('ascii', 'ignore') in one_sent.encode('ascii','ignore'))
-                for gold_snip in gold_snips
-            ]
-        )
-    )
-
 def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_tokenizer):
     if(use_sent_tokenizer):
         good_sents  = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
@@ -535,7 +423,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             good_sents_embeds.append(good_embeds)
             good_sents_escores.append(good_escores+features)
             held_out_sents.append(good_text)
-            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+            good_sent_tags.append(0)
     ####
     return {
         'sents_embeds'     : good_sents_embeds,
@@ -551,12 +439,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     mmax                    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
-        t = (
-            snip_is_relevant(held_out_sents[ind], gold_snips),
-            emitss[ind],
-            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind]
-        )
+        t = (0, emitss[ind], "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']), held_out_sents[ind])
         all_emits.append(t)
         # if(emitss[ind] == mmax):
         #     extracted_from_one.append(t)
@@ -573,32 +456,6 @@ def get_norm_doc_scores(the_doc_scores):
     for i in range(len(ks)):
         norm_doc_scores[ks[i]] = vs[i]
     return norm_doc_scores
-
-def select_snippets_v1(extracted_snippets):
-    '''
-    :param extracted_snippets:
-    :param doc_res:
-    :return: returns the best 10 snippets of all docs (0..n from each doc)
-    '''
-    sorted_snips = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-    return sorted_snips[:10]
-
-def select_snippets_v2(extracted_snippets):
-    '''
-    :param extracted_snippets:
-    :param doc_res:
-    :return: returns the best snippet of each doc  (1 from each doc)
-    '''
-    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
-    ret                 = {}
-    for es in extracted_snippets:
-        if(es[2] in ret):
-            if(es[1] > ret[es[2]][1]):
-                ret[es[2]] = es
-        else:
-            ret[es[2]] = es
-    sorted_snips =  sorted(ret.values(), key=lambda x: x[1], reverse=True)
-    return sorted_snips[:10]
 
 def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
