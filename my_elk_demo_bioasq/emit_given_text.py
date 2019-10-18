@@ -992,7 +992,9 @@ es                  = Elasticsearch(cluster_ips, verify_certs=True, timeout=150,
 
 ###########################################################
 
-question_text       = 'Is durvalumab used for lung cancer treatment?'
-to_return           = get_results_for_one_question(question_text)
-pprint(to_return)
+# question_text       = 'Is durvalumab used for lung cancer treatment?'
+# to_return           = get_results_for_one_question(question_text)
+# pprint(to_return)
+
+###########################################################
 
