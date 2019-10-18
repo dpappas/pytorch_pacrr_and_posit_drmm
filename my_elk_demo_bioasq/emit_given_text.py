@@ -10,8 +10,6 @@ import  torch
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  numpy                       as np
-import  torch.optim                 as optim
-# import  cPickle                     as pickle
 import  torch.autograd              as autograd
 from    tqdm                        import tqdm
 from    pprint                      import pprint
