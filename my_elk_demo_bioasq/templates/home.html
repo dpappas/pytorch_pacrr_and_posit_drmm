@@ -3,13 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>QA DEMO</title>
-    <input type="text" list="question" />
-    <datalist id="question">
-      <option>Is durvalumab used for lung cancer treatment?</option>
-      <option>Saab</option>
-      <option>Mercedes</option>
-      <option>Audi</option>
-    </datalist>
+    <h3>Please select an answer or write down your own.</h3>
+    <form action="/submit_question" method="POST">
+        </br>
+        <input type="text" list="question" />
+        </br>
+        <datalist id="question">
+          <option>Is durvalumab used for lung cancer treatment?</option>
+          <option>Saab</option>
+          <option>Mercedes</option>
+          <option>Audi</option>
+        </datalist>
+        </br>
+        <input type="submit" value="Submit"/>
+    </form>
 
     <!--<form action="/submit_question" method="POST">-->
         <!--<textarea name="the_quest"  id="the_quest"  placeholder="Write here your question."          style="width: 705px; height: 59px;">-->
