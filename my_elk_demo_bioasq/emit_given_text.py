@@ -986,7 +986,7 @@ if(use_cuda):
 ###########################################################
 resume_from     = '/home/dpappas/bioasq_w2vjpdrmm_demo_run_0/best_dev_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
-params      = model.parameters()
+params          = model.parameters()
 print_params(model)
 ###########################################################
 
