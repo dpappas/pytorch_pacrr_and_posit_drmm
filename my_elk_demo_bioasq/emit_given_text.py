@@ -5,25 +5,20 @@
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 
-import  os, random, collections
+import  os, re, nltk, random, pickle, collections
 import  torch
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  numpy                       as np
 import  torch.optim                 as optim
 # import  cPickle                     as pickle
-import  pickle
 import  torch.autograd              as autograd
 from    tqdm                        import tqdm
 from    pprint                      import pprint
 from    gensim.models.keyedvectors  import KeyedVectors
 from    nltk.tokenize               import sent_tokenize
-from    difflib                     import SequenceMatcher
 from elasticsearch                  import Elasticsearch
 from sklearn.preprocessing          import StandardScaler, MinMaxScaler
-import  re
-import  nltk
-import  math
 
 bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
 bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
