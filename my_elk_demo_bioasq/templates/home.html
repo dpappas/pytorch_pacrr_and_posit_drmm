@@ -2,22 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Welcome to </title>
-    <form action="/submit_question" method="POST">
-        <textarea name="the_quest"  id="the_quest"  placeholder="Write here your question."          style="width: 705px; height: 59px;">
-            Is the protein lefty an inhibitor of nodal?
-        </textarea>
-        </br>
-        <textarea name="the_doc"    id="the_doc"    placeholder="write here the text of a document." style="width: 705px; height: 362px;">
-            Nodal morphogens.Nodal signals belong to the TGF-beta superfamily and are essential for the induction of mesoderm and endoderm and the determination of the left-right axis. Nodal signals can act as morphogens-they have concentration-dependent effects and can act at a distance from their source of production. Nodal and its feedback inhibitor Lefty form an activator/inhibitor pair that behaves similarly to postulated reaction-diffusion models of tissue patterning. Nodal morphogen activity is also regulated by microRNAs, convertases, TGF-beta signals, coreceptors, and trafficking factors. This article describes how Nodal morphogens pattern embryonic fields and discusses how Nodal morphogen signaling is modulated.
-        </textarea>
-        </br>
-        <textarea name="the_mesh"   id="the_mesh"   placeholder="write here all the mesh terms' textual form sepparated by the two characters of || ." style="width: 705px; height: 66px;">
-            Animals || Body Patterning || Diffusion || Endoderm/metabolism || Humans || Kinetics || Left-Right Determination Factors metabolism || Mesoderm metabolism || MicroRNAs/metabolism
-        </textarea>
-        </br>
-        <input type="submit" value="Submit"/>
-    </form>
+    <title>QA DEMO</title>
+    <input type="text" list="question" />
+    <datalist id="question">
+      <option>Is durvalumab used for lung cancer treatment?</option>
+      <option>Saab</option>
+      <option>Mercedes</option>
+      <option>Audi</option>
+    </datalist>
+
+    <!--<form action="/submit_question" method="POST">-->
+        <!--<textarea name="the_quest"  id="the_quest"  placeholder="Write here your question."          style="width: 705px; height: 59px;">-->
+            <!--Is the protein lefty an inhibitor of nodal?-->
+        <!--</textarea>-->
+        <!--</br>-->
+        <!--<textarea name="the_doc"    id="the_doc"    placeholder="write here the text of a document." style="width: 705px; height: 362px;">-->
+            <!--Nodal morphogens.Nodal signals belong to the TGF-beta superfamily and are essential for the induction of mesoderm and endoderm and the determination of the left-right axis. Nodal signals can act as morphogens-they have concentration-dependent effects and can act at a distance from their source of production. Nodal and its feedback inhibitor Lefty form an activator/inhibitor pair that behaves similarly to postulated reaction-diffusion models of tissue patterning. Nodal morphogen activity is also regulated by microRNAs, convertases, TGF-beta signals, coreceptors, and trafficking factors. This article describes how Nodal morphogens pattern embryonic fields and discusses how Nodal morphogen signaling is modulated.-->
+        <!--</textarea>-->
+        <!--</br>-->
+        <!--<textarea name="the_mesh"   id="the_mesh"   placeholder="write here all the mesh terms' textual form sepparated by the two characters of || ." style="width: 705px; height: 66px;">-->
+            <!--Animals || Body Patterning || Diffusion || Endoderm/metabolism || Humans || Kinetics || Left-Right Determination Factors metabolism || Mesoderm metabolism || MicroRNAs/metabolism-->
+        <!--</textarea>-->
+        <!--</br>-->
+        <!--<input type="submit" value="Submit"/>-->
+    <!--</form>-->
 </head>
 <body>
 
