@@ -5,12 +5,7 @@
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 
-import  os
-import  json
-import  time
-import  random
-import  logging
-import  subprocess
+import  os, random, collections
 import  torch
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
@@ -927,6 +922,36 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
+def get_results_for_one_question(question_text):
+    new_data, new_docs = get_new(question_text)
+    new_data = {'queries': new_data}
+    all_bioasq_subm_data, data_for_revision = get_one_map(new_data, new_docs, use_sent_tokenizer=True)
+    #############
+    pprint(all_bioasq_subm_data['questions'][0].keys())
+    pprint(list(data_for_revision.values())[0]['snippets'].keys())
+    #############
+    all_items = list(list(data_for_revision.values())[0]['snippets'].items())
+    # all_items.sort(key=lambda tup: max(t[1] for t in tup[1]), reverse=True)
+    all_items.sort(key=lambda tup: max(t[1] * t[4] for t in tup[1]), reverse=True)
+    #############
+    docs_scores = [sc[1][0][-1] for sc in all_items][:10]
+    norm_doc_scores = dict(zip(docs_scores, softmax(docs_scores)))
+    #############
+    to_return = {}
+    for doc_id, doc in all_items[:10]:
+        to_return[doc_id] = {
+            'doc_id': doc_id,
+            'doc_score': norm_doc_scores[doc[0][4]],
+            'sentences': []
+        }
+        for sn in doc:
+            # snip_score = sn[1]*norm_doc_scores[doc[0][4]]
+            snip_score = sn[1]
+            to_return[doc_id]['sentences'].append((snip_score, sn[3].replace('\n', ' ').strip()))
+    #############
+    to_return = collections.OrderedDict(sorted(to_return.items(), key=lambda x: x[1]['doc_score'], reverse=True))
+    return to_return
+
 use_cuda = torch.cuda.is_available()
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
@@ -975,23 +1000,6 @@ es                  = Elasticsearch(cluster_ips, verify_certs=True, timeout=150,
 ###########################################################
 
 question_text       = 'Is durvalumab used for lung cancer treatment?'
-new_data, new_docs  = get_new(question_text)
-new_data            = {'queries':new_data}
-all_bioasq_subm_data, data_for_revision        = get_one_map(new_data, new_docs, use_sent_tokenizer=True)
-
-###########################################################
-
-pprint(all_bioasq_subm_data['questions'][0].keys())
-pprint(list(data_for_revision.values())[0]['snippets'].keys())
-
-all_items       = list(list(data_for_revision.values())[0]['snippets'].items())
-all_items.sort(key=lambda tup: max(t[1] for t in tup[1]), reverse=True)
-
-for doc_id, doc in all_items[:10]:
-    print(20 * '-')
-    print(doc_id, )
-    for sn in doc:
-        print(sn[-1], sn[1], sn[3].replace('\n',' ').strip())
-
-
+to_return           = get_results_for_one_question(question_text)
+pprint(to_return)
 
