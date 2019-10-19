@@ -921,8 +921,9 @@ def get_results_for_one_question(question_text):
     #############
     all_items = list(list(data_for_revision.values())[0]['snippets'].items())
     # all_items.sort(key=lambda tup: max(t[1] for t in tup[1]), reverse=True)
-    all_items.sort(key=lambda tup: max(t[1] * t[4] for t in tup[1]), reverse=True)
+    # all_items.sort(key=lambda tup: max(t[1] * t[4] for t in tup[1]), reverse=True)
     # all_items.sort(key=lambda tup: tup[1][-1], reverse=True)
+    all_items.sort(key=lambda tup: max(t[1] for t in tup[1]), reverse=True)
     #############
     docs_scores = [sc[1][0][-1] for sc in all_items][:10]
     norm_doc_scores = dict(zip(docs_scores, softmax(docs_scores)))
@@ -930,9 +931,10 @@ def get_results_for_one_question(question_text):
     to_return = {}
     for doc_id, doc in all_items[:10]:
         to_return[doc_id] = {
-            'doc_id': doc_id,
-            'doc_score': norm_doc_scores[doc[0][4]],
-            'sentences': []
+            # 'doc_id'    : doc_id,
+            'doc_id'    : max(sn[1] for sn in doc),
+            'doc_score' : norm_doc_scores[doc[0][4]],
+            'sentences' : []
         }
         for sn in doc:
             # snip_score = sn[1]*norm_doc_scores[doc[0][4]]
