@@ -931,9 +931,9 @@ def get_results_for_one_question(question_text):
     to_return = {}
     for doc_id, doc in all_items[:10]:
         to_return[doc_id] = {
-            # 'doc_id'    : doc_id,
-            'doc_id'    : max(sn[1] for sn in doc),
-            'doc_score' : norm_doc_scores[doc[0][4]],
+            'doc_id'    : doc_id,
+            # 'doc_score' : norm_doc_scores[doc[0][4]],
+            'doc_score' : max(sn[1] for sn in doc),
             'sentences' : []
         }
         for sn in doc:
