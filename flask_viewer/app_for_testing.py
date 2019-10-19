@@ -56,6 +56,8 @@ yellow_colors   = list(white.range_to(Color("yellow"), 101))
 yellow_colors   = [c.get_hex_l() for c in yellow_colors]
 blue_colors     = list(white.range_to(Color("blue"), 101))
 blue_colors     = [c.get_hex_l() for c in blue_colors]
+green_colors    = list(white.range_to(Color("green"), 101))
+green_colors    = [c.get_hex_l() for c in green_colors]
 
 app = Flask(__name__)
 

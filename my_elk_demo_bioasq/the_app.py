@@ -1,17 +1,21 @@
 
 # from .emit_given_text import get_results_for_one_question
-
+from sklearn.preprocessing import MinMaxScaler
 from colour import Color
 from flask import url_for
+import numpy as np
 from flask import Flask
 from flask import render_template
 from flask import request
+from collections import OrderedDict
 
 white           = Color("white")
 yellow_colors   = list(white.range_to(Color("yellow"), 101))
 yellow_colors   = [c.get_hex_l() for c in yellow_colors]
 blue_colors     = list(white.range_to(Color("blue"), 101))
 blue_colors     = [c.get_hex_l() for c in blue_colors]
+green_colors    = list(white.range_to(Color("green"), 101))
+green_colors    = [c.get_hex_l() for c in green_colors]
 
 app = Flask(__name__)
 
@@ -19,12 +23,463 @@ app = Flask(__name__)
 def get_news():
     return render_template("home.html")
 
+r1 = '''
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.accordion {background-color: #eee; color: #444; cursor: pointer; padding: 18px; width: 100%; border: none; text-align: left; outline: none; font-size: 15px; transition: 0.4s;}
+.active, .accordion:hover {background-color: #ccc;}
+.panel {padding: 0 18px; display: none; background-color: white; overflow: hidden;}
+</style>
+</head>
+<body>
+<h2>Results</h2>
+'''
+
+r2 = '''
+
+<script>
+var acc = document.getElementsByClassName("accordion");
+var i;
+
+for (i = 0; i < acc.length; i++) {
+  acc[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var panel = this.nextElementSibling;
+    if (panel.style.display === "block") {
+      panel.style.display = "none";
+    } else {
+      panel.style.display = "block";
+    }
+  });
+}
+</script>
+
+</body>
+</html>
+'''
+
+ret_dummy = OrderedDict(
+    [
+        ('28705024',
+              {'doc_id': '28705024',
+               'doc_score': 0.126079710986306,
+               'sentences': [(0.7528257369995117,
+                              'The authors believe that durvalumab will likely '
+                              'play an important role in future treatment '
+                              'strategies for NSCLC.'),
+                             (0.7110816836357117,
+                              'The PACIFIC trial assessing durvalumab after '
+                              'standard chemoradiotherapy for locally advanced '
+                              'NSCLC has already met its primary endpoint and '
+                              'the potential of durvalumab will be reinforced '
+                              'if phase III randomized studies of first-line '
+                              '(MYSTIC trial) and second or subsequent (ARCTIC '
+                              'trial) lines of therapy demonstrate superiority '
+                              'over the current standard of care.'),
+                             (0.6510307192802429,
+                              'Areas covered: This article reviews literature '
+                              'on durvalumab development, from the preclinical '
+                              'data to the results of phase III clinical '
+                              'trials, whether published or presented at '
+                              'international scientific conferences.'),
+                             (0.6346789598464966,
+                              'Expert opinion: Early phase trials of '
+                              'durvalumab monotherapy (and in combination) '
+                              'have demonstrated activity in advanced NSCLC '
+                              'patients and it has demonstrated a good safety '
+                              'profile.'),
+                             (0.6233258247375488,
+                              'MEDI 4736 (durvalumab) in non-small cell lung '
+                              'cancer.'),
+                             (0.5851157307624817,
+                              'Other notable PD-L1 inhibitors under '
+                              'development include avelumab and durvalumab.'),
+                             (0.4008886516094208,
+                              'INTRODUCTION  Immune checkpoint inhibitors '
+                              '(ICI) are now a therapeutic option for advanced '
+                              'non-small cell lung cancer (NSCLC) patients.'),
+                             (0.32595688104629517,
+                              'ICI, such as the PD-1 inhibitors nivolumab and '
+                              'pembrolizumab and the PD-L1 inhibitor '
+                              'atezolizumab, have already been marketed for '
+                              'the treatment of pretreated patients with '
+                              'advanced NSCLC.'),
+                             (0.21979956328868866,
+                              'Ongoing clinical trials were also reviewed.')]}),
+        ('28512504',
+          {'doc_id': '28512504',
+           'doc_score': 0.11415850781104293,
+           'sentences': [(0.8161256313323975,
+                          'A Case Report of Drug-Induced Myopathy '
+                          'Involving Extraocular Muscles after Combination '
+                          'Therapy with Tremelimumab and Durvalumab for '
+                          'Non-Small Cell Lung Cancer.'),
+                         (0.8108379244804382,
+                          'The authors report a 68-year-old man treated '
+                          'for non-small cell lung cancer (NSCLC) with a '
+                          'combination of tremelimumab and durvalumab.'),
+                         (0.6252461671829224,
+                          'Recently developed anti-tumour therapies '
+                          'targeting immune checkpoints include '
+                          'tremelimumab and durvalumab.'),
+                         (0.28304508328437805,
+                          'Within 1 month of withdrawal of cancer '
+                          'therapies and initiation of oral steroid '
+                          'therapy, ocular and systemic symptoms had '
+                          'resolved.'),
+                         (0.2772778570652008,
+                          'After treatment he developed diplopia, ptosis, '
+                          'fatigue, weakness, and an inflammatory myopathy '
+                          'affecting the extraocular muscles requiring '
+                          'hospitalisation.'),
+                         (0.24444884061813354,
+                          'This notable adverse effect has not been '
+                          'previously described for these drugs '
+                          'administered singly or in combination, and '
+                          'ophthalmologists should be aware of this '
+                          'presentation in patients treated with these '
+                          'agents.'),
+                         (0.24131029844284058,
+                          'These agents have incompletely characterised '
+                          'side effect profiles.'),
+                         (0.21184565126895905,
+                          'Electromyography (EMG) testing and muscle '
+                          'biopsy suggested inflammatory myopathy without '
+                          'sign of myasthenia.')]}),
+        ('28963357',
+        {'doc_id': '28963357',
+           'doc_score': 0.11366683069742717,
+           'sentences': [(0.7939553260803223,
+                          'The PD-L1 inhibitor durvalumab increases '
+                          'progression-free survival and objective '
+                          'response rate in patients with inoperable and '
+                          'locally advanced stage III non-small cell lung '
+                          'cancer, according to interim results of a phase '
+                          'III trial.'),
+                         (0.5450866222381592,
+                          'Durvalumab Promising for NSCLC.'),
+                         (0.22926607728004456,
+                          'The benefit was great enough that the drug '
+                          'could become the standard of care in the United '
+                          'States for these patients.')]}),
+        ('28585617',
+          {'doc_id': '28585617',
+           'doc_score': 0.10832927074395596,
+           'sentences': [(0.5606199502944946,
+                          'Similarly to other malignancies, immune '
+                          'checkpoint inhibitor therapy is a '
+                          'revolutionary, effective new treatment '
+                          'possibility for lung cancer.'),
+                         (0.5580491423606873,
+                          'Avelumab and durvalumab have promising activity '
+                          'as well.'),
+                         (0.41366899013519287,
+                          'The PD-1 inhibitor nivolumab and pembrolizumab '
+                          'and the PD-L1 inhibitor atezolizumab is a '
+                          'labelled indication in second line setting in '
+                          'advanced nonsmall cell lung cancer (NSCLC).'),
+                         (0.39814069867134094,
+                          'In lung cancer carcinogenesis is related mainly '
+                          'to tobacco smoking with high somatic mutation '
+                          'rate and immunogenicity.'),
+                         (0.3645658493041992,
+                          'There are numerous ongoing clinical trials in '
+                          'lung cancer with immune checkpoint inhibitors '
+                          'in combination with cytotoxic chemotherapy, '
+                          'targeted agents, or in adjuvant setting.'),
+                         (0.36173710227012634,
+                          '[Immunotherapy for lung cancer].'),
+                         (0.28228625655174255,
+                          'Based on the data of KEYNOTE 024 trial, '
+                          'pembrolizumab is approved in first line setting '
+                          'for cases with ≥50% PD-L1 expression.'),
+                         (0.26311177015304565,
+                          'Pembrolizumab treatment became a new first line '
+                          'standard of care in advanced NSCLC.'),
+                         (0.20108452439308167,
+                          'In this selected patient population, '
+                          'progression-free survival has doubled, and '
+                          'overall survival was significantly better in '
+                          'pembrolizumab-treated patients compared to '
+                          'those receiving standard of care.')]}),
+        ('27019997',
+          {'doc_id': '27019997',
+           'doc_score': 0.09715932456508534,
+           'sentences': [(0.6930536031723022,
+                          'The efficacy and safety data for drugs such as '
+                          'ipilimumab, nivolumab, pembrolizumab, '
+                          'atezolizumab and durvalumab are reviewed, along '
+                          'with combination strategies and response '
+                          'evaluation criteria.'),
+                         (0.5222896933555603,
+                          'Immune checkpoint inhibitors targeting CTLA-4, '
+                          'PD-1 and PD-L1 have been developed for the '
+                          'treatment of patients with non-small-cell lung '
+                          'cancer and other malignancies, with impressive '
+                          'clinical activity, durable responses and a '
+                          'favorable toxicity profile.'),
+                         (0.34059178829193115,
+                          'Immune checkpoint inhibitors in lung cancer: '
+                          'past, present and future.'),
+                         (0.3147279620170593,
+                          'Inhibitory ligands on tumor cells and their '
+                          'corresponding receptors on T cells are '
+                          'collectively called immune checkpoint molecules '
+                          'and have emerged as druggable targets that '
+                          'harness endogenous immunity to fight cancer.'),
+                         (0.23520700633525848,
+                          'This article reviews the development, current '
+                          'status and future directions for some of these '
+                          'agents.'),
+                         (0.2127751260995865,
+                          'The toxicity profiles and predictive biomarkers '
+                          'of response are also discussed.')]}),
+        ('26882955',
+              {'doc_id': '26882955',
+               'doc_score': 0.09481262404830765,
+               'sentences': [(0.797855019569397,
+                              'Immune checkpoint inhibitors such as '
+                              'ipilimumab, nivolumab, pembrolizumab, '
+                              'durvalumab, tremelimumab and ulocuplumab are at '
+                              'the forefront of immunotherapy and have '
+                              'achieved approvals for certain cancer types, '
+                              'including melanoma (ipilimumab, nivolumab and '
+                              'pembrolizumab), non-SCLC (nivolumab and '
+                              'pembrolizumab) and renal cell carcinoma '
+                              '(nivolumab).'),
+                             (0.498870849609375,
+                              'Treatment for small-cell lung cancer (SCLC) has '
+                              'changed little over the past few decades; '
+                              'available therapies have failed to extend '
+                              'survival in advanced disease.'),
+                             (0.3787004053592682,
+                              'Immunotherapy for small-cell lung cancer: '
+                              'emerging evidence.'),
+                             (0.2802731394767761,
+                              'In recent years, immunotherapy with treatments '
+                              'such as interferons, TNFs, vaccines and immune '
+                              'checkpoint inhibitors has advanced and shown '
+                              'promise in the treatment of several tumor '
+                              'types.'),
+                             (0.21201610565185547,
+                              'We review emerging evidence supporting the use '
+                              'of immunotherapy in SCLC patients.'),
+                             (0.20732387900352478,
+                              'Clinical trials are investigating different '
+                              'immunotherapies in patients with other solid '
+                              'and hematologic malignancies, including '
+                              'SCLC.')]}),
+        ('27532023',
+              {'doc_id': '27532023',
+               'doc_score': 0.09070824008449527,
+               'sentences': [(0.7084934711456299,
+                              'Two drugs, nivolumab and pembrolizumab, are now '
+                              'FDA approved for use in certain patients who '
+                              'have failed or progressed on platinum-based or '
+                              'targeted therapies while agents targeting '
+                              'PD-L1, atezolizumab and durvalumab, are '
+                              'approaching the final stages of clinical '
+                              'testing.'),
+                             (0.4696488678455353,
+                              'Various monoclonal antibodies which block the '
+                              'interaction between checkpoint molecules PD-1 '
+                              'on immune cells and PD-L1 on cancer cells have '
+                              'been used to successfully treat non-small cell '
+                              'lung cancer (NSCLC), including some durable '
+                              'responses lasting years.'),
+                             (0.38527911901474,
+                              'PD-L1 biomarker testing for non-small cell lung '
+                              'cancer: truth or fiction?'),
+                             (0.33129963278770447,
+                              'Research in cancer immunology is currently '
+                              'accelerating following a series of cancer '
+                              'immunotherapy breakthroughs during the last '
+                              '5\xa0years.'),
+                             (0.28581470251083374,
+                              'Despite impressive treatment outcomes in a '
+                              'subset of patients who receive these immune '
+                              'therapies, many patients with NSCLC fail to '
+                              'respond to anti-PD-1/PD-L1 and the '
+                              'identification of a biomarker to select these '
+                              'patients remains highly sought after.'),
+                             (0.23212508857250214,
+                              'In this review, we discuss the recent clinical '
+                              'trial results of pembrolizumab, nivolumab, and '
+                              'atezolizumab for NSCLC, and the significance of '
+                              'companion diagnostic testing for tumor PD-L1 '
+                              'expression.')]}),
+        ('27389724',
+              {'doc_id': '27389724',
+               'doc_score': 0.08582881266429562,
+               'sentences': [(0.6827545166015625,
+                              'Despite not being eligible for a durvalumab '
+                              'trial because of lack of PD-L1 expression, she '
+                              'had a meaningful response to nivolumab.'),
+                             (0.3382163345813751,
+                              'A 58-year-old woman, a heavy smoker, was '
+                              'diagnosed with stage III squamous cell lung '
+                              'cancer.'),
+                             (0.33626845479011536,
+                              'Battling regional (stage III) lung cancer: '
+                              'bumpy road of a cancer survivor in the '
+                              'immunotherapy age.'),
+                             (0.2854982912540436,
+                              'She had disease progression 9\u2005months into '
+                              'treatment.'),
+                             (0.24585649371147156,
+                              '4\u2005months later, a rapidly enlarging renal '
+                              'mass was discovered and turned out to be '
+                              'metastatic from the lung primary.'),
+                             (0.24071486294269562,
+                              'Fortunately, her bleed was self-limited.'),
+                             (0.2161630392074585,
+                              '2\u2005months later, she had haemoptysis caused '
+                              'by brisk bleeding from the radiated right upper '
+                              'lobe.'),
+                             (0.212578684091568,
+                              'She was treated with concurrent chemotherapy '
+                              'and radiotherapy, with partial response.'),
+                             (0.21097226440906525,
+                              'In the next few months, she experienced a '
+                              'variety of side effects, some of which were '
+                              'potentially life-threatening.'),
+                             (0.21042422950267792,
+                              'Second-line chemotherapy with docetaxel and '
+                              'ramucirumab did not have effects on the renal '
+                              'mass after 2 cycles.'),
+                             (0.20962224900722504,
+                              'Once every 2\u2005weeks, infusion of nivolumab '
+                              'resulted in rapid tumour shrinkage in multiple '
+                              'areas.')]}),
+        ('28271729',
+              {'doc_id': '28271729',
+               'doc_score': 0.08509885116571422,
+               'sentences': [(0.7143888473510742,
+                              'The combination of osimertinib plus durvalumab '
+                              'in pretreated or chemo naïve NSCLC patients '
+                              'showed encouraging clinical activity, however, '
+                              'this combination was associated with high '
+                              'incidence of interstitial lung disease (38%), '
+                              'leading to termination of further enrollment.'),
+                             (0.6330975890159607,
+                              'The combination of gefitinib plus durvalumab '
+                              'demonstrated encouraging activity but higher '
+                              'incidence of grade 3/4 liver enzyme elevation '
+                              '(40-70%).'),
+                             (0.3779904842376709,
+                              'INTRODUCTION  Epidermal growth factor receptor '
+                              '(EGFR) tyrosine kinase inhibitors (TKI) has '
+                              'significantly improved clinical outcomes '
+                              'compared with chemotherapy in non-small cell '
+                              'lung cancer (NSCLC) patients with sensitizing '
+                              'EGFR gene mutation.'),
+                             (0.3333910405635834,
+                              'EGFR TKI combination with immunotherapy in '
+                              'non-small cell lung cancer.'),
+                             (0.2777625322341919,
+                              'It has been reported that activation of the '
+                              'oncogenic EGFR pathway enhances susceptibility '
+                              'of the lung tumors to PD-1 blockade in mouse '
+                              'model, suggesting combination of PD1 blockade '
+                              'with EGFR TKIs may be a promising therapeutic '
+                              'strategy.'),
+                             (0.26722806692123413,
+                              'The treatment related Grade 3-4 adverse events '
+                              'were observed in 39% of patients when treated '
+                              'with atezolizumab plus erlotinib.'),
+                             (0.2256692498922348,
+                              'Until now, the combination of EGFR TKI and '
+                              'immunotherapy should be investigational.'),
+                             (0.21707475185394287,
+                              'Areas covered: Almost all patients treated with '
+                              'EGFR TKIs eventually develop acquired '
+                              'resistance.'),
+                             (0.21395689249038696,
+                              'Nivolumab combined with erlotinib was '
+                              'associated with 19% of grade 3 toxicities.'),
+                             (0.20948049426078796,
+                              'Expert opinion: Given the relatively high '
+                              'incidence of treatment-related toxicities '
+                              'associated with combination of EGFR TKI and '
+                              'immunotherapy, further development of this '
+                              'approach remains controversial.')]}),
+        ('28064556',
+              {'doc_id': '28064556',
+               'doc_score': 0.08415782723336986,
+               'sentences': [(0.69700688123703,
+                              'The authors discuss pembrolizumab and '
+                              'pembrolizumab plus ipilimumab, durvalumab and '
+                              'durvalumab plus tremelimumab, nivolumab and '
+                              'nivolumab plus ipilimumab for NSCLC as well as '
+                              'nivolumab and nivolumab plus ipilimumab for '
+                              'SCLC.'),
+                             (0.41634857654571533,
+                              'The increased response rate, if confirmed in '
+                              'larger scale studies, will likely make '
+                              'combination therapy another useful therapeutic '
+                              'approach for lung cancer.'),
+                             (0.4094315767288208,
+                              'PD-1 checkpoint blockade alone or combined PD-1 '
+                              'and CTLA-4 blockade as immunotherapy for lung '
+                              'cancer?'),
+                             (0.36628714203834534,
+                              'Blocking a single immune checkpoint or multiple '
+                              'checkpoints simultaneously can generate '
+                              'anti-tumor activity against a variety of '
+                              'cancers including lung cancer.'),
+                             (0.34728947281837463,
+                              'Area covered: This review highlights the '
+                              'results of recent clinical studies of single or '
+                              'combination checkpoint inhibitor immunotherapy '
+                              'in non-small cell lung cancer (NSCLC) or small '
+                              'cell lung cancer (SCLC).'),
+                             (0.2873440086841583,
+                              'For checkpoint inhibitor immunotherapy in SCLC '
+                              'and NSCLC, combination therapy is associated '
+                              'with a higher incidence of toxicities than '
+                              'single therapy; however, it appears to help '
+                              'increase tumor response rate.'),
+                             (0.2525465190410614,
+                              'Nevertheless, combination therapy is associated '
+                              'with an increased toxicity.'),
+                             (0.23285989463329315,
+                              'Several larger-scale studies are currently '
+                              'ongoing.'),
+                             (0.22378256916999817,
+                              'INTRODUCTION  Signaling through T-cell surface, '
+                              'an immune checkpoint protein such as PD-1 or '
+                              'CTLA-4 helps dampen or terminate unwanted '
+                              'immune responses.'),
+                             (0.2055046707391739,
+                              'Expert opinion: Available data suggest that, in '
+                              'both metastatic NSCLC and SCLC, combined PD-1 '
+                              'and CTLA-4 blockade may produce a higher tumor '
+                              'response rate than PD-1 blockade alone.')]})
+    ]
+)
+
 @app.route("/submit_question", methods=["POST", "GET"])
 def submit_question():
-    print(request.form)
+    text_to_return = r1 + '\n' # + r2
+    # print(request.form)
     question_text   = request.form.get("sent1") #.strip()
-    print(str(question_text))
-    return ''
+    scaler          = MinMaxScaler(feature_range=(0, 0.5))
+    scaler.fit(np.array([ret_dummy[doc_id]['doc_score'] for doc_id in ret_dummy]).reshape(-1, 1))
+    for doc_id in ret_dummy:
+        doc_score       = scaler.transform([[ret_dummy[doc_id]['doc_score']]])[0][0] + 0.5
+        doc_bgcolor     = green_colors[int(doc_score*100)]
+        doc_txtcolor    = 'white' if(doc_score>0.5) else 'black'
+        text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{}</button><div class="panel">'.format(str(doc_score*100), doc_bgcolor, doc_txtcolor, doc_id)
+        for sent in ret_dummy[doc_id]['sentences']:
+            print(sent)
+            sent_score, sent_text = sent
+            text_to_return += '<div style="width:100%;background-color:{};">{}</div>'.format(yellow_colors[int(sent_score*100)], sent_text)
+        text_to_return  += '</div>'
+    text_to_return += '\n' + r2
+    return text_to_return
 
 
 if __name__ == '__main__':
