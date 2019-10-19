@@ -436,7 +436,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
         #     extracted_from_one.append(t)
         extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
-    all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
+    # all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
 def get_norm_doc_scores(the_doc_scores):
@@ -470,7 +470,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     gold_snips                  = []
     #
     doc_res, extracted_snippets         = {}, []
-    extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score_standard'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
@@ -486,9 +485,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
         extracted_snippets.extend(extracted_from_one)
         #
-        total_relevant = sum([1 for em in all_emits if(em[0]==True)])
-        if (total_relevant > 0):
-            extracted_snippets_known_rel_num.extend(all_emits[:total_relevant])
         if (dato['query_id'] not in data_for_revision):
             data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets': {retr['doc_id']: all_emits}}
         else:
@@ -920,12 +916,13 @@ def get_results_for_one_question(question_text):
     new_data = {'queries': new_data}
     all_bioasq_subm_data, data_for_revision = get_one_map(new_data, new_docs, use_sent_tokenizer=True)
     #############
-    pprint(all_bioasq_subm_data['questions'][0].keys())
-    pprint(list(data_for_revision.values())[0]['snippets'].keys())
+    # pprint(all_bioasq_subm_data['questions'][0].keys())
+    # pprint(list(data_for_revision.values())[0]['snippets'].keys())
     #############
     all_items = list(list(data_for_revision.values())[0]['snippets'].items())
     # all_items.sort(key=lambda tup: max(t[1] for t in tup[1]), reverse=True)
     all_items.sort(key=lambda tup: max(t[1] * t[4] for t in tup[1]), reverse=True)
+    # all_items.sort(key=lambda tup: tup[1][-1], reverse=True)
     #############
     docs_scores = [sc[1][0][-1] for sc in all_items][:10]
     norm_doc_scores = dict(zip(docs_scores, softmax(docs_scores)))
@@ -941,8 +938,8 @@ def get_results_for_one_question(question_text):
             # snip_score = sn[1]*norm_doc_scores[doc[0][4]]
             snip_score = sn[1]
             to_return[doc_id]['sentences'].append((snip_score, sn[3].replace('\n', ' ').strip()))
-    #############
-    to_return = collections.OrderedDict(sorted(to_return.items(), key=lambda x: x[1]['doc_score'], reverse=True))
+        #############
+        to_return = collections.OrderedDict(sorted(to_return.items(), key=lambda x: x[1]['doc_score'], reverse=True))
     return to_return
 
 use_cuda = torch.cuda.is_available()
