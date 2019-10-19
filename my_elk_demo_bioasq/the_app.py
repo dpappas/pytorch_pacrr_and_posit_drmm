@@ -71,15 +71,16 @@ def submit_question():
     scaler          = MinMaxScaler(feature_range=(0, 0.5))
     scaler.fit(np.array([ret_dummy[doc_id]['doc_score'] for doc_id in ret_dummy]).reshape(-1, 1))
     for doc_id in ret_dummy:
+        doc_date        = ret_dummy[doc_id]['doc_date']
         doc_score       = scaler.transform([[ret_dummy[doc_id]['doc_score']]])[0][0] + 0.5
         doc_bgcolor     = green_colors[int(doc_score*100)]
         doc_txtcolor    = 'white' if(doc_score>0.5) else 'black'
-        text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{}</button><div class="panel">'.format(str(doc_score*100), doc_bgcolor, doc_txtcolor, doc_id)
+        text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{}    Date:{}</button><div class="panel">'.format(str(doc_score*100), doc_bgcolor, doc_txtcolor, doc_id, doc_date)
         for sent in ret_dummy[doc_id]['sentences']:
             # print(sent)
             sent_score, sent_text   = sent
             sent_text               = sent_text.replace('</', '< ')
-            if(sent_score<0.3):
+            if(sent_score<0.45):
                 sent_score = 0.0
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(sent_score, yellow_colors[int(sent_score*100)], sent_text)
         text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
