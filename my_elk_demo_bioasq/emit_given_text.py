@@ -925,7 +925,7 @@ def get_results_for_one_question(question_text):
     # all_items.sort(key=lambda tup: tup[1][-1], reverse=True)
     all_items.sort(key=lambda tup: max(t[1] for t in tup[1]), reverse=True)
     #############
-    docs_scores = [sc[1][0][-1] for sc in all_items][:10]
+    docs_scores     = [sc[1][0][-1] for sc in all_items][:10]
     norm_doc_scores = dict(zip(docs_scores, softmax(docs_scores)))
     #############
     to_return = {}
