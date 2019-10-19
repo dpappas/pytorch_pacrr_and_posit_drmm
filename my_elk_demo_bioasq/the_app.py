@@ -63,10 +63,10 @@ for (i = 0; i < acc.length; i++) {
 
 @app.route("/submit_question", methods=["POST", "GET"])
 def submit_question():
-    text_to_return = r1 + '\n' # + r2
-    # print(request.form)
     question_text   = request.form.get("sent1") #.strip()
-    text_to_return  += '<h2>Results for the question: {}</h2>'.format(question_text)
+    print(question_text)
+    text_to_return  = r1 + '\n' # + r2
+    text_to_return  += '<h2>Results for the question: {}</h2>'.format(question_text) + '\n'
     ret_dummy       = get_results_for_one_question(question_text)
     scaler          = MinMaxScaler(feature_range=(0, 0.5))
     scaler.fit(np.array([ret_dummy[doc_id]['doc_score'] for doc_id in ret_dummy]).reshape(-1, 1))

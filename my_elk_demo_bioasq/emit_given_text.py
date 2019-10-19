@@ -911,7 +911,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-def get_results_for_one_question(question_text):
+def get_results_for_one_question(question_text, how_many=20):
     new_data, new_docs = get_new(question_text)
     new_data = {'queries': new_data}
     all_bioasq_subm_data, data_for_revision = get_one_map(new_data, new_docs, use_sent_tokenizer=True)
@@ -925,11 +925,11 @@ def get_results_for_one_question(question_text):
     # all_items.sort(key=lambda tup: tup[1][-1], reverse=True)
     all_items.sort(key=lambda tup: max(t[1] for t in tup[1]), reverse=True)
     #############
-    docs_scores     = [sc[1][0][-1] for sc in all_items][:10]
-    norm_doc_scores = dict(zip(docs_scores, softmax(docs_scores)))
+    docs_scores     = [sc[1][0][-1] for sc in all_items][:how_many]
+    # norm_doc_scores = dict(zip(docs_scores, softmax(docs_scores)))
     #############
     to_return = {}
-    for doc_id, doc in all_items[:10]:
+    for doc_id, doc in all_items[:how_many]:
         to_return[doc_id] = {
             'doc_id'    : doc_id,
             # 'doc_score' : norm_doc_scores[doc[0][4]],
