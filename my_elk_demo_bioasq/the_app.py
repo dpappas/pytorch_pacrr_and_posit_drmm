@@ -1,5 +1,5 @@
 
-from .emit_given_text import get_results_for_one_question
+from emit_given_text import get_results_for_one_question
 from sklearn.preprocessing import MinMaxScaler
 from colour import Color
 from flask import url_for
@@ -77,14 +77,21 @@ def submit_question():
         for sent in ret_dummy[doc_id]['sentences']:
             # print(sent)
             sent_score, sent_text = sent
+            if(sent_score<0.3):
+                sent_score = 0.0
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(sent_score, yellow_colors[int(sent_score*100)], sent_text)
+        text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+            'link',
+            'white',
+            'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">{}</a>'.format(doc_id, doc_id)
+        )
         text_to_return  += '</div>'
     text_to_return += '\n' + r2
     return text_to_return
 
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=True)
 
 '''
 batch 2
