@@ -35,6 +35,7 @@ r1 = '''
 </style>
 </head>
 <body>
+<title>Results</title>
 <h2>Results</h2>
 '''
 
@@ -76,7 +77,8 @@ def submit_question():
         text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{}</button><div class="panel">'.format(str(doc_score*100), doc_bgcolor, doc_txtcolor, doc_id)
         for sent in ret_dummy[doc_id]['sentences']:
             # print(sent)
-            sent_score, sent_text = sent
+            sent_score, sent_text   = sent
+            sent_text               = sent_text.replace('</', '< ')
             if(sent_score<0.3):
                 sent_score = 0.0
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(sent_score, yellow_colors[int(sent_score*100)], sent_text)
