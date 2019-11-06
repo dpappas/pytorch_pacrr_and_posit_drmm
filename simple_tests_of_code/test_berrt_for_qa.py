@@ -161,7 +161,7 @@ fixed_tokens        = fix_bert_tokens(eval_feat.tokens)
 
 tok_inds            = [i for i in range(len(tokens)) if (not tokens[i].startswith('##'))]
 token_embeds        = token_embeds.squeeze(0)
-embs                = token_embeds[tok_inds, :]
+embs                = token_embeds[tok_inds, : ]
 
 
 
