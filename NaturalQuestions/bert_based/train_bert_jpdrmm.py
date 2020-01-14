@@ -948,18 +948,22 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     #
     start_time = time.time()
     pbar = tqdm(
-        iterable= train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
-        total   = 16021, # 14288, #9684, # 378,
+        iterable= train_data_step2(train_instances, train_docs, bioasq6_data, use_sent_tokenizer),
+        total   = 14288, #9684, # 378,
         ascii   = True
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds   = datum['good_sents_embeds'],
-            doc2_sents_embeds   = datum['bad_sents_embeds'],
-            sents_gaf           = datum['good_sents_escores'],
-            sents_baf           = datum['bad_sents_escores'],
-            doc_gaf             = datum['good_doc_af'],
-            doc_baf             = datum['bad_doc_af']
+            doc1_sents_embeds=datum['good_sents_embeds'],
+            doc2_sents_embeds=datum['bad_sents_embeds'],
+            doc1_oh_sim=datum['good_oh_sims'],
+            doc2_oh_sim=datum['bad_oh_sims'],
+            question_embeds=datum['quest_embeds'],
+            q_idfs=datum['q_idfs'],
+            sents_gaf=datum['good_sents_escores'],
+            sents_baf=datum['bad_sents_escores'],
+            doc_gaf=datum['good_doc_af'],
+            doc_baf=datum['bad_doc_af']
         )
         #
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
@@ -976,21 +980,27 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         if (len(batch_costs) == b_size):
             batch_counter += 1
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
-                batch_costs, epoch_costs, batch_acc, epoch_acc)
+                batch_costs,
+                epoch_costs,
+                batch_acc,
+                epoch_acc
+            )
             elapsed_time = time.time() - start_time
             start_time = time.time()
-            print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
-                batch_counter, batch_aver_cost, epoch_aver_cost,batch_aver_acc, epoch_aver_acc, elapsed_time)
-            )
+            print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
+                                                                     batch_aver_acc, epoch_aver_acc, elapsed_time))
             logger.info(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
-                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time)
-            )
+                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
+                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
         batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs,
-                                                                                     batch_acc, epoch_acc)
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
+            batch_costs,
+            epoch_costs,
+            batch_acc,
+            epoch_acc
+        )
         elapsed_time = time.time() - start_time
         start_time = time.time()
         print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
