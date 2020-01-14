@@ -192,7 +192,7 @@ def tokenize(x):
     x_tokens = fix_bert_tokens(x_tokens)
     return x_tokens
 
-def idf_val(w):
+def idf_val(w, idf, max_idf):
     if w in idf:
         return idf[w]
     return max_idf
@@ -644,10 +644,11 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
+def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
     good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    quest_toks          = bioclean(quest)
     ####
-    good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25)
+    good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
     #
     all_doc_text        = the_doc['title'] + ' ' + the_doc['abstractText']
@@ -655,9 +656,9 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     tomi                = (set(doc_toks) & set(quest_toks))
     tomi_no_stop        = tomi - set(stopwords)
     BM25score           = similarity_score(quest_toks, doc_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-    tomi_no_stop_idfs   = [idf_val(w) for w in tomi_no_stop]
-    tomi_idfs           = [idf_val(w) for w in tomi]
-    quest_idfs          = [idf_val(w) for w in quest_toks]
+    tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+    tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+    quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
     features            = [
         len(quest) / 300.,
         len(all_doc_text) / 300.,
@@ -668,19 +669,21 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     ]
     good_doc_af.extend(features)
     ####
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
+    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
-        sent_toks, sent_embeds  = embed_the_sent(' '.join(bioclean(good_text)))
-        oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
-        good_oh_sim.append(oh_sim)
-        good_escores            = GetScores(quest, good_text, the_bm25)[:-1]
+        sent_toks               = bioclean(good_text)
+        sent_embeds_1           = embed_the_sent(' '.join(bioclean(good_text)), ' '.join(bioclean(quest)))
+        sent_embeds_2           = embed_the_sent(' '.join(bioclean(quest)), ' '.join(bioclean(good_text)))
+        # sent_embeds             = torch.cat([sent_embeds_1, sent_embeds_2])
+        sent_embeds             = sent_embeds_1 + sent_embeds_2
+        good_escores            = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
         tomi                    = (set(sent_toks) & set(quest_toks))
         tomi_no_stop            = tomi - set(stopwords)
         BM25score               = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-        tomi_no_stop_idfs       = [idf_val(w) for w in tomi_no_stop]
-        tomi_idfs               = [idf_val(w) for w in tomi]
-        quest_idfs              = [idf_val(w) for w in quest_toks]
+        tomi_no_stop_idfs       = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+        tomi_idfs               = [idf_val(w, idf, max_idf) for w in tomi]
+        quest_idfs              = [idf_val(w, idf, max_idf) for w in quest_toks]
         features                = [
             len(quest) / 300.,
             len(good_text) / 300.,
@@ -700,8 +703,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
         'sents_escores': good_sents_escores,
         'doc_af': good_doc_af,
         'sent_tags': good_sent_tags,
-        'held_out_sents': held_out_sents,
-        'oh_sims': good_oh_sim
+        'held_out_sents': held_out_sents
     }
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
