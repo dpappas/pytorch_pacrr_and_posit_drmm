@@ -1419,9 +1419,7 @@ b_size              = 32
 max_epoch           = 30
 early_stop          = 4
 
-import sys
-# run_from    = int(sys.argv[1])
-# run_to      = int(sys.argv[2])
+weight    = float(sys.argv[1])
 run_from    = 0
 run_to      = 1
 hdlr        = None
@@ -1431,7 +1429,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir    = 'bioasq_jpdrmm_2L_0p01_weight_{}_run_{}/'.format(weight, run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
@@ -1469,5 +1467,10 @@ for run in range(run_from, run_to):
             logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
             break
 
-
+# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 0.1
+# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 0.5
+# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 1
+# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 5
+# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 10
+# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 50
 
