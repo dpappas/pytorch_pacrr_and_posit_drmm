@@ -5,28 +5,19 @@
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 
-import  os
-import  json
-import  time
-import  random
-import  logging
-import  subprocess
+import  os, json, sys, re, nltk, math, time, random, logging, subprocess, pickle
 import  torch
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  numpy                       as np
 import  torch.optim                 as optim
 # import  cPickle                     as pickle
-import  pickle
 import  torch.autograd              as autograd
 from    tqdm                        import tqdm
 from    pprint                      import pprint
 from    gensim.models.keyedvectors  import KeyedVectors
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
-import  re
-import  nltk
-import  math
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
