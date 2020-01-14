@@ -954,16 +954,16 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds=datum['good_sents_embeds'],
-            doc2_sents_embeds=datum['bad_sents_embeds'],
-            doc1_oh_sim=datum['good_oh_sims'],
-            doc2_oh_sim=datum['bad_oh_sims'],
-            question_embeds=datum['quest_embeds'],
-            q_idfs=datum['q_idfs'],
-            sents_gaf=datum['good_sents_escores'],
-            sents_baf=datum['bad_sents_escores'],
-            doc_gaf=datum['good_doc_af'],
-            doc_baf=datum['bad_doc_af']
+            doc1_sents_embeds   = datum['good_sents_embeds'],
+            doc2_sents_embeds   = datum['bad_sents_embeds'],
+            doc1_oh_sim         = datum['good_oh_sims'],
+            doc2_oh_sim         = datum['bad_oh_sims'],
+            question_embeds     = datum['quest_embeds'],
+            q_idfs              = datum['q_idfs'],
+            sents_gaf           = datum['good_sents_escores'],
+            sents_baf           = datum['bad_sents_escores'],
+            doc_gaf             = datum['good_doc_af'],
+            doc_baf             = datum['bad_doc_af']
         )
         #
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
