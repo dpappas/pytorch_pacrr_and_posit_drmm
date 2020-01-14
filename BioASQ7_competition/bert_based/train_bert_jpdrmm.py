@@ -1569,6 +1569,8 @@ for epoch in range(max_epoch):
     print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
     logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
+# CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py
+
 '''
 ['[CLS]', 'the', 'drugs', 'covered', 'target', 'ga', '##ba', '##a', 'za', '##le', '##pl', '##on', '-', 'cr', 'lore', '##di', '##pl', '##on', 'ev', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tam', '##ine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'ser', '##oton', '##in', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'mel', '##aton', '##ins', '##ero', '##ton', '##in', '##5', '-', 'h', '##t', '##1', '##a', 'pi', '##rom', '##ela', '##tine', 'and', 'mel', '##aton', '##in', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'mel', '##aton', '##in', 'and', 'ta', '##si', '##mel', '##te', '##on', 'for', 'pediatric', 'sleep', 'and', 'circa', '##dian', '[SEP]']
 len([
