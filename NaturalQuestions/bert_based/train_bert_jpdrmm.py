@@ -48,22 +48,6 @@ class InputFeatures(object):
         self.segment_ids = segment_ids
         self.label_id = label_id
 
-def train_data_step1(train_data):
-    ret = []
-    for dato in tqdm(train_data['queries'], ascii=True):
-        quest = dato['query_text']
-        quest_id = dato['query_id']
-        bm25s = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        ret_pmids = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-        good_pmids = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-        if (len(bad_pmids) > 0):
-            for gid in good_pmids:
-                bid = random.choice(bad_pmids)
-                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
-    print('')
-    return ret
-
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
         os.makedirs(odir)
@@ -187,48 +171,6 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
         return ((score - mean) / deviation)
     else:
         return score
-
-def RemoveTrainLargeYears(data, doc_text):
-    for i in range(len(data['queries'])):
-        hyear = 1900
-        for j in range(len(data['queries'][i]['retrieved_documents'])):
-            if data['queries'][i]['retrieved_documents'][j]['is_relevant']:
-                doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-                year = doc_text[doc_id]['publicationDate'].split('-')[0]
-                if year[:1] == '1' or year[:1] == '2':
-                    if int(year) > hyear:
-                        hyear = int(year)
-        j = 0
-        while True:
-            doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-            year = doc_text[doc_id]['publicationDate'].split('-')[0]
-            if (year[:1] == '1' or year[:1] == '2') and int(year) > hyear:
-                del data['queries'][i]['retrieved_documents'][j]
-            else:
-                j += 1
-            if j == len(data['queries'][i]['retrieved_documents']):
-                break
-    return data
-
-def RemoveBadYears(data, doc_text, train):
-    for i in range(len(data['queries'])):
-        j = 0
-        while True:
-            doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-            year = doc_text[doc_id]['publicationDate'].split('-')[0]
-            ##########################
-            # Skip 2017/2018 docs always. Skip 2016 docs for training.
-            # Need to change for final model - 2017 should be a train year only.
-            # Use only for testing.
-            if year == '2017' or year == '2018' or (train and year == '2016'):
-                # if year == '2018' or (train and year == '2017'):
-                del data['queries'][i]['retrieved_documents'][j]
-            else:
-                j += 1
-            ##########################
-            if j == len(data['queries'][i]['retrieved_documents']):
-                break
-    return data
 
 def get_words(s):
     sl = tokenize(s)
@@ -934,30 +876,43 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
 
-def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
+def train_data_step1(train_data):
+    ret = []
+    for dato in tqdm(train_data['queries'], ascii=True):
+        quest = dato['query_text']
+        quest_id = dato['query_id']
+        bm25s = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        if (len(bad_pmids) > 0):
+            for gid in good_pmids:
+                bid = random.choice(bad_pmids)
+                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
+    print('')
+    return ret
+
+def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         ####
         good_snips          = get_snips(quest_id, gid, bioasq6_data)
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        quest_tokens, qemb  = embed_the_sent(quest_text)
-        q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+        quest_tokens        = bioclean(quest_text)
         ####
-        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens)
+        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf)
         good_sents_embeds   = datum['sents_embeds']
         good_sents_escores  = datum['sents_escores']
         good_doc_af         = datum['doc_af']
         good_sent_tags      = datum['sent_tags']
         good_held_out_sents = datum['held_out_sents']
-        good_oh_sims        = datum['oh_sims']
         #
-        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], quest_tokens)
+        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf)
         bad_sents_embeds    = datum['sents_embeds']
         bad_sents_escores   = datum['sents_escores']
         bad_doc_af          = datum['doc_af']
         bad_sent_tags       = [0] * len(datum['sent_tags'])
         bad_held_out_sents  = datum['held_out_sents']
-        bad_oh_sims         = datum['oh_sims']
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
             yield {
@@ -966,17 +921,12 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
                 'good_doc_af': good_doc_af,
                 'good_sent_tags': good_sent_tags,
                 'good_held_out_sents': good_held_out_sents,
-                'good_oh_sims': good_oh_sims,
                 #
                 'bad_sents_embeds': bad_sents_embeds,
                 'bad_sents_escores': bad_sents_escores,
                 'bad_doc_af': bad_doc_af,
                 'bad_sent_tags': bad_sent_tags,
                 'bad_held_out_sents': bad_held_out_sents,
-                'bad_oh_sims': bad_oh_sims,
-                #
-                'quest_embeds': qemb,
-                'q_idfs': q_idfs,
             }
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
@@ -990,22 +940,18 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     #
     start_time = time.time()
     pbar = tqdm(
-        iterable= train_data_step2(train_instances, train_docs, bioasq6_data, use_sent_tokenizer),
-        total   = 14288, #9684, # 378,
+        iterable= train_data_step2(train_instances, train_docs, bioasq6_data, idf, max_idf, use_sent_tokenizer),
+        total   = 16021, # 14288, #9684, # 378,
         ascii   = True
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds=datum['good_sents_embeds'],
-            doc2_sents_embeds=datum['bad_sents_embeds'],
-            doc1_oh_sim=datum['good_oh_sims'],
-            doc2_oh_sim=datum['bad_oh_sims'],
-            question_embeds=datum['quest_embeds'],
-            q_idfs=datum['q_idfs'],
-            sents_gaf=datum['good_sents_escores'],
-            sents_baf=datum['bad_sents_escores'],
-            doc_gaf=datum['good_doc_af'],
-            doc_baf=datum['bad_doc_af']
+            doc1_sents_embeds   = datum['good_sents_embeds'],
+            doc2_sents_embeds   = datum['bad_sents_embeds'],
+            sents_gaf           = datum['good_sents_escores'],
+            sents_baf           = datum['bad_sents_escores'],
+            doc_gaf             = datum['good_doc_af'],
+            doc_baf             = datum['bad_doc_af']
         )
         #
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
@@ -1022,27 +968,21 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         if (len(batch_costs) == b_size):
             batch_counter += 1
             batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
-                batch_costs,
-                epoch_costs,
-                batch_acc,
-                epoch_acc
-            )
+                batch_costs, epoch_costs, batch_acc, epoch_acc)
             elapsed_time = time.time() - start_time
             start_time = time.time()
-            print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                     batch_aver_acc, epoch_aver_acc, elapsed_time))
+            print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
+                batch_counter, batch_aver_cost, epoch_aver_cost,batch_aver_acc, epoch_aver_acc, elapsed_time)
+            )
             logger.info(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
+                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(
+                    batch_counter, batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc, elapsed_time)
+            )
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
         batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
-            batch_costs,
-            epoch_costs,
-            batch_acc,
-            epoch_acc
-        )
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs,
+                                                                                     batch_acc, epoch_acc)
         elapsed_time = time.time() - start_time
         start_time = time.time()
         print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
@@ -1505,12 +1445,6 @@ print('BERT part')
 logger.info('BERT part')
 print_params(bert_model)
 ##########################################
-##########################################
-##########################################
-##########################################
-##########################################
-##########################################
-
 
 best_dev_map, test_map = None, None
 for epoch in range(max_epoch):
@@ -1522,7 +1456,7 @@ for epoch in range(max_epoch):
     print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
     logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
-# CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py
+# CUDA_VISIBLE_DEVICES=0 python3.6 train_nq_bert_jpdrmm.py
 
 
 

@@ -771,7 +771,6 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
         good_snips          = get_snips(quest_id, gid, bioasq6_data)
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        quest_tokens        = bioclean(quest_text)
         ####
         datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf)
         good_sents_embeds   = datum['sents_embeds']
