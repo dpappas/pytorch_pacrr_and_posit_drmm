@@ -1456,10 +1456,11 @@ for run in range(run_from, run_to):
             logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
             break
 
+# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 0.01
 # CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 0.1
 # CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 0.2
 # CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 1
 # CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 5
 # CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 10
-# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 50
+# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 100
 
