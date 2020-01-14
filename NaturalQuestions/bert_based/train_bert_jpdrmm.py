@@ -502,7 +502,7 @@ def embed_the_sent(sent):
     fixed_tokens = fix_bert_tokens(tokens)
     return fixed_tokens, embs
 
-def get_map_res(fgold, femit, eval_path):
+def get_map_res(fgold, femit):
     trec_eval_res = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
     (out, err) = trec_eval_res.communicate()
     lines = out.decode("utf-8").split('\n')
@@ -1044,16 +1044,14 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
         res_map = get_map_res(
             os.path.join(odir, 'v3 dev_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'),
-            eval_path
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json')
         )
     else:
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
         res_map = get_map_res(
             os.path.join(odir, 'v3 test_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'),
-            eval_path
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json')
         )
     return res_map
 
