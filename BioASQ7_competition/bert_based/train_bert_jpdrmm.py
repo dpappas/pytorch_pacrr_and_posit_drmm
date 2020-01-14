@@ -590,17 +590,14 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
     return sn_d1_l, sn_d2_l
 
-def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
-    '''
-    :param state:       the stete of the pytorch mode
-    :param filename:    the name of the file in which we will store the model.
-    :return:            Nothing. It just saves the model.
-    '''
+def save_checkpoint(epoch, model, bert_model, max_dev_map, optimizer1, optimizer2, filename='checkpoint.pth.tar'):
     state = {
         'epoch': epoch,
-        'state_dict': model.state_dict(),
+        'model_state_dict': model.state_dict(),
+        'bert_state_dict': bert_model.state_dict(),
         'best_valid_score': max_dev_map,
-        'optimizer': optimizer.state_dict(),
+        'optimizer1': optimizer1.state_dict(),
+        'optimizer2': optimizer2.state_dict() if(optimizer2 is not None) else None,
     }
     torch.save(state, filename)
 
@@ -909,11 +906,23 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
 
-def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc, optimizer):
+def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
+    # batch_cost = sum(batch_costs)
     batch_cost.backward()
-    optimizer.step()
-    optimizer.zero_grad()
+    ###################################
+    optimizer_1.step()
+    if(optimizer_2 is not None):
+        optimizer_2.step()
+        scheduler.step()
+    ###################################
+    optimizer_1.zero_grad()
+    if(optimizer_2 is not None):
+        optimizer_2.zero_grad()
+    ###################################
+    # model.zero_grad()
+    # bert_model.zero_grad()
+    ###################################
     batch_aver_cost = batch_cost.cpu().item()
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
     batch_aver_acc = sum(batch_acc) / float(len(batch_acc))
@@ -1090,8 +1099,12 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             batch_costs, batch_acc = [], []
     if (len(batch_costs) > 0):
         batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(batch_costs, epoch_costs,
-                                                                                     batch_acc, epoch_acc)
+        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
+            batch_costs,
+            epoch_costs,
+            batch_acc,
+            epoch_acc
+        )
         elapsed_time = time.time() - start_time
         start_time = time.time()
         print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
@@ -1467,7 +1480,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 #####################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
+odd                 = '/media/dpappas/dpappas_data/models_out/'
 #####################
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
@@ -1483,6 +1496,18 @@ bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=Tr
 bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
 bert_model.to(device)
 #####################
+frozen_or_unfrozen  = 'unfrozen'
+last_layers         = 4
+lr2                 = 2e-5
+if(frozen_or_unfrozen == 'frozen'):
+    optimizer_2 = None
+    scheduler   = None
+else:
+    for param in bert_model.encoder.layer[-last_layers:].parameters():
+        param.requires_grad = True
+    optimizer_2 = optim.Adam(list(bert_model.encoder.layer[-last_layers:].parameters()), lr=lr2)
+    scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
+#####################
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
 embedding_dim       = 768 # 50  # 30  # 200
@@ -1496,43 +1521,41 @@ max_epoch           = 4
 )
 
 hdlr = None
-for run in range(0, 5):
-    #
-    my_seed = run
-    random.seed(my_seed)
-    torch.manual_seed(my_seed)
-    #
-    odir = 'bioasq7_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
-    odir = os.path.join(odd, odir)
-    print(odir)
-    if (not os.path.exists(odir)):
-        os.makedirs(odir)
-    #
-    logger, hdlr = init_the_logger(hdlr)
-    print('random seed: {}'.format(my_seed))
-    logger.info('random seed: {}'.format(my_seed))
-    #
-    avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
-    print(avgdl, mean, deviation)
-    #
-    print('Compiling model...')
-    logger.info('Compiling model...')
-    model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
-    params      = list(model.parameters())
-    params      += list(bert_model.parameters())
-    print_params()
-    optimizer   = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-    #
-    best_dev_map, test_map = None, None
-    for epoch in range(max_epoch):
-        train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
-        epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
-        if (best_dev_map is None or epoch_dev_map >= best_dev_map):
-            best_dev_map = epoch_dev_map
-            save_checkpoint(epoch, model,      best_dev_map, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
-            save_checkpoint(epoch, bert_model, best_dev_map, optimizer, filename=os.path.join(odir, 'best_bert_checkpoint.pth.tar'))
-        print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
-        logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
+run = 0
+my_seed = run
+random.seed(my_seed)
+torch.manual_seed(my_seed)
+#
+odir = 'bioasq7_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
+odir = os.path.join(odd, odir)
+print(odir)
+if (not os.path.exists(odir)):
+    os.makedirs(odir)
+#
+logger, hdlr = init_the_logger(hdlr)
+print('random seed: {}'.format(my_seed))
+logger.info('random seed: {}'.format(my_seed))
+#
+avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
+print(avgdl, mean, deviation)
+#
+print('Compiling model...')
+logger.info('Compiling model...')
+model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
+params      = list(model.parameters())
+params      += list(bert_model.parameters())
+print_params()
+optimizer_1 = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+#
+best_dev_map, test_map = None, None
+for epoch in range(max_epoch):
+    train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+    epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
+    if (best_dev_map is None or epoch_dev_map >= best_dev_map):
+        best_dev_map = epoch_dev_map
+        save_checkpoint(epoch, model, bert_model, best_dev_map, optimizer_1, optimizer_2, filename='best_checkpoint.pth.tar')
+    print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
+    logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
 '''
 ['[CLS]', 'the', 'drugs', 'covered', 'target', 'ga', '##ba', '##a', 'za', '##le', '##pl', '##on', '-', 'cr', 'lore', '##di', '##pl', '##on', 'ev', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tam', '##ine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'ser', '##oton', '##in', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'mel', '##aton', '##ins', '##ero', '##ton', '##in', '##5', '-', 'h', '##t', '##1', '##a', 'pi', '##rom', '##ela', '##tine', 'and', 'mel', '##aton', '##in', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'mel', '##aton', '##in', 'and', 'ta', '##si', '##mel', '##te', '##on', 'for', 'pediatric', 'sleep', 'and', 'circa', '##dian', '[SEP]']
