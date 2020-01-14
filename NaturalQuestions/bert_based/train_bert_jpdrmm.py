@@ -644,9 +644,8 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
+def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks, idf, max_idf):
     good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
-    quest_toks          = bioclean(quest)
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25, idf, max_idf)
     good_doc_af.append(len(good_sents) / 60.)
@@ -722,7 +721,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, idf, max_idf)
+        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, quest_tokens, idf, max_idf)
         doc_emit_, gs_emits_ = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             doc1_oh_sim         = datum['oh_sims'],
@@ -902,7 +901,7 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         quest_tokens, qemb  = embed_the_sent(quest_text)
         q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         ####
-        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf)
+        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens, idf, max_idf)
         good_sents_embeds   = datum['sents_embeds']
         good_sents_escores  = datum['sents_escores']
         good_doc_af         = datum['doc_af']
@@ -910,7 +909,7 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         good_held_out_sents = datum['held_out_sents']
         good_oh_sims        = datum['oh_sims']
         #
-        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf)
+        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], quest_tokens, idf, max_idf)
         bad_sents_embeds    = datum['sents_embeds']
         bad_sents_escores   = datum['sents_escores']
         bad_doc_af          = datum['doc_af']
@@ -937,7 +936,6 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
                 'quest_embeds': qemb,
                 'q_idfs': q_idfs,
             }
-            break
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
@@ -1032,7 +1030,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         all_bioasq_subm_data_known_v1['questions'].append(snips_res_known['v1'])
         all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
-        break
     #
     print_the_results('v1 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1, data_for_revision)
     print_the_results('v2 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
@@ -1369,7 +1366,7 @@ device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ##########################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
+odd                 = '/media/dpappas/dpappas_data/models_out/'
 ##########################################
 dataloc             = '/home/dpappas/NQ_data/'
 bert_all_words_path = '/home/dpappas/NQ_data/bert_all_words.pkl'
