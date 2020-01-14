@@ -672,8 +672,8 @@ def prep_data(quest, the_doc, the_bm25, good_snips, idf, max_idf):
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
         sent_toks               = bioclean(good_text)
-        sent_embeds_1           = embed_the_sent(' '.join(bioclean(good_text)), ' '.join(bioclean(quest)))
-        sent_embeds_2           = embed_the_sent(' '.join(bioclean(quest)), ' '.join(bioclean(good_text)))
+        sent_embeds_1           = embed_the_sent(' '.join(bioclean(good_text)))
+        sent_embeds_2           = embed_the_sent(' '.join(bioclean(quest)))
         # sent_embeds             = torch.cat([sent_embeds_1, sent_embeds_2])
         sent_embeds             = sent_embeds_1 + sent_embeds_2
         good_escores            = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
