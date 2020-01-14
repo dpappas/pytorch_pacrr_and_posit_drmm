@@ -892,27 +892,30 @@ def train_data_step1(train_data):
     print('')
     return ret
 
-def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_tokenizer):
+def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
         ####
         good_snips          = get_snips(quest_id, gid, bioasq6_data)
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        quest_tokens        = bioclean(quest_text)
+        quest_tokens, qemb  = embed_the_sent(quest_text)
+        q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         ####
-        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, idf, max_idf)
+        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens)
         good_sents_embeds   = datum['sents_embeds']
         good_sents_escores  = datum['sents_escores']
         good_doc_af         = datum['doc_af']
         good_sent_tags      = datum['sent_tags']
         good_held_out_sents = datum['held_out_sents']
+        good_oh_sims        = datum['oh_sims']
         #
-        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], idf, max_idf)
+        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], quest_tokens)
         bad_sents_embeds    = datum['sents_embeds']
         bad_sents_escores   = datum['sents_escores']
         bad_doc_af          = datum['doc_af']
         bad_sent_tags       = [0] * len(datum['sent_tags'])
         bad_held_out_sents  = datum['held_out_sents']
+        bad_oh_sims         = datum['oh_sims']
         #
         if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
             yield {
@@ -921,12 +924,17 @@ def train_data_step2(instances, docs, bioasq6_data, idf, max_idf, use_sent_token
                 'good_doc_af': good_doc_af,
                 'good_sent_tags': good_sent_tags,
                 'good_held_out_sents': good_held_out_sents,
+                'good_oh_sims': good_oh_sims,
                 #
                 'bad_sents_embeds': bad_sents_embeds,
                 'bad_sents_escores': bad_sents_escores,
                 'bad_doc_af': bad_doc_af,
                 'bad_sent_tags': bad_sent_tags,
                 'bad_held_out_sents': bad_held_out_sents,
+                'bad_oh_sims': bad_oh_sims,
+                #
+                'quest_embeds': qemb,
+                'q_idfs': q_idfs,
             }
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
