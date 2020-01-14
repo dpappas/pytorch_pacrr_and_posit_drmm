@@ -936,6 +936,7 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
                 'quest_embeds': qemb,
                 'q_idfs': q_idfs,
             }
+            break
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
@@ -1033,6 +1034,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         all_bioasq_subm_data_known_v1['questions'].append(snips_res_known['v1'])
         all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
+        break
     #
     print_the_results('v1 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1,
                       data_for_revision)
