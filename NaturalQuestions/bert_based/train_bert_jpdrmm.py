@@ -1456,7 +1456,7 @@ logger.info('BERT part')
 print_params(bert_model)
 ##########################################
 
-best_dev_map, test_map = None, None
+best_dev_map = None
 for epoch in range(max_epoch):
     train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
     epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
