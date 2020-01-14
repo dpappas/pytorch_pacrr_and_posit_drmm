@@ -169,16 +169,6 @@ def tf(term, document):
     else:
         return tf / len(document)
 
-def compute_the_cost(optimizer, costs, back_prop=True):
-    cost_ = torch.stack(costs)
-    cost_ = cost_.sum() / (1.0 * cost_.size(0))
-    if (back_prop):
-        cost_.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-    the_cost = cost_.cpu().item()
-    return the_cost
-
 def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
     score = 0
     for query_term in query:
@@ -197,21 +187,6 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
         return ((score - mean) / deviation)
     else:
         return score
-
-def compute_avgdl(documents):
-    total_words = 0
-    for document in documents:
-        total_words += len(document)
-    avgdl = total_words / len(documents)
-    return avgdl
-
-def weighted_binary_cross_entropy(output, target, weights=None):
-    if weights is not None:
-        assert len(weights) == 2
-        loss = weights[1] * (target * torch.log(output)) + weights[0] * ((1 - target) * torch.log(1 - output))
-    else:
-        loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
-    return torch.neg(torch.mean(loss))
 
 def RemoveTrainLargeYears(data, doc_text):
     for i in range(len(data['queries'])):
@@ -547,38 +522,6 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
     sorted_snips = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
-
-def similar(upstream_seq, downstream_seq):
-    upstream_seq = upstream_seq.encode('ascii', 'ignore')
-    downstream_seq = downstream_seq.encode('ascii', 'ignore')
-    s = SequenceMatcher(None, upstream_seq, downstream_seq)
-    match = s.find_longest_match(0, len(upstream_seq), 0, len(downstream_seq))
-    upstream_start = match[0]
-    upstream_end = match[0] + match[2]
-    longest_match = upstream_seq[upstream_start:upstream_end]
-    to_match = upstream_seq if (len(downstream_seq) > len(upstream_seq)) else downstream_seq
-    r1 = SequenceMatcher(None, to_match, longest_match).ratio()
-    return r1
-
-def get_pseudo_retrieved(dato, bioasq6_data):
-    some_ids = [item['document'].split('/')[-1].strip() for item in bioasq6_data[dato['query_id']]['snippets']]
-    pseudo_retrieved = [
-        {
-            'bm25_score': 7.76,
-            'doc_id': id,
-            'is_relevant': True,
-            'norm_bm25_score': 3.85
-        }
-        for id in set(some_ids)
-    ]
-    return pseudo_retrieved
-
-def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
-    wright = torch.cat([gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 1)])
-    wrong = [gs_emits_[i] for i in range(len(good_sent_tags)) if (good_sent_tags[i] == 0)]
-    wrong = torch.cat(wrong + [bs_emits_.squeeze(-1)])
-    losses = [model.my_hinge_loss(w.unsqueeze(0).expand_as(wrong), wrong) for w in wright]
-    return sum(losses) / float(len(losses))
 
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     bs_emits_ = bs_emits_.squeeze(-1)
