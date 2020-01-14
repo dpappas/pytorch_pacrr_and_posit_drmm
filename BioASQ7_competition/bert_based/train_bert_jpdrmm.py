@@ -1498,19 +1498,9 @@ bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
+for param in bert_model.parameters():
+    param.requires_grad = False
 bert_model.to(device)
-#####################
-frozen_or_unfrozen  = 'unfrozen'
-last_layers         = 4
-lr2                 = 2e-5
-if(frozen_or_unfrozen == 'frozen'):
-    optimizer_2 = None
-    scheduler   = None
-else:
-    for param in bert_model.bert.encoder.layer[-last_layers:].parameters():
-        param.requires_grad = True
-    optimizer_2 = optim.Adam(list(bert_model.bert.encoder.layer[-last_layers:].parameters()), lr=lr2)
-    scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 #####################
 k_for_maxpool       = 5
 k_sent_maxpool      = 5
@@ -1518,6 +1508,10 @@ embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
 b_size              = 32
 max_epoch           = 4
+#####################
+frozen_or_unfrozen  = 'unfrozen'
+last_layers         = 4
+lr2                 = 2e-5
 #####################
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(
@@ -1545,11 +1539,17 @@ print(avgdl, mean, deviation)
 #
 print('Compiling model...')
 logger.info('Compiling model...')
-model = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
-params      = list(model.parameters())
-params      += list(bert_model.parameters())
+model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
+optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+if(frozen_or_unfrozen == 'frozen'):
+    optimizer_2 = None
+    scheduler   = None
+else:
+    for param in bert_model.bert.encoder.layer[-last_layers:].parameters():
+        param.requires_grad = True
+    optimizer_2 = optim.Adam(list(bert_model.bert.encoder.layer[-last_layers:].parameters()), lr=lr2)
+    scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 print_params()
-optimizer_1 = optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #
 best_dev_map, test_map = None, None
 for epoch in range(max_epoch):
