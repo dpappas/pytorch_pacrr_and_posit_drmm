@@ -717,7 +717,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
     quest_tokens, qemb  = embed_the_sent(quest_text)
     ####
-    q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+    q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     gold_snips          = get_gold_snips(dato['query_id'])
     #
     doc_res, extracted_snippets         = {}, []
@@ -901,7 +901,7 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
         quest_tokens, qemb  = embed_the_sent(quest_text)
-        q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+        q_idfs              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         ####
         datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens)
         good_sents_embeds   = datum['sents_embeds']
@@ -938,7 +938,6 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
                 'quest_embeds': qemb,
                 'q_idfs': q_idfs,
             }
-            break
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     model.train()
@@ -1033,7 +1032,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         all_bioasq_subm_data_known_v1['questions'].append(snips_res_known['v1'])
         all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
-        break
     #
     print_the_results('v1 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1, data_for_revision)
     print_the_results('v2 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2, data_for_revision)
