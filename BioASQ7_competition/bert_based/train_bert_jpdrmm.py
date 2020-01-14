@@ -929,7 +929,7 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     epoch_aver_acc = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
-def print_params():
+def print_params(model):
     '''
     It just prints the number of parameters in the model.
     :param model:   The pytorch model
@@ -941,15 +941,15 @@ def print_params():
     logger.info(40 * '=')
     logger.info(model)
     logger.info(40 * '=')
-    trainable = 0
-    untrainable = 0
-    for parameter in list(model.parameters()) + list(bert_model.parameters()):
+    trainable       = 0
+    untrainable     = 0
+    for parameter in model.parameters():
         # print(parameter.size())
         v = 1
         for s in parameter.size():
             v *= s
-        if (parameter.requires_grad):
-            trainable += v
+        if(parameter.requires_grad):
+            trainable   += v
         else:
             untrainable += v
     total_params = trainable + untrainable
@@ -1539,8 +1539,10 @@ print(avgdl, mean, deviation)
 #
 print('Compiling model...')
 logger.info('Compiling model...')
+#
 model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
 optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+#
 if(frozen_or_unfrozen == 'frozen'):
     optimizer_2 = None
     scheduler   = None
@@ -1549,7 +1551,9 @@ else:
         param.requires_grad = True
     optimizer_2 = optim.Adam(list(bert_model.bert.encoder.layer[-last_layers:].parameters()), lr=lr2)
     scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
-print_params()
+#
+print_params(model)
+print_params(bert_model)
 #
 best_dev_map, test_map = None, None
 for epoch in range(max_epoch):
