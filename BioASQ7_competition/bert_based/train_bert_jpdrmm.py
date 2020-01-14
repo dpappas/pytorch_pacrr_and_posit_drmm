@@ -1503,9 +1503,9 @@ if(frozen_or_unfrozen == 'frozen'):
     optimizer_2 = None
     scheduler   = None
 else:
-    for param in bert_model.encoder.layer[-last_layers:].parameters():
+    for param in bert_model.bert.encoder.layer[-last_layers:].parameters():
         param.requires_grad = True
-    optimizer_2 = optim.Adam(list(bert_model.encoder.layer[-last_layers:].parameters()), lr=lr2)
+    optimizer_2 = optim.Adam(list(bert_model.bert.encoder.layer[-last_layers:].parameters()), lr=lr2)
     scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 #####################
 k_for_maxpool       = 5
