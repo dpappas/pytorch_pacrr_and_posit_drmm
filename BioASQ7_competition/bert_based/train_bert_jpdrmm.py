@@ -1537,6 +1537,7 @@ logger.info('Compiling model...')
 #
 #####################
 model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
+optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2).to(device)
@@ -1551,7 +1552,11 @@ else:
     optimizer_2 = optim.Adam(list(bert_model.bert.encoder.layer[-last_layers:].parameters()), lr=lr2)
     scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 #####################
+print('JPDRMM part')
+logger.info('JPDRMM part')
 print_params(model)
+print('BERT part')
+logger.info('BERT part')
 print_params(bert_model)
 #####################
 best_dev_map, test_map = None, None
