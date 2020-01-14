@@ -131,7 +131,7 @@ sysB    = json.load(open(sysBf))
 
 sysA_metric = scoreA
 sysB_metric = scoreB
-orig_diff   =  abs(sysA_metric - sysB_metric)
+orig_diff   = abs(sysA_metric - sysB_metric)
 
 N           = 10000
 num_invalid = 0

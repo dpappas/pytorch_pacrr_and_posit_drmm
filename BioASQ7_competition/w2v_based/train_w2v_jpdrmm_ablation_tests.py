@@ -1552,6 +1552,27 @@ CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 1 1 1 0 &
 CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 1 1 1 0
 
 
+java -Xmx10G -cp \
+/home/dpappas/bioasq_all/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/media/dpappas/dpappas_data/models_out/ablations/test_ablation_1111111_batch1/v3 test_emit_bioasq.json"
+
+java -Xmx10G -cp \
+/home/dpappas/bioasq_all/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/bioasq_all/bioasq7/submit_files/test_batch_1/batch1-sys1.json"
+
+java -Xmx10G -cp \
+/home/dpappas/bioasq_all/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar \
+evaluation.EvaluatorTask1b \
+-phaseA -e 5  \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json"
+
 
 # 127 models in total
 
