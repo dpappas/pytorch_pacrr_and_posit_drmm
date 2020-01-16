@@ -1071,6 +1071,9 @@ CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 100
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 100
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 100
 
+
+grep -E 'INFO v3 dev MAP|best_dev_map' /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_0.001_run_0/model.log
+
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
 "/media/dpappas/dpappas_data/models_out/weight_tuning/test_weight_0.001_batch1/v3 test_emit_bioasq.json" | \
