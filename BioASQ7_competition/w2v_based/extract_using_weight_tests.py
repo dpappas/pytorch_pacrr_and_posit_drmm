@@ -653,6 +653,9 @@ def load_model_from_checkpoint(resume_from):
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+    else:
+        print("=> DID NOT FIND PATH '{}'".format(resume_from))
+        exit()
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -982,7 +985,7 @@ use_cuda                    = torch.cuda.is_available()
 eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 ###########################################################
-weight                      = sys.argv[2]
+weight                      = float(sys.argv[2])
 ###########################################################
 resume_from                 = '/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_{}_run_0/best_dev_checkpoint.pth.tar'.format(weight)
 ###########################################################
@@ -1047,45 +1050,25 @@ print(test_map)
 
 
 '''
-python3.6 extract_using_weight.py 1 0.001
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 0.001
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 0.001
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 0.001
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 0.001
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 0.01 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 0.01 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 0.01 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 0.01 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 0.01
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 0.1 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 0.1 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 0.1 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 0.1 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 0.1
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 0.2 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 0.2 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 0.2 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 0.2 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 0.2
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 1 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 1 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 1 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 1 &
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 1
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 1
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 1
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 1
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 1
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 5 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 5 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 5 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 5 &
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 5
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 5
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 5
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 5
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 5
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 10 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 10 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 10 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 10 &
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 10
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 10
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 10
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 10
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 10
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 100 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 100 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 100 &
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 100 &
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 100
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 100
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 100
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 100
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 100
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
