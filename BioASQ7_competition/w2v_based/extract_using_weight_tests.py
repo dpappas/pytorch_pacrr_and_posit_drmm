@@ -610,7 +610,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
 
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision):
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
-    pprint(bioasq_snip_res)
+    # pprint(bioasq_snip_res)
     print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
     print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
@@ -1016,7 +1016,7 @@ if(use_cuda):
 ###########################################################
 load_model_from_checkpoint(resume_from)
 params      = model.parameters()
-print_params(model)
+# print_params(model)
 ###########################################################
 print('loading pickle data')
 with open(f_in1, 'r') as f:
