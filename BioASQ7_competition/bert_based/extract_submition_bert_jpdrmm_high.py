@@ -1352,8 +1352,8 @@ evaluation.EvaluatorTask1b \
 -phaseA \
 -e \
 5 \
-"/home/dpappas/test_bert_jpdrmm/v3 test_gold_bioasq.json" \
-"/home/dpappas/test_bert_jpdrmm/v3 test_emit_bioasq.json"
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/test_bert_jpdrmm_high_batch1/v3 test_emit_bioasq.json"
 
 python \
 /home/dpappas/bioasq_all/eval/run_eval.py \
