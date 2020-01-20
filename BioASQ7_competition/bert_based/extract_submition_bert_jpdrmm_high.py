@@ -1373,7 +1373,11 @@ python3.6 tt.py -30. -30. False
 grep -E '\"body\"|\"text\"' "test_bert_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
 cp "/home/dpappas/test_bert_jpdrmm_high_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bert_jpdrmm.json" 
 
-CUDA_VISIBLE_DEVICES=1 python3.6 tt.py  
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 1
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 2
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 3
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 4
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 5
 
 '''
 
