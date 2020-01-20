@@ -1267,19 +1267,17 @@ def load_model_from_checkpoint(resume_from, resume_from_bert):
         bert_model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from_bert, checkpoint['epoch']))
 
-# min_doc_score               = float(sys.argv[1])
-# min_sent_score              = float(sys.argv[2])
-# emit_only_abstract_sents    = bool(int(sys.argv[3]))
 min_doc_score               = -1000.
 min_sent_score              = -1000.
 emit_only_abstract_sents    = False
 ###########################################################
 use_cuda = torch.cuda.is_available()
 ###########################################################
-f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseA-testset5'
-f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'
-f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'
-odir                = './test_bert_jpdrmm_high_batch5/'
+batch_no            = sys.argv[1]
+f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch_no, batch_no)
+f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch_no)
+f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch_no)
+odir                = './test_bert_jpdrmm_high_batch{}/'.format(batch_no)
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1313,8 +1311,10 @@ bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=Tr
 bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
 model               = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 ###########################################################
-resume_from         = '/home/dpappas/bioasq7_bert_jpdrmm_2L_0p01_run_4/best_checkpoint.pth.tar'
-resume_from_bert    = '/home/dpappas/bioasq7_bert_jpdrmm_2L_0p01_run_4/best_bert_checkpoint.pth.tar'
+# resume_from         = '/home/dpappas/bioasq7_bert_jpdrmm_2L_0p01_run_4/best_checkpoint.pth.tar'
+# resume_from_bert    = '/home/dpappas/bioasq7_bert_jpdrmm_2L_0p01_run_4/best_bert_checkpoint.pth.tar'
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_run_0/best_checkpoint.pth.tar'
+resume_from_bert    = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_run_0/best_bert_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from, resume_from_bert)
 print_params(model, bert_model)
 bert_model.to(device)
