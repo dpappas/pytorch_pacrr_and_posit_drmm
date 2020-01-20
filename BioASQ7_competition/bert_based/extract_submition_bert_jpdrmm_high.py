@@ -1344,16 +1344,10 @@ print(test_map)
 
 
 '''
-java \
--Xmx10G \
--cp \
-'/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' \
-evaluation.EvaluatorTask1b \
--phaseA \
--e \
-5 \
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/home/dpappas/test_bert_jpdrmm_high_batch1/v3 test_emit_bioasq.json"
+"/media/dpappas/dpappas_data/models_out/ablations/test_ablation_1111111_batch1/v3 test_emit_bioasq.json"
 
 python \
 /home/dpappas/bioasq_all/eval/run_eval.py \

@@ -1464,5 +1464,11 @@ for epoch in range(max_epoch):
 
 # CUDA_VISIBLE_DEVICES=0 python3.6 train_nq_bert_jpdrmm.py
 
+'''
 
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/media/dpappas/dpappas_data/models_out/NQ_bert_jpdrmm_2L_0p01_run_0/v3 dev_gold_bioasq.json" \
+"/media/dpappas/dpappas_data/models_out/NQ_bert_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq.json"
+
+'''
 
