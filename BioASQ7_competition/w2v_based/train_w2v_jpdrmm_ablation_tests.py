@@ -1449,7 +1449,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #############################################
-    odir    = 'ablation_{}{}{}{}{}{}{}_bioasq_jpdrmm_2L_0p01_run_{}/'.format(
+    odir    = 'ablation_{}{}{}{}{}{}{}_{}_bioasq_jpdrmm_2L_0p01_run_{}/'.format(
         int(use_sent_extra),
         int(use_doc_extra),
         int(use_OH_sim),
@@ -1457,6 +1457,7 @@ for run in range(run_from, run_to):
         int(use_context_sim),
         int(use_sent_loss),
         int(use_last_layer),
+        str(weight).replace('.', 'p'),
         run
     )
     odir    = os.path.join(odd, odir)
