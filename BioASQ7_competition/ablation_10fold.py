@@ -1414,10 +1414,6 @@ idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 ##########################################
 (train_data, train_docs, idf, max_idf, wv, bioasq7_data) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
-dev_docs            = train_docs
-fold_size           = int(len(train_data['queries'])/10)
-dev_data            = {'queries':[]}
-traind_data         = {'queries':[]}
 ##########################################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 print(avgdl, mean, deviation)
@@ -1431,6 +1427,11 @@ use_sent_loss   = bool(int(sys.argv[6]))    # True
 use_last_layer  = bool(int(sys.argv[7]))    # True
 weight          = float(sys.argv[8])
 fold            = int(sys.argv[9])          # 0 to 9
+##########################################
+dev_docs            = train_docs
+fold_size           = int(len(train_data['queries'])/10)
+dev_data            = {'queries': train_data['queries'][fold*fold_size: (fold+1)*fold_size]}
+train_data         = {'queries': train_data['queries'][:fold*fold_size] + train_data['queries'][(fold+1)*fold_size:]}
 ##########################################
 
 k_for_maxpool       = 5
