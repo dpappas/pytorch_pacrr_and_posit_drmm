@@ -1431,7 +1431,10 @@ fold            = int(sys.argv[9])          # 0 to 9
 dev_docs            = train_docs
 fold_size           = int(len(train_data['queries'])/10)
 dev_data            = {'queries': train_data['queries'][fold*fold_size: (fold+1)*fold_size]}
-train_data         = {'queries': train_data['queries'][:fold*fold_size] + train_data['queries'][(fold+1)*fold_size:]}
+train_data          = {'queries': train_data['queries'][:fold*fold_size] + train_data['queries'][(fold+1)*fold_size:]}
+##########################################
+print(len(dev_data['queries']))
+print(len(train_data['queries']))
 ##########################################
 
 k_for_maxpool       = 5
