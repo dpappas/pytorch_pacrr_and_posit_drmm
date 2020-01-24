@@ -775,8 +775,11 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         if(two_losses):
             sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss                       = sn_d1_l + sn_d2_l
-            l                               = 0.5
-            cost_                           = ((1 - l) * snip_loss) + (l * cost_)
+            cost_                           = weight * snip_loss + cost_
+            # sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            # snip_loss                       = sn_d1_l + sn_d2_l
+            # l                               = 0.5
+            # cost_                           = ((1 - l) * snip_loss) + (l * cost_)
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1427,6 +1430,8 @@ use_W2V_sim     = bool(int(sys.argv[4])) # True
 use_context_sim = bool(int(sys.argv[5])) # True
 use_sent_loss   = bool(int(sys.argv[6])) # True
 use_last_layer  = bool(int(sys.argv[7])) # True
+weight          = float(sys.argv[8])
+fold            = int(sys.argv[9])
 ##########################################
 
 k_for_maxpool       = 5
@@ -1445,7 +1450,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #############################################
-    odir    = 'ablation_{}{}{}{}{}{}{}_bioasq_jpdrmm_2L_0p01_run_{}/'.format(
+    odir    = 'ablation_{}{}{}{}{}{}{}_{}_{}_bioasq_jpdrmm_2L_0p01_run_{}/'.format(
         int(use_sent_extra),
         int(use_doc_extra),
         int(use_OH_sim),
@@ -1453,6 +1458,8 @@ for run in range(run_from, run_to):
         int(use_context_sim),
         int(use_sent_loss),
         int(use_last_layer),
+        str(weight).replace('.', 'p'),
+        fold,
         run
     )
     odir    = os.path.join(odd, odir)
