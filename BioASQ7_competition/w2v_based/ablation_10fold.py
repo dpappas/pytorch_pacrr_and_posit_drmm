@@ -1508,58 +1508,17 @@ for run in range(run_from, run_to):
 '''
 ###########################################################
 # exclude one at a time
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 1 1 1 1
-CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 1 1 0 
-CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 1 0 1
-CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 1 0 1 1
-CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 1 1 1 0 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 0 1 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 1 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 1 1 1 1
-###########################################################
-# no extra at all
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 1 1 0
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 0 1 1 1 0 1
-CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 0 0 1 1 0 1 1
-CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 0 0 1 0 1 1 1
-CUDA_VISIBLE_DEVICES=0 python3.6 ablation.py 0 0 0 1 1 1 1
-###########################################################
-# no sent extra
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 0 1 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 0 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 1 0 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 1 1 0 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 1 1 1 0
-###########################################################
-# no doc extra
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 0 1 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 0 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 1 0 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 1 1 0 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 1 1 1 0
-###########################################################
-# no final layer
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 1 1 0 0
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 1 0 1 0
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 0 1 1 0
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 0 1 1 1 0
-###########################################################
-# no OH sim
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 0 0 1 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 0 1 0 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 0 1 1 0 1
-###########################################################
-# no context sim
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 0 0 1 1
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 1 0 0 1
-###########################################################
 
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 1 0 1 0 &
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 1 0 1 1 0 &
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 1 0 1 1 1 0 &
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 1 0 1 1 1 1 0 &
-CUDA_VISIBLE_DEVICES=1 python3.6 ablation.py 0 1 1 1 1 1 0
+use_sent_extra  = bool(int(sys.argv[1]))    # True
+use_doc_extra   = bool(int(sys.argv[2]))    # True
+use_OH_sim      = bool(int(sys.argv[3]))    # True
+use_W2V_sim     = bool(int(sys.argv[4]))    # True
+use_context_sim = bool(int(sys.argv[5]))    # True
+use_sent_loss   = bool(int(sys.argv[6]))    # True
+use_last_layer  = bool(int(sys.argv[7]))    # True
+weight          = float(sys.argv[8])
+fold            = int(sys.argv[9])          # 0 to 9
+
 
 
 java -Xmx10G -cp \
