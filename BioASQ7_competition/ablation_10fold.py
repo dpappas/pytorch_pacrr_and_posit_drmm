@@ -1036,10 +1036,6 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
         bioasq7_data = json.load(f)
         bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
     #
-    with open(dataloc + 'bioasq7_bm25_top100.dev.pkl', 'rb') as f:
-        dev_data = pickle.load(f)
-    with open(dataloc + 'bioasq7_bm25_docset_top100.dev.pkl', 'rb') as f:
-        dev_docs = pickle.load(f)
     with open(dataloc + 'bioasq7_bm25_top100.train.pkl', 'rb') as f:
         train_data = pickle.load(f)
     with open(dataloc + 'bioasq7_bm25_docset_top100.train.pkl', 'rb') as f:
@@ -1048,14 +1044,13 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     #
     words               = {}
     GetWords(train_data, train_docs, words)
-    GetWords(dev_data,   dev_docs,   words)
     #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
     print('loading w2v')
     wv              = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
     wv              = dict([(word, wv[word]) for word in wv.vocab.keys() if(word in words)])
-    return dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data
+    return train_data, train_docs, idf, max_idf, wv, bioasq7_data
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
@@ -1418,20 +1413,24 @@ w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 ##########################################
-(dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
+(train_data, train_docs, idf, max_idf, wv, bioasq7_data) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
+dev_docs            = train_docs
+fold_size           = int(len(train_data['queries'])/10)
+dev_data            = {'queries':[]}
+traind_data         = {'queries':[]}
 ##########################################
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.1907, mean=0.6275, deviation=1.2210)
 print(avgdl, mean, deviation)
 ##########################################
-use_sent_extra  = bool(int(sys.argv[1])) # True
-use_doc_extra   = bool(int(sys.argv[2])) # True
-use_OH_sim      = bool(int(sys.argv[3])) # True
-use_W2V_sim     = bool(int(sys.argv[4])) # True
-use_context_sim = bool(int(sys.argv[5])) # True
-use_sent_loss   = bool(int(sys.argv[6])) # True
-use_last_layer  = bool(int(sys.argv[7])) # True
+use_sent_extra  = bool(int(sys.argv[1]))    # True
+use_doc_extra   = bool(int(sys.argv[2]))    # True
+use_OH_sim      = bool(int(sys.argv[3]))    # True
+use_W2V_sim     = bool(int(sys.argv[4]))    # True
+use_context_sim = bool(int(sys.argv[5]))    # True
+use_sent_loss   = bool(int(sys.argv[6]))    # True
+use_last_layer  = bool(int(sys.argv[7]))    # True
 weight          = float(sys.argv[8])
-fold            = int(sys.argv[9])
+fold            = int(sys.argv[9])          # 0 to 9
 ##########################################
 
 k_for_maxpool       = 5
