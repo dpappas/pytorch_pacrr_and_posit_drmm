@@ -14,7 +14,7 @@ import  torch.autograd              as autograd
 from    tqdm                        import tqdm
 from    pprint                      import pprint
 from    gensim.models.keyedvectors  import KeyedVectors
-from    nltk.tokenize               import sent_tokenize
+# from    nltk.tokenize               import sent_tokenize
 from elasticsearch                  import Elasticsearch
 from sklearn.preprocessing          import StandardScaler, MinMaxScaler
 
