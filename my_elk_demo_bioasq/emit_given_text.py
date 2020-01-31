@@ -15,6 +15,7 @@ from    tqdm                        import tqdm
 from    pprint                      import pprint
 from    gensim.models.keyedvectors  import KeyedVectors
 # from    nltk.tokenize               import sent_tokenize
+from    my_sentence_splitting import get_sents as sent_tokenize
 from elasticsearch                  import Elasticsearch
 from sklearn.preprocessing          import StandardScaler, MinMaxScaler
 
