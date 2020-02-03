@@ -65,3 +65,30 @@ with open(os.path.join('/home/dpappas/bioasq_all/bioasq7/data/BioASQ-task7bPhase
     f.close()
 
 ##################################################################################################
+
+
+
+
+import pickle, json, os
+all_bioasq7_bm25_top100			 = {'queries':[]}
+all_bioasq7_bm25_docset_top100 	 = {}
+all_questions 					 = {'questions':[]}
+for i in range(1,6):
+    # --------------------------------------------------------------------------------------------
+    bioasq7_bm25_top100 		 = pickle.load(open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(i),'rb'))
+    bioasq7_bm25_docset_top100  = pickle.load(open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(i),'rb'))
+    dd                          = json.load(open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(i,i),'r'))
+    # --------------------------------------------------------------------------------------------
+    all_bioasq7_bm25_top100['queries'].extend(bioasq7_bm25_top100['queries'])
+    all_questions['questions'].extend(dd['questions'])
+    all_bioasq7_bm25_docset_top100.update(bioasq7_bm25_docset_top100)
+    # --------------------------------------------------------------------------------------------
+
+pickle.dump(all_bioasq7_bm25_top100, open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl','wb'))
+pickle.dump(all_bioasq7_bm25_docset_top100, open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl','wb'))
+
+with open(os.path.join('/home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345'), 'w') as f:
+    f.write(json.dumps(all_questions, indent=4, sort_keys=True))
+    f.close()
+
+
