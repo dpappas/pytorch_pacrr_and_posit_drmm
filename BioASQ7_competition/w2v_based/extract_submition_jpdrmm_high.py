@@ -1212,7 +1212,9 @@ cp "/home/dpappas/test_jpdrmm_high_batch3/v3 test_emit_bioasq.json" "/home/dpapp
 '''
 
 '''
-CUDA_VISIBLE_DEVICES=0 python3.6 eval_test.py 12345 /media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0 /media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/test/
+CUDA_VISIBLE_DEVICES=0 python3.6 eval_test.py 12345 \
+/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_1_bioasq_jpdrmm_2L_0p01_run_0 \
+/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_1_bioasq_jpdrmm_2L_0p01_run_0/test/
 
 '''
 
