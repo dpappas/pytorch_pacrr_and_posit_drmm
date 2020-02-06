@@ -1405,13 +1405,21 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 use_cuda = torch.cuda.is_available()
 ##########################################
-eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
+# eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
+# retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+# odd                 = '/home/dpappas/'
 ##########################################
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
-dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
+# w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
+# dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
+##########################################
+eval_path           = '/home/DISK_1/dpappas/bioasq_all/eval/run_eval.py'
+retrieval_jar_path  = '/home/DISK_1/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
+odd                 = '/home/DISK_1/dpappas/'
+##########################################
+w2v_bin_path        = '/home/DISK_1/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path     = '/home/DISK_1/dpappas/bioasq_all/idf.pkl'
+dataloc             = '/home/DISK_1/dpappas/bioasq_all/bioasq7_data/'
 ##########################################
 (train_data, train_docs, idf, max_idf, wv, bioasq7_data) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
 ##########################################
@@ -1445,7 +1453,7 @@ max_epoch           = 30
 early_stop          = 4
 
 run_from    = 0
-run_to      = 5
+run_to      = 1
 hdlr        = None
 for run in range(run_from, run_to):
     #############################################
