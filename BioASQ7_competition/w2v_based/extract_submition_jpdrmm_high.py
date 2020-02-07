@@ -787,8 +787,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
         self.k_sent_maxpool                         = k_sent_maxpool
-        self.doc_add_feats                          = 11
-        self.sent_add_feats                         = 10
+        if(use_sent_extra):
+            self.sent_add_feats = 10
+        else:
+            self.sent_add_feats = 0
+        if(use_doc_extra):
+            self.doc_add_feats  = 11
+        else:
+            self.doc_add_feats  = 0
         #
         self.embedding_dim                          = embedding_dim
         self.sentence_out_method                    = sentence_out_method
@@ -825,7 +831,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         if(use_cuda):
             self.q_weights_mlp  = self.q_weights_mlp.cuda()
     def init_mlps_for_pooled_attention(self):
-        self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True)
+        how_many = 0
+        if(use_W2V_sim):
+            how_many += 1
+        if(use_OH_sim):
+            how_many += 1
+        if(use_context_sim):
+            how_many += 1
+        self.linear_per_q1      = nn.Linear(how_many * 3, 8, bias=True)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1)
         self.linear_per_q2      = nn.Linear(8, 1, bias=True)
         if(use_cuda):
@@ -932,8 +945,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             sensitive_pooled    = self.pooling_method(sim_sens)
             oh_pooled           = self.pooling_method(sim_oh)
             #
-            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            the_inputs          = []
+            if(use_OH_sim):
+                the_inputs.append(oh_pooled)
+            if(use_W2V_sim):
+                the_inputs.append(insensitive_pooled)
+            if(use_context_sim):
+                the_inputs.append(sensitive_pooled)
+            sent_emit           = self.get_output(the_inputs, q_weights)
+            if(use_sent_extra):
+                sent_add_feats = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            else:
+                sent_add_feats = torch.cat([sent_emit.unsqueeze(-1)])
             res.append(sent_add_feats)
         res = torch.stack(res)
         if(self.sentence_out_method == 'MLP'):
@@ -1035,16 +1058,22 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        if(use_doc_extra):
+            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
+        else:
+            good_out_pp     = torch.cat([good_out], -1)
         #
         final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
+        if(use_last_layer):
+            gs_emits            = gs_emits.unsqueeze(-1)
+            gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+            gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
+            gs_emits            = torch.sigmoid(gs_emits)
+        else:
+            gs_emits            = torch.sigmoid(gs_emits)
         #
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
@@ -1068,27 +1097,34 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
+        if(use_doc_extra):
+            good_out_pp     = torch.cat([good_out, doc_gaf], -1)
+            bad_out_pp      = torch.cat([bad_out, doc_baf], -1)
+        else:
+            good_out_pp     = torch.cat([good_out], -1)
+            bad_out_pp      = torch.cat([bad_out], -1)
         #
         final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
-        #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
-        #
+        ###################
         final_bad_output    = self.final_layer_1(bad_out_pp)
         final_bad_output    = self.final_activ_1(final_bad_output)
         final_bad_output    = self.final_layer_2(final_bad_output)
-        #
-        bs_emits            = bs_emits.unsqueeze(-1)
-        bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
-        bs_emits            = torch.sigmoid(bs_emits)
-        #
+        ###################
+        if(use_last_layer):
+            gs_emits        = gs_emits.unsqueeze(-1)
+            gs_emits        = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+            gs_emits        = self.oo_layer(gs_emits).squeeze(-1)
+            gs_emits        = torch.sigmoid(gs_emits)
+            #####################
+            bs_emits            = bs_emits.unsqueeze(-1)
+            bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+            bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
+            bs_emits            = torch.sigmoid(bs_emits)
+        else:
+            gs_emits            = torch.sigmoid(gs_emits)
+            bs_emits            = torch.sigmoid(bs_emits)
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
@@ -1118,6 +1154,15 @@ f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_
 f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
 resume_from                 = sys.argv[2]
 odir                        = sys.argv[3]
+ddd                         = resume_from.split(os.path.sep)[-2].split('_')[1].strip()
+print(ddd)
+use_sent_extra              = ddd[0] == '1'
+use_doc_extra               = ddd[1] == '1'
+use_OH_sim                  = ddd[2] == '1'
+use_W2V_sim                 = ddd[3] == '1'
+use_context_sim             = ddd[4] == '1'
+use_sent_loss               = ddd[5] == '1'
+use_last_layer              = ddd[6] == '1'
 ###########################################################
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
