@@ -3,6 +3,7 @@ from flask import  Flask
 from flask import request
 from flask import redirect, url_for, jsonify
 import traceback
+from pprint import pprint
 
 from    gensim.models.keyedvectors  import KeyedVectors
 
@@ -20,8 +21,9 @@ def get_data_using_slug():
         app.logger.debug("received...")
         # token = request.args.get('token')
         data    = request.get_json()
-        token   = token['token']
-        ret     = {'emb': wv[token]}
+        pprint(data)
+        token   = data['token']
+        ret     = {'emb': wv[token].tolist()}
         app.logger.debug(ret)
         return jsonify(ret)
     except Exception as e:
@@ -37,13 +39,13 @@ if __name__ == '__main__':
 
 '''
 
-from urllib import request, parse
-data = parse.urlencode(data).encode()
-pprint(data)
-print('#####################################################')
-req =  request.Request('http://localhost:9250/get_embeds', data=data) # this will make the method "POST"
-resp = request.urlopen(req)
+import json, urllib 
+import numpy as np
 data = {'token' : 'the'}
-pprint(resp)
+params          = json.dumps(data).encode('utf8')
+req             = urllib.request.Request('http://localhost:9250/get_embeds', data=params, headers={'content-type': 'application/json'})
+response        = urllib.request.urlopen(req)
+resp            = response.read().decode('utf8') 
+pprint(np.array(json.loads(resp)['emb']))
 
 '''
