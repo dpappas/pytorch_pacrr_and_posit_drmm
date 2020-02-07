@@ -19,7 +19,6 @@ app.config['JSON_SORT_KEYS'] = False
 def get_data_using_slug():
     try:
         app.logger.debug("received...")
-        # token = request.args.get('token')
         data    = request.get_json()
         pprint(data)
         token   = data['token']
@@ -41,7 +40,7 @@ if __name__ == '__main__':
 
 import json, urllib 
 import numpy as np
-data = {'token' : 'the'}
+data            = {'token' : 'the'}
 params          = json.dumps(data).encode('utf8')
 req             = urllib.request.Request('http://localhost:9250/get_embeds', data=params, headers={'content-type': 'application/json'})
 response        = urllib.request.urlopen(req)
