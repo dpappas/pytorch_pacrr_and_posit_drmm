@@ -1189,6 +1189,8 @@ if(use_cuda):
 ###########################################################
 load_model_from_checkpoint(resume_from)
 params      = model.parameters()
+for param in params:
+    param.requires_grad = False
 print_params(model)
 ###########################################################
 print('loading pickle data')
