@@ -1111,7 +1111,6 @@ use_cuda                    = torch.cuda.is_available()
 ###########################################################
 eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                         = '/home/dpappas/'
 ###########################################################
 b                           = sys.argv[1]
 f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(b, b)
