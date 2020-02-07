@@ -1223,7 +1223,8 @@ CUDA_VISIBLE_DEVICES=0 python3.6 eval_test.py 12345 \
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345" \
 "/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/test/v3 test_emit_bioasq.json" | \
-grep -E '^MAP snippets:|^MAP documents:' 
+grep -E '^MAP snippets:|^MAP documents:' \
+> "/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/test/results.txt"
 
 
 '''
