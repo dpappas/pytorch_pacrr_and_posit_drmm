@@ -1099,6 +1099,9 @@ def load_model_from_checkpoint(resume_from):
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
         model.load_state_dict(checkpoint['state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+    else:
+        print('ERROR! 404!!! EXITING!')
+        exit()
 
 min_doc_score               = -1000.
 min_sent_score              = -1000.
@@ -1212,9 +1215,16 @@ cp "/home/dpappas/test_jpdrmm_high_batch3/v3 test_emit_bioasq.json" "/home/dpapp
 '''
 
 '''
+
 CUDA_VISIBLE_DEVICES=0 python3.6 eval_test.py 12345 \
 /media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_1_bioasq_jpdrmm_2L_0p01_run_0 \
 /media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_1_bioasq_jpdrmm_2L_0p01_run_0/test/
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345" \
+"/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/test/v3 test_emit_bioasq.json" | \
+grep -E '^MAP snippets:|^MAP documents:' 
+
 
 '''
 
