@@ -18,8 +18,10 @@ app.config['JSON_SORT_KEYS'] = False
 def get_data_using_slug():
     try:
         app.logger.debug("received...")
-        token = request.args.get('token')
-        ret = {'emb': wv[token]}
+        # token = request.args.get('token')
+        data    = request.get_json()
+        token   = token['token']
+        ret     = {'emb': wv[token]}
         app.logger.debug(ret)
         return jsonify(ret)
     except Exception as e:
@@ -30,6 +32,18 @@ def get_data_using_slug():
         return jsonify(ret)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=9250, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=9250, debug=False, threaded=True)
     # app.run(host='localhost', port=9250, debug=True, threaded=True)
 
+'''
+
+from urllib import request, parse
+data = parse.urlencode(data).encode()
+pprint(data)
+print('#####################################################')
+req =  request.Request('http://localhost:9250/get_embeds', data=data) # this will make the method "POST"
+resp = request.urlopen(req)
+data = {'token' : 'the'}
+pprint(resp)
+
+'''
