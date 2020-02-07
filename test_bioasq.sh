@@ -30,6 +30,6 @@ grep -E '^MAP snippets:|^MAP documents:' "/media/dpappas/dpappas_data/models_out
 #
 #java -Xmx10G -cp "/home/DISK_1/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" evaluation.EvaluatorTask1b  -phaseA -e 5 \
 #"/home/DISK_1/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345" \
-#"/media/dpappas/dpappas_data/models_out/${DIRI}/test/v3 test_emit_bioasq.json" | \
+#"/home/DISK_1/dpappas/${DIRI}/test/v3 test_emit_bioasq.json" | \
 #grep -E '^MAP snippets:|^MAP documents:' > "/home/DISK_1/dpappas/bioasq_all/models_out/${DIRI}/test/results.txt"
 
