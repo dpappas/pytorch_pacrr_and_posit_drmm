@@ -1154,6 +1154,7 @@ f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_
 f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
 resume_from                 = sys.argv[2]
 odir                        = sys.argv[3]
+###########################################################
 ddd                         = resume_from.split(os.path.sep)[-2].split('_')[1].strip()
 print(ddd)
 use_sent_extra              = ddd[0] == '1'

@@ -41,5 +41,5 @@ CUDA_VISIBLE_DEVICES=0 python eval_test.py 12345 \
 java -Xmx10G -cp "/home/DISK_1/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar" evaluation.EvaluatorTask1b  -phaseA -e 5 \
 "/home/DISK_1/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345" \
 "/home/DISK_1/dpappas/${DIRI}/test/v3 test_emit_bioasq.json" | \
-grep -E '^MAP snippets:|^MAP documents:' > "/home/DISK_1/dpappas/bioasq_all/${DIRI}/test/results.txt"
+grep -E '^MAP snippets:|^MAP documents:' > "/home/DISK_1/dpappas/${DIRI}/test/results.txt"
 
