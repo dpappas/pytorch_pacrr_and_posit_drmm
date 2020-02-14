@@ -1272,7 +1272,20 @@ grep -E '^MAP snippets:|^MAP documents:' \
 > "/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/test/results.txt"
 
 
-test_bioasq.sh 
+sh test_bioasq_2.sh 0111111_0p01
+
+sh test_bioasq_2.sh 0111111_100p0
+sh test_bioasq_2.sh 0111111_10p0
+sh test_bioasq_2.sh 0111111_1p0
+sh test_bioasq_2.sh 1011111_0p01
+sh test_bioasq_2.sh 1011111_100p0
+sh test_bioasq_2.sh 1011111_10p0
+sh test_bioasq_2.sh 1011111_1p0
+sh test_bioasq_2.sh 1111111_0p01
+sh test_bioasq_2.sh 1111111_0p1
+sh test_bioasq_2.sh 1111111_100p0
+sh test_bioasq_2.sh 1111111_10p0
+sh test_bioasq_2.sh 1111111_1p0
 
 '''
 
