@@ -120,8 +120,8 @@ grep -E '^MAP snippets:|^MAP documents:' > "/home/DISK_1/dpappas/${DIRI}/test/re
 # sh test_bioasq_2.sh 0111111_10p0
 # sh test_bioasq_2.sh 0111111_100p0
 # sh test_bioasq_2.sh 1011111_0p01
-
 # sh test_bioasq_2.sh 1011111_0p1
+
 # sh test_bioasq_2.sh 1011111_1p0
 # sh test_bioasq_2.sh 1011111_10p0
 # sh test_bioasq_2.sh 1011111_100p0
