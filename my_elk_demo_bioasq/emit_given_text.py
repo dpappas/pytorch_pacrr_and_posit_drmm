@@ -321,6 +321,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
         except:
             # print(the_text)
             # pprint(docs[pid])
+            print(pid, the_text)
             ind_from                            = docs[pid]['abstractText'].index(the_text)
             ind_to                              = ind_from + len(the_text)
             esnip_res["beginSection"]           = "abstract"
