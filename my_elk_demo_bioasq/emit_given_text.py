@@ -305,7 +305,7 @@ def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body
     }
     for esnip in extracted_snippets:
         pid         = esnip[2].split('/')[-1]
-        the_text    = esnip[3]
+        the_text    = esnip[3].strip()
         if(len(the_text.strip())==0):
             continue
         esnip_res   = {
