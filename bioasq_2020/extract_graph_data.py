@@ -36,11 +36,17 @@ all_connections = dict(item for item in all_connections.items() if(item[1]>=at_l
 
 print(len(all_connections))
 
-id2no, no2id    = {}, {}
+name2no = {}
 for ((id1, id2), cc) in tqdm(all_connections.items()):
     if(id1 == id2):
         continue
-    break
+    name1 = all_names[id1].most_common(1)[0][0]
+    name2 = all_names[id2].most_common(1)[0][0]
+    try:
+        no = name2no[name1]
+    except:
+        no = name2no[name1]
+
 
 # pprint(next(iter(names.items())))
 # pprint(next(iter(connections.items())))
