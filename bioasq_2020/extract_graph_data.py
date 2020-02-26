@@ -54,12 +54,15 @@ for ((id1, id2), cc) in tqdm(all_connections.items()):
     no1, name1 = get_no_name(id1)
     no2, name2 = get_no_name(id2)
     #############################
-    fp.write('{} {}\n'.format(no1, no2))
+    _ = fp.write('{} {}\n'.format(no1, no2))
     #############################
 
 fp.close()
 
 fp = open('graph_names.txt', 'w')
+for k, v in tqdm(name2no.items()):
+    _ = fp.write('{} {}\n'.format(v, k))
+
 fp.close()
 
 
