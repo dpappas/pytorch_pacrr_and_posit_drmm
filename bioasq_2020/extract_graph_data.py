@@ -8,7 +8,7 @@ from collections import Counter
 
 all_names       = None
 all_connections = None
-for i in tqdm(range(23, 28)):
+for i in tqdm(range(18, 28)):
     fname = '/media/dpappas/dpappas_data/graph_data_pubtator/graph_names_{}000000_{}000000.p'.format(i, i+1)
     cname = '/media/dpappas/dpappas_data/graph_data_pubtator/graph_connections_{}000000_{}000000.p'.format(i, i+1)
     names       = pickle.load(open(fname, 'rb'))
@@ -32,7 +32,7 @@ print(len(all_names))
 print(len(all_connections))
 
 at_least        = 10
-all_connections = dict(item for item in all_connections.items() if(item[1]>=at_least))
+all_connections = sorted([item for item in all_connections.items() if(item[1]>=at_least)], key=lambda x: x[1], reverse=True)
 
 print(len(all_connections))
 
@@ -47,7 +47,7 @@ def get_no_name(id1):
 
 fp = open('graph_edges.txt', 'w')
 name2no = {}
-for ((id1, id2), cc) in tqdm(all_connections.items()):
+for ((id1, id2), cc) in tqdm(all_connections):
     if(id1 == id2):
         continue
     #############################
