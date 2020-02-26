@@ -35,6 +35,7 @@ at_least        = 10
 all_connections = dict(item for item in all_connections.items() if(item[1]>=at_least))
 
 print(len(all_connections))
+
 id2no, no2id    = {}, {}
 for ((id1, id2), cc) in tqdm(all_connections.items()):
     if(id1 == id2):
