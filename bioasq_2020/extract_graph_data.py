@@ -8,7 +8,7 @@ from collections import Counter
 
 all_names       = None
 all_connections = None
-for i in tqdm(range(18, 28)):
+for i in tqdm(range(23, 28)):
     fname = '/media/dpappas/dpappas_data/graph_data_pubtator/graph_names_{}000000_{}000000.p'.format(i, i+1)
     cname = '/media/dpappas/dpappas_data/graph_data_pubtator/graph_connections_{}000000_{}000000.p'.format(i, i+1)
     names       = pickle.load(open(fname, 'rb'))
@@ -28,19 +28,28 @@ for i in tqdm(range(18, 28)):
             else:
                 all_connections[k] = v
 
-for ((id1, id2), cc) in tqdm(sorted(all_connections.items(), key=lambda x: x[1], reverse=True)):
+print(len(all_names))
+print(len(all_connections))
+
+at_least        = 10
+all_connections = dict(item for item in all_connections.items() if(item[1]>=at_least))
+
+print(len(all_connections))
+
+
+for ((id1, id2), cc) in tqdm(all_connections.items()):
     if(id1 == id2):
         continue
     break
 
-pprint(next(iter(names.items())))
-pprint(next(iter(connections.items())))
-
-# graph_names_7000000_8000000.p
-# graph_names_8000000_9000000.p
-
-pprint(names['9971'])
-pprint((names['MESH:D009369']))
+# pprint(next(iter(names.items())))
+# pprint(next(iter(connections.items())))
+#
+# # graph_names_7000000_8000000.p
+# # graph_names_8000000_9000000.p
+#
+# pprint(names['9971'])
+# pprint((names['MESH:D009369']))
 
 
 
