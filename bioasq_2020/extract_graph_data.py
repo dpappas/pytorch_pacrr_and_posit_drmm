@@ -36,16 +36,22 @@ all_connections = dict(item for item in all_connections.items() if(item[1]>=at_l
 
 print(len(all_connections))
 
+def get_no_name(id1):
+    name1 = all_names[id1].most_common(1)[0][0]
+    try:
+        no = name2no[name1]
+    except:
+        no = len(name2no)
+        name2no[name1] = no
+    return no, name1
+
+
 name2no = {}
 for ((id1, id2), cc) in tqdm(all_connections.items()):
     if(id1 == id2):
         continue
-    name1 = all_names[id1].most_common(1)[0][0]
-    name2 = all_names[id2].most_common(1)[0][0]
-    try:
-        no = name2no[name1]
-    except:
-        no = name2no[name1]
+    no1, name1 = get_no_name(id1)
+    no2, name2 = get_no_name(id2)
 
 
 # pprint(next(iter(names.items())))
