@@ -50,18 +50,12 @@ name2no = {}
 for ((id1, id2), cc) in tqdm(all_connections.items()):
     if(id1 == id2):
         continue
+    #############################
     no1, name1 = get_no_name(id1)
     no2, name2 = get_no_name(id2)
+    #############################
 
 
-# pprint(next(iter(names.items())))
-# pprint(next(iter(connections.items())))
-#
-# # graph_names_7000000_8000000.p
-# # graph_names_8000000_9000000.p
-#
-# pprint(names['9971'])
-# pprint((names['MESH:D009369']))
 
 
 
