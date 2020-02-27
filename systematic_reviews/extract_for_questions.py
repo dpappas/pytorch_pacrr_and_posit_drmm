@@ -1,5 +1,6 @@
 
 
+from emit_given_text import get_results_for_one_question
 
 
 key_questions = [
@@ -34,3 +35,10 @@ key_questions = [
         'What are the effects, comparative effects, and harms of pharmacological interventions (e.g., mesalamine), non-pharmacological interventions (e.g., medical nutrition therapy), and elective surgery to prevent recurrent diverticulitis?'
     ]
 ]
+
+
+ret_dummy       = get_results_for_one_question(question_text)
+
+
+
+
