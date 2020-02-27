@@ -56,13 +56,23 @@ results = pickle.load(open('results_SR.p', 'rb'))
 # pprint(results[0])
 
 documents = []
-for item in results[0]:
-    for k2, v2 in item.items():
-        # print(k2, v2['doc_score'])
-        documents.append(k2)
+all_q_res = []
+for key_question_results in results:
+    docs = []
+    for question_res in key_question_results:
+        for k2, v2 in question_res.items():
+            if(v2['doc_score'] > 0.3):
+                print(k2, v2['doc_score'])
+                docs.append(k2)
+                all_q_res.append(k2)
+    documents.append(Counter(docs))
 
-documents = Counter(documents)
-pprint(documents)
+all_q_res = Counter(all_q_res)
+print(len(documents))
+pprint(documents[0])
+pprint(all_q_res)
+pprint(len(all_q_res))
+
 
 '''
 
