@@ -53,7 +53,7 @@ import pickle
 from pprint import pprint
 from collections import Counter
 results = pickle.load(open('results_SR.p', 'rb'))
-pprint(results[0])
+# pprint(results[0])
 
 documents = []
 for item in results[0]:
