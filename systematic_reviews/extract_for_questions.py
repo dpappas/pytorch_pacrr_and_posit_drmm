@@ -41,7 +41,7 @@ key_questions = [
 results = []
 for kqs in tqdm(key_questions):
     res = []
-    for kq in tqdm(kqs):
+    for kq in kqs:
         ret_dummy       = get_results_for_one_question(kq, how_many=100)
         res.append(ret_dummy)
     results.append(res)
@@ -62,6 +62,7 @@ for item in results[0]:
         documents.append(k2)
 
 documents = Counter(documents)
+pprint(documents)
 
 '''
 
