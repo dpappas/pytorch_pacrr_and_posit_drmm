@@ -1,6 +1,7 @@
 
 
 from emit_given_text import get_results_for_one_question
+from collections import Counter
 from pprint import pprint
 from tqdm import tqdm
 import pickle
@@ -42,18 +43,12 @@ results = []
 for kqs in tqdm(key_questions):
     res = []
     for kq in kqs:
-        ret_dummy       = get_results_for_one_question(kq, how_many=100)
+        ret_dummy       = get_results_for_one_question(kq, how_many=20)
         res.append(ret_dummy)
     results.append(res)
 
 pickle.dump(results, open('results_SR.p', 'wb'))
-
-'''
-import pickle
-from pprint import pprint
-from collections import Counter
 results = pickle.load(open('results_SR.p', 'rb'))
-# pprint(results[0])
 
 documents = []
 all_q_res = []
@@ -61,7 +56,7 @@ for key_question_results in results:
     docs = []
     for question_res in key_question_results:
         for k2, v2 in question_res.items():
-            if(v2['doc_score'] > 0.3):
+            if(v2['doc_score'] > 0.5):
                 print(k2, v2['doc_score'])
                 docs.append(k2)
                 all_q_res.append(k2)
@@ -72,9 +67,6 @@ print(len(documents))
 pprint(documents[0])
 pprint(all_q_res)
 pprint(len(all_q_res))
-
-
-'''
 
 
 
