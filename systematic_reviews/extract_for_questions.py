@@ -1,7 +1,9 @@
 
 
 from emit_given_text import get_results_for_one_question
-
+from pprint import pprint
+from tqdm import tqdm
+import pickle
 
 key_questions = [
     [
@@ -36,8 +38,15 @@ key_questions = [
     ]
 ]
 
+results = []
+for kqs in tqdm(key_questions):
+    res = []
+    for kq in tqdm(kqs):
+        ret_dummy       = get_results_for_one_question(kq, how_many=50)
+        res.append(ret_dummy)
+    results.append(res)
 
-ret_dummy       = get_results_for_one_question(question_text)
+pickle.dump(results, open('results_SR.p', 'wb'))
 
 
 
