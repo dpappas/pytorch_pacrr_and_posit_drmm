@@ -42,12 +42,28 @@ results = []
 for kqs in tqdm(key_questions):
     res = []
     for kq in tqdm(kqs):
-        ret_dummy       = get_results_for_one_question(kq, how_many=50)
+        ret_dummy       = get_results_for_one_question(kq, how_many=100)
         res.append(ret_dummy)
     results.append(res)
 
 pickle.dump(results, open('results_SR.p', 'wb'))
 
+'''
+import pickle
+from pprint import pprint
+from collections import Counter
+results = pickle.load(open('results_SR.p', 'rb'))
+pprint(results[0])
+
+documents = []
+for item in results[0]:
+    for k2, v2 in item.items():
+        # print(k2, v2['doc_score'])
+        documents.append(k2)
+
+documents = Counter(documents)
+
+'''
 
 
 
