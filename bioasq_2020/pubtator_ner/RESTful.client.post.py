@@ -52,7 +52,7 @@ else:
 	print("\nThe request is received and processing....\n\n")
 	#Receive
 	url_Receive = "https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/RESTful/tmTool.cgi/" + SessionNumber + "/Receive/"
-	
+	#######################################
 	code=404
 	while(code == 404 or code == 501):
 		time.sleep(5)
@@ -64,5 +64,5 @@ else:
 			code = e.code
 		else:
 			code = urllib_result.getcode()
-
-	print urllib_result.read()
+	#######################################
+	print(urllib_result.read())
