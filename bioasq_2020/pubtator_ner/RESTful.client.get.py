@@ -3,9 +3,9 @@ import time
 import sys
 import getopt
 
-inputfile = ''
-bioconcept = ''
-format = ''
+inputfile 	= ''
+bioconcept 	= ''
+format 		= ''
 
 try:
 	options, remainder = getopt.getopt(sys.argv[1:], 'i:b:f:', ['inputfile=','bioconcept=','format='])
