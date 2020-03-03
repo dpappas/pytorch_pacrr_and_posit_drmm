@@ -12,9 +12,9 @@ url_Submit = ''
 
 try:
 	options, remainder = getopt.getopt(sys.argv[1:], 'i:t:x:e:', ['inputfile=','trigger=','taxonomy=','email='])
-except getopt.GetoptError, err:
-	print "\npython RESTful.client.post.py -i [inputfile] -t [trigger:tmChem|DNorm|tmVar|GNormPlus] -e [E-mail](optional)\n"
-	print "\npython RESTful.client.post.py -i [inputfile] -t GNormPlus -x [taxonomy]\n"
+except getopt.GetoptError as err:
+	print("\npython RESTful.client.post.py -i [inputfile] -t [trigger:tmChem|DNorm|tmVar|GNormPlus] -e [E-mail](optional)\n")
+	print("\npython RESTful.client.post.py -i [inputfile] -t GNormPlus -x [taxonomy]\n")
 	sys.exit(0)
 														 
 for opt, arg in options:
@@ -46,10 +46,10 @@ urllib_result = urllib2.urlopen(url_Submit, InputSTR)
 SessionNumber = urllib_submit.read()
 
 if PubTator_username != '':
-	print "Thanks for your submission (Session number: " + SessionNumber + ").\nThe result will be sent to your E-mail: " + email + ".\n"
+	print("Thanks for your submission (Session number: " + SessionNumber + ").\nThe result will be sent to your E-mail: " + email + ".\n")
 else:
-	print "Thanks for your submission. The session number is : "+ SessionNumber + "\n"
-	print "\nThe request is received and processing....\n\n"
+	print("Thanks for your submission. The session number is : "+ SessionNumber + "\n")
+	print("\nThe request is received and processing....\n\n")
 	#Receive
 	url_Receive = "https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/RESTful/tmTool.cgi/" + SessionNumber + "/Receive/"
 	
