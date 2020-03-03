@@ -44,9 +44,9 @@ import spacy
 from scispacy.abbreviation import AbbreviationDetector
 from scispacy.umls_linking import UmlsEntityLinker
 
-nlp                 = spacy.load("/home/dpappas/en_core_sci_lg-0.2.3/en_core_sci_lg/en_core_sci_lg-0.2.3/")
-linker              = UmlsEntityLinker(resolve_abbreviations=True)
-# abbreviation_pipe   = AbbreviationDetector(nlp)
+nlp                     = spacy.load("/home/dpappas/en_core_sci_lg-0.2.3/en_core_sci_lg/en_core_sci_lg-0.2.3/")
+linker                  = UmlsEntityLinker(resolve_abbreviations=True)
+# abbreviation_pipe     = AbbreviationDetector(nlp)
 
 # nlp.add_pipe(abbreviation_pipe)
 nlp.add_pipe(linker)
