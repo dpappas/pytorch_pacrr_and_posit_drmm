@@ -1,19 +1,10 @@
 
 __author__ = 'Dimitris'
 
-import  json
-import  torch
-import  torch.nn.functional         as F
-import  torch.nn                    as nn
-import  numpy                       as np
-import  torch.autograd              as autograd
-from    tqdm                        import tqdm
-from    gensim.models.keyedvectors  import KeyedVectors
-import  pickle, re, os, collections, random
-from    nltk.corpus import stopwords
-import hnswlib
-import torch.backends.cudnn as cudnn
-from   adhoc_vectorizer import get_sentence_vecs
+import  numpy as np
+from    tqdm import tqdm
+import  pickle, re, os, collections, random, json, hnswlib
+from    adhoc_vectorizer import get_sentence_vecs
 
 index_dir   = '/media/dpappas/dpappas_data/models_out/batched_semir_bioasq_2020/index/'
 bin_fpaths  = [fpath for fpath in os.listdir(index_dir) if fpath.endswith('.bin')]
