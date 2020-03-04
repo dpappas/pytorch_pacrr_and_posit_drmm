@@ -64,23 +64,48 @@ with open('bioasq_results.json', 'w') as of:
     of.close()
 
 '''
+
+from elasticsearch import Elasticsearch
+from pprint import pprint
 import json
+
+def f7(seq):
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
 
 dd  = json.load(open('bioasq_results.json'))
 
-dd3 = {}
-for question, v in dd.items():
-    if(question not in dd3):
-        dd3[question] = {}
-    for score, _, ss in v:
-        pmid = ss.split(':')[0]
-        try:
-            dd3[question][pmid] += (1-score)
-        except:
-            dd3[question][pmid] = (1-score)
-    dd3[question] = sorted(list(dd3[question].items()), key=lambda x:x[1], reverse=True)[:10]
+with open('/home/dpappas/elk_ips.txt') as fp:
+    cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
+    fp.close()
 
-with open('bioasq_results_scores.json', 'w') as of:
-    of.write(json.dumps(dd3, indent=4, sort_keys=True))
-    of.close()
+es = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+index, doc_type = 'pubmed_abstracts_joint_0_1', 'abstract_map_joint_0_1'
+# es.get(index, doc_type, '26749069', params=None)
+
+for qid in dd:
+    doc_ids = f7(
+        [
+            item[2].split(':')[0].strip()
+            for item in dd[qid] 
+        ]
+    )[:10]
+    for snip_score, _, snip in dd[qid][:10]:
+        pmid, _, snip = snip.split(':',2)
+        print(pmid)
+        doc_data    = es.get(index, doc_type, pmid)
+        title       = doc_data['_source']['joint_text'].split('--------------------')[0].strip()
+        abstract    = doc_data['_source']['joint_text'].split('--------------------')[1].strip()
+        try:
+            ind_from    = title.index(snip)
+            ind_to      = ind_from + len(snip) 
+            section     = 'title'
+        except:
+            ind_from    = abstract.index(snip)
+            ind_to      = ind_from + len(snip) 
+            section     = 'abstract'
+    break
+
+
 '''
