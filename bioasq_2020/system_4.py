@@ -13,23 +13,12 @@ import  pickle, re, os, collections, random
 from    nltk.corpus import stopwords
 import hnswlib
 import torch.backends.cudnn as cudnn
-from adhoc_vectorizer import get_sentence_vecs
+from   adhoc_vectorizer import get_sentence_vecs
 
 index_dir   = '/media/dpappas/dpappas_data/models_out/batched_semir_bioasq_2020/index/'
 bin_fpaths  = [fpath for fpath in os.listdir(index_dir) if fpath.endswith('.bin')]
 
 ##############################################################################################################
-
-def print_some_sents(max_dist_sent):
-    global printed_one
-    print(20 * '-')
-    for lab, dist in zip(sent_labels1[0].tolist(), sent_distances1[0].tolist()):
-        if(dist<=max_dist_sent):
-            print('{} ~ {} ~ {}'.format(dist, lab, labels2names[lab]))
-    print(20 * '-')
-    for lab, dist in zip(sent_labels2[0].tolist(), sent_distances2[0].tolist()):
-        if(dist<=max_dist_sent):
-            print('{} ~ {} ~ {}'.format(dist, lab, labels2names[lab]))
 
 def retrieve_some_sents():
     ret = []
@@ -51,7 +40,6 @@ qdata                   = json.load(open(bioasq_test_set_fpath))
 questions               = [(q['body'], q['id']) for q in qdata['questions']]
 ##############################################################################################################
 
-max_dist = 0.05
 results = {}
 for bin_fpath in tqdm(bin_fpaths):
     sent_index_path     = os.path.join(index_dir, bin_fpath)
@@ -72,11 +60,11 @@ for bin_fpath in tqdm(bin_fpaths):
         sent_labels2, sent_distances2 = sent_index.knn_query(question_vecs[1], k=25)
         ####################################################################################
         retrieved_sents = retrieve_some_sents()
-        if(question not in results):
-            results[question] = retrieved_sents
+        if(qid not in results):
+            results[qid] = retrieved_sents
         else:
-            results[question].extend(retrieved_sents)
-        results[question] = sorted(results[question], key=lambda x: x[0])
+            results[qid].extend(retrieved_sents)
+        results[qid] = sorted(results[qid], key=lambda x: x[0])
     ####################################################################################
 
 with open('bioasq_results.json', 'w') as of:
