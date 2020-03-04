@@ -78,37 +78,29 @@ idf, max_idf        = load_idfs(idf_pickle_path)
 system_subm_data    = {'questions':[]}
 
 for quer in tqdm(ret_data['queries']):
-    qid     = quer['query_id']
-    qtext   = quer['query_text']
-    quest_toks = tokenize(qtext)
-    qvecs   = get_sentence_vecs(qtext)
+    qid         = quer['id']
+    qtext       = quer['body']
+    quest_toks  = tokenize(qtext)
+    qvecs       = get_sentence_vecs(qtext)
     if(qvecs is None):
         continue
     #############################################
     subm_data = {
         "body"      : qtext,
         "documents" : [],
-        "id"        : qtext,
+        "id"        : qid,
         "snippets"  : []
     }
     #############################################
     sent_res    = []
     #############################################
-    for ret_doc in quer['retrieved_documents']:
-        norm_bm25   = ret_doc['norm_bm25_score']
-        doc_id      = ret_doc['doc_id']
+    for ret_doc in quer['documents']:
+        norm_bm25   = 1
+        doc_id      = ret_doc.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '').strip()
         #############################################
-        abstract    = ' '.join([
-            token for token in docs_data[doc_id]['abstractText'].split()
-            if(not token.startswith('__') and not token.endswith('__'))
-        ])
-        # abs_sents   = get_sents(abstract)
+        abstract    = ' '.join([ token for token in docs_data[doc_id]['abstractText'].split() if(not token.startswith('__') and not token.endswith('__'))])
         abs_sents   = sent_tokenize(abstract)
-        title       = ' '.join([
-            token for token in docs_data[doc_id]['title'].split()
-            if(not token.startswith('__') and not token.endswith('__'))
-        ])
-        # tit_sents   = get_sents(title)
+        title       = ' '.join([token for token in docs_data[doc_id]['title'].split() if(not token.startswith('__') and not token.endswith('__'))])
         tit_sents   = sent_tokenize(title)
         #############################################
         for sent in tit_sents:
@@ -134,7 +126,7 @@ for quer in tqdm(ret_data['queries']):
                 (sim, doc_id, norm_bm25, 'abstract', sent, sent_bm25, offset_from, offset_to)
             )
     #############################################
-    sent_res    = sorted(sent_res, key=lambda x: x[0] * x[2]* x[5], reverse=True)
+    sent_res    = sorted(sent_res, key=lambda x: x[0] * x[2] * x[5], reverse=True)
     doc_res     = f7([t[1] for t in sent_res])
     #############################################
     subm_data['documents']  = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(doc_id) for doc_id in doc_res[:10]]
