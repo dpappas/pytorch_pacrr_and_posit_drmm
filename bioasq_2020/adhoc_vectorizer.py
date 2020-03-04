@@ -1,17 +1,14 @@
 
 __author__ = 'Dimitris'
 
-import  json
 import  torch
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  numpy                       as np
 import  torch.autograd              as autograd
-from    tqdm                        import tqdm
 from    gensim.models.keyedvectors  import KeyedVectors
-import  pickle, re, os, collections, random
+import  re, os, collections, random
 from    nltk.corpus import stopwords
-import hnswlib
 import torch.backends.cudnn as cudnn
 
 my_seed     = 1
