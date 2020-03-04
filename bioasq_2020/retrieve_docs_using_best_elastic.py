@@ -35,7 +35,7 @@ def get_first_n_1(qtext, n, max_year=2019):
     tokenized_body  = [t for t in tokenized_body if t not in stopwords]
     question        = ' '.join(tokenized_body)
     ################################################
-    bod         = {
+    bod             = {
         "size": n,
         "query": {
             "bool": {
@@ -45,7 +45,7 @@ def get_first_n_1(qtext, n, max_year=2019):
             }
         }
     }
-    res         = es.search(index=doc_index, body=bod, request_timeout=120)
+    res             = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
 fpath       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseA-testset1'
