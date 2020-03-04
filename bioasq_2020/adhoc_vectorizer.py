@@ -131,6 +131,8 @@ class Modeler(nn.Module):
 
 def get_sentence_vecs(sent_text):
     tok_vecs        = [get_vec(tok) for tok in bioclean(sent_text)]
+    if(len(tok_vecs) == 0):
+        return None
     question_vecs   = np.stack(tok_vecs, 0)
     sent_mask       = np.ones(question_vecs.shape[0])
     question_vecs   = model.encode_sent([question_vecs], [sent_mask]).squeeze(0).cpu().data.numpy()

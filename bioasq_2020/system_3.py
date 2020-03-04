@@ -15,12 +15,14 @@ in_dir      = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/bioasq8_bm25_t
 docs_data   = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_docset_top100.test.pkl'), 'rb'))
 ret_data    = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_top100.test.pkl'), 'rb'))
 
-pprint(ret_data['queries'][0])
+# pprint(ret_data['queries'][0])
 
 for quer in tqdm(ret_data['queries']):
     qid     = quer['query_id']
     qtext   = quer['query_text']
     qvecs   = get_sentence_vecs(qtext)
+    if(qvecs is None):
+        continue
     #############################################
     sent_res    = []
     #############################################
@@ -43,6 +45,8 @@ for quer in tqdm(ret_data['queries']):
         #############################################
         for sent in tit_sents:
             svecs       = get_sentence_vecs(sent)
+            if (svecs is None):
+                continue
             sim         = cosine_similarity(qvecs, svecs).max()
             offset_from = title.index(sent)
             offset_to   = offset_from + len(sent)
@@ -51,6 +55,8 @@ for quer in tqdm(ret_data['queries']):
             )
         for sent in abs_sents:
             svecs       = get_sentence_vecs(sent)
+            if (svecs is None):
+                continue
             sim         = cosine_similarity(qvecs, svecs).max()
             offset_from = abstract.index(sent)
             offset_to   = offset_from + len(sent)
