@@ -27,53 +27,8 @@ with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
 
 print(stopwords)
 
-def idf_val(w, idf, max_idf):
-    if w in idf:
-        return idf[w]
-    return max_idf
-
 def tokenize(x):
   return bioclean(x)
-
-def GetWords(data, doc_text, words):
-  for i in range(len(data['queries'])):
-    qwds = tokenize(data['queries'][i]['query_text'])
-    for w in qwds:
-      words[w] = 1
-    for j in range(len(data['queries'][i]['retrieved_documents'])):
-      doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
-      dtext = (
-              doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText']
-              # +
-              # ' '.join(
-              #     [
-              #         ' '.join(mm) for mm in
-              #         get_the_mesh(doc_text[doc_id])
-              #     ]
-              # )
-      )
-      dwds = tokenize(dtext)
-      for w in dwds:
-        words[w] = 1
-
-def load_idfs(idf_path, words):
-    print('Loading IDF tables')
-    #
-    # with open(dataloc + 'idf.pkl', 'rb') as f:
-    with open(idf_path, 'rb') as f:
-        idf = pickle.load(f)
-    ret = {}
-    for w in words:
-        if w in idf:
-            ret[w] = idf[w]
-    max_idf = 0.0
-    for w in idf:
-        if idf[w] > max_idf:
-            max_idf = idf[w]
-    idf = None
-    print('Loaded idf tables with max idf {}'.format(max_idf))
-    #
-    return ret, max_idf
 
 def get_first_n_1(qtext, n, max_year=2019):
     tokenized_body  = bioclean_mod(qtext)
@@ -107,12 +62,13 @@ for q in tqdm(test_data['questions']):
     results     = get_first_n_1(qtext, 100)
     #######################################################
     temp_1 = {
-        'num_rel'       : 0,
-        'num_rel_ret'   : 0,
-        'num_ret'       : -1,
-        'query_id'      : qid,
-        'query_text'    : qtext,
-        'relevant_documents': [],
+        'num_rel'               : 0,
+        'num_rel_ret'           : 0,
+        'num_ret'               : -1,
+        'query_id'              : qid,
+        'query_text'            : qtext,
+        'relevant_documents'    : [],
+        'retrieved_documents'   : []
     }
     #######################################################
     all_scores          = [res['_score'] for res in results]
@@ -132,7 +88,7 @@ for q in tqdm(test_data['questions']):
             'title'             : res['_source']['joint_text'].split('--------------------')[0].strip()
         }
         #######################################################
-        temp_1['relevant_documents'].append({
+        temp_1['retrieved_documents'].append({
                 'bm25_score'        : res['_score'],
                 'doc_id'            : res['_id'],
                 'is_relevant'       : False,
