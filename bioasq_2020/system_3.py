@@ -77,7 +77,7 @@ idf, max_idf        = load_idfs(idf_pickle_path)
 
 system_subm_data    = {'questions':[]}
 
-for quer in tqdm(ret_data['queries']):
+for quer in tqdm(ret_data['questions']):
     qid         = quer['id']
     qtext       = quer['body']
     quest_toks  = tokenize(qtext)
@@ -150,5 +150,5 @@ if (not os.path.exists(odir)):
     os.makedirs(odir)
 
 with open(os.path.join(odir, 'bioasq8_batch1_system3_results.json'), 'w') as f:
-    f.write(json.dumps(system_subm_data, indent=4, sort_keys=True))
+    gb = f.write(json.dumps(system_subm_data, indent=4, sort_keys=True))
 
