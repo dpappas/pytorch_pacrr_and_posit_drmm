@@ -131,6 +131,7 @@ for q in tqdm(test_data['questions']):
             'publicationDate'   : res['_source']['DateCompleted'],
             'title'             : res['_source']['joint_text'].split('--------------------')[0].strip()
         }
+        #######################################################
         temp_1['relevant_documents'].append(
             {
                 'bm25_score'        : res['_score'],
