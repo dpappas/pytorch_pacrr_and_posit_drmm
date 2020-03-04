@@ -138,7 +138,6 @@ def get_sentence_vecs(sent_text):
     question_vecs   = model.encode_sent([question_vecs], [sent_mask]).squeeze(0).cpu().data.numpy()
     return question_vecs[0], question_vecs[1]
 
-
 device          = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 model           = Modeler().to(device)
 
