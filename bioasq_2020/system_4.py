@@ -32,15 +32,16 @@ questions               = [(q['body'], q['id']) for q in qdata['questions']]
 ##############################################################################################################
 
 results = {}
-for bin_fpath in tqdm(bin_fpaths):
+pbar = tqdm(bin_fpaths)
+for bin_fpath in pbar:
     sent_index_path     = os.path.join(index_dir, bin_fpath)
     labels2names_path   = os.path.join(index_dir, 'labels2names{}.p'.format(bin_fpath.replace('my_index','').replace('.bin','')))
     ####################################################################################
-    print("Loading labels2names'{}'\n".format(sent_index_path))
+    pbar.set_description("Loading labels2names'{}'\n".format(sent_index_path))
     labels2names        = pickle.load(open(labels2names_path, 'rb'))
     ####################################################################################
     sent_index          = hnswlib.Index(space, dim)
-    print("Loading index from '{}'\n".format(sent_index_path))
+    pbar.set_description("Loading index from '{}'\n".format(sent_index_path))
     sent_index.load_index(sent_index_path, max_elements)
     sent_index.set_num_threads(4)
     ####################################################################################
