@@ -162,5 +162,5 @@ if (not os.path.exists(odir)):
     os.makedirs(odir)
 
 with open(os.path.join(odir, 'bioasq8_batch1_system5_results.json'), 'w') as f:
-    f.write(json.dumps(ret_data, indent=4, sort_keys=True))
+    f.write(json.dumps(system_subm_data, indent=4, sort_keys=True))
 
