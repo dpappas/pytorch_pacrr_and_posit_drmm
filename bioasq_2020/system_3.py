@@ -153,8 +153,7 @@ for quer in tqdm(ret_data['queries']):
 
 ###########################################################
 
-
-odir = '/home/dpappas/bioasq8_batch1_system5_out/'
+odir = '/home/dpappas/bioasq8_batch1_system3_out/'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 
