@@ -33,6 +33,7 @@ for qid in pbar:
         "documents" : [],
         "snippets"  : []
     }
+    ########################################################################
     doc_ids = f7(
         [
             item[2].split(':')[0].strip()
@@ -40,9 +41,12 @@ for qid in pbar:
         ]
     )[:10]
     q_subm_data["documents"] = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(doc_id) for doc_id in doc_ids]
+    ########################################################################
     counter = 10
     for snip_score, _, snip in dd[qid]:
         pmid, _, snip = snip.split(':',2)
+        if(snip == 'GSK3732394 is currently in clinical trials.'):
+            snip = 'GSK3732394 is currently in human studies.'
         pbar.set_description(pmid)
         try:
             doc_data    = es.get(index, doc_type, pmid)
@@ -50,8 +54,11 @@ for qid in pbar:
             #     continue
         except:
             continue
-        title           = doc_data['_source']['ArticleTitle'].strip()
-        abstract        = doc_data['_source']['AbstractText'].strip()
+        ########################################################################
+        # title           = doc_data['_source']['ArticleTitle'].strip()
+        # abstract        = doc_data['_source']['AbstractText'].strip()
+        title           = doc_data['_source']['joint_text'].split('--------------------')[0].strip()
+        abstract        = doc_data['_source']['joint_text'].split('--------------------')[1].strip()
         ########################################################################
         title           = ' '.join(
             [
@@ -73,11 +80,11 @@ for qid in pbar:
         )
         ########################################################################
         try:
-            ind_from    = title.index(snip)
+            ind_from    = title.lower().index(snip.lower())
             ind_to      = ind_from + len(snip)
             section     = 'title'
         except:
-            ind_from    = abstract.index(snip)
+            ind_from    = abstract.lower().index(snip.lower())
             ind_to      = ind_from + len(snip)
             section     = 'abstract'
         q_subm_data["snippets"].append(
@@ -95,3 +102,10 @@ for qid in pbar:
             break
     all_subm_data['questions'].append(q_subm_data)
 
+import os
+odir = '/home/dpappas/bioasq8_batch1_system4_out/'
+if (not os.path.exists(odir)):
+    os.makedirs(odir)
+
+with open(os.path.join(odir, 'bioasq8_batch1_system4_results.json'), 'w') as f:
+    gb = f.write(json.dumps(all_subm_data, indent=4, sort_keys=True))
