@@ -83,23 +83,24 @@ with open('bioasq_results.json', 'w') as of:
     of.write(json.dumps(results, indent=4, sort_keys=True))
     of.close()
 
-# import json
-#
-# dd  = json.load(open('bioasq_results.json'))
-#
-# dd3 = {}
-# for question, v in dd.items():
-#     if(question not in dd3):
-#         dd3[question] = {}
-#     for score, _, ss in v:
-#         pmid = ss.split(':')[0]
-#         try:
-#             dd3[question][pmid] += (1-score)
-#         except:
-#             dd3[question][pmid] = (1-score)
-#     dd3[question] = sorted(list(dd3[question].items()), key=lambda x:x[1], reverse=True)[:10]
-#
-# with open('bioasq_results_scores.json', 'w') as of:
-#     of.write(json.dumps(dd3, indent=4, sort_keys=True))
-#     of.close()
+'''
+import json
 
+dd  = json.load(open('bioasq_results.json'))
+
+dd3 = {}
+for question, v in dd.items():
+    if(question not in dd3):
+        dd3[question] = {}
+    for score, _, ss in v:
+        pmid = ss.split(':')[0]
+        try:
+            dd3[question][pmid] += (1-score)
+        except:
+            dd3[question][pmid] = (1-score)
+    dd3[question] = sorted(list(dd3[question].items()), key=lambda x:x[1], reverse=True)[:10]
+
+with open('bioasq_results_scores.json', 'w') as of:
+    of.write(json.dumps(dd3, indent=4, sort_keys=True))
+    of.close()
+'''
