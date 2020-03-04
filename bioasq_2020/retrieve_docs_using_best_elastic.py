@@ -132,15 +132,13 @@ for q in tqdm(test_data['questions']):
             'title'             : res['_source']['joint_text'].split('--------------------')[0].strip()
         }
         #######################################################
-        temp_1['relevant_documents'].append(
-            {
+        temp_1['relevant_documents'].append({
                 'bm25_score'        : res['_score'],
                 'doc_id'            : res['_id'],
                 'is_relevant'       : False,
                 'norm_bm25_score'   : scaler.transform([[res['_score']]])[0][0],
                 'rank'              : rank
-            }
-        )
+            })
     test_data_to_save['queries'].append(temp_1)
 
 if(not os.path.exists(odir)):
