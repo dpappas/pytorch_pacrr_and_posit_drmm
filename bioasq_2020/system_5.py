@@ -91,7 +91,7 @@ for quer in tqdm(ret_data['queries']):
     subm_data = {
         "body"      : qtext,
         "documents" : [],
-        "id"        : qtext,
+        "id"        : qid,
         "snippets"  : []
     }
     #############################################
@@ -150,7 +150,7 @@ for quer in tqdm(ret_data['queries']):
             "offsetInEndSection"    : s_res[7],
             "text"                  : s_res[4]
         }
-        for s_res in sent_res
+        for s_res in sent_res[:10]
     ]
     system_subm_data['questions'].append(subm_data)
 
