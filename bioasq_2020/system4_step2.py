@@ -17,10 +17,8 @@ with open('/home/dpappas/elk_ips.txt') as fp:
 
 es = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
-# doc_index = 'pubmed_abstracts_0_1'
-# doc_type = "abstract_map_0_1"
+# index, doc_type = 'pubmed_abstracts_0_1', 'abstract_map_0_1'
 index, doc_type = 'pubmed_abstracts_joint_0_1', 'abstract_map_joint_0_1'
-# es.get(index, doc_type, '26749069', params=None)
 
 bioasq_test_set_fpath   = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseA-testset1'
 qdata                   = json.load(open(bioasq_test_set_fpath))
