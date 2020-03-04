@@ -3,7 +3,7 @@ __author__ = 'Dimitris'
 
 import  numpy as np
 from    tqdm  import tqdm
-import  pickle, os, json, re
+import  pickle, os, json, re, sys
 from adhoc_vectorizer import get_sentence_vecs
 # from my_sentence_splitting import get_sents
 from nltk.tokenize import sent_tokenize
@@ -156,4 +156,11 @@ for quer in tqdm(ret_data['queries']):
 
 ###########################################################
 
+
+odir = '/home/dpappas/bioasq8_batch1_system5_out/'
+if (not os.path.exists(odir)):
+    os.makedirs(odir)
+
+with open(os.path.join(odir, 'bioasq8_batch1_system5_results.json'), 'w') as f:
+    f.write(json.dumps(ret_data, indent=4, sort_keys=True))
 
