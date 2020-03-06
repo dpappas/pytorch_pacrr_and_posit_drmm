@@ -34,15 +34,8 @@ for qid in pbar:
         "snippets"  : []
     }
     ########################################################################
-    doc_ids = f7(
-        [
-            item[2].split(':')[0].strip()
-            for item in dd[qid]
-        ]
-    )[:10]
-    q_subm_data["documents"] = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(doc_id) for doc_id in doc_ids]
-    ########################################################################
-    counter = 10
+    exclude_pmids   = set()
+    counter         = 10
     for snip_score, _, snip in dd[qid]:
         pmid, _, snip = snip.split(':',2)
         if(snip == 'GSK3732394 is currently in clinical trials.'):
@@ -50,11 +43,12 @@ for qid in pbar:
         pbar.set_description(pmid)
         try:
             doc_data    = es.get(index, doc_type, pmid)
-            # if(doc_data['_source']['AbstractText'] is None or len(doc_data['_source']['AbstractText'])==0):
-            #     continue
         except:
+            exclude_pmids.add(pmid)
             continue
         ########################################################################
+        # if(doc_data['_source']['AbstractText'] is None or len(doc_data['_source']['AbstractText'])==0):
+        #     continue
         # title           = doc_data['_source']['ArticleTitle'].strip()
         # abstract        = doc_data['_source']['AbstractText'].strip()
         title           = doc_data['_source']['joint_text'].split('--------------------')[0].strip()
@@ -97,9 +91,15 @@ for qid in pbar:
                 "text"                  : snip
             }
         )
+        ########################################################################
         counter -= 1
         if(counter == 0):
             break
+    ########################################################################
+    doc_ids = f7([item[2].split(':')[0].strip() for item in dd[qid]])
+    doc_ids = [doc_id for doc_id in doc_ids if doc_id not in exclude_pmids][:10]
+    q_subm_data["documents"] = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(doc_id) for doc_id in doc_ids]
+    ########################################################################
     all_subm_data['questions'].append(q_subm_data)
 
 import os
