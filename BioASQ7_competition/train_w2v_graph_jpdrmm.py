@@ -405,9 +405,23 @@ def idf_val(w, idf, max_idf):
 def get_embeds(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
-        if(tok in wv):
+        if(tok in wv and tok in graph_embeds):
             ret1.append(tok)
-            ret2.append(wv[tok])
+            ret2.append(
+                np.concatenate([wv[tok], graph_embeds[tok]])
+            )
+        elif (tok in wv):
+            ret1.append(tok)
+            ret2.append(
+                np.concatenate([wv[tok], graph_embeds['unk']])
+            )
+        elif (tok in graph_embeds):
+            ret1.append(tok)
+            ret2.append(
+                np.concatenate([wv['unk'], graph_embeds[tok]])
+            )
+        else:
+            pass
     return ret1, np.array(ret2, 'float64')
 
 def get_embeds_use_unk(tokens, wv):
@@ -1047,6 +1061,7 @@ def load_all_data(dataloc, w2v_bin_path, idf_pickle_path):
     words               = {}
     GetWords(train_data, train_docs, words)
     GetWords(dev_data,   dev_docs,   words)
+    words['unk']        = 1
     #
     print('loading idfs')
     idf, max_idf    = load_idfs(idf_pickle_path, words)
