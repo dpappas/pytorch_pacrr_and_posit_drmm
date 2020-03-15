@@ -1085,7 +1085,7 @@ def load_graph_embeds():
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
-             embedding_dim          = 30+120,
+             embedding_dim          = 30,
              k_for_maxpool          = 5,
              sentence_out_method    = 'MLP',
              k_sent_maxpool         = 1
@@ -1412,7 +1412,7 @@ print(avgdl, mean, deviation)
 
 k_for_maxpool   = 5
 k_sent_maxpool  = 5
-embedding_dim   = 30 #200
+embedding_dim   = 150 #200
 lr              = 0.01
 b_size          = 32
 max_epoch       = 30
