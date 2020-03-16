@@ -1135,10 +1135,6 @@ eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 ###########################################################
 b                           = sys.argv[1]
-# f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(b, b)
-# f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
-# f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
-# #############################
 f_in1                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/BioASQ-task8bPhaseA-testset{}'.format(b, b)
 f_in2                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/bioasq8_bm25_top100.test.pkl'.format(b)
 f_in3                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/bioasq8_bm25_docset_top100.test.pkl'.format(b)
@@ -1147,13 +1143,13 @@ odir                        = sys.argv[3]
 ###########################################################
 ddd                         = resume_from.split(os.path.sep)[-2].split('_')[1].strip()
 print(ddd)
-use_sent_extra              = ddd[0] == '1'
-use_doc_extra               = ddd[1] == '1'
-use_OH_sim                  = ddd[2] == '1'
-use_W2V_sim                 = ddd[3] == '1'
-use_context_sim             = ddd[4] == '1'
-use_sent_loss               = ddd[5] == '1'
-use_last_layer              = ddd[6] == '1'
+use_sent_extra              = True
+use_doc_extra               = True
+use_OH_sim                  = True
+use_W2V_sim                 = True
+use_context_sim             = True
+use_sent_loss               = True
+use_last_layer              = True
 ###########################################################
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1199,6 +1195,7 @@ with open(f_in3, 'rb') as f:
 ###########################################################
 words = {}
 GetWords(test_data, test_docs, words)
+words['unk'] = 1
 ###########################################################
 print('loading idfs')
 idf, max_idf = load_idfs(idf_pickle_path, words)
@@ -1212,3 +1209,15 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 ###########################################################
 print(test_map)
 
+
+'''
+python3.6 test_w2v_graph_jpdrmm.py 1 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_graph_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+bioasq8_1_graph
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseB-testset1" \
+"/home/dpappas/bioasq8_1_graph/v3 test_emit_bioasq.json" | \
+grep -E '^MAP snippets:|^MAP documents:'
+
+'''
