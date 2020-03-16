@@ -1220,4 +1220,10 @@ java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.E
 "/home/dpappas/bioasq8_1_graph/v3 test_emit_bioasq.json" | \
 grep -E '^MAP snippets:|^MAP documents:'
 
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseB-testset1" \
+"/home/dpappas/bioasq8_batch1_out_jpdrmm/v3 test_emit_bioasq.json" | \
+grep -E '^MAP snippets:|^MAP documents:'
+
 '''
