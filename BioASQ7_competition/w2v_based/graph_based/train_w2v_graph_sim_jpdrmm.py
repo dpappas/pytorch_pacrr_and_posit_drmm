@@ -18,6 +18,7 @@ from    pprint                      import pprint
 from    gensim.models.keyedvectors  import KeyedVectors
 from    nltk.tokenize               import sent_tokenize
 from    difflib                     import SequenceMatcher
+import string
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
@@ -402,26 +403,31 @@ def idf_val(w, idf, max_idf):
         return idf[w]
     return max_idf
 
-def get_embeds(tokens, wv):
+def randomString(stringLength=10):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase + string.ascii_uppercase
+    return ''.join(random.choice(letters) for i in range(stringLength))
+
+def get_w2v_embeds(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
-        if(tok in wv and tok in graph_embeds):
+        if (tok in wv):
             ret1.append(tok)
-            ret2.append(
-                np.concatenate([wv[tok], graph_embeds[tok]])
-            )
-        elif (tok in wv):
+            ret2.append(wv[tok])
+    if(len(ret1)==0):
+        ret1.append(randomString(stringLength=10))
+        ret2.append(wv['unk'])
+    return ret1, np.array(ret2, 'float64')
+
+def get_graph_embeds(tokens):
+    ret1, ret2 = [], []
+    for tok in tokens:
+        if (tok in graph_embeds):
             ret1.append(tok)
-            ret2.append(
-                np.concatenate([wv[tok], graph_embeds['unk']])
-            )
-        elif (tok in graph_embeds):
-            ret1.append(tok)
-            ret2.append(
-                np.concatenate([wv['unk'], graph_embeds[tok]])
-            )
-        else:
-            pass
+            ret2.append(graph_embeds[tok])
+    if(len(ret1)==0):
+        ret1.append('UNKN')
+        ret2.append(graph_embeds['UNKN'])
     return ret1, np.array(ret2, 'float64')
 
 def get_embeds_use_unk(tokens, wv):
@@ -669,11 +675,12 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
     for good_text in good_sents:
-        sent_toks                   = tokenize(good_text)
-        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
-        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        sent_toks                               = tokenize(good_text)
+        good_graph_tokens, good_graph_embeds    = get_graph_embeds(sent_toks)
+        good_w2v_tokens, good_w2v_embeds        = get_w2v_embeds(sent_toks, wv)
+        good_escores                            = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks)/ 342.)
-        if (len(good_embeds) > 0):
+        if (len(good_w2v_embeds) > 0):
             #
             tomi                = (set(sent_toks) & set(quest_toks))
             tomi_no_stop        = tomi - set(stopwords)
@@ -690,7 +697,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
                 sum(tomi_idfs)          / sum(quest_idfs),
             ]
             #
-            good_sents_embeds.append(good_embeds)
+            good_sents_embeds.append(good_w2v_embeds)
             good_sents_escores.append(good_escores+features)
             held_out_sents.append(good_text)
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))

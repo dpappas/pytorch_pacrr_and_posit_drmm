@@ -411,8 +411,8 @@ def get_embeds(tokens, wv):
         else:
             pass
     if(len(ret1)==0):
-        ret1.append('unk')
-        ret2.append(wv['unk'])
+        ret1.append('UNKN')
+        ret2.append(wv['UNKN'])
     return ret1, np.array(ret2, 'float64')
 
 def get_embeds_use_unk(tokens, wv):
