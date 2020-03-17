@@ -900,8 +900,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     quest_text                  = dato['query_text']
     #
-    quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-    q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    quest_w2v_tokens, quest_w2v_embeds      = get_w2v_embeds(tokenize(quest_text), wv)
+    quest_graph_tokens, quest_graph_embeds  = get_graph_embeds(tokenize(quest_text))
+    q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_w2v_tokens], 'float')
     gold_snips                  = get_gold_snips(dato['query_id'], bioasq7_data)
     #
     doc_res, extracted_snippets         = {}, []
@@ -910,7 +911,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
-            question_embeds     = quest_embeds,
+            question_embeds     = quest_w2v_embeds,
             q_idfs              = q_idfs,
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
