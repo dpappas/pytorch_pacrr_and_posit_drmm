@@ -729,7 +729,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_held_out_sents          = datum['held_out_sents']
         #
         quest_w2v_tokens, quest_w2v_embeds      = get_w2v_embeds(tokenize(quest_text), wv)
-        quest_graph_tokens, quest_graph_embeds  = get_w2v_embeds(tokenize(quest_text), wv)
+        quest_graph_tokens, quest_graph_embeds  = get_graph_embeds(tokenize(quest_text))
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_w2v_tokens], 'float')
         #
         if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
@@ -739,13 +739,13 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'good_doc_af'           : good_doc_af,
                 'good_sent_tags'        : good_sent_tags,
                 'good_held_out_sents'   : good_held_out_sents,
-                #
+                ###########################################################
                 'bad_sents_embeds'      : bad_sents_embeds,
                 'bad_sents_escores'     : bad_sents_escores,
                 'bad_doc_af'            : bad_doc_af,
                 'bad_sent_tags'         : bad_sent_tags,
                 'bad_held_out_sents'    : bad_held_out_sents,
-                #
+                ###########################################################
                 'quest_embeds'          : quest_w2v_tokens,
                 'q_idfs'                : q_idfs,
             }
