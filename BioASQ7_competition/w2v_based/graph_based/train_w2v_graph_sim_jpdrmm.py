@@ -430,26 +430,6 @@ def get_graph_embeds(tokens):
         ret2.append(graph_embeds['UNKN'])
     return ret1, np.array(ret2, 'float64')
 
-def get_embeds_use_unk(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        if(tok in wv):
-            ret1.append(tok)
-            ret2.append(wv[tok])
-        else:
-            wv[tok] = np.random.randn(embedding_dim)
-            ret1.append(tok)
-            ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
-
-def get_embeds_use_only_unk(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        wv[tok] = np.random.randn(embedding_dim)
-        ret1.append(tok)
-        ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
-
 def load_idfs(idf_path, words):
     print('Loading IDF tables')
     #
@@ -748,7 +728,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
         #
-        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+        quest_tokens, quest_embeds  = get_w2v_embeds(tokenize(quest_text), wv)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
