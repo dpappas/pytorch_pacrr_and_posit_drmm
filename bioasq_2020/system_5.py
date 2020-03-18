@@ -1,13 +1,10 @@
 
 __author__ = 'Dimitris'
 
-import  numpy as np
 from    tqdm  import tqdm
 import  pickle, os, json, re, sys
 from adhoc_vectorizer import get_sentence_vecs
-# from my_sentence_splitting import get_sents
 from nltk.tokenize import sent_tokenize
-from pprint import pprint
 from sklearn.metrics.pairwise import cosine_similarity
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
