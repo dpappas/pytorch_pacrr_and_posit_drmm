@@ -6,7 +6,11 @@ from    tqdm import tqdm
 import  pickle, re, os, collections, random, json, hnswlib
 from    adhoc_vectorizer import get_sentence_vecs
 
-index_dir   = '/media/dpappas/dpappas_data/models_out/batched_semir_bioasq_2020/index/'
+b                       = '2'
+index_dir               = '/media/dpappas/dpappas_data/models_out/batched_semir_bioasq_2020/index/'
+bioasq_test_set_fpath   = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/BioASQ-task8bPhaseA-testset{}'.format(b, b)
+odir                    = '/home/dpappas/bioasq_2020/system4_output_b{}/'.format(b)
+
 bin_fpaths  = [fpath for fpath in os.listdir(index_dir) if fpath.endswith('.bin')]
 
 ##############################################################################################################
@@ -26,7 +30,6 @@ space               = 'cosine'
 max_elements        = 10000000
 
 ##############################################################################################################
-bioasq_test_set_fpath   = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseA-testset1'
 qdata                   = json.load(open(bioasq_test_set_fpath))
 questions               = [(q['body'], q['id']) for q in qdata['questions']]
 ##############################################################################################################
@@ -59,6 +62,6 @@ for bin_fpath in pbar:
         results[qid] = sorted(results[qid], key=lambda x: x[0])
     ####################################################################################
 
-with open('bioasq_results.json', 'w') as of:
+with open(os.path.join(odir, 'bioasq_results.json'), 'w') as of:
     of.write(json.dumps(results, indent=4, sort_keys=True))
     of.close()
