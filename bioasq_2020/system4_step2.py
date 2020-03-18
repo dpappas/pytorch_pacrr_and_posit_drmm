@@ -76,6 +76,7 @@ for qid in pbar:
             ]
         )
         ########################################################################
+        pbar.set_description('|{}: {}|'.format(pmid, snip))
         try:
             ind_from    = title.lower().index(snip.lower())
             ind_to      = ind_from + len(snip)
