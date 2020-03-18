@@ -1204,17 +1204,10 @@ print(test_map)
 
 
 '''
-python3.6 /home/dpappas/bioasq_2020/system2.py 1 \
-/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_graphonly_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_2020/system2_output_b1
 
 python3.6 /home/dpappas/bioasq_2020/system2.py 2 \
 /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_graphonly_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_2020/system2_output_b2
-
-python3.6 test_graph_jpdrmm.py 1 \
-/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_graphonly_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
-bioasq8_1_graphonly
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseB-testset1" \
