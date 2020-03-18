@@ -76,7 +76,16 @@ for qid in pbar:
             ]
         )
         ########################################################################
+        if(snip.startswith('[')):
+            snip = snip[1:]
+        if(snip.endswith('.')):
+            snip = snip[:-1]
+        if(snip.endswith(']')):
+            snip = snip[:-1]
+        snip = snip.strip()
+        ########################################################################
         pbar.set_description('|{}: {}|'.format(pmid, snip))
+        ########################################################################
         try:
             ind_from    = title.lower().index(snip.lower())
             ind_to      = ind_from + len(snip)
