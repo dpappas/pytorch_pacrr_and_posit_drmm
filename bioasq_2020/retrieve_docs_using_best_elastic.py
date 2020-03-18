@@ -30,10 +30,11 @@ print(stopwords)
 def tokenize(x):
   return bioclean(x)
 
-def get_first_n_1(qtext, n, max_year=2019):
+def get_first_n_1(qtext, n, max_year=2020):
     tokenized_body  = bioclean_mod(qtext)
     tokenized_body  = [t for t in tokenized_body if t not in stopwords]
     question        = ' '.join(tokenized_body)
+    print(question)
     ################################################
     bod             = {
         "size": n,
@@ -48,8 +49,10 @@ def get_first_n_1(qtext, n, max_year=2019):
     res             = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-fpath       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseA-testset1'
-odir        = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/bioasq8_bm25_top100/'
+# fpath       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseA-testset1'
+# odir        = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/bioasq8_bm25_top100/'
+fpath       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_2/BioASQ-task8bPhaseA-testset2'
+odir        = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_2/bioasq8_bm25_top100/'
 test_data   = json.load(open(fpath))
 
 test_docs_to_save = {}
@@ -57,6 +60,7 @@ test_data_to_save = {'queries' : []}
 
 for q in tqdm(test_data['questions']):
     qtext       = q['body']
+    print(qtext)
     qid         = q['id']
     #######################################################
     results     = get_first_n_1(qtext, 100)
@@ -72,6 +76,7 @@ for q in tqdm(test_data['questions']):
     }
     #######################################################
     all_scores          = [res['_score'] for res in results]
+    # print(all_scores)
     scaler              = StandardScaler().fit(np.array(all_scores).reshape(-1,1))
     temp_1['num_ret']   = len(all_scores)
     #######################################################
