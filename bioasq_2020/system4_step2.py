@@ -1,15 +1,19 @@
 
 from elasticsearch import Elasticsearch
 from pprint import pprint
-import json
+import json, os
 from tqdm import tqdm
+
+b                       = '2'
+odir                    = '/home/dpappas/bioasq_2020/system4_output_b{}/'.format(b)
+bioasq_test_set_fpath   = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/BioASQ-task8bPhaseA-testset{}'.format(b, b)
 
 def f7(seq):
     seen = set()
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x))]
 
-dd  = json.load(open('bioasq_results.json'))
+dd  = json.load(open(os.path.join(odir, 'bioasq_results.json')))
 
 with open('/home/dpappas/elk_ips.txt') as fp:
     cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
@@ -20,7 +24,6 @@ es = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, 
 # index, doc_type = 'pubmed_abstracts_0_1', 'abstract_map_0_1'
 index, doc_type = 'pubmed_abstracts_joint_0_1', 'abstract_map_joint_0_1'
 
-bioasq_test_set_fpath   = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseA-testset1'
 qdata                   = json.load(open(bioasq_test_set_fpath))
 qid2text                = dict([(q['id'], q['body']) for q in qdata['questions']])
 
@@ -102,10 +105,8 @@ for qid in pbar:
     ########################################################################
     all_subm_data['questions'].append(q_subm_data)
 
-import os
-odir = '/home/dpappas/bioasq8_batch1_system4_out/'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 
-with open(os.path.join(odir, 'bioasq8_batch1_system4_results.json'), 'w') as f:
+with open(os.path.join(odir, 'bioasq8_batch{}_system4_results.json'.format(b)), 'w') as f:
     gb = f.write(json.dumps(all_subm_data, indent=4, sort_keys=True))
