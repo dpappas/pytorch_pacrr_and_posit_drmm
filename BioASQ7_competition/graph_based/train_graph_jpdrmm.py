@@ -418,7 +418,8 @@ def get_embeds(tokens, graph_embeds):
             pass
     if(len(ret1)==0):
         ret1.append(randomString(stringLength=10))
-        ret2.append(graph_embeds['UNKN'])
+        # ret2.append(graph_embeds['UNKN'])
+        ret2.append(graph_embeds['unk'])
     return ret1, np.array(ret2, 'float64')
 
 def load_idfs(idf_path, words):
