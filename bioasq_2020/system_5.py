@@ -62,7 +62,8 @@ def f7(seq):
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x))]
 
-in_dir      = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/bioasq8_bm25_top100/'
+in_dir  = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/bioasq8_bm25_top100/'
+odir    = '/home/dpappas/bioasq8_batch1_system5_out/'
 
 docs_data   = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_docset_top100.test.pkl'), 'rb'))
 ret_data    = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_top100.test.pkl'), 'rb'))
@@ -156,7 +157,6 @@ for quer in tqdm(ret_data['queries']):
 
 ###########################################################
 
-odir = '/home/dpappas/bioasq8_batch1_system5_out/'
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 
