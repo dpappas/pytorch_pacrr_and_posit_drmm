@@ -62,17 +62,18 @@ def f7(seq):
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x))]
 
-in_dir      = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/bioasq8_bm25_top100/'
-odir        = '/home/dpappas/bioasq8_batch1_system3_out/'
+in_dir          = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/bioasq8_bm25_top100/'
+odir            = '/home/dpappas/bioasq8_batch1_system3_out/'
+ret_data_path   = "/home/dpappas/bioasq8_batch1_out_jpdrmm/v3 test_emit_bioasq.json"
+idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 
 docs_data   = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_docset_top100.test.pkl'), 'rb'))
-ret_data    = json.load(open("/home/dpappas/bioasq8_batch1_out_jpdrmm/v3 test_emit_bioasq.json"))
+ret_data    = json.load(open(ret_data_path))
 
 avgdl, mean, deviation      = 21.1907, 0.6275, 1.2210
 print(avgdl, mean, deviation)
 ###########################################################
 print('loading idfs')
-idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 idf, max_idf        = load_idfs(idf_pickle_path)
 ###########################################################
 
