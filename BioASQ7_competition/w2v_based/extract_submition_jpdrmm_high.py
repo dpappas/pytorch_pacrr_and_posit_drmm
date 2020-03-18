@@ -1301,11 +1301,11 @@ sh test_bioasq_2.sh 1111111_1p0
 
 CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 1 \
 /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-system1_output_b1
+/home/dpappas/bioasq_2020/system1_output_b1
 
 CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 2 \
 /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-system1_output_b2
+/home/dpappas/bioasq_2020/system1_output_b2
 
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
