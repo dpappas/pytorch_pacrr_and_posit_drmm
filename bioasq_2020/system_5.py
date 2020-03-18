@@ -69,8 +69,6 @@ odir    = '/home/dpappas/bioasq_2020/system5_output_b{}/'.format(b)
 docs_data   = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_docset_top100.test.pkl'), 'rb'))
 ret_data    = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_top100.test.pkl'), 'rb'))
 
-# pprint(ret_data['queries'][0])
-
 ###########################################################
 avgdl, mean, deviation      = 21.1907, 0.6275, 1.2210
 print(avgdl, mean, deviation)
