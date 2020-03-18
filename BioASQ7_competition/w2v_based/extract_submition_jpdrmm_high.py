@@ -1298,5 +1298,15 @@ sh test_bioasq_2.sh 1111111_100p0
 sh test_bioasq_2.sh 1111111_10p0
 sh test_bioasq_2.sh 1111111_1p0
 
+
+CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 1 \
+/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
+system2_output_b1
+
+CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 2 \
+/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
+system2_output_b2
+
+
 '''
 
