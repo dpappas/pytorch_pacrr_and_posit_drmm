@@ -11,6 +11,9 @@ index_dir               = '/media/dpappas/dpappas_data/models_out/batched_semir_
 bioasq_test_set_fpath   = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/BioASQ-task8bPhaseA-testset{}'.format(b, b)
 odir                    = '/home/dpappas/bioasq_2020/system4_output_b{}/'.format(b)
 
+if(not os.path.exists(odir)):
+    os.makedirs(odir)
+
 bin_fpaths  = [fpath for fpath in os.listdir(index_dir) if fpath.endswith('.bin')]
 
 ##############################################################################################################
