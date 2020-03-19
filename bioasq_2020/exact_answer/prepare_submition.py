@@ -5,7 +5,7 @@ import json
 fpaths = [
     (
         'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\ir_results\\system1.json',
-        'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\exact_answer\\system_3.json',
+        'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\exact_answer\\system_1.json',
         'C:\\Users\\dvpap\\OneDrive\\Desktop\\system_1.json'
     ),
     (
@@ -31,9 +31,9 @@ for f1, f2, opath in fpaths:
         quest['type'] = tt[quest['id']]
         #######################################
         if(quest['type'] == 'factoid'):
-            quest['exact_answer'] = [t['text'] for t in res['ngrams']]
+            quest['exact_answer'] = res['exact_answer']
         if(quest['type'] == 'list'):
-            quest['exact_answer'] = [[t['text']] for t in res['ngrams']]
+            quest['exact_answer'] = res['exact_answer']
         if(quest['type'] == 'yesno'):
             quest['exact_answer'] = 'yes'
         if(quest['type'] == 'summary'):
