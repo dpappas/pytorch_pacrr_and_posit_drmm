@@ -6,16 +6,16 @@ JPDRMM -> SGRANK
 '''
 
 import scispacy
-# import spacy
+import spacy
 import re
 import json, pickle
-from pprint import pprint
+from tqdm import tqdm
 from collections import Counter
 from textacy import make_spacy_doc, keyterms
 
 bioclean_mod    = lambda t: re.sub('[~`@#$-=<>/.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').replace("\n", ' ').strip().lower())
 
-nlp 	= scispacy.load("en_core_sci_lg")
+nlp 	= spacy.load("en_core_sci_lg")
 
 def load_idfs(idf_path):
     print('Loading IDF tables')
@@ -81,9 +81,9 @@ def check_answer(ans, quest):
         return False
     return True
 
-data    = json.load(open('/home/dpappas/BioASQ-task8bPhaseB-testset2'))
-fpath3  = '/home/dpappas/bioasq8_batch2_system1_results.json'
-f3      = '/home/dpappas/system_1_jpdrmm_sgrank.json'
+data            = json.load(open('/home/dpappas/BioASQ-task8bPhaseB-testset2'))
+fpath3          = '/home/dpappas/system1.json'
+ofpath          = '/home/dpappas/system_1_jpdrmm_sgrank.json'
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 
 idf, max_idf    = load_idfs(idf_pickle_path)
@@ -92,7 +92,7 @@ qid2type = dict((quest['id'], quest['type']) for quest in data['questions'])
 
 dd      = json.load(open(fpath3))
 
-for quest in dd['questions']:
+for quest in tqdm(dd['questions']):
     quest['type'] = qid2type[quest['id']]
     if(quest['type'] not in ['factoid', 'list']):
         continue
@@ -111,7 +111,7 @@ for quest in dd['questions']:
     else :
         quest['exact_answer'] = [kt[0] for kt in my_kt_ens]
 
-with open(f3, 'w') as of:
+with open(ofpath, 'w') as of:
     of.write(json.dumps(dd, indent=4, sort_keys=True))
     of.close()
 

@@ -5,15 +5,16 @@ get GOLD results and then call SGRANK to get the answers
 GOLD -> SGRANK
 '''
 
-import  scispacy
-# import  spacy
+# import  scispacy
+import  spacy
 import  re
 import  json, pickle
+from tqdm import tqdm
 from    textacy import make_spacy_doc, keyterms
 
 bioclean_mod    = lambda t: re.sub('[~`@#$-=<>/.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').replace("\n", ' ').strip().lower())
 
-nlp 	= scispacy.load("en_core_sci_lg")
+nlp 	= spacy.load("en_core_sci_lg")
 
 def load_idfs(idf_path):
     print('Loading IDF tables')
@@ -80,14 +81,14 @@ def check_answer(ans, quest):
     return True
 
 data            = json.load(open('/home/dpappas/BioASQ-task8bPhaseB-testset2'))
-f1              = '/home/dpappas/system_5_gold_sgrank.json'
+ofpath          = '/home/dpappas/system_5_gold_sgrank.json'
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 
 idf, max_idf    = load_idfs(idf_pickle_path)
 
 qid2type = dict((quest['id'], quest['type']) for quest in data['questions'])
 
-for quest in data['questions']:
+for quest in tqdm(data['questions']):
     if(quest['type'] not in ['factoid', 'list']):
         continue
     # print(quest['body'])
@@ -127,6 +128,6 @@ for quest in data['questions']:
     else:
         quest['exact_answer'] = [kt[0] for kt in my_kt_ens]
 
-with open(f1, 'w') as of:
+with open(ofpath, 'w') as of:
     of.write(json.dumps(data, indent=4, sort_keys=True))
     of.close()
