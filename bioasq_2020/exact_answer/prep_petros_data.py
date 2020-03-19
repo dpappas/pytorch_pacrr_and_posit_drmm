@@ -36,9 +36,10 @@ for f1, f2, opath in fpaths:
         quest['type'] = tt[quest['id']]
         #######################################
         if(quest['type'] == 'factoid'):
-            quest['exact_answer'] = [t['text'] for t in res['ngrams']]
+            quest['exact_answer'] = list(set([t['text'] for t in res['ngrams']]))
         if(quest['type'] == 'list'):
-            quest['exact_answer'] = [[t['text']] for t in res['ngrams']]
+            quest['exact_answer'] = list(set([t['text'] for t in res['ngrams']]))
+            quest['exact_answer'] = [[t] for t in quest['exact_answer']]
         if(quest['type'] == 'yesno'):
             quest['exact_answer'] = 'yes'
         if(quest['type'] == 'summary'):
