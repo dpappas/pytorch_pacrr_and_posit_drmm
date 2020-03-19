@@ -10,7 +10,7 @@ fpaths = [
     ),
     (
         'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\BioASQ-task8bPhaseB-testset2.json',
-        # 'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\exact_answer\\system_3.json',
+        'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\exact_answer\\system_5.json',
         'C:\\Users\\dvpap\\OneDrive\\Desktop\\system_5.json'
     )
 ]
@@ -28,7 +28,7 @@ for f1, f2, opath in fpaths:
     # pprint(d2)
     for quest, res in zip(d1['questions'], d2):
         #######################################
-        quest['type'] = tt[quest['id']]
+        quest['type']   = tt[quest['id']]
         #######################################
         if(quest['type'] == 'factoid'):
             quest['exact_answer'] = res['exact_answer']
