@@ -8,22 +8,16 @@ fpaths = [
         'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\exact_answer\\system_3.json',
         'C:\\Users\\dvpap\\OneDrive\\Desktop\\system_3.json'
     ),
-    # (
-    #     '',
-    #     ''
-    # ),
-    # (
-    #     '',
-    #     ''
-    # ),
-    # (
-    #     '',
-    #     ''
-    # ),
-    # (
-    #     '',
-    #     ''
-    # ),
+    (
+        'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\ir_results\\system2.json',
+        'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\exact_answer\\system_2.json',
+        'C:\\Users\\dvpap\\OneDrive\\Desktop\\system_2.json'
+    ),
+    (
+        'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\BioASQ-task8bPhaseB-testset2.json',
+        'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\exact_answer\\system_4.json',
+        'C:\\Users\\dvpap\\OneDrive\\Desktop\\system_4.json'
+    )
 ]
 
 fff = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch2_submit_files\\BioASQ-task8bPhaseB-testset2.json'
@@ -49,7 +43,10 @@ for f1, f2, opath in fpaths:
             quest['exact_answer'] = 'yes'
         if(quest['type'] == 'summary'):
             quest['ideal_answer'] = [' '.join(s['text'] for s in quest['snippets'])]
-    break
+        #######################################
+    with open(opath, 'w') as of:
+        of.write(json.dumps(d1, indent=4, sort_keys=True))
+        of.close()
 
 
 
