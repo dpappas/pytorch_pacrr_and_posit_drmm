@@ -25,7 +25,16 @@ for f1, f2 in fpaths:
     c += 1
     #####################################################################
     d2 = json.load(open(f2))
-    tt = dict((q['id'], (q['type'], q['exact_answer'] if 'exact_answer' in q else None))for q in d2['questions'])
+    tt = dict(
+        (
+            q['id'],
+            (
+                q['type'],
+                q['exact_answer'] if 'exact_answer' in q else None
+            )
+        )
+        for q in d2['questions']
+    )
     #####################################################################
     d1 = json.load(open(f1))
     for quest in d1['questions']:
