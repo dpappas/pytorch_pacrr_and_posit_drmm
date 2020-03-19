@@ -15,6 +15,8 @@ from textacy import make_spacy_doc, keyterms
 
 bioclean_mod    = lambda t: re.sub('[~`@#$-=<>/.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').replace("\n", ' ').strip().lower())
 
+nlp 	= spacy.load("en_core_sci_lg")
+
 def load_idfs(idf_path):
     print('Loading IDF tables')
     with open(idf_path, 'rb') as f:
@@ -83,8 +85,6 @@ data    = json.load(open('/home/dpappas/BioASQ-task8bPhaseB-testset2'))
 fpath3  = '/home/dpappas/bioasq8_batch2_system1_results.json'
 f3      = '/home/dpappas/system_1_jpdrmm_sgrank.json'
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
-
-nlp 	= spacy.load("en_core_sci_lg")
 
 idf, max_idf    = load_idfs(idf_pickle_path)
 
