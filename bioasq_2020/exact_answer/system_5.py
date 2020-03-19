@@ -5,17 +5,15 @@ get GOLD results and then call SGRANK to get the answers
 GOLD -> SGRANK
 '''
 
-import scispacy
-import spacy
-import re
-import json, pickle
-from pprint import pprint
-from collections import Counter
-from textacy import make_spacy_doc, keyterms
+import  scispacy
+# import  spacy
+import  re
+import  json, pickle
+from    textacy import make_spacy_doc, keyterms
 
 bioclean_mod    = lambda t: re.sub('[~`@#$-=<>/.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').replace("\n", ' ').strip().lower())
 
-nlp 	= spacy.load("en_core_sci_lg")
+nlp 	= scispacy.load("en_core_sci_lg")
 
 def load_idfs(idf_path):
     print('Loading IDF tables')

@@ -6,7 +6,7 @@ JPDRMM -> SGRANK
 '''
 
 import scispacy
-import spacy
+# import spacy
 import re
 import json, pickle
 from pprint import pprint
@@ -15,7 +15,7 @@ from textacy import make_spacy_doc, keyterms
 
 bioclean_mod    = lambda t: re.sub('[~`@#$-=<>/.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').replace("\n", ' ').strip().lower())
 
-nlp 	= spacy.load("en_core_sci_lg")
+nlp 	= scispacy.load("en_core_sci_lg")
 
 def load_idfs(idf_path):
     print('Loading IDF tables')
