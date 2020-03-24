@@ -41,11 +41,7 @@ mapping = {
                 "section"          : {
                     "type"      : "text",
                     "analyzer"  : "english",
-                    "fields": {
-                        "raw": {
-                            "type": "keyword"
-                        }
-                    }
+                    "fields": {"raw": {"type": "keyword"}}
                 }
             }
         }
