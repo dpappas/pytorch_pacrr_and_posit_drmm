@@ -3,7 +3,8 @@ import zipfile, json
 from pprint import pprint
 from tqdm import tqdm
 
-zip_path    = 'C:\\Users\\dvpap\\Downloads\\db_entries.zip'
+# zip_path    = 'C:\\Users\\dvpap\\Downloads\\db_entries.zip'
+zip_path    = '/media/dpappas/dpappas_data/COVID/db_entries.zip'
 archive     = zipfile.ZipFile(zip_path, 'r')
 jsondata    = archive.read('db_entries.json')
 d           = json.loads(jsondata)

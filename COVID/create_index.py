@@ -1,10 +1,9 @@
 
 from elasticsearch import Elasticsearch
+from pprint import pprint
 
-index   = 'covid_index_0_1'
-map     = 'covid_map_0_1'
-
-elastic_con   = Elasticsearch(['127.0.01:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+index       = 'covid_index_0_1'
+elastic_con = Elasticsearch(['127.0.01:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 elastic_con.indices.delete(index=index, ignore=[400,404])
 
 mapping = {
@@ -20,8 +19,7 @@ mapping = {
         }
     },
     "mappings":{
-        map:{
-            "properties":{
+        "properties":{
                 ######### TEXT
                 'joint_text'  : {
                     "type"          : "text",
@@ -41,61 +39,14 @@ mapping = {
                 "section"          : {
                     "type"      : "text",
                     "analyzer"  : "english",
-                    "fields": {"raw": {"type": "keyword"}}
+                    "fields": {
+                        "raw": {
+                            "type": "keyword"
+                        }
+                    }
                 }
             }
-        }
     }
 }
 
-print(elastic_con.indices.create(index = index, ignore=400, body=mapping))
-
-
-'''
-
-b   : a weight for doc length           default 0.75
-k1  : a weight for term frequencies     default 1.2
-
-curl -XPOST 'http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_close'
-curl -XPUT "http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_settings" -d '
-{
-    "similarity": {
-        "my_similarity": { 
-            "type": "BM25",
-            "b"  : 0.1,
-            "k1" : 0.9
-        }
-    }
-}'
-curl -XPOST 'http://192.168.188.79:9201/pubmed_abstracts_joint_0_1/_open'
-
-
-
-
-curl -XPUT "http://192.168.188.79:9201/pubmed_abstracts_joint_0_1" -d '
-{
-    "settings": {
-        "similarity": {
-            "my_similarity": { 
-                "type": "BM25",
-                "b"  : 0.1,
-                "k1" : 0.9
-            }
-        }
-    }
-}
-'
-
-curl -XPUT "http://<server>/<index>" -d '
-{
-  "settings": {
-    "similarity": {
-      "custom_bm25": { 
-        "type": "BM25",
-        "b":    0 ,
-         "k1" : 0.9
-      }
-    }
-  }'
-'''
-
+pprint(elastic_con.indices.create(index = index, ignore=400, body=mapping))
