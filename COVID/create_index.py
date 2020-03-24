@@ -44,7 +44,12 @@ mapping = {
                             "type": "keyword"
                         }
                     }
-                }
+                },
+                ######### NESTED
+                "doc_vec_scibert": {
+                    "type": "dense_vector",
+                    "dims": 50
+                },
             }
     }
 }
