@@ -36,6 +36,16 @@ mapping = {
                 'date'       : {
                     "type"      : "date",
                     "format"    : "yyy-MM-dd HH:mm:ss||yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||yyyy/MM/dd||dd/MM/yyyy||epoch_millis||EE MMM d HH:mm:ss Z yyyy"
+                },
+                ######### NESTED
+                "section"          : {
+                    "type"      : "text",
+                    "analyzer"  : "english",
+                    "fields": {
+                        "raw": {
+                            "type": "keyword"
+                        }
+                    }
                 }
             }
         }
