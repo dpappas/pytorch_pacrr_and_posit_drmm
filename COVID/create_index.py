@@ -29,100 +29,13 @@ mapping = {
                     "similarity"    : "my_similarity",
                 },
                 ######### KEYWORDS
+                'pmcid'             : {"type": "keyword"},
+                'doi'               : {"type": "keyword"},
                 'pmid'              : {"type": "keyword"},
                 ######### DATES
-                'Date'       : {
+                'date'       : {
                     "type"      : "date",
                     "format"    : "yyy-MM-dd HH:mm:ss||yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||yyyy/MM/dd||dd/MM/yyyy||epoch_millis||EE MMM d HH:mm:ss Z yyyy"
-                },
-                ######### NESTED
-                "Chemicals"         : {
-                    "properties": {
-                        "UI": {
-                            "type": "keyword"
-                        },
-                        "NameOfSubstance": {
-                            "type"      : "text",
-                            "analyzer"  : "english",
-                            "fields": {
-                                "raw": {
-                                    "type": "keyword"
-                                }
-                            }
-                        },
-                        "RegistryNumber": {
-                            "type": "keyword",
-                        },
-                    }
-                },
-                'OtherIDs'          : {
-                    "properties": {
-                        "id": {
-                            "type": "keyword"
-                        },
-                        "Source": {
-                            "type": "keyword"
-                        },
-                    }
-                },
-                'MeshHeadings'      : {
-                    "properties": {
-                        'UI' : {
-                            "type": "keyword"
-                        },
-                        'MajorTopicYN' : {
-                            "type": "keyword"
-                        },
-                        'Type' : {
-                            "type": "keyword"
-                        },
-                        'text' : {
-                            "type"      : "text",
-                            "analyzer"  : "english",
-                            "fields": {
-                                "raw": {
-                                    "type": "keyword"
-                                }
-                            }
-                        },
-                        'Label' : {
-                            "type"      : "text",
-                            "analyzer"  : "english",
-                            "fields": {
-                                "raw": {
-                                    "type": "keyword"
-                                }
-                            }
-                        },
-                    }
-                },
-                "Keywords"          : {
-                    "type"      : "text",
-                    "analyzer"  : "english",
-                    "fields": {
-                        "raw": {
-                            "type": "keyword"
-                        }
-                    }
-                },
-                'SupplMeshList'     : {
-                    "properties": {
-                        'text' : {
-                            "type"      : "text",
-                            "analyzer"  : "english",
-                            "fields": {
-                                "raw": {
-                                    "type": "keyword"
-                                }
-                            }
-                        },
-                        'GrantID' : {
-                            "type": "keyword"
-                        },
-                        'Agency' : {
-                            "type": "keyword"
-                        },
-                    }
                 }
             }
         }
