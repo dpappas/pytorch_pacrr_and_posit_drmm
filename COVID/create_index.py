@@ -13,8 +13,8 @@ mapping = {
             "similarity" : {
               "my_similarity" : {
                 "type"  : "BM25",
-                "k1"    : "1.2",
-                "b"     : "0.75"
+                "k1"    : "0.6",
+                "b"     : "0.3"
               }
             }
         }
