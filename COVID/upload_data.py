@@ -34,11 +34,10 @@ index       = 'covid_index_0_1'
 elastic_con = Elasticsearch(['127.0.01:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
 for item in tqdm(d):
-    key = mystring = input(item['joint_text'][100:])
-    hash_object = hashlib.md5(mystring.encode())
-    # print(hash_object.hexdigest())
-    idd     = '{}_{}_{}_{}'.format(item['pmid'], item['pmcid'], item['doi'], hash_object)
-    vec     = encode_sent_with_bert(item['joint_text'].replace('\n------------------------------', ''), max_len=512)
-    vec     = vec[0].cpu().detach().numpy()
-    result  = elastic_con.index(index=index, body=item, id=idd)
+    hash_object     = hashlib.md5(item['joint_text'].encode()).hexdigest()
+    idd                     = '{}_{}_{}_{}_{}'.format(item['pmid'], item['pmcid'], item['doi'], hash_object)
+    vec                     = encode_sent_with_bert(item['joint_text'].replace('\n------------------------------', ''), max_len=512)
+    vec                     = vec[0].cpu().detach().numpy()
+    item["doc_vec_scibert"] = vec.tolist()
+    result                  = elastic_con.index(index=index, body=item, id=idd)
     # break

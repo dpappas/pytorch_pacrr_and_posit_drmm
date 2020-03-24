@@ -33,7 +33,7 @@ mapping = {
                 ######### DATES
                 'date'       : {
                     "type"      : "date",
-                    "format"    : "yyy-MM-dd HH:mm:ss||yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||yyyy/MM/dd||dd/MM/yyyy||epoch_millis||EE MMM d HH:mm:ss Z yyyy"
+                    "format"    : "yyyy-MM-dd"
                 },
                 ######### NESTED
                 "section"          : {
@@ -48,7 +48,7 @@ mapping = {
                 ######### NESTED
                 "doc_vec_scibert": {
                     "type": "dense_vector",
-                    "dims": 50
+                    "dims": 768
                 },
             }
     }
