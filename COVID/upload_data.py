@@ -47,8 +47,7 @@ bert_model      = BertModel.from_pretrained(scibert_dir,  output_hidden_states=F
 # zip_path    = 'C:\\Users\\dvpap\\Downloads\\db_entries.zip'
 zip_path    = '/media/dpappas/dpappas_data/COVID/db_entries.zip'
 archive     = zipfile.ZipFile(zip_path, 'r')
-jsondata    = archive.read('db_entries.json')
-d           = json.loads(jsondata)
+d           = json.loads(archive.read('db_entries.json'))
 
 index       = 'covid_index_0_1'
 elastic_con = Elasticsearch(['127.0.01:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
@@ -70,7 +69,6 @@ for item in tqdm(d[fromm:too]):
     vec                     = encode_sent_with_bert(item['joint_text'].replace('\n------------------------------', ''), max_len=512)
     vec                     = vec[0].cpu().detach().numpy()
     item["doc_vec_scibert"] = vec.tolist()
-    # result                  = elastic_con.index(index=index, body=item, id=idd)
     actions.append(create_an_action(item))
     if (len(actions) >= b_size):
         send_to_elk(actions)
