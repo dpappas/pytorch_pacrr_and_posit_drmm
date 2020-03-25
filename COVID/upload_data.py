@@ -77,9 +77,12 @@ for item in tqdm(d[fromm:too]):
 send_to_elk(actions)
 
 '''
-python3.6 index_sents.py 0 250000 &
+python3.6 index_sents.py 0 125000 &
+python3.6 index_sents.py 125000 250000 &
 python3.6 index_sents.py 250000 500000 &
-python3.6 index_sents.py 500000 750000 &
-python3.6 index_sents.py 750000 1000000 &
+python3.6 index_sents.py 500000 625000 &
+python3.6 index_sents.py 625000 750000 &
+python3.6 index_sents.py 750000 875000 &
+python3.6 index_sents.py 875000 1000000 &
 python3.6 index_sents.py 1000000 1250000
 '''
