@@ -5,6 +5,7 @@ from tqdm import tqdm
 from elasticsearch import Elasticsearch
 from pprint import pprint
 import torch
+from dateutil import parser
 from pytorch_transformers import BertModel, BertTokenizer
 
 my_seed     = 1989
@@ -36,10 +37,14 @@ elastic_con = Elasticsearch(['127.0.01:9200'], verify_certs=True, timeout=150, m
 for item in tqdm(d):
     if(len(item['date'])==0):
         item['date'] = None
+    else:
+        try:
+            item['date'] = parser.parse(item['date']).strftime('%Y-%m-%d')
+        except:
+            item['date'] = None
     hash_object     = hashlib.md5(item['joint_text'].encode()).hexdigest()
     idd                     = '{}_{}_{}_{}'.format(item['pmid'], item['pmcid'], item['doi'], hash_object)
     vec                     = encode_sent_with_bert(item['joint_text'].replace('\n------------------------------', ''), max_len=512)
     vec                     = vec[0].cpu().detach().numpy()
     item["doc_vec_scibert"] = vec.tolist()
     result                  = elastic_con.index(index=index, body=item, id=idd)
-    # break
