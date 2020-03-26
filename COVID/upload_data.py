@@ -45,8 +45,8 @@ bert_tokenizer  = BertTokenizer.from_pretrained(scibert_dir)
 bert_model      = BertModel.from_pretrained(scibert_dir,  output_hidden_states=False, output_attentions=False).to(device)
 
 # zip_path    = 'C:\\Users\\dvpap\\Downloads\\db_entries.zip'
-# zip_path    = '/media/dpappas/dpappas_data/COVID/db_entries.zip'
-zip_path    = '/home/dpappas/db_entries.zip'
+zip_path    = '/media/dpappas/dpappas_data/COVID/db_entries.zip'
+# zip_path    = '/home/dpappas/db_entries.zip'
 archive     = zipfile.ZipFile(zip_path, 'r')
 d           = json.loads(archive.read('db_entries.json'))
 
@@ -56,7 +56,7 @@ elastic_con = Elasticsearch(['127.0.01:9200'], verify_certs=True, timeout=150, m
 fromm       = int(sys.argv[1])
 too         = int(sys.argv[2])
 actions     = []
-b_size      = 10
+b_size      = 200
 for item in tqdm(d[fromm:too]):
     if(len(item['date'])==0):
         item['date'] = None
@@ -65,8 +65,8 @@ for item in tqdm(d[fromm:too]):
             item['date'] = parser.parse(item['date']).strftime('%Y-%m-%d')
         except:
             item['date'] = None
-    hash_object     = hashlib.md5(item['joint_text'].encode()).hexdigest()
-    idd                     = '{}_{}_{}_{}'.format(item['pmid'], item['pmcid'], item['doi'], hash_object)
+    # hash_object     = hashlib.md5(item['joint_text'].encode()).hexdigest()
+    idd                     = '{}_{}_{}_{}'.format(item['pmid'], item['pmcid'], item['doi'], item['joint_text'][-50:])
     vec                     = encode_sent_with_bert(item['joint_text'].replace('\n------------------------------', ''), max_len=512)
     vec                     = vec[0].cpu().detach().numpy()
     item["doc_vec_scibert"] = vec.tolist()
