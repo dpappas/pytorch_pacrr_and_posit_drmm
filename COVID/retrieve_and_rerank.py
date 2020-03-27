@@ -107,7 +107,7 @@ def idf_val(w, idf, max_idf):
 def get_embeds(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
-        if(tok in wv):
+        if(tok in wv and tok not in stopwords):
             ret1.append(tok)
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
