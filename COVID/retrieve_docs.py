@@ -13,7 +13,9 @@ import torch
 bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
 bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 #####################################################################################
-with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
+# with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
+#     stopwords = pickle.load(f)
+with open('stopwords.pkl', 'rb') as f:
     stopwords = pickle.load(f)
 
 print(stopwords)

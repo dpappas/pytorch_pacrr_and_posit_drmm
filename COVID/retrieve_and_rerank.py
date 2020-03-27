@@ -1,8 +1,12 @@
 
 ###########################################################
-w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
-resume_from                 = '/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
+# w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+# idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
+# resume_from                 = '/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
+###########################################################
+w2v_bin_path                = 'pubmed2018_w2v_30D.bin'
+idf_pickle_path             = 'idf.pkl'
+resume_from                 = 'best_dev_checkpoint.pth.tar'
 ###########################################################
 
 from    retrieve_docs  import get_first_n_1, pprint, bioclean, stopwords, os, np, pickle, tqdm, json
