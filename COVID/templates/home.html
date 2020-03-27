@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $("select[name='select_sent1']").on('change', function() {
+            $("textarea[name='sent1']").val($(this).val());
+        });
+    });
+    $(document).ready(function(){
+        $("select[name='select_sent1']").on('click', function() {
+            $("textarea[name='sent1']").val($(this).val());
+        });
+    });
+    //
+    $(document).ready(function(){
+        $("select[name='select_section']").on('change', function() {
+            $("textarea[name='section']").val($(this).val());
+        });
+    });
+    $(document).ready(function(){
+        $("select[name='select_section']").on('click', function() {
+            $("textarea[name='section']").val($(this).val());
+        });
+    });
+    </script>
+</head>
+<body>
+    <title>QA demo</title>
+    <form action="/submit_question" method="POST">
+        </br>
+        Write you own question:
+        </br>
+        <textarea name="sent1" id="sent1" placeholder="Write here your question." style="width: 705px; height: 59px;"></textarea>
+        </br>
+        Or select some example:
+        </br>
+        <select name="select_sent1" id="slt2">
+            <option>Describe Canvas SPW</option>
+            <option>Which two drugs are included in the MAVYRET pill?</option>
+            <option>Are there graph kernel libraries available implemented in JAVA?</option>
+            <option>Is durvalumab used for lung cancer treatment?</option>
+            <option>What is the cause of Sandhoff disease?</option>
+            <option>Are there tools for reviewing variant calls?</option>
+            <option>Name one CCR4 targeted drug.</option>
+            <option>Can enasidenib be used for the treatment of acute myeloid leukemia?</option>
+            <option>What is the most effective therapy for androgenic alopecia?</option>
+        </select>
+        </br>
+        </br>
+        <textarea name="section" id="section" placeholder="Narrow down your section." style="width: 705px; height: 59px;"></textarea>
+        </br>
+        Or select some example:
+        </br>
+        <select name="select_section" id="slt_section">
+            <option>Abstract</option>
+            <option>Background</option>
+            <option>Conclusion</option>
+            <option>Clinical signs</option>
+            <option>Diagnosis</option>
+            <option>Discussion</option>
+            <option>Introduction</option>
+            <option>MATERIALS AND METHODS</option>
+            <option>Methods</option>
+            <option>Results</option>
+            <option>Results and discussion</option>
+            <option>Statistical analysis</option>
+            <option>Treatment</option>
+        </select>
+        </br>
+        </br>
+        </br>
+        <input type="submit" value="Submit"/>
+    </form>
+</body>
+</html>
