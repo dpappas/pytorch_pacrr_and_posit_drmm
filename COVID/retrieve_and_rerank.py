@@ -848,8 +848,6 @@ emit_only_abstract_sents    = False
 ###########################################################
 use_cuda                    = torch.cuda.is_available()
 ###########################################################
-ddd                         = resume_from.split(os.path.sep)[-2].split('_')[1].strip()
-print(ddd)
 use_sent_extra              = True
 use_doc_extra               = True
 use_OH_sim                  = True
