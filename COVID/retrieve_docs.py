@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 from elasticsearch import Elasticsearch
 from pprint import pprint
-import torch
+import torch, nltk
 
 #####################################################################################
 # Modified bioclean: also split on dashes. Works better for retrieval with galago.
@@ -17,6 +17,12 @@ bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"',
 #     stopwords = pickle.load(f)
 with open('stopwords.pkl', 'rb') as f:
     stopwords = pickle.load(f)
+
+stopwords   = stopwords.union(set(nltk.corpus.stopwords.words("english")))
+stopwords.add('know')
+stopwords.add('what')
+stopwords.add('who')
+stopwords.add('which')
 
 print(stopwords)
 #####################################################################################
