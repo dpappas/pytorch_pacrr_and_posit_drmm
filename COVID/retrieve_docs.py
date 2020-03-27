@@ -19,11 +19,10 @@ with open('stopwords.pkl', 'rb') as f:
     stopwords = pickle.load(f)
 
 stopwords   = stopwords.union(set(nltk.corpus.stopwords.words("english")))
-stopwords.add('know')
 stopwords.add('what')
 stopwords.add('who')
 stopwords.add('which')
-
+stopwords.add('know')
 print(stopwords)
 #####################################################################################
 

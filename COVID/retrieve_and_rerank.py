@@ -13,7 +13,7 @@ from    retrieve_docs  import get_first_n_1, pprint, bioclean, stopwords, os, np
 from    nltk.tokenize   import sent_tokenize
 from    gensim.models.keyedvectors  import KeyedVectors
 from    difflib                     import SequenceMatcher
-import  torch, random
+import  nltk, torch, random
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  torch.autograd              as autograd
@@ -97,7 +97,7 @@ def get_words(s, idf, max_idf):
 
 def tokenize(x):
     tokens = bioclean(x)
-    tokens = [tok for tok in tokens if tok not in stopwords]
+    # tokens = [tok for tok in tokens if tok not in stopwords]
     return tokens
 
 def idf_val(w, idf, max_idf):
