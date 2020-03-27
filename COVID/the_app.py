@@ -96,7 +96,7 @@ def submit_question():
         print(sents_max_score)
         for sent_score, sent_text in doc['sents_with_scores']:
             sent_text               = sent_text.replace('</', '< ')
-            if(sent_score == sents_max_score):
+            if(sent_score == sents_max_score and sent_score >=0.15):
                 sent_score = 1
             if(sent_score<0.45):
                 sent_score = 0.0
