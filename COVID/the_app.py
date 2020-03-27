@@ -83,6 +83,12 @@ def submit_question():
     scaler          = MinMaxScaler(feature_range=(0, 0.5))
     scaler.fit(np.array([d['doc_score'] for d in ret_dummy]).reshape(-1, 1))
     ###############################################################################################
+    top_10_snips = []
+    for doc in ret_dummy:
+        top_10_snips.extend(doc['sents_with_scores'])
+    top_10_snips.sort(key=lambda x: x[0])
+    top_10_snips = [t[1] for t in top_10_snips[:10]]
+    ###############################################################################################
     for doc in ret_dummy:
         doc_date        = doc['date']
         doc_score       = scaler.transform([[doc['doc_score']]])[0][0] + 0.5
@@ -127,6 +133,8 @@ def submit_question():
         for sent_score, sent_text in doc['sents_with_scores']:
             sent_text               = sent_text.replace('</', '< ')
             if(sent_score == sents_max_score and sent_score >= 0.15):
+                sent_score = 1
+            if(sent_text in top_10_snips):
                 sent_score = 1
             if(sent_score<0.45):
                 sent_score = 0.0
