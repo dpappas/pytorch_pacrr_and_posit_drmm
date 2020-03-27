@@ -92,8 +92,7 @@ def submit_question():
             str(doc_score * 100), doc_bgcolor, doc_txtcolor, doc['pmid'], doc['pmcid'], doc['doi'], doc_date
         )
         ##############################################################################################################################
-        for score, sent in doc['sents_with_scores']:
-            sent_score, sent_text   = sent
+        for sent_score, sent_text in doc['sents_with_scores']:
             sent_text               = sent_text.replace('</', '< ')
             if(sent_score<0.45):
                 sent_score = 0.0
