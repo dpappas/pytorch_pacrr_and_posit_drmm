@@ -88,12 +88,16 @@ def submit_question():
         doc_score       = scaler.transform([[doc['doc_score']]])[0][0] + 0.5
         doc_bgcolor     = green_colors[int(doc_score * 100)]
         doc_txtcolor    = 'white' if (doc_score > 0.5) else 'black'
-        text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{}   PMCID:{}   doi:{}   Date:{}</button><div class="panel">'.format(
-            str(doc_score * 100), doc_bgcolor, doc_txtcolor, doc['pmid'], doc['pmcid'], doc['doi'], doc_date
+        text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{}   PMCID:{}   doi:{}   SECTION:{}   Date:{}</button><div class="panel">'.format(
+            str(doc_score * 100), doc_bgcolor, doc_txtcolor, doc['pmid'], doc['pmcid'], doc['doi'], doc['section'], doc_date
         )
         ##############################################################################################################################
+        sents_max_score = max(sent_score for sent_score, _ in doc['sents_with_scores'])
+        print(sents_max_score)
         for sent_score, sent_text in doc['sents_with_scores']:
             sent_text               = sent_text.replace('</', '< ')
+            if(sent_score == sents_max_score):
+                sent_score = 1
             if(sent_score<0.45):
                 sent_score = 0.0
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(sent_score, yellow_colors[int(sent_score*100)], sent_text)
