@@ -88,20 +88,23 @@ def submit_question():
         doc_score       = scaler.transform([[doc['doc_score']]])[0][0] + 0.5
         doc_bgcolor     = green_colors[int(doc_score * 100)]
         doc_txtcolor    = 'white' if (doc_score > 0.5) else 'black'
-        text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{} PMCID:{} doi:{} Date:{}</button><div class="panel">'.format(
+        text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{}   PMCID:{}   doi:{}   Date:{}</button><div class="panel">'.format(
             str(doc_score * 100), doc_bgcolor, doc_txtcolor, doc['pmid'], doc['pmcid'], doc['doi'], doc_date
         )
-        # for sent in ret_dummy[doc_id]['sentences']:
-        #     sent_score, sent_text   = sent
-        #     sent_text               = sent_text.replace('</', '< ')
-        #     if(sent_score<0.45):
-        #         sent_score = 0.0
-        #     text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(sent_score, yellow_colors[int(sent_score*100)], sent_text)
-        # text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
-        #     'link',
-        #     'white',
-        #     'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">{}</a>'.format(doc_id, doc_id)
-        # )
+        ##############################################################################################################################
+        for score, sent in doc['sents_with_scores']:
+            sent_score, sent_text   = sent
+            sent_text               = sent_text.replace('</', '< ')
+            if(sent_score<0.45):
+                sent_score = 0.0
+            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(sent_score, yellow_colors[int(sent_score*100)], sent_text)
+        ##############################################################################################################################
+        if(doc['pmid'] in doc and len(doc['pmid'].strip())!=0):
+            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+                'link',
+                'white',
+                'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">{}</a>'.format(doc['pmid'], doc['pmid'])
+            )
         text_to_return  += '</div>'
     text_to_return += '\n' + r2
     return text_to_return
