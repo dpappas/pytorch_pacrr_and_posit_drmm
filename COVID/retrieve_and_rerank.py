@@ -18,6 +18,7 @@ import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  torch.autograd              as autograd
 stopwords   = stopwords.union(set(nltk.corpus.stopwords.words("english")))
+stopwords.add('know')
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 
 # Compute the term frequency of a word for a specific document
