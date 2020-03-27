@@ -97,7 +97,9 @@ def get_words(s, idf, max_idf):
     return sl, sl2
 
 def tokenize(x):
-  return bioclean(x)
+    tokens = bioclean(x)
+    tokens = [tok for tok in tokens if tok not in stopwords]
+    return tokens
 
 def idf_val(w, idf, max_idf):
     if w in idf:
@@ -107,7 +109,7 @@ def idf_val(w, idf, max_idf):
 def get_embeds(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
-        if(tok in wv and tok not in stopwords):
+        if(tok in wv):
             ret1.append(tok)
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
@@ -356,28 +358,6 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         'held_out_sents'   : held_out_sents,
     }
 
-def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
-    emition                 = doc_emit_.cpu().item()
-    emitss                  = gs_emits_.tolist()
-    mmax                    = max(emitss)
-    all_emits, extracted_from_one = [], []
-    for ind in range(len(emitss)):
-        t = (
-            snip_is_relevant(held_out_sents[ind], gold_snips),
-            emitss[ind],
-            "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(retr['doc_id']),
-            held_out_sents[ind]
-        )
-        all_emits.append(t)
-        # extracted_from_one.append(t)
-        # if(emitss[ind] == mmax):
-        #     extracted_from_one.append(t)
-        if(emitss[ind]> min_sent_score):
-            extracted_from_one.append(t)
-    doc_res[retr['doc_id']] = float(emition)
-    all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
-    return doc_res, extracted_from_one, all_emits
-
 def get_norm_doc_scores(the_doc_scores):
     ks = list(the_doc_scores.keys())
     vs = [the_doc_scores[k] for k in ks]
@@ -424,61 +404,6 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
     sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
-
-def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
-    emitions                    = {
-        'body': dato['query_text'],
-        'id': dato['query_id'],
-        'documents': []
-    }
-    #
-    quest_text                  = dato['query_text']
-    quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-    q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
-    #
-    doc_res, extracted_snippets         = {}, []
-    for retr in retr_docs:
-        datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, [], idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
-        doc_emit_, gs_emits_    = model.emit_one(
-            doc1_sents_embeds   = datum['sents_embeds'],
-            question_embeds     = quest_embeds,
-            q_idfs              = q_idfs,
-            sents_gaf           = datum['sents_escores'],
-            doc_gaf             = datum['doc_af']
-        )
-        doc_res, extracted_from_one, all_emits = do_for_one_retrieved(doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, [])
-        # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
-        extracted_snippets.extend(extracted_from_one)
-        #
-        if (dato['query_id'] not in data_for_revision):
-            data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets'  : {retr['doc_id']: all_emits}}
-        else:
-            data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
-    #
-    doc_res                                 = sorted([item for item in doc_res.items() if(item[1]>min_doc_score)], key = lambda x: x[1], reverse = True)
-    the_doc_scores                          = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
-    doc_res                                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
-    emitions['documents']                   = doc_res[:100]
-    ret_data['questions'].append(emitions)
-    #
-    extracted_snippets                      = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-    if(use_sent_tokenizer):
-        extracted_snippets_v1               = select_snippets_v1(extracted_snippets)
-        extracted_snippets_v2               = select_snippets_v2(extracted_snippets)
-        extracted_snippets_v3               = select_snippets_v3(extracted_snippets, the_doc_scores)
-    else:
-        extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3 = [], [], []
-    #
-    snips_res_v1                = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_v2                = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    snips_res_v3                = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
-    #
-    snips_res = {
-        'v1' : snips_res_v1,
-        'v2' : snips_res_v2,
-        'v3' : snips_res_v3,
-    }
-    return data_for_revision, ret_data, snips_res
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
