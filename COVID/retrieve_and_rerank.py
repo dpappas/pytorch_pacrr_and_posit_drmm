@@ -908,17 +908,14 @@ def load_model_from_checkpoint(resume_from):
         print('ERROR! 404!!! EXITING!')
         exit()
 
-
+###########################################################
 min_doc_score               = -1000.
 min_sent_score              = -1000.
 emit_only_abstract_sents    = False
 ###########################################################
 use_cuda                    = torch.cuda.is_available()
 ###########################################################
-eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
-retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-###########################################################
-resume_from                 = ''
+resume_from                 = '/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
 ###########################################################
 ddd                         = resume_from.split(os.path.sep)[-2].split('_')[1].strip()
 print(ddd)
@@ -960,15 +957,6 @@ print('loading w2v')
 wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv = dict([(word, wv[word]) for word in wv.vocab.keys()])
 ###########################################################
+model.eval()
 test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 ###########################################################
-
-docs = (
-    get_first_n_1(
-        qtext       = 'A pneumonia outbreak associated with a new coronavirus of probable bat origin',
-        n           = 100,
-        max_year    = 2021
-    )
-)
-
-
