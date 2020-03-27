@@ -912,3 +912,4 @@ def retrieve_given_question(quest, n=100, section=None, max_year=2021):
         }
         ###############################################################
         results.append(t_res)
+    return results
