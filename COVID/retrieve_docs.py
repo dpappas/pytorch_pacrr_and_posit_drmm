@@ -88,13 +88,13 @@ def get_first_n_1(qtext, n, max_year=2020):
         })
     return temp_1
 
-pprint(
-    get_first_n_1(
-        qtext       = 'A pneumonia outbreak associated with a new coronavirus of probable bat origin',
-        n           = 100,
-        max_year    = 2021
-    )
-)
+# pprint(
+#     get_first_n_1(
+#         qtext       = 'A pneumonia outbreak associated with a new coronavirus of probable bat origin',
+#         n           = 100,
+#         max_year    = 2021
+#     )
+# )
 
 #####################################################################################
 
