@@ -108,7 +108,23 @@ def submit_question():
                 'white',
                 'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">{}</a>'.format(doc['pmid'], doc['pmid'])
             )
-        text_to_return  += '</div>'
+            text_to_return  += '</div>'
+        if (doc['pmcid'] in doc and len(doc['pmcid'].strip()) != 0):
+            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+                'link',
+                'white',
+                'Available on: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/{}">PMC: {}</a>'.format(doc['pmcid'], doc['pmcid'])
+            )
+            text_to_return += '</div>'
+        if (doc['doi'] in doc and len(doc['doi'].strip()) != 0):
+            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+                'link',
+                'white',
+                'Available on: <a href="http://doi.org/{}">Doi : {}</a>'.format(doc['doi'], doc['doi'])
+            )
+            text_to_return += '</div>'
+
+            # 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6602490/'
     text_to_return += '\n' + r2
     return text_to_return
 
