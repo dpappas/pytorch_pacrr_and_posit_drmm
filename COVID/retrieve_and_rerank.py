@@ -48,60 +48,6 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
     else:
         return score
 
-def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
-    '''
-    java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
-    evaluation.EvaluatorTask1b -phaseA -e 5
-    /home/dpappas/for_ryan/bioasq6_submit_files/test_batch_1/BioASQ-task6bPhaseB-testset1
-    ./drmm-experimental_submit.json
-    '''
-    jar_path = retrieval_jar_path
-    #
-    fgold   = '{}_data_for_revision.json'.format(prefix)
-    fgold   = os.path.join(odir, fgold)
-    fgold   = os.path.abspath(fgold)
-    with open(fgold, 'w') as f:
-        f.write(json.dumps(data_for_revision, indent=4, sort_keys=True))
-        f.close()
-    #
-    for tt in data_gold['questions']:
-        if ('exact_answer' in tt):
-            del (tt['exact_answer'])
-        if ('ideal_answer' in tt):
-            del (tt['ideal_answer'])
-        if ('type' in tt):
-            del (tt['type'])
-    fgold    = '{}_gold_bioasq.json'.format(prefix)
-    fgold   = os.path.join(odir, fgold)
-    fgold   = os.path.abspath(fgold)
-    with open(fgold, 'w') as f:
-        f.write(json.dumps(data_gold, indent=4, sort_keys=True))
-        f.close()
-    #
-    femit    = '{}_emit_bioasq.json'.format(prefix)
-    femit   = os.path.join(odir, femit)
-    femit   = os.path.abspath(femit)
-    with open(femit, 'w') as f:
-        f.write(json.dumps(data_emitted, indent=4, sort_keys=True))
-        f.close()
-    #
-    bioasq_eval_res = subprocess.Popen(
-        [
-            'java', '-Xmx10G', '-cp', jar_path, 'evaluation.EvaluatorTask1b',
-            '-phaseA', '-e', '5', fgold, femit
-        ],
-        stdout=subprocess.PIPE, shell=False
-    )
-    (out, err)  = bioasq_eval_res.communicate()
-    lines       = out.decode("utf-8").split('\n')
-    ret = {}
-    for line in lines:
-        if(':' in line):
-            k       = line.split(':')[0].strip()
-            v       = line.split(':')[1].strip()
-            ret[k]  = float(v)
-    return ret
-
 def similar(upstream_seq, downstream_seq):
     upstream_seq    = upstream_seq.encode('ascii','ignore')
     downstream_seq  = downstream_seq.encode('ascii','ignore')
@@ -524,28 +470,6 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     }
     return data_for_revision, ret_data, snips_res
 
-def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision):
-    bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
-    pprint(bioasq_snip_res)
-    print('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
-    print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    print('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    #
-
-def get_one_map(prefix, data, docs, use_sent_tokenizer):
-    model.eval()
-    ret_data                        = {'questions': []}
-    all_bioasq_subm_data_v3         = {"questions": []}
-    all_bioasq_gold_data            = {'questions': []}
-    data_for_revision               = {}
-    for dato in tqdm(data['queries']):
-        all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res = do_for_some_retrieved(docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
-        all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
-    print_the_results('v3 '+prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, data_for_revision)
-    return None
-
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self,
              embedding_dim          = 30,
@@ -958,5 +882,33 @@ wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv = dict([(word, wv[word]) for word in wv.vocab.keys()])
 ###########################################################
 model.eval()
-# test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 ###########################################################
+
+def retrieve_given_question(quest, n=100, section=None, max_year=2021):
+    docs                                = get_first_n_1(qtext= quest, n=n, section=section, max_year= max_year)
+    quest_tokens, quest_embeds          = get_embeds(tokenize(quest), wv)
+    q_idfs                              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    results                             = []
+    for ddd in tqdm(docs['retrieved_documents']):
+        datum = prep_data(quest, ddd['doc'], ddd['norm_bm25_score'], wv, [], idf, max_idf, True)
+        doc_emit_, gs_emits_    = model.emit_one(
+            doc1_sents_embeds   = datum['sents_embeds'],
+            question_embeds     = quest_embeds,
+            q_idfs              = q_idfs,
+            sents_gaf           = datum['sents_escores'],
+            doc_gaf             = datum['doc_af']
+        )
+        ###############################################################
+        t_res = {
+            'doc_score'         : doc_emit_.cpu().tolist()[0],
+            'title'             : ddd['doc']['title'],
+            'paragraph'         : ddd['doc']['abstractText'],
+            'sents_with_scores' : [(score, sent) for score, sent in zip(gs_emits_.cpu().tolist(), datum['held_out_sents'])],
+            'section'           : ddd['doc']['section'],
+            'pmid'              : ddd['doc']['pmid'],
+            'pmcid'             : ddd['doc']['pmcid'],
+            'doi'               : ddd['doc']['doi'],
+            'date'              : ddd['doc']['date'],
+        }
+        ###############################################################
+        results.append(t_res)
