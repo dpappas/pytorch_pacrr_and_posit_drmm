@@ -96,11 +96,30 @@ def submit_question():
             str(doc_score * 100),
             doc_bgcolor,
             doc_txtcolor,
-            'Title: '+doc['title']
+            'Title: '+ (doc['title'] if(len(doc['title'])) else '(Not Available)')
         )
         text_to_return += '<div title="{}" style="width:100%;background-color:{};">Date: {}  ||  Section: {}</div>'.format(
-            doc['section'], 'white', doc_date, doc['section']
+            doc['section'], 'grey', doc_date, doc['section']
         )
+        ##############################################################################################################################
+        if('pmid' in doc and len(doc['pmid'].strip())!=0):
+            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+                'link',
+                'grey',
+                'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">PMID: {}</a>'.format(doc['pmid'], doc['pmid'])
+            )
+        if ('pmcid' in doc and len(doc['pmcid'].strip()) != 0):
+            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+                'link',
+                'grey',
+                'Available on: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/{}">PMC: {}</a>'.format(doc['pmcid'], doc['pmcid'])
+            )
+        if ('doi' in doc and len(doc['doi'].strip()) != 0):
+            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+                'link',
+                'grey',
+                'Available on: <a href="http://doi.org/{}">Doi : {}</a>'.format(doc['doi'], doc['doi'])
+            )
         ##############################################################################################################################
         sents_max_score = max(sent_score for sent_score, _ in doc['sents_with_scores'])
         print(sents_max_score)
@@ -113,24 +132,6 @@ def submit_question():
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
                 sent_score, yellow_colors[int(sent_score*100)], sent_text)
         ##############################################################################################################################
-        if('pmid' in doc and len(doc['pmid'].strip())!=0):
-            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
-                'link',
-                'white',
-                'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">PMID: {}</a>'.format(doc['pmid'], doc['pmid'])
-            )
-        if ('pmcid' in doc and len(doc['pmcid'].strip()) != 0):
-            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
-                'link',
-                'white',
-                'Available on: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/{}">PMC: {}</a>'.format(doc['pmcid'], doc['pmcid'])
-            )
-        if ('doi' in doc and len(doc['doi'].strip()) != 0):
-            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
-                'link',
-                'white',
-                'Available on: <a href="http://doi.org/{}">Doi : {}</a>'.format(doc['doi'], doc['doi'])
-            )
         text_to_return += '</div>'
     text_to_return += '\n' + r2
     return text_to_return
