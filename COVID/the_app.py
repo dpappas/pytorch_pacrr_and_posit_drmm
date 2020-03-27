@@ -113,27 +113,25 @@ def submit_question():
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
                 sent_score, yellow_colors[int(sent_score*100)], sent_text)
         ##############################################################################################################################
-        if(doc['pmid'] in doc and len(doc['pmid'].strip())!=0):
+        if('pmid' in doc and len(doc['pmid'].strip())!=0):
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
                 'link',
                 'white',
-                'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">{}</a>'.format(doc['pmid'], doc['pmid'])
+                'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">PMID: {}</a>'.format(doc['pmid'], doc['pmid'])
             )
-            text_to_return  += '</div>'
-        if (doc['pmcid'] in doc and len(doc['pmcid'].strip()) != 0):
+        if ('pmcid' in doc and len(doc['pmcid'].strip()) != 0):
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
                 'link',
                 'white',
                 'Available on: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/{}">PMC: {}</a>'.format(doc['pmcid'], doc['pmcid'])
             )
-            text_to_return += '</div>'
-        if (doc['doi'] in doc and len(doc['doi'].strip()) != 0):
+        if ('doi' in doc and len(doc['doi'].strip()) != 0):
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
                 'link',
                 'white',
                 'Available on: <a href="http://doi.org/{}">Doi : {}</a>'.format(doc['doi'], doc['doi'])
             )
-            text_to_return += '</div>'
+        text_to_return += '</div>'
     text_to_return += '\n' + r2
     return text_to_return
 
