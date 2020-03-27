@@ -121,7 +121,7 @@ def submit_question():
                 'Available on: <a href="http://doi.org/{}">Doi : {}</a>'.format(doc['doi'], doc['doi'])
             )
         ##############################################################################################################################
-        text_to_return += '<div></div>'
+        text_to_return += '<div title="" style="width:100%;height:25px;background-color:white;"> </div>'
         sents_max_score = max(sent_score for sent_score, _ in doc['sents_with_scores'])
         print(sents_max_score)
         for sent_score, sent_text in doc['sents_with_scores']:
