@@ -958,5 +958,5 @@ wv = KeyedVectors.load_word2vec_format(w2v_bin_path, binary=True)
 wv = dict([(word, wv[word]) for word in wv.vocab.keys()])
 ###########################################################
 model.eval()
-test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
+# test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 ###########################################################

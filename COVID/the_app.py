@@ -1,6 +1,5 @@
 
-from retrieve_docs  import get_first_n_1
-from .retrieve_and_rerank import  get_embeds, idf_val, idf, max_idf, wv, prep_data, model, tokenize, np
+from retrieve_and_rerank import  get_embeds, idf_val, idf, max_idf, wv, prep_data, model, tokenize, np, get_first_n_1
 
 quest = 'A pneumonia outbreak associated with a new coronavirus of probable bat origin'
 docs = (
