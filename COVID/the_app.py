@@ -99,28 +99,29 @@ def submit_question():
             'Title: '+ (doc['title'] if(len(doc['title'])) else '(Not Available)')
         )
         text_to_return += '<div title="{}" style="width:100%;background-color:{};">Date: {}  ||  Section: {}</div>'.format(
-            doc['section'], 'grey', doc_date, doc['section']
+            doc['section'], '#D3D3D3', doc_date, doc['section']
         )
         ##############################################################################################################################
         if('pmid' in doc and len(doc['pmid'].strip())!=0):
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
                 'link',
-                'grey',
+                '#D3D3D3',
                 'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">PMID: {}</a>'.format(doc['pmid'], doc['pmid'])
             )
         if ('pmcid' in doc and len(doc['pmcid'].strip()) != 0):
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
                 'link',
-                'grey',
+                '#D3D3D3',
                 'Available on: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/{}">PMC: {}</a>'.format(doc['pmcid'], doc['pmcid'])
             )
         if ('doi' in doc and len(doc['doi'].strip()) != 0):
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
                 'link',
-                'grey',
+                '#D3D3D3',
                 'Available on: <a href="http://doi.org/{}">Doi : {}</a>'.format(doc['doi'], doc['doi'])
             )
         ##############################################################################################################################
+        text_to_return += '<div></div>'
         sents_max_score = max(sent_score for sent_score, _ in doc['sents_with_scores'])
         print(sents_max_score)
         for sent_score, sent_text in doc['sents_with_scores']:
