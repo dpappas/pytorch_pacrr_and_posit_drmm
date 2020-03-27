@@ -9,21 +9,14 @@ from pprint import pprint
 import torch
 
 #####################################################################################
-
 # Modified bioclean: also split on dashes. Works better for retrieval with galago.
-bioclean_mod = lambda t: re.sub(
-    '[.,?;*!%^&_+():-\[\]{}]', '',
-    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()
-).split()
-bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
-
+bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
+bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 #####################################################################################
-
 with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
     stopwords = pickle.load(f)
 
 print(stopwords)
-
 #####################################################################################
 
 my_seed     = 1989
@@ -35,7 +28,6 @@ device  = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 n_gpu   = torch.cuda.device_count()
 
 #####################################################################################
-
 es          = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=300, max_retries=10, retry_on_timeout=True)
 doc_index   = 'covid_index_0_1'
 
