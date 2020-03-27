@@ -96,7 +96,7 @@ def submit_question():
             str(doc_score * 100),
             doc_bgcolor,
             doc_txtcolor,
-            doc['title']
+            'Title: '+doc['title']
         )
         text_to_return += '<div title="{}" style="width:100%;background-color:{};">Date: {}  ||  Section: {}</div>'.format(
             doc['section'], 'white', doc_date, doc['section']
