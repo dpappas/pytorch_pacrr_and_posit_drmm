@@ -912,5 +912,5 @@ def retrieve_given_question(quest, n=100, section=None, max_year=2021):
         }
         ###############################################################
         results.append(t_res)
-    results.sort(key= lambda x: x['doc_score'], reverese=True)
+    results.sort(key= lambda x: x['doc_score'], reverse=True)
     return results
