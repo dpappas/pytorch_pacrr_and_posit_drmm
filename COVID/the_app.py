@@ -88,8 +88,18 @@ def submit_question():
         doc_score       = scaler.transform([[doc['doc_score']]])[0][0] + 0.5
         doc_bgcolor     = green_colors[int(doc_score * 100)]
         doc_txtcolor    = 'white' if (doc_score > 0.5) else 'black'
-        text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{}   ||   PMCID:{}   ||   doi:{}   ||   SECTION:{}   ||   Date:{}</button><div class="panel">'.format(
-            str(doc_score * 100), doc_bgcolor, doc_txtcolor, doc['pmid'], doc['pmcid'], doc['doi'], doc['section'], doc_date
+        # text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">PMID:{}   ||   PMCID:{}   ||   doi:{}   ||   SECTION:{}   ||   Date:{}</button><div class="panel">'.format(
+        #     str(doc_score * 100), doc_bgcolor, doc_txtcolor, doc['pmid'], doc['pmcid'], doc['doi'], doc['section'], doc_date
+        # )
+        text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">' \
+                           '{}</button><div class="panel">'.format(
+            str(doc_score * 100),
+            doc_bgcolor,
+            doc_txtcolor,
+            doc['title']
+        )
+        text_to_return += '<div title="{}" style="width:100%;background-color:{};">Date: {}  ||  Section: {}</div>'.format(
+            doc['section'], 'white', doc_date, doc['section']
         )
         ##############################################################################################################################
         sents_max_score = max(sent_score for sent_score, _ in doc['sents_with_scores'])
@@ -100,7 +110,8 @@ def submit_question():
                 sent_score = 1
             if(sent_score<0.45):
                 sent_score = 0.0
-            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(sent_score, yellow_colors[int(sent_score*100)], sent_text)
+            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+                sent_score, yellow_colors[int(sent_score*100)], sent_text)
         ##############################################################################################################################
         if(doc['pmid'] in doc and len(doc['pmid'].strip())!=0):
             text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
@@ -123,8 +134,6 @@ def submit_question():
                 'Available on: <a href="http://doi.org/{}">Doi : {}</a>'.format(doc['doi'], doc['doi'])
             )
             text_to_return += '</div>'
-
-            # 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6602490/'
     text_to_return += '\n' + r2
     return text_to_return
 
