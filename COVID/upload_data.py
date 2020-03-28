@@ -45,8 +45,9 @@ bert_tokenizer  = BertTokenizer.from_pretrained(scibert_dir)
 bert_model      = BertModel.from_pretrained(scibert_dir,  output_hidden_states=False, output_attentions=False).to(device)
 
 # zip_path    = 'C:\\Users\\dvpap\\Downloads\\db_entries.zip'
-zip_path    = '/media/dpappas/dpappas_data/COVID/db_entries.zip'
+# zip_path    = '/media/dpappas/dpappas_data/COVID/db_entries.zip'
 # zip_path    = '/home/dpappas/db_entries.zip'
+zip_path = '/home/dpappas/COVID/data/28_03_2020/db_entries.zip'
 archive     = zipfile.ZipFile(zip_path, 'r')
 d           = json.loads(archive.read('db_entries.json'))
 
