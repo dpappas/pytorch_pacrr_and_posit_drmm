@@ -88,6 +88,8 @@ def get_first_n_1(qtext, n, section=None, max_year=2020):
     #######################################################
     all_scores = [res['_score'] for res in results]
     print(all_scores)
+    if(len(all_scores)==0):
+        return temp_1
     scaler = StandardScaler().fit(np.array(all_scores).reshape(-1, 1))
     temp_1['num_ret'] = len(all_scores)
     #######################################################
