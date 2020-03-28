@@ -89,7 +89,7 @@ def submit_question():
             sorted(doc['sents_with_scores'],key=lambda x: x[0], reverse=True)[:2]
         )
     top_10_snips.sort(key=lambda x: x[0], reverse=True)
-    top_10_snips = [t[1] for t in top_10_snips[:10]]
+    top_10_snips = [t[1] for t in top_10_snips[:5]]
     ###############################################################################################
     for doc in ret_dummy:
         doc_date        = doc['date']

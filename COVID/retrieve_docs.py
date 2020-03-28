@@ -7,6 +7,7 @@ import numpy as np
 from elasticsearch import Elasticsearch
 from pprint import pprint
 import torch, nltk
+import datetime
 
 #####################################################################################
 # Modified bioclean: also split on dashes. Works better for retrieval with galago.
@@ -46,6 +47,14 @@ def get_first_n_1(qtext, n, section=None, max_year=2020):
     tokenized_body  = [t for t in tokenized_body if t not in stopwords]
     question        = ' '.join(tokenized_body)
     print(question)
+    ################################################
+    history_datum = {
+        'qtext'     : qtext,
+        'section'   : section,
+        'date'      : datetime.datetime.now().strftime('%Y-%m-%d')
+    }
+    res = es.index('history_index_0_1', body=history_datum)
+    print(res)
     ################################################
     bod             = {
         "size": n,
