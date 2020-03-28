@@ -73,8 +73,8 @@ def submit_question():
     if(len(section.strip())==0):
         section = None
     ###############################################################################################
-    if(question_text is None or len(question_text)==0):
-        question_text = 'covid-19'
+    # if(question_text is None or len(question_text)==0):
+    #     question_text = 'covid-19'
     print(question_text)
     print(section)
     ###############################################################################################
@@ -154,4 +154,5 @@ def submit_question():
 
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
+    app.add_url_rule('/favicon.ico', redirect_to=url_for('static', filename='aueb_favicon.png'))
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
