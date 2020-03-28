@@ -154,5 +154,5 @@ def submit_question():
 
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
-    app.add_url_rule('/favicon.ico', redirect_to=url_for('static', filename='aueb_favicon.png'))
+    # app.add_url_rule('/favicon.ico', redirect_to=url_for('static', filename='aueb_favicon.png'))
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
