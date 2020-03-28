@@ -73,6 +73,8 @@ def submit_question():
     if(len(section.strip())==0):
         section = None
     ###############################################################################################
+    if(question_text is None or len(question_text)==0):
+        question_text = 'covid-19'
     print(question_text)
     print(section)
     ###############################################################################################

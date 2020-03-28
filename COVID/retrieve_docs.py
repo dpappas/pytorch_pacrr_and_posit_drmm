@@ -48,7 +48,7 @@ def get_first_n_1(qtext, n, section=None, max_year=2020):
     question        = ' '.join(tokenized_body)
     print(question)
     if(question is None or len(question.strip())==0):
-        question = 'covid-19'
+        question = 'the'
     ################################################
     history_datum = {
         'qtext'     : qtext,
