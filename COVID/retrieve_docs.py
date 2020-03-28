@@ -47,6 +47,8 @@ def get_first_n_1(qtext, n, section=None, max_year=2020):
     tokenized_body  = [t for t in tokenized_body if t not in stopwords]
     question        = ' '.join(tokenized_body)
     print(question)
+    if(len(question.strip())==0):
+        question = 'the'
     ################################################
     history_datum = {
         'qtext'     : qtext,
