@@ -1520,7 +1520,7 @@ my_seed = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir = 'bioasq7_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
+odir = 'bioasq7_bert_jpdrmm_2L_0p01_{}_run_{}/'.format(frozen_or_unfrozen, run)
 odir = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
