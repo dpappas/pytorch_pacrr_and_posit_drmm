@@ -11,7 +11,7 @@ wv_old              = KeyedVectors.load_word2vec_format(w2v_bin_path_old, binary
 wv_new              = Word2Vec.load(w2v_bin_path_new)
 
 common_tokens       = set(wv_old.vocab.keys()).intersection(set(wv_new.wv.vocab.keys()))
-common_tokens       = [ (tok, tok) for tok in common_tokens]
+common_tokens       = [(tok, tok) for tok in common_tokens]
 
 transmat = translation_matrix.TranslationMatrix(wv_new.wv, wv_old, common_tokens)
 transmat.train(common_tokens)
@@ -20,6 +20,4 @@ transmat.train(common_tokens)
 
 transmat.translate('covid-19')
 
-
-
-
+# BackMappingTranslationMatrix
