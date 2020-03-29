@@ -18,6 +18,4 @@ transmat.train(common_tokens)
 
 # transmat.apply_transmat(transmat.source_space)
 
-transmat.translate('covid-19')
-
-# BackMappingTranslationMatrix
+transmat.translate('covid-19', topn=25)
