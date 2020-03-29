@@ -4,6 +4,7 @@ from gensim.models import KeyedVectors
 from gensim.models import Word2Vec
 from gensim.models import translation_matrix
 from gensim.models import BackMappingTranslationMatrix
+from pprint import pprint
 
 w2v_bin_path_old    = '/home/dpappas/COVID/COVID/pubmed2018_w2v_30D.bin'
 w2v_bin_path_new    = '/home/dpappas/COVID/covid_19_w2v_embeds_30.model'
@@ -18,4 +19,7 @@ transmat.train(common_tokens)
 
 # transmat.apply_transmat(transmat.source_space)
 
-transmat.translate('covid-19', topn=25)
+pprint(transmat.translate('covid-19', topn=25))
+
+from scipy import spatial
+result = 1 - spatial.distance.cosine(wv_old['fredriksberg'], wv_old['non-neurologist'])
