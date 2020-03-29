@@ -1504,8 +1504,8 @@ max_epoch           = 4
 #####################
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
-frozen_or_unfrozen  = 'unfrozen'
-last_layers         = 4
+frozen_or_unfrozen  = 'frozen'
+last_layers         = -1
 lr2                 = 2e-5
 #####################
 
@@ -1513,8 +1513,9 @@ lr2                 = 2e-5
     dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
 )
 
+import sys
 hdlr = None
-run = 0
+run = int(sys.argv[1])
 my_seed = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
@@ -1536,6 +1537,11 @@ print('Compiling model...')
 logger.info('Compiling model...')
 #
 #####################
+# bert : https://github.com/google-research/bert
+# batch sizes: 8, 16, 32, 64, 128
+# learning rates: 3e-4, 1e-4, 5e-5, 3e-5
+#####################
+
 model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
 optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
@@ -1604,5 +1610,14 @@ pprint(d['abs_bert_original_tokens'])
 ['[CLS]', 'however', 'the', 'bid', '##ire', '##ction', '##al', 'link', 'between', 'sleep', 'and', 'certain', 'como', '##rb', '##idi', '##ties', 'may', 'encourage', 'development', 'of', 'specific', 'drugs', 'for', 'como', '##rb', '##id', 'ins', '##om', '##nia', '[SEP]'], 
 ['[CLS]', 'new', 'ins', '##om', '##nia', 'the', '##ra', '##pies', 'will', 'most', 'likely', 'move', 'away', 'from', 'ga', '##ba', '##ar', 'receptors', 'modulation', 'to', 'more', 'subtle', 'neurological', 'pathways', 'that', 'regulate', 'the', 'sleep', '-', 'wake', 'cycle', '[SEP]']
 ]
+
+
+CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py 0
+CUDA_VISIBLE_DEVICES=1 python3.6 train_bert_jpdrmm.py 1
+CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py 2
+CUDA_VISIBLE_DEVICES=1 python3.6 train_bert_jpdrmm.py 3
+CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py 4
+
+
 
 '''
