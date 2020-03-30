@@ -83,10 +83,10 @@ related_lists = [
 ]
 
 print(mean_reciprocal_rank(related_lists))  ### 0.3089
-print(doc_precision_at_k(related_lists, 10))  ### 0.0602
+print(doc_precision_at_k(related_lists, 2))  ### 0.0602
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1023
 #####################################################################################################
-extracted       = json.load(open("/home/dpappas/natural_questions_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq.json"))
+extracted       = json.load(open("/media/dpappas/dpappas_data/models_out/natural_questions_jpdrmm_2L_0p01_run_0/v3 dev_emit_bioasq.json"))
 #####################################################################################################
 
 snip_related_lists = []
@@ -115,11 +115,11 @@ related_lists   = [
 
 #####################################################################################################
 print(mean_reciprocal_rank(related_lists))  ### 0.4056
-print(doc_precision_at_k(related_lists, 10))  ### 0.0710
+print(doc_precision_at_k(related_lists, 2))  ### 0.0710
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1327
 #####################################################################################################
 print(mean_reciprocal_rank(snip_related_lists))  ### 0.4056
-print(doc_precision_at_k(snip_related_lists, 10))  ### 0.0710
+print(doc_precision_at_k(snip_related_lists, 2))  ### 0.0710
 print(np.average([doc_precision_at_k(snip_related_lists, k) for k in range(1, 11)])) ### 0.1327
 #####################################################################################################
 
@@ -128,14 +128,14 @@ related_lists = [[int(tt['is_relevant']) for tt in item['retrieved_documents']][
 
 print(mean_reciprocal_rank(related_lists)) ### 0.3162
 print(doc_precision_at_k(related_lists, 1)) ### 0.0608
-print(doc_precision_at_k(related_lists, 10)) ### 0.0608
+print(doc_precision_at_k(related_lists, 2)) ### 0.0608
 print(np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])) ### 0.1047
 #####################################################################################################
 
-extracted   = json.load(open("/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_emit_bioasq.json"))
-# extracted   = json.load(open("/home/dpappas/test_NQ_JBERT/v3 test_emit_bioasq.json"))
-# extracted = json.load(open('/home/dpappas/test_pdrmm_pdrmm_NQ/v3 test_emit_bioasq.json'))
-# extracted = json.load(open("/media/dpappas/dpappas_data/models_out/bioasq7_outputs/test_NQ_pdrmm/v3 test_emit_bioasq.json"))
+# extracted     = json.load(open("/home/dpappas/test_natural_questions_jpdrmm_2L_0p01_run_0/v3 test_emit_bioasq.json"))
+# extracted     = json.load(open("/home/dpappas/test_NQ_JBERT/v3 test_emit_bioasq.json"))
+# extracted     = json.load(open('/media/dpappas/dpappas_data/models_out/test_pdrmm_pdrmm_NQ/v3 test_emit_bioasq.json'))
+extracted       = json.load(open("/media/dpappas/dpappas_data/models_out/bioasq7_outputs/test_NQ_pdrmm/v3 test_emit_bioasq.json"))
 
 #####################################################################################################
 
