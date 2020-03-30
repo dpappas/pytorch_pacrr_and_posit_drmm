@@ -576,12 +576,12 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
 
 def save_checkpoint(epoch, model, bert_model, max_dev_map, optimizer1, optimizer2, filename='checkpoint.pth.tar'):
     state = {
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'bert_state_dict': bert_model.state_dict(),
-        'best_valid_score': max_dev_map,
-        'optimizer1': optimizer1.state_dict(),
-        'optimizer2': optimizer2.state_dict() if(optimizer2 is not None) else None,
+        'epoch'             : epoch,
+        'model_state_dict'  : model.state_dict(),
+        'bert_state_dict'   : bert_model.state_dict(),
+        'best_valid_score'  : max_dev_map,
+        'optimizer1'        : optimizer1.state_dict(),
+        'optimizer2'        : optimizer2.state_dict() if(optimizer2 is not None) else None,
     }
     torch.save(state, filename)
 
