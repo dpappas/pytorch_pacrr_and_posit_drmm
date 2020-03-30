@@ -23,3 +23,14 @@ pprint(transmat.translate('covid-19', topn=25))
 
 from scipy import spatial
 result = 1 - spatial.distance.cosine(wv_old['fredriksberg'], wv_old['non-neurologist'])
+
+# def project_words_vectors(transmat, source_words):
+#     source_space = translation_matrix.Space.build(transmat.source_lang_vec, source_words)
+#     source_space.normalize()
+#     mapped_source_space = transmat.apply_transmat(source_space)
+#     return mapped_source_space
+#
+# pprint(wv_old.similar_by_vector(project_words_vectors(transmat, ['covid-19']).mat[0]))
+
+
+
