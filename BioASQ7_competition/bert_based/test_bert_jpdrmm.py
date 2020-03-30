@@ -1250,9 +1250,9 @@ def load_model_from_checkpoint(resume_from):
         bert_model.load_state_dict(checkpoint['bert_state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
-min_doc_score               = float(sys.argv[1])
-min_sent_score              = float(sys.argv[2])
-emit_only_abstract_sents    = bool(sys.argv[3])
+min_doc_score               = -1000.
+min_sent_score              = -1000.
+emit_only_abstract_sents    = False
 ###########################################################
 use_cuda                    = torch.cuda.is_available()
 ###########################################################
@@ -1279,7 +1279,6 @@ deviation           = 1.2210
 print(avgdl, mean, deviation)
 ###########################################################
 k_for_maxpool       = 5
-k_sent_maxpool      = 5
 embedding_dim       = 768 #200
 ###########################################################
 my_seed     = 1

@@ -1496,7 +1496,6 @@ max_seq_length      = 50
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 #####################
 k_for_maxpool       = 5
-k_sent_maxpool      = 5
 embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
 b_size              = 32
