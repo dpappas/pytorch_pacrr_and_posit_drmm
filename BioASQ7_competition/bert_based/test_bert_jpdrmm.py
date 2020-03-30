@@ -1254,7 +1254,7 @@ min_doc_score               = float(sys.argv[1])
 min_sent_score              = float(sys.argv[2])
 emit_only_abstract_sents    = bool(sys.argv[3])
 ###########################################################
-use_cuda = torch.cuda.is_available()
+use_cuda                    = torch.cuda.is_available()
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1267,7 +1267,9 @@ f_in3               = '/home/dpappas/bioasq_all/test_batch_1/bioasq7_bm25_top100
 w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                = './test_bert_jpdrmm/'
+indiri              = '/home/dpappas/bioasq7_bert_jpdrmm_2L_0p01_run_4/'
+resume_from         = os.path.join(indiri, 'best_checkpoint.pth.tar')
+odir                = os.path.join(indiri, 'test_bert_jpdrmm/')
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
@@ -1293,7 +1295,6 @@ bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=Tr
 bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
 model               = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 ###########################################################
-resume_from         = '/home/dpappas/bioasq7_bert_jpdrmm_2L_0p01_run_4/best_checkpoint.pth.tar'
 load_model_from_checkpoint(resume_from)
 print_params(model, bert_model)
 bert_model.to(device)
