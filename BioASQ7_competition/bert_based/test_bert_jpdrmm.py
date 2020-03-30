@@ -949,77 +949,48 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
-        self.margin_loss = nn.MarginRankingLoss(margin=1.0)
-        if (use_cuda):
-            self.margin_loss = self.margin_loss.cuda()
-    ###########################################################
+        self.margin_loss = nn.MarginRankingLoss(margin=1.0).to(device)
+
     def init_mesh_module(self):
-        self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim))
-        self.mesh_gru = nn.GRU(self.embedding_dim, self.embedding_dim)
-        if (use_cuda):
-            self.mesh_h0 = self.mesh_h0.cuda()
-            self.mesh_gru = self.mesh_gru.cuda()
-    ###########################################################
+        self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim)).to(device)
+        self.mesh_gru = nn.GRU(self.embedding_dim, self.embedding_dim).to(device)
+
     def init_context_module(self):
-        self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
-        self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1)
-        if (use_cuda):
-            self.trigram_conv_1 = self.trigram_conv_1.cuda()
-            self.trigram_conv_2 = self.trigram_conv_2.cuda()
-            self.trigram_conv_activation_1 = self.trigram_conv_activation_1.cuda()
-            self.trigram_conv_activation_2 = self.trigram_conv_activation_2.cuda()
-    ###########################################################
+        self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
+        self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
+        self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
+        self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
+
     def init_question_weight_module(self):
-        self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True)
-        if (use_cuda):
-            self.q_weights_mlp = self.q_weights_mlp.cuda()
-    ###########################################################
+        self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True).to(device)
+
     def init_mlps_for_pooled_attention(self):
-        self.linear_per_q1 = nn.Linear(3 * 3, 8, bias=True)
-        self.my_relu1 = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.linear_per_q2 = nn.Linear(8, 1, bias=True)
-        if (use_cuda):
-            self.linear_per_q1 = self.linear_per_q1.cuda()
-            self.linear_per_q2 = self.linear_per_q2.cuda()
-            self.my_relu1 = self.my_relu1.cuda()
-    ###########################################################
+        self.linear_per_q1 = nn.Linear(3 * 3, 8, bias=True).to(device)
+        self.my_relu1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
+        self.linear_per_q2 = nn.Linear(8, 1, bias=True).to(device)
+
     def init_sent_output_layer(self):
         if (self.sentence_out_method == 'MLP'):
-            self.sent_out_layer_1 = nn.Linear(self.sent_add_feats + 1, 8, bias=False)
-            self.sent_out_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1)
-            self.sent_out_layer_2 = nn.Linear(8, 1, bias=False)
-            if (use_cuda):
-                self.sent_out_layer_1 = self.sent_out_layer_1.cuda()
-                self.sent_out_activ_1 = self.sent_out_activ_1.cuda()
-                self.sent_out_layer_2 = self.sent_out_layer_2.cuda()
+            self.sent_out_layer_1 = nn.Linear(self.sent_add_feats + 1, 8, bias=False).to(device)
+            self.sent_out_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
+            self.sent_out_layer_2 = nn.Linear(8, 1, bias=False).to(device)
         else:
-            self.sent_res_h0 = autograd.Variable(torch.randn(2, 1, 5))
+            self.sent_res_h0 = autograd.Variable(torch.randn(2, 1, 5)).to(device)
             self.sent_res_bigru = nn.GRU(input_size=self.sent_add_feats + 1, hidden_size=5, bidirectional=True,
-                                         batch_first=False)
-            self.sent_res_mlp = nn.Linear(10, 1, bias=False)
-            if (use_cuda):
-                self.sent_res_h0 = self.sent_res_h0.cuda()
-                self.sent_res_bigru = self.sent_res_bigru.cuda()
-                self.sent_res_mlp = self.sent_res_mlp.cuda()
-    ###########################################################
+                                         batch_first=False).to(device)
+            self.sent_res_mlp = nn.Linear(10, 1, bias=False).to(device)
+
     def init_doc_out_layer(self):
-        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True)
-        self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1)
-        self.final_layer_2 = nn.Linear(8, 1, bias=True)
-        self.oo_layer = nn.Linear(2, 1, bias=True)
-        if (use_cuda):
-            self.final_layer_1 = self.final_layer_1.cuda()
-            self.final_activ_1 = self.final_activ_1.cuda()
-            self.final_layer_2 = self.final_layer_2.cuda()
-            self.oo_layer = self.oo_layer.cuda()
-    ###########################################################
+        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True).to(device)
+        self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
+        self.final_layer_2 = nn.Linear(8, 1, bias=True).to(device)
+        self.oo_layer = nn.Linear(2, 1, bias=True).to(device)
+
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
-    ###########################################################
+
     def apply_context_gru(self, the_input, h0):
         output, hn = self.context_gru(the_input.unsqueeze(1), h0)
         output = self.context_gru_activation(output)
@@ -1028,7 +999,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = out_forward + out_backward
         res = output + the_input
         return res, hn
-    ###########################################################
+
     def apply_context_convolution(self, the_input, the_filters, activation):
         conv_res = the_filters(the_input.transpose(0, 1).unsqueeze(0))
         if (activation is not None):
@@ -1040,7 +1011,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         conv_res = conv_res.transpose(1, 2)
         conv_res = conv_res + the_input
         return conv_res.squeeze(0)
-    ###########################################################
+
     def my_cosine_sim(self, A, B):
         A = A.unsqueeze(0)
         B = B.unsqueeze(0)
@@ -1050,18 +1021,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         den = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1, -2))
         dist_mat = num / den
         return dist_mat
-    ###########################################################
+
     def pooling_method(self, sim_matrix):
         sorted_res = torch.sort(sim_matrix, -1)[0]  # sort the input minimum to maximum
         k_max_pooled = sorted_res[:, -self.k:]  # select the last k of each instance in our data
         average_k_max_pooled = k_max_pooled.sum(-1) / float(self.k)  # average these k values
         the_maximum = k_max_pooled[:, -1]  # select the maximum value of each instance
-        the_average_over_all = sorted_res.sum(-1) / float(
-            sim_matrix.size(1))  # add average of all elements as long sentences might have more matches
-        the_concatenation = torch.stack([the_maximum, average_k_max_pooled, the_average_over_all],
-                                        dim=-1)  # concatenate maximum value and average of k-max values
+        the_average_over_all = sorted_res.sum(-1) / float(sim_matrix.size(1))  # add average of all elements as long sentences might have more matches
+        the_concatenation = torch.stack([the_maximum, average_k_max_pooled, the_average_over_all],dim=-1)  # concatenate maximum value and average of k-max values
         return the_concatenation  # return the concatenation
-    ###########################################################
+
     def get_output(self, input_list, weights):
         temp = torch.cat(input_list, -1)
         lo = self.linear_per_q1(temp)
@@ -1071,22 +1040,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo = lo * weights
         sr = lo.sum(-1) / lo.size(-1)
         return sr
-    ###########################################################
+
     def apply_sent_res_bigru(self, the_input):
         output, hn = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-    ###########################################################
-    def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights,
-                           k2):
+
+    def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
-            sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False)
+            sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False).to(device)
             sent_embeds = doc_sents_embeds[i]
-            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            if (use_cuda):
-                sim_oh = sim_oh.cuda()
-                gaf = gaf.cuda()
+            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(device)
             #
             conv_res            = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res            = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1111,16 +1076,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # ret = self.get_max(res).unsqueeze(0)
         ret = self.get_kmax(res, k2)
         return ret, res
-    ###########################################################
+
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         hn = self.context_h0
         for i in range(len(doc_sents_embeds)):
-            sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
-            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False)
-            if (use_cuda):
-                sent_embeds = sent_embeds.cuda()
-                gaf = gaf.cuda()
+            sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False).to(device)
+            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(device)
             conv_res, hn = self.apply_context_gru(sent_embeds, hn)
             #
             sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
@@ -1145,45 +1107,41 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         ret = self.get_kmax(res, k2)
         res = torch.sigmoid(res)
         return ret, res
-    ###########################################################
+
     def get_max(self, res):
         return torch.max(res)
-    ###########################################################
+
     def get_kmax(self, res, k):
         res = torch.sort(res, 0)[0]
         res = res[-k:].squeeze(-1)
         if (len(res.size()) == 0):
             res = res.unsqueeze(0)
         if (res.size()[0] < k):
-            to_concat = torch.zeros(k - res.size()[0])
-            if (use_cuda):
-                to_concat = to_concat.cuda()
+            to_concat = torch.zeros(k - res.size()[0]).to(device)
             res = torch.cat([res, to_concat], -1)
         return res
-    ###########################################################
+
     def get_max_and_average_of_k_max(self, res, k):
         k_max_pooled = self.get_kmax(res, k)
         average_k_max_pooled = k_max_pooled.sum() / float(k)
         the_maximum = k_max_pooled[-1]
         the_concatenation = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
         return the_concatenation
-    ###########################################################
+
     def get_average(self, res):
         res = torch.sum(res) / float(res.size()[0])
         return res
-    ###########################################################
+
     def get_maxmin_max(self, res):
         res = self.min_max_norm(res)
         res = torch.max(res)
         return res
-    ###########################################################
+
     def apply_mesh_gru(self, mesh_embeds):
-        mesh_embeds = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False)
-        if (use_cuda):
-            mesh_embeds = mesh_embeds.cuda()
+        mesh_embeds = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False).to(device)
         output, hn = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         return output[-1, 0, :]
-    ###########################################################
+
     def get_mesh_rep(self, meshes_embeds, q_context):
         meshes_embeds = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
         meshes_embeds = torch.stack(meshes_embeds)
@@ -1191,13 +1149,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim = torch.sort(sim_matrix, -1)[0][:, -1]
         output = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
-    ###########################################################
+
     def emit_one(self, doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf):
-        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
-        if (use_cuda):
-            q_idfs = q_idfs.cuda()
-            doc_gaf = doc_gaf.cuda()
+        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
+        doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
         #
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1228,16 +1183,12 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         gs_emits = torch.sigmoid(gs_emits)
         #
         return final_good_output, gs_emits
-    ###########################################################
+
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
                 question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False)
-        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False)
-        if (use_cuda):
-            q_idfs = q_idfs.cuda()
-            doc_gaf = doc_gaf.cuda()
-            doc_baf = doc_baf.cuda()
+        q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
+        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
+        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(device)
         #
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1282,6 +1233,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_bad_output = self.final_layer_2(final_bad_output)
         #
         bs_emits = bs_emits.unsqueeze(-1)
+        # bs_emits = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
         bs_emits = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
         bs_emits = self.oo_layer(bs_emits).squeeze(-1)
         bs_emits = torch.sigmoid(bs_emits)
@@ -1289,18 +1241,14 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-def load_model_from_checkpoint(resume_from, resume_from_bert):
+def load_model_from_checkpoint(resume_from):
     global start_epoch, optimizer
     if os.path.isfile(resume_from):
         print("=> loading checkpoint '{}'".format(resume_from))
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
-        model.load_state_dict(checkpoint['state_dict'])
+        model.load_state_dict(checkpoint['model_state_dict'])
+        bert_model.load_state_dict(checkpoint['bert_state_dict'])
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
-    if os.path.isfile(resume_from_bert):
-        print("=> loading checkpoint '{}'".format(resume_from_bert))
-        checkpoint = torch.load(resume_from_bert, map_location=lambda storage, loc: storage)
-        bert_model.load_state_dict(checkpoint['state_dict'])
-        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from_bert, checkpoint['epoch']))
 
 min_doc_score               = float(sys.argv[1])
 min_sent_score              = float(sys.argv[2])
@@ -1346,8 +1294,7 @@ bert_model          = BertForSequenceClassification.from_pretrained(bert_model, 
 model               = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 ###########################################################
 resume_from         = '/home/dpappas/bioasq7_bert_jpdrmm_2L_0p01_run_4/best_checkpoint.pth.tar'
-resume_from_bert    = '/home/dpappas/bioasq7_bert_jpdrmm_2L_0p01_run_4/best_bert_checkpoint.pth.tar'
-load_model_from_checkpoint(resume_from, resume_from_bert)
+load_model_from_checkpoint(resume_from)
 print_params(model, bert_model)
 bert_model.to(device)
 model.to(device)
