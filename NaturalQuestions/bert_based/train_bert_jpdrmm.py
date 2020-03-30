@@ -1405,8 +1405,8 @@ max_epoch           = 4
 ##########################################
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
-frozen_or_unfrozen  = 'unfrozen'
-last_layers         = 4
+frozen_or_unfrozen  = 'frozen'
+last_layers         = -1
 lr2                 = 2e-5
 ##########################################
 hdlr = None
