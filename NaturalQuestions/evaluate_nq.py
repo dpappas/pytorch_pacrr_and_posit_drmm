@@ -170,25 +170,37 @@ nof_relevant = [len(test_data[item['id']]['relevant_documents']) for item in ext
 
 #####################################################################################################
 doc_mrr         = mean_reciprocal_rank(related_lists)
-# doc_pre1        = doc_precision_at_k(related_lists, 1)
-# doc_pre10       = doc_precision_at_k(related_lists, 10)
-# doc_averpreatk  = np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])
 doc_rec1        = doc_recall_at_k(related_lists, 1, nof_relevant)
 doc_rec2        = doc_recall_at_k(related_lists, 2, nof_relevant)
-# doc_averrecatk  = np.average([doc_recall_at_k(related_lists, k, nof_relevant) for k in range(1, 11)])
-# print(', '.join(str(t) for t in [doc_mrr, doc_pre1, doc_pre10, doc_averpreatk, doc_rec1, doc_rec10, doc_averrecatk]))
 print(', '.join(str(t) for t in [doc_mrr, doc_rec1, doc_rec2]))
 #####################################################################################################
 snip_mrr         = mean_reciprocal_rank(snip_related_lists)
-# snip_pre1        = doc_precision_at_k(snip_related_lists, 1)
-# snip_pre10       = doc_precision_at_k(snip_related_lists, 10)
-# snip_averpreatk  = np.average([doc_precision_at_k(snip_related_lists, k) for k in range(1, 11)])
 snip_rec1       = doc_recall_at_k(snip_related_lists, 1, snip_nof_relevant)
 snip_rec2       = doc_recall_at_k(snip_related_lists, 2, snip_nof_relevant)
-# snip_averrecatk  = np.average([doc_recall_at_k(snip_related_lists, k, snip_nof_relevant) for k in range(1, 11)])
 print(', '.join(str(t) for t in [snip_mrr, snip_rec1, snip_rec2]))
 #####################################################################################################
 
+'''
+#####################################################################################################
+doc_mrr         = mean_reciprocal_rank(related_lists)
+doc_pre1        = doc_precision_at_k(related_lists, 1)
+doc_pre10       = doc_precision_at_k(related_lists, 10)
+doc_averpreatk  = np.average([doc_precision_at_k(related_lists, k) for k in range(1, 11)])
+doc_rec1        = doc_recall_at_k(related_lists, 1, nof_relevant)
+doc_rec10       = doc_recall_at_k(related_lists, 10, nof_relevant)
+doc_averrecatk  = np.average([doc_recall_at_k(related_lists, k, nof_relevant) for k in range(1, 11)])
+print(', '.join(str(t) for t in [doc_mrr, doc_pre1, doc_pre10, doc_averpreatk, doc_rec1, doc_rec10, doc_averrecatk]))
+#####################################################################################################
+snip_mrr         = mean_reciprocal_rank(snip_related_lists)
+snip_pre1        = doc_precision_at_k(snip_related_lists, 1)
+snip_pre10       = doc_precision_at_k(snip_related_lists, 10)
+snip_averpreatk  = np.average([doc_precision_at_k(snip_related_lists, k) for k in range(1, 11)])
+snip_rec1       = doc_recall_at_k(snip_related_lists, 1, snip_nof_relevant)
+snip_rec10       = doc_recall_at_k(snip_related_lists, 10, snip_nof_relevant)
+snip_averrecatk  = np.average([doc_recall_at_k(snip_related_lists, k, snip_nof_relevant) for k in range(1, 11)])
+print(', '.join(str(t) for t in [snip_mrr, snip_pre1, snip_pre10, snip_averpreatk, snip_rec1, snip_rec10, snip_averrecatk]))
+#####################################################################################################
+'''
 
 '''
 java -Xmx10G -cp \
