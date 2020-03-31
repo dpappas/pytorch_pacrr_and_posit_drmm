@@ -6,7 +6,7 @@ from pprint import pprint
 url 		= 'http://cslab241.cs.aueb.gr:5000/just_the_json'
 data 		= {
 	'question'  : 'What do we know about Covid-19 vaccines ?',
-	'section'   : ''
+	'section'   : None
 }
 r = requests.post(url, json=data)
 print(r.status_code)

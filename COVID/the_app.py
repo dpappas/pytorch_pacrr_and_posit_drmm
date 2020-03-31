@@ -79,6 +79,8 @@ def just_the_json():
         if(req is not None):
             question_text   = req['question']
             section         = req['section']
+            if(len(section.strip())==0):
+                section = None
             ###############################################################################################
             ret             = {
                 'request': {
