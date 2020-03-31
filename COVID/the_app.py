@@ -75,7 +75,7 @@ def just_the_json():
             question_text   = req['question']
             section         = req['section']
             ###############################################################################################
-            ret = {
+            ret             = {
                 'request': {
                     'question'  : question_text,
                     'section'   : section,
@@ -83,11 +83,12 @@ def just_the_json():
                     'date_to'   : '',
                 },
                 'results': {
-                    'total' : 0,
+                    'total' : None,
                     'docs'  : []
                 }
             }
             ret_dummy       = retrieve_given_question(question_text, n=20, section=section)
+            ret['results']['total'] = len(ret_dummy)
             if(len(ret_dummy)==0):
                 return jsonify(ret)
             scaler          = MinMaxScaler(feature_range=(0, 0.5))
