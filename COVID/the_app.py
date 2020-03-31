@@ -88,6 +88,8 @@ def just_the_json():
                 }
             }
             ret_dummy       = retrieve_given_question(question_text, n=20, section=section)
+            if(len(ret_dummy)==0):
+                return jsonify(ret)
             scaler          = MinMaxScaler(feature_range=(0, 0.5))
             scaler.fit(np.array([d['doc_score'] for d in ret_dummy]).reshape(-1, 1))
             ###############################################################################################
