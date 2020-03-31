@@ -14,6 +14,7 @@ from flask import render_template
 from flask import request
 from flask import jsonify
 from collections import OrderedDict
+from pprint import pprint
 
 white           = Color("white")
 yellow_colors   = list(white.range_to(Color("yellow"), 101))
@@ -71,6 +72,10 @@ for (i = 0; i < acc.length; i++) {
 def just_the_json():
     try:
         req = request.get_json()
+        print(30 * '-')
+        print('request:')
+        pprint(req)
+        print(30 * '-')
         if(req is not None):
             question_text   = req['question']
             section         = req['section']
