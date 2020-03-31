@@ -10,7 +10,13 @@ w2v_bin_path_new    = '/home/dpappas/COVID/covid_19_w2v_embeds_30.model'
 wv_old              = KeyedVectors.load_word2vec_format(w2v_bin_path_old, binary=True)
 wv_new              = Word2Vec.load(w2v_bin_path_new)
 
-common_tokens       = sorted(list(set(wv_old.vocab.keys()).intersection(set(wv_new.wv.vocab.keys()))))
+common_tokens       = sorted(
+    list(
+        tok for tok in
+        set(wv_old.vocab.keys()).intersection(set(wv_new.wv.vocab.keys()))
+        if(wv_new.wv.vocab[tok].count>50000 and wv_old.wv.vocab[tok].count>50000 )
+    )
+)
 
 A_matrix            = np.stack([wv_new[tok] for tok in common_tokens], axis=0)
 B_matrix            = np.stack([wv_old[tok] for tok in common_tokens], axis=0)
@@ -26,19 +32,30 @@ B_matrix            = autograd.Variable(torch.FloatTensor(B_matrix), requires_gr
 print(A_matrix.size())
 print(B_matrix.size())
 
-X1                  = torch.nn.Parameter(torch.randn(30,30))
-# optimizer           = optim.Adam([X1], lr=1.000)
-optimizer           = optim.RMSprop([X1], lr=0.001, alpha=0.99, eps=1e-08, momentum=0.1, centered=False)
+# amax        = A_matrix.abs().max(dim=0).values.unsqueeze(0)
+# A_matrix    = A_matrix / amax.expand_as(A_matrix)
 
-for i in range(1000):
+# bmax        = B_matrix.abs().max(dim=0).values.unsqueeze(0)
+# B_matrix    = B_matrix / amax.expand_as(B_matrix)
+
+X1                  = torch.nn.Parameter(torch.randn(30,30))
+b1                  = torch.nn.Parameter(torch.randn(30))
+# optimizer           = optim.Adam([X1], lr=1.000)
+optimizer           = optim.RMSprop([X1,b1], lr=0.0001, alpha=0.99, eps=1e-08, momentum=0.1, centered=False)
+
+for i in range(100000):
     Y               = torch.mm(A_matrix, X1)
+    Y               = Y + b1.expand_as(Y)
     cost            = torch.sum(torch.norm(Y - B_matrix, p=2, dim=1)) # + torch.sum(torch.norm(Y - B_matrix, p=1, dim=1))
     print(cost)
     cost.backward()
     optimizer.step()
     optimizer.zero_grad()
 
-q = autograd.Variable(torch.FloatTensor([wv_new['the']]), requires_grad=False)
+# q = autograd.Variable(torch.FloatTensor([wv_new['the']]), requires_grad=False) / amax
+# r = (torch.mm(q, X1) * bmax).squeeze().detach().numpy()
+
+q = autograd.Variable(torch.FloatTensor([wv_new['depends']]), requires_grad=False)
 r = torch.mm(q, X1).squeeze().detach().numpy()
 
 pprint(wv_old.similar_by_vector(r))

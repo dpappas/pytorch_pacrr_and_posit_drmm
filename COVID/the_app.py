@@ -12,6 +12,7 @@ import numpy as np
 from flask import Flask
 from flask import render_template
 from flask import request
+from flask import jsonify
 from collections import OrderedDict
 
 white           = Color("white")
@@ -65,6 +66,98 @@ for (i = 0; i < acc.length; i++) {
 </body>
 </html>
 '''
+
+@app.route("/just_the_json", methods=["POST", "GET"])
+def just_the_json():
+    try:
+        req = request.get_json()
+        if(req is not None):
+            question_text   = req['question']
+            section         = req['section']
+            ###############################################################################################
+            ret = {
+                'request': {
+                    'question'  : question_text,
+                    'section'   : section,
+                    'date_from' : '',
+                    'date_to'   : '',
+                },
+                'results': {
+                    'total' : 0,
+                    'docs'  : []
+                }
+            }
+            ret_dummy       = retrieve_given_question(question_text, n=20, section=section)
+            scaler          = MinMaxScaler(feature_range=(0, 0.5))
+            scaler.fit(np.array([d['doc_score'] for d in ret_dummy]).reshape(-1, 1))
+            ###############################################################################################
+            top_10_snips = []
+            for doc in ret_dummy:
+                top_10_snips.extend(
+                    sorted(doc['sents_with_scores'],key=lambda x: x[0], reverse=True)[:2]
+                )
+            top_10_snips.sort(key=lambda x: x[0], reverse=True)
+            top_10_snips = [t[1] for t in top_10_snips[:5]]
+            ###############################################################################################
+            ret['results']['total'] = len(ret_dummy)
+            ###############################################################################################
+            for doc in ret_dummy:
+                doc_date        = doc['date']
+                doc_score       = scaler.transform([[doc['doc_score']]])[0][0] + 0.5
+                ###################################################################
+                doc_datum = {
+                    'title'     : doc['title'].strip(),
+                    'doc_score' : str(doc_score * 100),
+                    'section'   : section,
+                    'doc_date'  : doc_date,
+                    'pmid'      : None,
+                    'pmcid'     : None,
+                    'doi'       : None,
+                    'sentences' : []
+                }
+                ##############################################################################################################################
+                if('pmid' in doc and len(doc['pmid'].strip())!=0):
+                    doc_datum['pmid'] = doc['pmid'].strip()
+                if ('pmcid' in doc and len(doc['pmcid'].strip()) != 0):
+                    doc_datum['pmcid'] = doc['pmcid'].strip()
+                if ('doi' in doc and len(doc['doi'].strip()) != 0):
+                    doc_datum['doi'] = doc['doi'].strip()
+                ##############################################################################################################################
+                sents_max_score = max(sent_score for sent_score, _ in doc['sents_with_scores'])
+                print(sents_max_score)
+                for sent_score, sent_text in doc['sents_with_scores']:
+                    sent_text   = sent_text.replace('</', '< ')
+                    if(sent_score == sents_max_score and sent_score >= 0.15):
+                        sent_score = 1
+                    if(sent_text in top_10_snips):
+                        sent_score = 1
+                    if(sent_score<0.45):
+                        sent_score = 0.0
+                    doc_datum['sentences'].append((sent_score, sent_text))
+                ret['results']['docs'].append(doc_datum)
+            return jsonify(ret)
+        else:
+            ret = {
+                'request': {
+                    'question'  : '',
+                    'section'   : '',
+                    'date_from' : '',
+                    'date_to'   : '',
+                },
+                'error': 'empty request'
+            }
+            return jsonify(ret)
+    except Exception as ex:
+        ret = {
+            'request': {
+                'question': '',
+                'section': '',
+                'date_from': '',
+                'date_to': '',
+            },
+            'error': 'Error: {}'.format(str(ex))
+        }
+        return jsonify(ret)
 
 @app.route("/submit_question", methods=["POST", "GET"])
 def submit_question():
