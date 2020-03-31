@@ -150,10 +150,10 @@ def just_the_json():
     except Exception as ex:
         ret = {
             'request': {
-                'question': '',
-                'section': '',
-                'date_from': '',
-                'date_to': '',
+                'question'  : '',
+                'section'   : '',
+                'date_from' : '',
+                'date_to'   : '',
             },
             'error': 'Error: {}'.format(str(ex))
         }
