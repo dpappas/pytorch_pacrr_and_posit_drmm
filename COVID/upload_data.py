@@ -48,7 +48,7 @@ bert_model      = BertModel.from_pretrained(scibert_dir,  output_hidden_states=F
 # zip_path    = '/media/dpappas/dpappas_data/COVID/db_entries.zip'
 # zip_path    = '/home/dpappas/db_entries.zip'
 # zip_path = '/home/dpappas/COVID/data/28_03_2020/db_entries.zip'
-zip_path = '/home/dpappas/COVID/data/mine/db_new_entries.zip'
+zip_path = '/home/dpappas/COVID/data/01_04_2020/db_new_entries.zip'
 archive     = zipfile.ZipFile(zip_path, 'r')
 d           = json.loads(archive.read('db_new_entries.json'))
 
@@ -57,8 +57,8 @@ elastic_con = Elasticsearch(['127.0.01:9200'], verify_certs=True, timeout=150, m
 
 fromm       = int(sys.argv[1])
 too         = int(sys.argv[2])
-fromm       = 0
-too         = 10000000000000
+# fromm       = 0
+# too         = 10000000000000
 
 actions     = []
 b_size      = 200
