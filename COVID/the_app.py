@@ -34,18 +34,24 @@ r1 = '''
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Results</title>
-<style>
-.accordion {background-color: #eee; color: #444; cursor: pointer; padding: 18px; width: 100%; border: none; text-align: left; outline: none; font-size: 15px; transition: 0.4s;}
-.active, .accordion:hover {background-color: #ccc;}
-.panel {padding: 0 18px; display: none; background-color: white; overflow: hidden;}
-</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="templates/assets/tailwind.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="static/aueb_favicon.png">
+
+    <title>Results</title>
+
+    <style>
+    .accordion {background-color: #eee; color: #444; cursor: pointer; padding: 18px; width: 100%; border: none; text-align: left; outline: none; font-size: 15px; transition: 0.4s;}
+    .active, .accordion:hover {background-color: #ccc;}
+    .panel {padding: 0 18px; display: none; background-color: white; overflow: hidden;}
+    </style>
 </head>
 <body class="flex flex-wrap">
-<div class="w-full mb-6 p-4 mx-auto bg-indigo-600">
-    <h4 class="text-white text-center text-2xl">AUEB NLP Group COVID-19 Search Engine</h4>
-</div>
+    <div class="w-full mb-6 p-4 mx-auto bg-indigo-600">
+        <h4 class="text-white text-center text-2xl">AUEB NLP Group COVID-19 Search Engine</h4>
+    </div>
 <div class="container my-6 p-4 mx-auto">
     <div class="lg:w-3/3 md:w-3/3 mx-auto">
 '''
