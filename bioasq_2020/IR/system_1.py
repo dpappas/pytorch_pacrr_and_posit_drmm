@@ -1150,9 +1150,9 @@ retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.ja
 ###########################################################
 b                           = sys.argv[1]
 # f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(b, b)
-# f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
-# f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
-# #############################
+# # f_in2                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
+# # f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
+# # #############################
 f_in1                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/BioASQ-task8bPhaseA-testset{}'.format(b, b)
 f_in2                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/bioasq8_bm25_top100.test.pkl'.format(b)
 f_in3                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/bioasq8_bm25_docset_top100.test.pkl'.format(b)
@@ -1305,6 +1305,10 @@ CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 1 \
 CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 2 \
 /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_2020/system1_output_b2
+
+CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 3 \
+/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_2020/system1_output_b3
 
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
