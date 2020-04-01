@@ -105,7 +105,7 @@ for qid, doc_dat in tqdm(combined_data_docs.items()):
 
 opath = 'ensembe_sys1_and sys2.json'
 with open(opath, 'w') as f:
-    f.write(json.dumps(extract_data, indent=4, sort_keys=True))
+    f.write(json.dumps(extract_data, indent=4, sort_keys=False))
     f.close()
 
 
