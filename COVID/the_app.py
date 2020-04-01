@@ -47,11 +47,11 @@ r1 = '''
     <h4 class="text-white text-center text-2xl">AUEB NLP Group COVID-19 Search Engine</h4>
 </div>
 <div class="container my-6 p-4 mx-auto">
-        <div class="lg:w-2/3 md:w-3/3 mx-auto">
+    <div class="lg:w-3/3 md:w-3/3 mx-auto">
 '''
 
 r2 = '''
-</div>
+    </div>
 </div>
 <script>
 var acc = document.getElementsByClassName("accordion");
@@ -214,32 +214,32 @@ def submit_question():
         #     str(doc_score * 100), doc_bgcolor, doc_txtcolor, doc['pmid'], doc['pmcid'], doc['doi'], doc['section'], doc_date
         # )
         text_to_return  += '<button title="{}" class="accordion" style="background-color:{};color:{};">' \
-                           '{}</button><div class="panel">'.format(
+                           '{}</button><div class="panel m-4">'.format(
             str(doc_score * 100),
             doc_bgcolor,
             doc_txtcolor,
             'Title: '+ (doc['title'] if(len(doc['title'])) else '(Not Available)')
         )
-        text_to_return += '<div title="{}" style="width:100%;background-color:{};">Date: {}  ||  Section: {}</div>'.format(
-            doc['section'], '#D3D3D3', doc_date, doc['section']
+        text_to_return += '<div class="my-1" title="{}" style="width:100%;background-color:{};">Date: {}  ||  Section: {}</div>'.format(
+            doc['section'], '#e2e8f0', doc_date, doc['section']
         )
         ##############################################################################################################################
         if('pmid' in doc and len(doc['pmid'].strip())!=0):
-            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+            text_to_return += '<div title="{}" class="my-1" style="width:100%;background-color:{};">{}</div>'.format(
                 'link',
-                '#D3D3D3',
+                '#e2e8f0',
                 'Available on: <a href="https://www.ncbi.nlm.nih.gov/pubmed/?term={}">PMID: {}</a>'.format(doc['pmid'], doc['pmid'])
             )
         if ('pmcid' in doc and len(doc['pmcid'].strip()) != 0):
-            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+            text_to_return += '<div title="{}" class="my-1" class="my-1" style="width:100%;background-color:{};">{}</div>'.format(
                 'link',
-                '#D3D3D3',
+                '#e2e8f0',
                 'Available on: <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/{}">PMC: {}</a>'.format(doc['pmcid'], doc['pmcid'])
             )
         if ('doi' in doc and len(doc['doi'].strip()) != 0):
-            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+            text_to_return += '<div title="{}" class="my-1" style="width:100%;background-color:{};">{}</div>'.format(
                 'link',
-                '#D3D3D3',
+                '#e2e8f0',
                 'Available on: <a href="http://doi.org/{}">Doi : {}</a>'.format(doc['doi'], doc['doi'])
             )
         ##############################################################################################################################
@@ -254,7 +254,7 @@ def submit_question():
                 sent_score = 1
             if(sent_score<0.45):
                 sent_score = 0.0
-            text_to_return += '<div title="{}" style="width:100%;background-color:{};">{}</div>'.format(
+            text_to_return += '<div title="{}" class="my-1" style="width:100%;background-color:{};">{}</div>'.format(
                 sent_score, yellow_colors[int(sent_score*100)], sent_text)
         ##############################################################################################################################
         text_to_return += '</div>'
