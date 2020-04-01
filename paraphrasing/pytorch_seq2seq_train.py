@@ -29,7 +29,7 @@ en = spacy.load('en')
 
 ######################################################################################################
 
-def translate_sentence(sentence, src_field, trg_field, model, device, max_len=50):
+def translate_sentence(sentence, src_field, trg_field, model, device, max_len=150):
     model.eval()
     if isinstance(sentence, str):
         nlp = spacy.load('de')
@@ -115,15 +115,7 @@ def tokenize_en(sentence):
 ######################################################################################################
 
 class Encoder(nn.Module):
-    def __init__(self,
-                 input_dim,
-                 hid_dim,
-                 n_layers,
-                 n_heads,
-                 pf_dim,
-                 dropout,
-                 device,
-                 max_length=100):
+    def __init__(self, input_dim, hid_dim, n_layers, n_heads, pf_dim, dropout, device, max_length=150):
         super().__init__()
         self.device = device
         self.tok_embedding = nn.Embedding(input_dim, hid_dim)
@@ -139,9 +131,9 @@ class Encoder(nn.Module):
     def forward(self, src, src_mask):
         # src = [batch size, src len]
         # src_mask = [batch size, src len]
-        batch_size = src.shape[0]
-        src_len = src.shape[1]
-        pos = torch.arange(0, src_len).unsqueeze(0).repeat(batch_size, 1).to(self.device)
+        batch_size  = src.shape[0]
+        src_len     = src.shape[1]
+        pos         = torch.arange(0, src_len).unsqueeze(0).repeat(batch_size, 1).to(self.device)
         # pos = [batch size, src len]
         src = self.dropout((self.tok_embedding(src) * self.scale) + self.pos_embedding(pos))
         # src = [batch size, src len, hid dim]
@@ -238,15 +230,7 @@ class PositionwiseFeedforwardLayer(nn.Module):
         return x
 
 class Decoder(nn.Module):
-    def __init__(self,
-                 output_dim,
-                 hid_dim,
-                 n_layers,
-                 n_heads,
-                 pf_dim,
-                 dropout,
-                 device,
-                 max_length=100):
+    def __init__(self, output_dim, hid_dim, n_layers, n_heads, pf_dim, dropout, device, max_length=150):
         super().__init__()
         self.device = device
         self.tok_embedding = nn.Embedding(output_dim, hid_dim)
@@ -311,12 +295,7 @@ class DecoderLayer(nn.Module):
         return trg, attention
 
 class Seq2Seq(nn.Module):
-    def __init__(self,
-                 encoder,
-                 decoder,
-                 src_pad_idx,
-                 trg_pad_idx,
-                 device):
+    def __init__(self,encoder, decoder, src_pad_idx, trg_pad_idx, device):
         super().__init__()
         self.encoder = encoder
         self.decoder = decoder
@@ -341,6 +320,7 @@ class Seq2Seq(nn.Module):
     def forward(self, src, trg):
         # src = [batch size, src len]
         # trg = [batch size, trg len]
+        src, trg = src.to(device), trg.to(device)
         src_mask = self.make_src_mask(src)
         trg_mask = self.make_trg_mask(trg)
         # src_mask = [batch size, 1, 1, src len]
@@ -368,20 +348,14 @@ train_part, val_part = train_test_split(df, test_size=0.1)
 train_part.to_csv("train.csv", index=False)
 val_part.to_csv("val.csv", index=False)
 ######################################################################################################
-
-data_fields = [('src', EN_TEXT_1), ('trg', EN_TEXT_2)]
-train_part, val_part = data.TabularDataset.splits(path='./', train='train.csv', validation='val.csv', format='csv', fields=data_fields)
-
+data_fields             = [('src', EN_TEXT_1), ('trg', EN_TEXT_2)]
+train_part, val_part    = data.TabularDataset.splits(path='./', train='train.csv', validation='val.csv', format='csv', fields=data_fields)
 EN_TEXT_1.build_vocab(train_part, val_part)
 EN_TEXT_2.build_vocab(train_part, val_part)
-
 ######################################################################################################
-
 train_iter = BucketIterator(train_part, batch_size=20, sort_key=lambda x: len(x.trg), shuffle=True)
-
 valid_iter = BucketIterator(val_part, batch_size=20, sort_key=lambda x: len(x.trg), shuffle=True)
 test_iter  = valid_iter
-
 ######################################################################################################
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
