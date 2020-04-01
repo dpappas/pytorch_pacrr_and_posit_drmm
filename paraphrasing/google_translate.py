@@ -1,8 +1,8 @@
 
 # pip install googletrans
 
-import googletrans
-from googletrans import Translator
+import  googletrans
+from    googletrans import Translator
 print(googletrans.LANGUAGES)
 translator  = Translator()
 
