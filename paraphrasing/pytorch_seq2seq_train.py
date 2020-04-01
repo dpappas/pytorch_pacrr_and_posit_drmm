@@ -418,6 +418,8 @@ CLIP = 1
 
 best_valid_loss = float('inf')
 
+# next(enumerate(train_iter))
+
 for epoch in range(N_EPOCHS):
     start_time = time.time()
     train_loss = train(model, train_iter, optimizer, criterion, CLIP)
