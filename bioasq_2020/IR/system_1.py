@@ -1178,9 +1178,8 @@ if (not os.path.exists(odir)):
 avgdl, mean, deviation      = 21.1907, 0.6275, 1.2210
 print(avgdl, mean, deviation)
 ###########################################################
-k_for_maxpool       = 5
-k_sent_maxpool      = 5
-embedding_dim       = 30 #200
+k_for_maxpool               = 5
+embedding_dim               = 30 #200
 ###########################################################
 my_seed     = 1
 random.seed(my_seed)
