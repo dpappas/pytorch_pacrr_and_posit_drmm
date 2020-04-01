@@ -295,7 +295,7 @@ class DecoderLayer(nn.Module):
         # self attention
         _trg, _ = self.self_attention(trg, trg, trg, trg_mask)
         # dropout, residual connection and layer norm
-        trg = self.layer_norm(trg + self.dropout(_trg))
+        trg     = self.layer_norm(trg + self.dropout(_trg))
         # trg = [batch size, trg len, hid dim]
         # encoder attention
         _trg, attention = self.encoder_attention(trg, enc_src, enc_src, src_mask)
@@ -356,10 +356,10 @@ class Seq2Seq(nn.Module):
 EN_TEXT_1 = Field(tokenize=tokenize_en, init_token = "<sos>", eos_token = "<eos>")
 EN_TEXT_2 = Field(tokenize=tokenize_en, init_token = "<sos>", eos_token = "<eos>")
 ######################################################################################################
-raw_data = {'English' : [line for line in from_text], 'French': [line for line in to_text]}
-df = pd.DataFrame(raw_data, columns=["English", "French"])
-df['eng_len'] = df['English'].str.count(' ')
-df['fr_len'] = df['French'].str.count(' ')
+raw_data = {'src' : [line for line in from_text], 'trg': [line for line in to_text]}
+df = pd.DataFrame(raw_data, columns=["src", "trg"])
+df['eng_len'] = df['src'].str.count(' ')
+df['fr_len'] = df['trg'].str.count(' ')
 df = df.query('fr_len < 80 & eng_len < 80')
 df = df.query('fr_len < eng_len * 1.5 & fr_len * 1.5 > eng_len')
 ######################################################################################################
@@ -369,7 +369,7 @@ train_part.to_csv("train.csv", index=False)
 val_part.to_csv("val.csv", index=False)
 ######################################################################################################
 
-data_fields = [('English', EN_TEXT_1), ('French', EN_TEXT_2)]
+data_fields = [('src', EN_TEXT_1), ('trg', EN_TEXT_2)]
 train_part, val_part = data.TabularDataset.splits(path='./', train='train.csv', validation='val.csv', format='csv', fields=data_fields)
 
 EN_TEXT_1.build_vocab(train_part, val_part)
@@ -377,9 +377,9 @@ EN_TEXT_2.build_vocab(train_part, val_part)
 
 ######################################################################################################
 
-train_iter = BucketIterator(train_part, batch_size=20, sort_key=lambda x: len(x.French), shuffle=True)
+train_iter = BucketIterator(train_part, batch_size=20, sort_key=lambda x: len(x.trg), shuffle=True)
 
-valid_iter = BucketIterator(val_part, batch_size=20, sort_key=lambda x: len(x.French), shuffle=True)
+valid_iter = BucketIterator(val_part, batch_size=20, sort_key=lambda x: len(x.trg), shuffle=True)
 test_iter  = valid_iter
 
 ######################################################################################################
@@ -400,11 +400,11 @@ DEC_PF_DIM  = 512
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 
-enc = Encoder(INPUT_DIM, HID_DIM, ENC_LAYERS, ENC_HEADS, ENC_PF_DIM, ENC_DROPOUT, device)
-dec = Decoder(OUTPUT_DIM, HID_DIM, DEC_LAYERS, DEC_HEADS, DEC_PF_DIM, DEC_DROPOUT, device)
+enc         = Encoder(INPUT_DIM, HID_DIM, ENC_LAYERS, ENC_HEADS, ENC_PF_DIM, ENC_DROPOUT, device)
+dec         = Decoder(OUTPUT_DIM, HID_DIM, DEC_LAYERS, DEC_HEADS, DEC_PF_DIM, DEC_DROPOUT, device)
 SRC_PAD_IDX = EN_TEXT_1.vocab.stoi[EN_TEXT_1.pad_token]
 TRG_PAD_IDX = EN_TEXT_2.vocab.stoi[EN_TEXT_2.pad_token]
-model = Seq2Seq(enc, dec, SRC_PAD_IDX, TRG_PAD_IDX, device).to(device)
+model       = Seq2Seq(enc, dec, SRC_PAD_IDX, TRG_PAD_IDX, device).to(device)
 
 print(f'The model has {count_parameters(model):,} trainable parameters')
 
@@ -418,7 +418,7 @@ CLIP = 1
 
 best_valid_loss = float('inf')
 
-# next(enumerate(train_iter))
+# next(enumerate(train_iter))[1]
 
 for epoch in range(N_EPOCHS):
     start_time = time.time()
@@ -447,48 +447,6 @@ print(f'trg = {trg}')
 translation, attention = translate_sentence(src, EN_TEXT_1, EN_TEXT_2, model, device)
 print(f'predicted trg = {translation}')
 
-
 '''
-# code from http://nlp.seas.harvard.edu/2018/04/03/attention.html
-# read text after for description of what it does
-global max_src_in_batch, max_tgt_in_batch
-
-def batch_size_fn(new, count, sofar):
-    "Keep augmenting batch and calculate total number of tokens + padding."
-    global max_src_in_batch, max_tgt_in_batch
-    if count == 1:
-        max_src_in_batch = 0
-        max_tgt_in_batch = 0
-    max_src_in_batch = max(max_src_in_batch, len(new.English))
-    max_tgt_in_batch = max(max_tgt_in_batch, len(new.French) + 2)
-    src_elements = count * max_src_in_batch
-    tgt_elements = count * max_tgt_in_batch
-    return max(src_elements, tgt_elements)
-
-class MyIterator(data.Iterator):
-    def create_batches(self):
-        if self.train:
-            def pool(d, random_shuffler):
-                for p in data.batch(d, self.batch_size * 100):
-                    p_batch = data.batch(
-                        sorted(p, key=self.sort_key),
-                        self.batch_size, self.batch_size_fn)
-                    for b in random_shuffler(list(p_batch)):
-                        yield b
-            self.batches = pool(self.data(), self.random_shuffler)
-        else:
-            self.batches = []
-            for b in data.batch(self.data(), self.batch_size,
-                                self.batch_size_fn):
-                self.batches.append(sorted(b, key=self.sort_key))
-
-train_iter = MyIterator(
-    trn, batch_size=1300, device=0,
-    repeat=False, sort_key= lambda x:
-    (len(x.English), len(x.French)),
-    batch_size_fn=batch_size_fn, train=True,
-    shuffle=True
-)
+CUDA_VISIBLE_DEVICES=-1 python3.6 train_model.py 
 '''
-
-
