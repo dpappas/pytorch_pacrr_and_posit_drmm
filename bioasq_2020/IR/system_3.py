@@ -68,8 +68,8 @@ odir            = "/home/dpappas/bioasq_2020/system3_output_b{}/".format(b)
 ret_data_path   = "/home/dpappas/bioasq_2020/system1_output_b{}/v3 test_emit_bioasq.json".format(b)
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 
-docs_data   = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_docset_top100.test.pkl'), 'rb'))
-ret_data    = json.load(open(ret_data_path))
+docs_data       = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_docset_top100.test.pkl'), 'rb'))
+ret_data        = json.load(open(ret_data_path))
 
 avgdl, mean, deviation      = 21.1907, 0.6275, 1.2210
 print(avgdl, mean, deviation)
