@@ -44,8 +44,8 @@
     <div class="container my-6 p-4 mx-auto">
         <div class="lg:w-2/3 md:w-3/3 mx-auto">
         <h3 class="text-base">
-            An Experimental Document and Snippet Retrieval Search Engine for the <a href="https://pages.semanticscholar.org/coronavirus-research">COVID-19 Open Research Dataset (CORD-19)</a>
-            based on <a href="https://www.aueb.gr/en/content/team-auebs-department-informatics-wins-bioasq-prize-0">award winning</a> technology developed by <a href="http://nlp.cs.aueb.gr/">AUEB's NLP Group</a> for the <a href="http://bioasq.org/">BioASQ challenge</a>
+            An Experimental Document and Snippet Retrieval Search Engine for the <a class="underline" href="https://pages.semanticscholar.org/coronavirus-research">COVID-19 Open Research Dataset (CORD-19)</a>
+            based on <a class="underline" href="https://www.aueb.gr/en/content/team-auebs-department-informatics-wins-bioasq-prize-0">award winning</a> technology developed by <a class="underline" href="http://nlp.cs.aueb.gr/">AUEB's NLP Group</a> for the <a class="underline" href="http://bioasq.org/">BioASQ challenge</a>
         </h3>
                 <form class="my-6" action="/submit_question" method="POST">
                     <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-first-name">
@@ -126,16 +126,39 @@
                         </div>
                     </div>
                     <input class="cursor-pointer mt-5 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow" type="submit" value="Submit">
-
-                    <p class="mt-5 text-xs text-center">
-                    Technology ported to CORD-19 by Dimitris Pappas (email: <a href="mailto: pappasd@aueb.gr">pappasd@aueb.gr</a>) and Petros Stavropoulos (email: <a href="mailto: pstav1993@aueb.gr">pstav1993@aueb.gr</a>).
-                    </p>
-
                 </form>
         </div>
 </div>
 
-
 </body>
+<footer class="container mb-5 text-xs mx-auto">
+    <div class="lg:w-2/3 md:w-3/3 mx-auto">
+    <p>
+        Technology ported to CORD-19 by Dimitris Pappas (email: <a class="underline" href="mailto: pappasd@aueb.gr">pappasd@aueb.gr</a>) and Petros Stavropoulos (email: <a class="underline" href="mailto: pstav1993@aueb.gr">pstav1993@aueb.gr</a>).
+    </p>
+    <p>
+        Papers:
+        <br>
+        <br>
+        1: <a class="underline" class="hover:underline" href="http://nlp.cs.aueb.gr/pubs/emnlp2018.pdf">Deep Relevance Ranking Using Enhanced Document-Query Interactions</a>
+        </br>
+        2: <a class="underline" class="hover:underline" href = "http://nlp.cs.aueb.gr/pubs/aueb_at_bioasq7.pdf">AUEB at BioASQ 7: Document and Snippet Retrieval</a>
+        </br>
+        </br>
+        Code: <a class="underline" class="hover:underline" href = "https://github.com/nlpaueb/aueb-bioasq7">aueb-bioasq7</a>
+        </br>
+        </br>
+        API example:
+        <code title="title" style="background-color:#D3D3D3;">curl --header "Content-Type: application/json" --request POST --data '{"question"  : "What do we know about Covid-19 vaccines ?", "section"   : ""}' http://cslab241.cs.aueb.gr:5000/just_the_json</code>
+        </br>
+        </br>
+        All provided <b>for research and demo purposes only</b>. Search engine running on a <b>weak server</b>. Please use responsibly.
+        </br>
+        </br>
+        If you can host the search engine on a stronger server, or if you can help improve the UI of the web demo, please let us know.
+        </br>
+    </p>
+    </div>
+</footer>
 </html>
 
