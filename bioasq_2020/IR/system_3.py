@@ -63,7 +63,7 @@ def f7(seq):
     return [x for x in seq if not (x in seen or seen_add(x))]
 
 b               = sys.argv[1]
-in_dir          = "/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/bioasq8_bm25_top100/".format(b)
+in_dir          = "/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/".format(b)
 odir            = "/home/dpappas/bioasq_2020/system3_output_b{}/".format(b)
 ret_data_path   = "/home/dpappas/bioasq_2020/system1_output_b{}/v3 test_emit_bioasq.json".format(b)
 idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
@@ -151,14 +151,12 @@ for quer in tqdm(ret_data['questions']):
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 
-with open(os.path.join(odir, 'bioasq8_batch3_system3_results.json'), 'w') as f:
+with open(os.path.join(odir, 'bioasq8_batch{}_system3_results.json'.format(b)), 'w') as f:
     gb = f.write(json.dumps(system_subm_data, indent=4, sort_keys=True))
 
 '''
-python3.6 system_3.py \
-"/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/bioasq8_bm25_top100/" \
-"/home/dpappas/bioasq_2020/system3_output_b1/" \
-"/home/dpappas/bioasq_2020/system1_output_b1/v3 test_emit_bioasq.json"
-
+python3.6 system_3.py 1
+python3.6 system_3.py 2
+python3.6 system_3.py 3
 
 '''

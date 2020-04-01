@@ -59,7 +59,7 @@ def f7(seq):
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x))]
 
-b       = '2'
+b       = sys.argv[1]
 in_dir  = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/'.format(b)
 odir    = '/home/dpappas/bioasq_2020/system5_output_b{}/'.format(b)
 

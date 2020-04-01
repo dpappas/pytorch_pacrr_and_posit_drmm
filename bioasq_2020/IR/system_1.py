@@ -710,10 +710,16 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         extracted_snippets.extend(extracted_from_one)
         #
         if (dato['query_id'] not in data_for_revision):
-            data_for_revision[dato['query_id']] = {'query_text': dato['query_text'], 'snippets'  : {retr['doc_id']: all_emits}}
+            data_for_revision[dato['query_id']] = {
+                'query_text': dato['query_text'],
+                'snippets'  : {
+                    retr['doc_id']: all_emits
+                }
+            }
         else:
             data_for_revision[dato['query_id']]['snippets'][retr['doc_id']] = all_emits
     #
+    data_for_revision['doc_scores']         = doc_res
     doc_res                                 = sorted([item for item in doc_res.items() if(item[1]>min_doc_score)], key = lambda x: x[1], reverse = True)
     the_doc_scores                          = dict([("http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]), pm[1]) for pm in doc_res[:10]])
     doc_res                                 = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(pm[0]) for pm in doc_res]
@@ -1297,16 +1303,19 @@ sh test_bioasq_2.sh 1111111_100p0
 sh test_bioasq_2.sh 1111111_10p0
 sh test_bioasq_2.sh 1111111_1p0
 
+'''
 
-CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 1 \
+'''
+
+CUDA_VISIBLE_DEVICES=0 python3.6 system_1.py 1 \
 /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_2020/system1_output_b1
 
-CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 2 \
+CUDA_VISIBLE_DEVICES=0 python3.6 system_1.py 2 \
 /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_2020/system1_output_b2
 
-CUDA_VISIBLE_DEVICES=0 python3.6 system1.py 3 \
+CUDA_VISIBLE_DEVICES=0 python3.6 system_1.py 3 \
 /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_2020/system1_output_b3
 
@@ -1315,6 +1324,4 @@ java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.E
 "/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseB-testset1" \
 "/home/dpappas/bioasq_2020/system1_output_b1/v3 test_emit_bioasq.json" | \
 grep -E '^MAP snippets:|^MAP documents:'
-
 '''
-
