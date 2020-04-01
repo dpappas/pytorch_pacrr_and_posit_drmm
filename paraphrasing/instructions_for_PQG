@@ -1,0 +1,18 @@
+
+
+
+
+git clone https://www.github.com/dev-chauhan/PQG-pytorch
+cd PQG-pytorch
+virtualenv --python=/usr/local/bin/python3.6 PQG
+source PQG/bin/activate
+
+pip install "torch==1.4.0"
+pip install "progressbar2==3.47.0"
+pip install "progressbar==2.5"
+pip install "tensorboardx==2.0"
+pip install "torchvision==0.3.0"
+pip install "stevedore==1.31.0"
+
+
+
