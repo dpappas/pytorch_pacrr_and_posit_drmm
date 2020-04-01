@@ -13,6 +13,10 @@ pip install "progressbar==2.5"
 pip install "tensorboardx==2.0"
 pip install "torchvision==0.3.0"
 pip install "stevedore==1.31.0"
+pip install "scipy==1.1.0"
+pip install "h5py==2.9.0"
+pip install "nltk==3.4.4"
+pip install "tqdm==4.41.1"
 
 
-
+./train.sh edlps --n_epoch 20

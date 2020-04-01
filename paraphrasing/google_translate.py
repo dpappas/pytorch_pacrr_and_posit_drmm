@@ -9,7 +9,6 @@ translator  = Translator()
 question    = "Is modified vaccinia Ankara effective for smallpox?"
 print(question)
 
-
 def get_different(question, lang='fr'):
     result      = translator.translate(question, src='en', dest=lang)
     transl_quest = result.text
@@ -21,6 +20,9 @@ for  lang in googletrans.LANGUAGES.keys():
     if(trans != question):
         print(lang)
         print(trans)
+
+
+
 
 
 
