@@ -2,9 +2,9 @@
 # following
 # https://github.com/huggingface/transformers#quick-tour-tf-20-training-and-pytorch-interoperability
 
-import tensorflow as tf
-import tensorflow_datasets
-from transformers import *
+import  tensorflow as tf
+import  tensorflow_datasets
+from    transformers import *
 
 # Load dataset, tokenizer, model from pretrained model/vocabulary
 tokenizer   = BertTokenizer.from_pretrained('bert-base-cased')
