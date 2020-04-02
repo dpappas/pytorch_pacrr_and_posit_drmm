@@ -1,5 +1,5 @@
 
-import json, torch, re, pickle, random, os
+import json, torch, re, pickle, random, os, sys
 from pytorch_transformers import BertModel, BertTokenizer
 import  torch.nn as nn
 import  torch.optim             as optim
@@ -85,15 +85,15 @@ class InputFeatures(object):
     self.input_mask = input_mask
     self.input_type_ids = input_type_ids
 
-def yield_batches(data, batch_size):
+def yield_batches(data, docs, batch_size):
     instances       = train_data_step1(data)
     random.shuffle(instances)
     batch_good      = []
     batch_bad       = []
     batch_quests    = []
     for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        good_doc    = train_docs[gid]['title'] + '--------------------' + train_docs[gid]['abstractText']
-        bad_doc     = train_docs[bid]['title'] + '--------------------' + train_docs[bid]['abstractText']
+        good_doc    = docs[gid]['title'] + '--------------------' + docs[gid]['abstractText']
+        bad_doc     = docs[bid]['title'] + '--------------------' + docs[bid]['abstractText']
         #################################################################################################
         batch_quests.append(quest_text)
         batch_good.append(good_doc)
@@ -199,17 +199,19 @@ class DocEmbeder(nn.Module):
         l2 = F.leaky_relu(self.layer2(l1))
         return l2
 
-TRAIN_BATCH_SIZE            = 24
-LEARNING_RATE               = 2e-5
-NUM_TRAIN_EPOCHS            = 1
-RANDOM_SEED                 = 42
-GRADIENT_ACCUMULATION_STEPS = 1
+TRAIN_BATCH_SIZE            = int(sys.argv[1])      # 64
+LEARNING_RATE               = float(sys.argv[2])    # 2e-5
+NUM_TRAIN_EPOCHS            = int(sys.argv[3])      # 4
+RANDOM_SEED                 = int(sys.argv[4])      # 1989
 WARMUP_PROPORTION           = 0.1
+odir = '/home/dpappas/train_bert_ir_embeds_{}_{}_{}_{}'.format(
+    TRAIN_BATCH_SIZE, str(LEARNING_RATE).replace('.','p'), NUM_TRAIN_EPOCHS, RANDOM_SEED
+)
 
 dataloc         = '/home/dpappas/bioasq_all/bioasq7_data/'
 (dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
 
-batch_size      = 64
+batch_size  = TRAIN_BATCH_SIZE
 
 model       = DocEmbeder(embedding_dim=100, input_dim=768, hidde_dim=256).to(device)
 
@@ -223,7 +225,7 @@ optimizer = BertAdam(
 def train_one():
     model.train()
     all_losses = []
-    pbar = tqdm(list(yield_batches(train_data, batch_size)))
+    pbar = tqdm(list(yield_batches(train_data, train_docs, batch_size, )))
     for batch_quests, batch_good, batch_bad in pbar:
         _, embeds_docs_neg      = embed_the_sents(batch_bad)
         _, embeds_docs_pos      = embed_the_sents(batch_good)
@@ -249,7 +251,7 @@ def train_one():
 def eval_one():
     model.eval()
     all_losses = []
-    pbar = tqdm(list(yield_batches(dev_data, batch_size)))
+    pbar = tqdm(list(yield_batches(dev_data, dev_docs, batch_size)))
     for batch_quests, batch_good, batch_bad in pbar:
         _, embeds_docs_neg      = embed_the_sents(batch_bad)
         _, embeds_docs_pos      = embed_the_sents(batch_good)
@@ -270,6 +272,10 @@ def eval_one():
 
 def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
     state = {
+        'TRAIN_BATCH_SIZE'  : TRAIN_BATCH_SIZE,
+        'LEARNING_RATE'     : LEARNING_RATE,
+        'NUM_TRAIN_EPOCHS'  : NUM_TRAIN_EPOCHS,
+        'RANDOM_SEED'       : RANDOM_SEED,
         'epoch'             : epoch,
         'model_state_dict'  : model.state_dict(),
         'best_valid_score'  : max_dev_map,
@@ -277,21 +283,24 @@ def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.p
     }
     torch.save(state, filename)
 
-total_epochs = 4
+if not os.path.exists(odir):
+    os.makedirs(odir)
+
 best_dev_average_loss = None
-for epoch in range(total_epochs):
+for epoch in range(NUM_TRAIN_EPOCHS):
     train_average_loss  = train_one()
     print('train_average_loss: {}'.format(train_average_loss))
     dev_average_loss    = eval_one()
     print('dev_average_loss: {}'.format(dev_average_loss))
     if (best_dev_average_loss is None or dev_average_loss >= best_dev_average_loss):
         best_dev_average_loss = dev_average_loss
-        save_checkpoint(epoch, model, best_dev_average_loss, optimizer, filename=os.path.join('train_bert_ir_embeds_best_checkpoint.pth.tar'))
+        save_checkpoint(epoch, model, best_dev_average_loss, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
 
 
 '''
 
-# CUDA_VISIBLE_DEVICES=1 python3.6 train_bert_ir_embeds.py
+CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_ir_embeds.py 64 2e-5 4 1989
+CUDA_VISIBLE_DEVICES=1 python3.6 train_bert_ir_embeds.py 64 0.01 4 1989
 
 '''
 
