@@ -248,10 +248,10 @@ def train_one():
         #################################################################
     return sum(all_losses) / float(len(all_losses))
 
-def eval_one():
+def eval_one(dev_batches):
     model.eval()
     all_losses = []
-    pbar = tqdm(list(yield_batches(dev_data, dev_docs, batch_size)))
+    pbar = tqdm()
     for batch_quests, batch_good, batch_bad in pbar:
         _, embeds_docs_neg      = embed_the_sents(batch_bad)
         _, embeds_docs_pos      = embed_the_sents(batch_good)
@@ -287,10 +287,11 @@ if not os.path.exists(odir):
     os.makedirs(odir)
 
 best_dev_average_loss = None
+dev_batches = list(yield_batches(dev_data, dev_docs, batch_size))
 for epoch in range(NUM_TRAIN_EPOCHS):
     train_average_loss  = train_one()
     print('train_average_loss: {}'.format(train_average_loss))
-    dev_average_loss    = eval_one()
+    dev_average_loss    = eval_one(dev_batches)
     print('dev_average_loss: {}'.format(dev_average_loss))
     if (best_dev_average_loss is None or dev_average_loss >= best_dev_average_loss):
         best_dev_average_loss = dev_average_loss
