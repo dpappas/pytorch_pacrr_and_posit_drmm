@@ -66,8 +66,8 @@ def train(model, iterator, optimizer, criterion, clip):
     model.train()
     epoch_loss = 0
     for i, batch in enumerate(iterator):
-        src = batch.src
-        trg = batch.trg
+        src         = batch.src
+        trg         = batch.trg
         optimizer.zero_grad()
         output, _   = model(src, trg[:, :-1])
         # output = [batch size, trg len - 1, output dim]
@@ -337,9 +337,11 @@ df = df.query('fr_len < 80 & eng_len < 80')
 df = df.query('fr_len < eng_len * 1.5 & fr_len * 1.5 > eng_len')
 ######################################################################################################
 print('create train and validation set and save to csv')
-train_part, val_part = train_test_split(df, test_size=0.1)
-train_part.to_csv("train.csv", index=False)
-val_part.to_csv("val.csv", index=False)
+train_part, val_part    = train_test_split(df, test_size=0.2)
+val_part,   test_part   = train_test_split(val_part, test_size=0.5)
+train_part.to_csv("train.csv",  index=False)
+val_part.to_csv("val.csv",      index=False)
+test_part.to_csv("test.csv",    index=False)
 ######################################################################################################
 print('Reload to train the model')
 data_fields             = [('src', EN_TEXT_1), ('trg', EN_TEXT_2)]
@@ -348,7 +350,7 @@ EN_TEXT_1.build_vocab(train_part, val_part)
 EN_TEXT_2.build_vocab(train_part, val_part)
 ######################################################################################################
 train_iter = BucketIterator(train_part, batch_size=20, sort_key=lambda x: len(x.trg), shuffle=True)
-valid_iter = BucketIterator(val_part, batch_size=20, sort_key=lambda x: len(x.trg), shuffle=True)
+valid_iter = BucketIterator(val_part,   batch_size=20, sort_key=lambda x: len(x.trg), shuffle=True)
 test_iter  = valid_iter
 ######################################################################################################
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
