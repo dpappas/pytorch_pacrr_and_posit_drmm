@@ -235,7 +235,7 @@ def train_one():
         #################################################################
         pos_sim         = model.cos(pos_vec_docs, vec_quests)
         neg_sim         = model.cos(neg_vec_docs, vec_quests)
-        loss            = model.my_hinge_loss(pos_sim, neg_sim, margin=0.4)
+        loss            = model.my_hinge_loss(pos_sim, neg_sim, margin=0.2)
         all_losses.append(loss.cpu().item())
         #################################################################
         loss.backward()
@@ -261,7 +261,7 @@ def eval_one():
         #################################################################
         pos_sim         = model.cos(pos_vec_docs, vec_quests)
         neg_sim         = model.cos(neg_vec_docs, vec_quests)
-        loss            = model.my_hinge_loss(pos_sim, neg_sim, margin=0.4)
+        loss            = model.my_hinge_loss(pos_sim, neg_sim, margin=0.2)
         all_losses.append(loss.cpu().item())
         #################################################################
         pbar.set_description('{}'.format(sum(all_losses) / float(len(all_losses))))
@@ -286,8 +286,7 @@ for epoch in range(total_epochs):
     print('dev_average_loss: {}'.format(dev_average_loss))
     if (best_dev_average_loss is None or dev_average_loss >= best_dev_average_loss):
         best_dev_average_loss = dev_average_loss
-        save_checkpoint(epoch, model, bert_model, best_dev_average_loss, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
-
+        save_checkpoint(epoch, model, best_dev_average_loss, optimizer, filename=os.path.join('train_bert_ir_embeds_best_checkpoint.pth.tar'))
 
 
 '''
