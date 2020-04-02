@@ -222,10 +222,10 @@ optimizer = BertAdam(
     t_total     = 10000
 )
 
-def train_one():
+def train_one(train_batches):
     model.train()
     all_losses = []
-    pbar = tqdm(list(yield_batches(train_data, train_docs, batch_size, )))
+    pbar = tqdm(train_batches)
     for batch_quests, batch_good, batch_bad in pbar:
         _, embeds_docs_neg      = embed_the_sents(batch_bad)
         _, embeds_docs_pos      = embed_the_sents(batch_good)
@@ -251,7 +251,7 @@ def train_one():
 def eval_one(dev_batches):
     model.eval()
     all_losses = []
-    pbar = tqdm()
+    pbar = tqdm(dev_batches)
     for batch_quests, batch_good, batch_bad in pbar:
         _, embeds_docs_neg      = embed_the_sents(batch_bad)
         _, embeds_docs_pos      = embed_the_sents(batch_good)
@@ -287,9 +287,12 @@ if not os.path.exists(odir):
     os.makedirs(odir)
 
 best_dev_average_loss = None
-dev_batches = list(yield_batches(dev_data, dev_docs, batch_size))
+dev_batches     = list(yield_batches(dev_data, dev_docs, batch_size))
+train_batches   = []
+for i in range(50):
+    train_batches.extend(list(yield_batches(dev_data, dev_docs, batch_size)))
 for epoch in range(NUM_TRAIN_EPOCHS):
-    train_average_loss  = train_one()
+    train_average_loss  = train_one(train_batches)
     print('train_average_loss: {}'.format(train_average_loss))
     dev_average_loss    = eval_one(dev_batches)
     print('dev_average_loss: {}'.format(dev_average_loss))
