@@ -424,5 +424,5 @@ translation, attention = translate_sentence(src, EN_TEXT_1, EN_TEXT_2, model, de
 print(f'predicted trg = {translation}')
 
 '''
-CUDA_VISIBLE_DEVICES=-1 python3.6 train_model.py 
+CUDA_VISIBLE_DEVICES=1 python3.6 train_model.py 
 '''
