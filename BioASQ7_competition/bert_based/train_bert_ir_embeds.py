@@ -1,12 +1,51 @@
 
-import json, torch, re
+import json, torch, re, pickle, random, os
 from pytorch_transformers import BertModel, BertTokenizer
 import  torch.nn as nn
-import  torch.nn.functional     as F
 import  torch.optim             as optim
+import  torch.nn.functional     as F
 from pytorch_pretrained_bert.optimization import BertAdam
+from tqdm import tqdm
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
+
+######################################################################
+
+def load_all_data(dataloc):
+    print('loading pickle data')
+    #
+    with open(dataloc + 'trainining7b.json', 'r') as f:
+        bioasq6_data = json.load(f)
+        bioasq6_data = dict((q['id'], q) for q in bioasq6_data['questions'])
+    #
+    with open(dataloc + 'bioasq7_bm25_top100.dev.pkl', 'rb') as f:
+        dev_data = pickle.load(f)
+    with open(dataloc + 'bioasq7_bm25_docset_top100.dev.pkl', 'rb') as f:
+        dev_docs = pickle.load(f)
+    with open(dataloc + 'bioasq7_bm25_top100.train.pkl', 'rb') as f:
+        train_data = pickle.load(f)
+    with open(dataloc + 'bioasq7_bm25_docset_top100.train.pkl', 'rb') as f:
+        train_docs = pickle.load(f)
+    print('loading words')
+    #
+    return dev_data, dev_docs, train_data, train_docs, bioasq6_data
+
+def train_data_step1(train_data):
+    ret = []
+    for dato in tqdm(train_data['queries'], ascii=True):
+        quest = dato['query_text']
+        quest_id = dato['query_id']
+        bm25s = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
+        ret_pmids = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
+        good_pmids = [t for t in ret_pmids if t in dato[u'relevant_documents']]
+        bad_pmids = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
+        if (len(bad_pmids) > 0):
+            for gid in good_pmids:
+                bid = random.choice(bad_pmids)
+                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
+    return ret
+
+######################################################################
 
 use_cuda    = torch.cuda.is_available()
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
@@ -45,6 +84,27 @@ class InputFeatures(object):
     self.input_ids = input_ids
     self.input_mask = input_mask
     self.input_type_ids = input_type_ids
+
+def yield_batches(data, batch_size):
+    instances       = train_data_step1(data)
+    random.shuffle(instances)
+    batch_good      = []
+    batch_bad       = []
+    batch_quests    = []
+    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
+        good_doc    = train_docs[gid]['title'] + '--------------------' + train_docs[gid]['abstractText']
+        bad_doc     = train_docs[bid]['title'] + '--------------------' + train_docs[bid]['abstractText']
+        #################################################################################################
+        batch_quests.append(quest_text)
+        batch_good.append(good_doc)
+        batch_bad.append(bad_doc)
+        #################################################################################################
+        if(len(batch_bad) == batch_size):
+            yield batch_quests, batch_good, batch_bad
+            batch_good      = []
+            batch_bad       = []
+            batch_quests    = []
+    yield batch_quests, batch_good, batch_bad
 
 def _truncate_seq_pair(tokens_a, tokens_b, max_length):
   """Truncates a sequence pair in place to the maximum length."""
@@ -146,9 +206,10 @@ RANDOM_SEED                 = 42
 GRADIENT_ACCUMULATION_STEPS = 1
 WARMUP_PROPORTION           = 0.1
 
-_, embeds_docs_neg      = embed_the_sents(['fear of the dark!', 'happy birthday to me'])
-_, embeds_docs_pos      = embed_the_sents(['i am talking to you', 'everything is ok'])
-_, embeds_quests        = embed_the_sents(['are you talking to me ?', 'dont worry be happy'])
+dataloc         = '/home/dpappas/bioasq_all/bioasq7_data/'
+(dev_data, dev_docs, train_data, train_docs, bioasq6_data) = load_all_data(dataloc=dataloc)
+
+batch_size      = 64
 
 model       = DocEmbeder(embedding_dim=100, input_dim=768, hidde_dim=256).to(device)
 
@@ -159,25 +220,79 @@ optimizer = BertAdam(
     t_total     = 10000
 )
 
-for i in range(100):
-    #################################################################
-    pos_vec_docs    = model(embeds_docs_pos)
-    neg_vec_docs    = model(embeds_docs_neg)
-    vec_quests      = model(embeds_quests)
-    #################################################################
-    pos_sim         = model.cos(pos_vec_docs, vec_quests)
-    neg_sim         = model.cos(neg_vec_docs, vec_quests)
-    loss            = model.my_hinge_loss(pos_sim, neg_sim, margin=0.4)
-    print(loss)
-    #################################################################
-    loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-    #################################################################
+def train_one():
+    model.train()
+    all_losses = []
+    pbar = tqdm(list(yield_batches(train_data, batch_size)))
+    for batch_quests, batch_good, batch_bad in pbar:
+        _, embeds_docs_neg      = embed_the_sents(batch_bad)
+        _, embeds_docs_pos      = embed_the_sents(batch_good)
+        _, embeds_quests        = embed_the_sents(batch_quests)
+        #################################################################
+        pos_vec_docs    = model(embeds_docs_pos)
+        neg_vec_docs    = model(embeds_docs_neg)
+        vec_quests      = model(embeds_quests)
+        #################################################################
+        pos_sim         = model.cos(pos_vec_docs, vec_quests)
+        neg_sim         = model.cos(neg_vec_docs, vec_quests)
+        loss            = model.my_hinge_loss(pos_sim, neg_sim, margin=0.4)
+        all_losses.append(loss.cpu().item())
+        #################################################################
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        #################################################################
+        pbar.set_description('{}'.format(sum(all_losses) / float(len(all_losses))))
+        #################################################################
+    return sum(all_losses) / float(len(all_losses))
+
+def eval_one():
+    model.eval()
+    all_losses = []
+    pbar = tqdm(list(yield_batches(dev_data, batch_size)))
+    for batch_quests, batch_good, batch_bad in pbar:
+        _, embeds_docs_neg      = embed_the_sents(batch_bad)
+        _, embeds_docs_pos      = embed_the_sents(batch_good)
+        _, embeds_quests        = embed_the_sents(batch_quests)
+        #################################################################
+        pos_vec_docs    = model(embeds_docs_pos)
+        neg_vec_docs    = model(embeds_docs_neg)
+        vec_quests      = model(embeds_quests)
+        #################################################################
+        pos_sim         = model.cos(pos_vec_docs, vec_quests)
+        neg_sim         = model.cos(neg_vec_docs, vec_quests)
+        loss            = model.my_hinge_loss(pos_sim, neg_sim, margin=0.4)
+        all_losses.append(loss.cpu().item())
+        #################################################################
+        pbar.set_description('{}'.format(sum(all_losses) / float(len(all_losses))))
+        #################################################################
+    return sum(all_losses) / float(len(all_losses))
+
+def save_checkpoint(epoch, model, max_dev_map, optimizer, filename='checkpoint.pth.tar'):
+    state = {
+        'epoch'             : epoch,
+        'model_state_dict'  : model.state_dict(),
+        'best_valid_score'  : max_dev_map,
+        'optimizer'         : optimizer
+    }
+    torch.save(state, filename)
+
+total_epochs = 4
+best_dev_average_loss = None
+for epoch in range(total_epochs):
+    train_average_loss  = train_one()
+    print('train_average_loss: {}'.format(train_average_loss))
+    dev_average_loss    = eval_one()
+    print('dev_average_loss: {}'.format(dev_average_loss))
+    if (best_dev_average_loss is None or dev_average_loss >= best_dev_average_loss):
+        best_dev_average_loss = dev_average_loss
+        save_checkpoint(epoch, model, bert_model, best_dev_average_loss, optimizer, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
 
 
 
+'''
 
+# CUDA_VISIBLE_DEVICES=1 python3.6 train_bert_ir_embeds.py
 
-
+'''
 
