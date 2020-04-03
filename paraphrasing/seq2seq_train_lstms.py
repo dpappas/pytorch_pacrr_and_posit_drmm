@@ -1,5 +1,5 @@
 
-import json, torch, re, pickle, random, os, sys, csv, spacy
+import json, torch, re, pickle, random, os, sys, csv, spacy, time
 import torch.nn as nn
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ use_cuda    = torch.cuda.is_available()
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ######################################################################################################
 
-en = spacy.load('en')
+en = spacy.load('en_core_web_sm')
 
 def tokenize_en(sentence):
     return [tok.text for tok in en.tokenizer(sentence)]
@@ -107,6 +107,12 @@ class S2S_lstm(nn.Module):
         # print(loss_)
         return loss_
 
+def epoch_time(start_time, end_time):
+    elapsed_time = end_time - start_time
+    elapsed_mins = int(elapsed_time / 60)
+    elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
+    return elapsed_mins, elapsed_secs
+
 ######################################################################################################
 data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
 to_text, from_text = [], []
@@ -144,24 +150,35 @@ vocab_size      = len(EN_TEXT_1.vocab)
 embedding_dim   = 30
 hidden_dim      = 100
 timesteps       = 50
+N_EPOCHS        = 10
 ######################################################################################################
-train_iter = BucketIterator(train_part, batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
-valid_iter = BucketIterator(val_part, batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
-test_iter  = valid_iter
+train_iter      = BucketIterator(train_part, batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
+valid_iter      = BucketIterator(val_part,   batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
 ######################################################################################################
-
 model           = S2S_lstm(vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim).to(device)
-
-src_tokens      = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
-trg_tokens      = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
-
 optim           = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-for i in range(1000):
-    loss = model(src_tokens, trg_tokens)
-    print(loss)
-    optim.zero_grad()
-    loss.backward()
-    optim.step()
+######################################################################################################
+
+best_valid_loss = float('inf')
+
+print('TRAINING the model')
+for epoch in tqdm(range(N_EPOCHS)):
+    start_time  = time.time()
+    train_loss  =
+    valid_loss  =
+    end_time    = time.time()
+    epoch_mins, epoch_secs = epoch_time(start_time, end_time)
+    if valid_loss < best_valid_loss:
+        best_valid_loss = valid_loss
+        torch.save(model.state_dict(), 'my_s2s_lstms.pt')
+
+
+# for i in range(1000):
+#     loss = model(src_tokens, trg_tokens)
+#     print(loss)
+#     optim.zero_grad()
+#     loss.backward()
+#     optim.step()
 
 
 
