@@ -6,14 +6,10 @@ from collections import Counter
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower())
 
 class DataHandler:
-   def __init__(self, data_path= '/home/dpappas/quora_duplicate_questions.tsv'):
+   def __init__(self, data_path= '/home/dpappas/quora_duplicate_questions.tsv', occur_thresh=5):
        self.to_text, self.from_text = [], []
-       self.to_text, self.from_text = [], []
+       self.occur_thresh            = occur_thresh
        self.vocab                   = Counter()
-       self.vocab['<eos>']          = -1
-       self.vocab['<sos>']          = -1
-       self.vocab['<pad>']          = -1
-       self.vocab['<unk>']          = -1
        with open(data_path, 'rt', encoding='utf8') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
             for row in tqdm(tsvin, total=404291):
@@ -34,6 +30,18 @@ class DataHandler:
                 self.to_text.append(text2)
                 self.to_text.append(text1)
                 ################################################
+       self.vocab                   = sorted(
+           [
+               word
+               for word in self.vocab
+               if(self.vocab[word]>=self.occur_thresh)
+           ],
+           key= lambda x: self.vocab[x]
+       )
+       self.vocab                   = ['<PAD>', '<UNK>', '<SOS>', '<EOS>'] + self.vocab
+       self.stoi                    = dict(enumerate(self.vocab))
+       self.itos                    = dict((v, k) for k,v in self.stoi)
+       print(len(self.vocab))
    def displayEmployee(self):
       print("Name : ", self.name,  ", Salary: ", self.salary)
 

@@ -9,6 +9,7 @@ from torchtext import data
 from torch import FloatTensor as FT
 from sklearn.model_selection import train_test_split
 from torchtext.data import Field, BucketIterator, TabularDataset
+from my_data_handling import DataHandler
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -146,8 +147,12 @@ class S2S_lstm(nn.Module):
         return loss_
 
 ######################################################################################################
-# data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
-data_path = '/home/dpappas/quora_duplicate_questions.tsv'
+data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
+# data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
+
+dh          = DataHandler(data_path)
+exit()
+
 to_text, from_text = [], []
 with open(data_path, 'rt', encoding='utf8') as tsvin:
     tsvin = csv.reader(tsvin, delimiter='\t')
