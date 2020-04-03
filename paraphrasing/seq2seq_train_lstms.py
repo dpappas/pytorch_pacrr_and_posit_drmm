@@ -70,7 +70,7 @@ class S2S_lstm(nn.Module):
             batch_first=True, dropout=0.1, bidirectional=True
         ).to(device)
         self.bi_lstm_trg        = nn.LSTM(
-            input_size  = 4*self.hidden_dim, hidden_size=self.hidden_dim, num_layers=2, bias=True,
+            input_size  = 2*self.hidden_dim+self.embedding_dim, hidden_size=self.hidden_dim, num_layers=2, bias=True,
             batch_first = True, dropout=0.1, bidirectional=True
         ).to(device)
         self.projection         = nn.Linear(2*self.hidden_dim, self.embedding_dim)
@@ -90,13 +90,13 @@ class S2S_lstm(nn.Module):
         hidden_concat               = torch.cat([h_n[0], h_n[1]], dim=1)
         trg_input                   = torch.cat(
             [
-                hidden_concat.unsqueeze(1).expand_as(src_contextual),
-                src_contextual
+                hidden_concat.unsqueeze(1).expand_as(trg_embeds[:,:-1,:]),
+                trg_embeds[:,:-1,:]
             ], dim=-1
         )
         # print(hidden_concat.size())
         # print(trg_input.size())
-        trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_embeds[:,:-1,:])
+        trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_input)
         # print(trg_contextual.size())
         out_vecs                    = self.projection(trg_contextual)
         # print(out_vecs.size())
