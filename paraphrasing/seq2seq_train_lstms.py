@@ -4,7 +4,7 @@ import  torch.nn as nn
 import numpy as np
 from torch import FloatTensor as FT
 from tqdm import tqdm
-from torch.optim import Adam
+from torch import optim
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -58,11 +58,11 @@ class S2S_lstm(nn.Module):
         #####################################################################################
         self.embed              = nn.Embedding(self.vocab_size, self.embedding_dim, padding_idx=None)
         self.bi_lstm_src        = nn.LSTM(
-            input_size=self.embedding_dim, hidden_size=self.hidden_dim, num_layers=1, bias=True,
+            input_size=self.embedding_dim, hidden_size=self.hidden_dim, num_layers=2, bias=True,
             batch_first=True, dropout=0.1, bidirectional=True
         ).to(device)
         self.bi_lstm_trg        = nn.LSTM(
-            input_size  = 4*self.hidden_dim, hidden_size=self.hidden_dim, num_layers=1, bias=True,
+            input_size  = 4*self.hidden_dim, hidden_size=self.hidden_dim, num_layers=2, bias=True,
             batch_first = True, dropout=0.1, bidirectional=True
         ).to(device)
         self.projection         = nn.Linear(2*self.hidden_dim, self.embedding_dim)
@@ -73,13 +73,19 @@ class S2S_lstm(nn.Module):
         # print(src_tokens.size())
         # print(trg_tokens.size())
         src_embeds                  = self.embed(src_tokens)
+        trg_embeds                  = self.embed(trg_tokens)
         # print(src_embeds.size())
         src_contextual, (h_n, c_n)  = self.bi_lstm_src(src_embeds)
         # print(src_contextual.size())
         # print(h_n.size())
         # print(c_n.size())
         hidden_concat               = torch.cat([h_n[0], h_n[1]], dim=1)
-        trg_input                   = torch.cat([hidden_concat.unsqueeze(1).expand_as(src_contextual), src_contextual], dim=-1)
+        trg_input                   = torch.cat(
+            [
+                hidden_concat.unsqueeze(1).expand_as(src_tokens),
+                src_tokens
+            ], dim=-1
+        )
         # print(hidden_concat.size())
         # print(trg_input.size())
         trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_input)
@@ -87,7 +93,7 @@ class S2S_lstm(nn.Module):
         out_vecs                    = self.projection(trg_contextual)
         # print(out_vecs.size())
         loss_                       = self.loss_f(
-            src_embeds.reshape(-1, 1, self.embedding_dim),
+            trg_embeds.reshape(-1, 1, self.embedding_dim),
             out_vecs.reshape(-1, 1, self.embedding_dim)
         )
         print(loss_)
@@ -101,11 +107,11 @@ timesteps       = 50
 
 model           = S2S_lstm(vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim).to(device)
 
-src_tokens  = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
-trg_tokens  = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
+src_tokens      = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
+trg_tokens      = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
 
-optim = Adam(model.parameters())
-for i in range(10):
+optim       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+for i in range(1000):
     loss = model(src_tokens, trg_tokens)
     optim.zero_grad()
     loss.backward()
