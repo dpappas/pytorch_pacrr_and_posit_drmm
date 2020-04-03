@@ -14,7 +14,7 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').re
 
 ######################################################################################################
 use_cuda    = torch.cuda.is_available()
-use_cuda    = False
+# use_cuda    = False
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ######################################################################################################
 
@@ -57,12 +57,14 @@ class SGNS(nn.Module):
         return -(oloss + nloss).mean()
 
 class S2S_lstm(nn.Module):
-    def __init__(self, vocab_size = 100, embedding_dim=30, hidden_dim = 256):
+    def __init__(self, vocab_size = 100, embedding_dim=30, hidden_dim = 256, src_pad_token=1, trg_pad_token=1):
         super(S2S_lstm, self).__init__()
         #####################################################################################
         self.vocab_size         = vocab_size
         self.embedding_dim      = embedding_dim
         self.hidden_dim         = hidden_dim
+        self.src_pad_token      = src_pad_token
+        self.trg_pad_token      = trg_pad_token
         #####################################################################################
         self.embed              = nn.Embedding(self.vocab_size, self.embedding_dim, padding_idx=None)
         self.bi_lstm_src        = nn.LSTM(
@@ -115,7 +117,7 @@ data_path = '/home/dpappas/quora_duplicate_questions.tsv'
 to_text, from_text = [], []
 with open(data_path, 'rt', encoding='utf8') as tsvin:
     tsvin = csv.reader(tsvin, delimiter='\t')
-    for row in tqdm(tsvin, total=40429):
+    for row in tqdm(tsvin, total=404291):
         from_text.append(row[3])
         from_text.append(row[4])
         to_text.append(row[4])
@@ -150,6 +152,8 @@ hidden_dim      = 100
 timesteps       = 50
 N_EPOCHS        = 10
 CLIP            = 1
+SRC_PAD_TOKEN   = EN_TEXT_1.vocab.stoi[EN_TEXT_2.pad_token]
+TRGT_PAD_TOKEN  = EN_TEXT_2.vocab.stoi[EN_TEXT_2.pad_token]
 ######################################################################################################
 train_iter      = BucketIterator(train_part, batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
 valid_iter      = BucketIterator(val_part,   batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
@@ -173,7 +177,7 @@ def train_one(iterator, clip):
         optimizer.step()
         epoch_loss += loss.item()
         ##########################################
-        pbar.set_description('train_aver_loss batch {}: {}'.format(i, epoch_loss / float(len(iterator))))
+        pbar.set_description('train_aver_loss batch {}: {}'.format(i, epoch_loss / float(i+1)))
     return epoch_loss / len(iterator)
 
 def eval_one(iterator):
@@ -186,7 +190,7 @@ def eval_one(iterator):
             trg = batch.trg
             loss = model(src, trg[:, :-1])
             epoch_loss += loss.item()
-            pbar.set_description('eval_aver_loss batch {}: {}'.format(i, epoch_loss / float(len(iterator))))
+            pbar.set_description('eval_aver_loss batch {}: {}'.format(i, epoch_loss / float(i+1)))
     return epoch_loss / len(iterator)
 
 best_valid_loss = float('inf')
