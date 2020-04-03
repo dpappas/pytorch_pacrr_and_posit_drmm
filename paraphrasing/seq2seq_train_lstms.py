@@ -14,7 +14,7 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').re
 
 ######################################################################################################
 use_cuda    = torch.cuda.is_available()
-# use_cuda    = False
+use_cuda    = False
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ######################################################################################################
 
@@ -110,11 +110,12 @@ def epoch_time(start_time, end_time):
     return elapsed_mins, elapsed_secs
 
 ######################################################################################################
-data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
+# data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
+data_path = '/home/dpappas/quora_duplicate_questions.tsv'
 to_text, from_text = [], []
 with open(data_path, 'rt', encoding='utf8') as tsvin:
     tsvin = csv.reader(tsvin, delimiter='\t')
-    for row in tqdm(tsvin):
+    for row in tqdm(tsvin, total=40429):
         from_text.append(row[3])
         from_text.append(row[4])
         to_text.append(row[4])
@@ -160,7 +161,7 @@ optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), ep
 def train_one(iterator, clip):
     model.train()
     epoch_loss = 0
-    pbar = tqdm(enumerate(iterator))
+    pbar = tqdm(enumerate(iterator), total=len(iterator))
     for i, batch in pbar:
         src = batch.src
         trg = batch.trg
@@ -179,7 +180,7 @@ def eval_one(iterator):
     model.eval()
     epoch_loss = 0
     with torch.no_grad():
-        pbar = tqdm(enumerate(iterator))
+        pbar = tqdm(enumerate(iterator), total=len(iterator))
         for i, batch in pbar:
             src = batch.src
             trg = batch.trg
@@ -208,7 +209,9 @@ for epoch in tqdm(range(N_EPOCHS)):
 #     loss.backward()
 #     optim.step()
 
-
+'''
+python -m spacy download en
+'''
 
 
 
