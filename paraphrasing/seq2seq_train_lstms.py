@@ -80,19 +80,19 @@ class S2S_lstm(nn.Module):
     def forward(self, src_tokens, trg_tokens):
         # print(src_tokens.size())
         # print(trg_tokens.size())
-        src_embeds                  = self.embed(src_tokens)
-        trg_embeds                  = self.embed(trg_tokens)
+        src_embeds                  = self.embed(src_tokens).transpose(0,1)
+        trg_embeds                  = self.embed(trg_tokens).transpose(0,1)
         # print(src_embeds.size())
         src_contextual, (h_n, c_n)  = self.bi_lstm_src(src_embeds)
         # print(src_contextual.size())
         # print(h_n.size())
         # print(c_n.size())
-        hidden_concat               = torch.cat([h_n[0], h_n[1]], dim=1)
+        hidden_concat               = torch.cat((h_n[0], h_n[1]), dim=1).unsqueeze(1).expand_as(trg_embeds[:,:-1,:])
         trg_input                   = torch.cat(
-            [
-                hidden_concat.unsqueeze(1).expand_as(trg_embeds[:,:-1,:]),
+            (
+                hidden_concat,
                 trg_embeds[:,:-1,:]
-            ], dim=-1
+            ), dim=-1
         )
         # print(hidden_concat.size())
         # print(trg_input.size())
