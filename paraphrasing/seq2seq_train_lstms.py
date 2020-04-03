@@ -151,28 +151,48 @@ embedding_dim   = 30
 hidden_dim      = 100
 timesteps       = 50
 N_EPOCHS        = 10
+CLIP            = 1
 ######################################################################################################
 train_iter      = BucketIterator(train_part, batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
 valid_iter      = BucketIterator(val_part,   batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
 ######################################################################################################
 model           = S2S_lstm(vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim).to(device)
-optim           = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 ######################################################################################################
 
-def train_one():
+def train_one(iterator, clip):
     model.train()
-    pass
+    epoch_loss = 0
+    for i, batch in enumerate(iterator):
+        src = batch.src
+        trg = batch.trg
+        ##########################################
+        optimizer.zero_grad()
+        loss = model(src, trg)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
+        optimizer.step()
+        epoch_loss += loss.item()
+        ##########################################
+    return epoch_loss / len(iterator)
 
-def eval_one():
+def eval_one(iterator):
     model.eval()
-    pass
+    epoch_loss = 0
+    with torch.no_grad():
+        for i, batch in enumerate(iterator):
+            src = batch.src
+            trg = batch.trg
+            loss = model(src, trg[:, :-1])
+            epoch_loss += loss.item()
+    return epoch_loss / len(iterator)
 
 best_valid_loss = float('inf')
 print('TRAINING the model')
 for epoch in tqdm(range(N_EPOCHS)):
     start_time  = time.time()
-    train_loss  = train_one()
-    valid_loss  = eval_one()
+    train_loss  = train_one(train_iter, clip=CLIP)
+    valid_loss  = eval_one(valid_iter)
     end_time    = time.time()
     epoch_mins, epoch_secs = epoch_time(start_time, end_time)
     if valid_loss < best_valid_loss:
