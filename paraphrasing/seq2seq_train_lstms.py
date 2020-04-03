@@ -1,15 +1,10 @@
 
 import json, torch, re, pickle, random, os, sys
-from pytorch_transformers import BertModel, BertTokenizer
 import  torch.nn as nn
-import  torch.optim             as optim
-import  torch.nn.functional     as F
-from pytorch_pretrained_bert.optimization import BertAdam
-from tqdm import tqdm
 import numpy as np
-
-from torch import LongTensor as LT
 from torch import FloatTensor as FT
+from tqdm import tqdm
+from torch.optim import Adam
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -31,18 +26,26 @@ class SGNS(nn.Module):
             wf              = np.power(weights, 0.75)
             wf              = wf / wf.sum()
             self.weights    = FT(wf)
-    def forward(self, iword, owords):
-        batch_size = iword.size()[0]
-        context_size = owords.size()[1]
+    def forward(self, true_vecs, out_vecs):
+        batch_size      = true_vecs.size()[0]
+        context_size    = true_vecs.size()[1]
         if self.weights is not None:
-            nwords = torch.multinomial(self.weights, batch_size * context_size * self.n_negs, replacement=True).view(batch_size, -1)
+            nwords  = torch.multinomial(self.weights, batch_size * context_size * self.n_negs, replacement=True).view(batch_size, -1)
         else:
-            nwords = FT(batch_size, context_size * self.n_negs).uniform_(0, self.vocab_size - 1).long()
-        ivectors = self.embedding.forward_i(iword).unsqueeze(2)
-        ovectors = self.embedding.forward_o(owords)
-        nvectors = self.embedding.forward_o(nwords).neg()
-        oloss = torch.bmm(ovectors, ivectors).squeeze().sigmoid().log().mean(1)
-        nloss = torch.bmm(nvectors, ivectors).squeeze().sigmoid().log().view(-1, context_size, self.n_negs).sum(2).mean(1)
+            nwords  = FT(batch_size, context_size * self.n_negs).uniform_(0, self.vocab_size - 1).long().to(device)
+        nvectors    = self.embedding(nwords).neg()
+        # print(out_vecs.size())
+        # print(true_vecs.size())
+        # print(nvectors.size())
+        oloss       = torch.bmm(out_vecs, true_vecs.transpose(1,2))
+        oloss       = oloss.sigmoid().log()
+        oloss       = oloss.mean(1)
+        nloss       = torch.bmm(nvectors, true_vecs.transpose(1,2))
+        nloss       = nloss.squeeze().sigmoid().log()
+        nloss       = nloss.view(-1, context_size, self.n_negs)
+        nloss       = nloss.sum(2).mean(1)
+        # print(oloss.size())
+        # print(nloss.size())
         return -(oloss + nloss).mean()
 
 class S2S_lstm(nn.Module):
@@ -53,29 +56,60 @@ class S2S_lstm(nn.Module):
         self.embedding_dim      = embedding_dim
         self.hidden_dim         = hidden_dim
         #####################################################################################
-        self.embed              = nn.Embedding(self.vocab_size_from, self.embedding_dim, padding_idx=None)
+        self.embed              = nn.Embedding(self.vocab_size, self.embedding_dim, padding_idx=None)
         self.bi_lstm_src        = nn.LSTM(
             input_size=self.embedding_dim, hidden_size=self.hidden_dim, num_layers=1, bias=True,
             batch_first=True, dropout=0.1, bidirectional=True
         ).to(device)
         self.bi_lstm_trg        = nn.LSTM(
-            input_size=self.embedding_dim, hidden_size=self.hidden_dim, num_layers=1, bias=True,
-            batch_first=True, dropout=0.1, bidirectional=True
+            input_size  = 4*self.hidden_dim, hidden_size=self.hidden_dim, num_layers=1, bias=True,
+            batch_first = True, dropout=0.1, bidirectional=True
         ).to(device)
+        self.projection         = nn.Linear(2*self.hidden_dim, self.embedding_dim)
         #####################################################################################
-    def forward(self, doc_vectors):
-        l1 = F.leaky_relu(self.layer1(doc_vectors))
-        l2 = F.leaky_relu(self.layer2(l1))
-        return l2
+        self.loss_f             = SGNS(self.embed, vocab_size=vocab_size, n_negs=20).to(device)
+        #####################################################################################
+    def forward(self, src_tokens, trg_tokens):
+        # print(src_tokens.size())
+        # print(trg_tokens.size())
+        src_embeds                  = self.embed(src_tokens)
+        # print(src_embeds.size())
+        src_contextual, (h_n, c_n)  = self.bi_lstm_src(src_embeds)
+        # print(src_contextual.size())
+        # print(h_n.size())
+        # print(c_n.size())
+        hidden_concat               = torch.cat([h_n[0], h_n[1]], dim=1)
+        trg_input                   = torch.cat([hidden_concat.unsqueeze(1).expand_as(src_contextual), src_contextual], dim=-1)
+        # print(hidden_concat.size())
+        # print(trg_input.size())
+        trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_input)
+        # print(trg_contextual.size())
+        out_vecs                    = self.projection(trg_contextual)
+        # print(out_vecs.size())
+        loss_                       = self.loss_f(
+            src_embeds.reshape(-1, 1, self.embedding_dim),
+            out_vecs.reshape(-1, 1, self.embedding_dim)
+        )
+        print(loss_)
+        return loss_
 
+b_size          = 64
+vocab_size      = 100
+embedding_dim   = 30
+hidden_dim      = 100
+timesteps       = 50
 
+model           = S2S_lstm(vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim).to(device)
 
+src_tokens  = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
+trg_tokens  = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
 
-model       = S2S_lstm(vocab_size_from = 100, vocab_size_to = 100, embedding_dim=30, hidden_dim = 256).to(device)
-
-
-
-
+optim = Adam(model.parameters())
+for i in range(10):
+    loss = model(src_tokens, trg_tokens)
+    optim.zero_grad()
+    loss.backward()
+    optim.step()
 
 
 
