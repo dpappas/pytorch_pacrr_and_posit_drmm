@@ -14,7 +14,7 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').re
 
 ######################################################################################################
 use_cuda    = torch.cuda.is_available()
-use_cuda    = False
+# use_cuda    = False
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ######################################################################################################
 
@@ -71,9 +71,9 @@ class S2S_lstm(nn.Module):
         ).to(device)
         self.bi_lstm_trg        = nn.LSTM(
             input_size  = 2*self.hidden_dim+self.embedding_dim, hidden_size=self.hidden_dim, num_layers=2, bias=True,
-            batch_first = True, dropout=0.1, bidirectional=True
+            batch_first = True, dropout=0.1, bidirectional=False
         ).to(device)
-        self.projection         = nn.Linear(2*self.hidden_dim, self.embedding_dim)
+        self.projection         = nn.Linear(self.hidden_dim, self.embedding_dim)
         #####################################################################################
         self.loss_f             = SGNS(self.embed, vocab_size=vocab_size, n_negs=20).to(device)
         #####################################################################################
@@ -87,14 +87,9 @@ class S2S_lstm(nn.Module):
         # print(src_contextual.size())
         # print(h_n.size())
         # print(c_n.size())
-        hidden_concat               = torch.cat((h_n[0], h_n[1]), dim=1).unsqueeze(1).expand_as(trg_embeds[:,:-1,:])
-        trg_input                   = torch.cat(
-            (
-                hidden_concat,
-                trg_embeds[:,:-1,:]
-            ), dim=-1
-        )
+        hidden_concat               = torch.cat((h_n[0], h_n[1]), dim=1).unsqueeze(1).expand(size=(-1, trg_embeds.size(1)-1,-1))
         # print(hidden_concat.size())
+        trg_input                   = torch.cat((hidden_concat, trg_embeds[:,:-1,:]), dim=-1)
         # print(trg_input.size())
         trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_input)
         # print(trg_contextual.size())
@@ -165,7 +160,8 @@ optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), ep
 def train_one(iterator, clip):
     model.train()
     epoch_loss = 0
-    for i, batch in enumerate(iterator):
+    pbar = tqdm(enumerate(iterator))
+    for i, batch in pbar:
         src = batch.src
         trg = batch.trg
         ##########################################
@@ -176,17 +172,20 @@ def train_one(iterator, clip):
         optimizer.step()
         epoch_loss += loss.item()
         ##########################################
+        pbar.set_description('train_aver_loss batch {}: {}'.format(i, epoch_loss / float(len(iterator))))
     return epoch_loss / len(iterator)
 
 def eval_one(iterator):
     model.eval()
     epoch_loss = 0
     with torch.no_grad():
-        for i, batch in enumerate(iterator):
+        pbar = tqdm(enumerate(iterator))
+        for i, batch in pbar:
             src = batch.src
             trg = batch.trg
             loss = model(src, trg[:, :-1])
             epoch_loss += loss.item()
+            pbar.set_description('eval_aver_loss batch {}: {}'.format(i, epoch_loss / float(len(iterator))))
     return epoch_loss / len(iterator)
 
 best_valid_loss = float('inf')
