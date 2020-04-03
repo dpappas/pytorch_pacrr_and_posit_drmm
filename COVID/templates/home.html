@@ -1,1 +1,162 @@
-${{ secrets.test }}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="./static/aueb_favicon.png">
+
+    <title>AUEB NLP Group COVID-19 Search Engine</title>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.9.1.js"></script>
+
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $("select[name='select_sent1']").on('change', function() {
+            $("input[name='sent1']").val($(this).val());
+        });
+    });
+    $(document).ready(function(){
+        $("select[name='select_sent1']").on('click', function() {
+            $("input[name='sent1']").val($(this).val());
+        });
+    });
+
+    // Optional Settings
+    $(document).ready(function(){
+        $("select[name='select_section']").on('change', function() {
+            $("input[name='section']").val($(this).val());
+        });
+    });
+    $(document).ready(function(){
+        $("select[name='select_section']").on('click', function() {
+            $("input[name='section']").val($(this).val());
+        });
+    });
+    </script>
+</head>
+
+<body class="flex flex-wrap">
+    <div class="w-full mb-6 p-4 mx-auto bg-indigo-600">
+        <h4 class="text-white text-center text-2xl">AUEB NLP Group COVID-19 Search Engine</h4>
+    </div>
+
+    <div class="container my-6 p-4 mx-auto">
+        <div class="lg:w-2/3 md:w-3/3 mx-auto">
+        <h3 class="text-base">
+            An Experimental Document and Snippet Retrieval Search Engine for the <a class="underline" href="https://pages.semanticscholar.org/coronavirus-research">COVID-19 Open Research Dataset (CORD-19)</a>
+            based on <a class="underline" href="https://www.aueb.gr/en/content/team-auebs-department-informatics-wins-bioasq-prize-0">award winning</a> technology developed by <a class="underline" href="http://nlp.cs.aueb.gr/">AUEB's NLP Group</a> for the <a class="underline" href="http://bioasq.org/">BioASQ challenge</a>
+        </h3>
+                <form class="my-6" action="/submit_question" method="POST">
+                    <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-first-name">
+                        Write your question
+                    </label>
+                    <input type="text" name="sent1" id="sent1" placeholder="Search for..." class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"></input>
+
+                    <label class="mt-4 block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-first-name">
+                        Or select an example question
+                    </label>
+                    <div class="relative">
+                        <select class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500" name="select_sent1" id="slt2">
+                        <option disabled selected value> -- select an option -- </option>
+                        <!-- user defined start -->
+                        <option>Is there a vaccine for covid-19 ?</option>
+                        <option>Is there a cure for covid-19 ?</option>
+                        <option>crohn disease and covid-19</option>
+                        <option>Pregnant women and COVID-19</option>
+                        <option>How Covid-19 is transmitted ?</option>
+                        <option>Does Covid-19 cause sneezing ?</option>
+                        <option>Where did COVID-19 originate ?</option>
+                        <option>Why is Covid-19 so infectious ?</option>
+                        <option>What is the spread rate of COVID-19 ?</option>
+                        <option>how many cases are considered critical ?</option>
+                        <option>What do we know about Covid-19 vaccines ?</option>
+                        <option>Impact of school closure to handle COVID-19 pandemic</option>
+                        <option>What sampling methods are there to determine asymptomatic disease ?</option>
+                        <!-- user defined end -->
+                        <option>What is known about transmission, incubation, and environmental stability?</option>
+                        <option>What do we know about COVID-19 risk factors?</option>
+                        <option>What do we know about virus genetics, origin, and evolution?</option>
+                        <option>What do we know about vaccines and therapeutics?</option>
+                        <option>What do we know about non-pharmaceutical interventions?</option>
+                        <option>What has been published about medical care?</option>
+                        <option>What do we know about diagnostics and surveillance?</option>
+                        <option>What has been published about information sharing and inter-sectoral collaboration?</option>
+                        <option>What has been published about ethical and social science considerations?</option>
+                        </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                    </div>
+
+                    <!-- Optional Settings -->
+                    <div class="flex flex-wrap -mx-3 mb-2 mt-16">
+                        <div class="w-full md:w-2/4 px-3 mb-6 md:mb-0">
+                        <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-first-name">
+                            Optionally, specify sections you want to search:
+                        </label>
+                        <input type="text" class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500" name="section" id="section" placeholder="Narrow down your section."></input>
+                        </div>
+                        <div class="w-full md:w-2/4 px-3 mb-6 md:mb-0">
+                            <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-first-name">
+                                Or select a section from this list:
+                            </label>
+                        <div class="relative">
+                            <select class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500" name="select_section" id="slt_section">
+                                <option disabled selected value> -- select an option -- </option>
+                                <option>Abstract</option>
+                                <option>Background</option>
+                                <option>Conclusion</option>
+                                <option>Clinical signs</option>
+                                <option>Diagnosis</option>
+                                <option>Discussion</option>
+                                <option>Introduction</option>
+                                <option>MATERIALS AND METHODS</option>
+                                <option>Methods</option>
+                                <option>Results</option>
+                                <option>Results and discussion</option>
+                                <option>Statistical analysis</option>
+                                <option>Treatment</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    <input class="cursor-pointer mt-5 bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow" type="submit" value="Submit">
+                </form>
+        </div>
+</div>
+
+</body>
+<footer class="container mb-5 text-xs mx-auto">
+    <div class="lg:w-2/3 md:w-3/3 mx-auto">
+    <p>
+        Technology ported to CORD-19 by Dimitris Pappas (email: <a class="underline" href="mailto: pappasd@aueb.gr">pappasd@aueb.gr</a>) and Petros Stavropoulos (email: <a class="underline" href="mailto: pstav1993@aueb.gr">pstav1993@aueb.gr</a>).
+    </p>
+    <p>
+        Papers:
+        <br>
+        <br>
+        1: <a class="underline" class="hover:underline" href="http://nlp.cs.aueb.gr/pubs/emnlp2018.pdf">Deep Relevance Ranking Using Enhanced Document-Query Interactions</a>
+        </br>
+        2: <a class="underline" class="hover:underline" href = "http://nlp.cs.aueb.gr/pubs/aueb_at_bioasq7.pdf">AUEB at BioASQ 7: Document and Snippet Retrieval</a>
+        </br>
+        </br>
+        Code: <a class="underline" class="hover:underline" href = "https://github.com/nlpaueb/aueb-bioasq7">aueb-bioasq7</a>
+        </br>
+        </br>
+        API example:
+        <code title="title" style="background-color:#D3D3D3;">curl --header "Content-Type: application/json" --request POST --data '{"question"  : "What do we know about Covid-19 vaccines ?", "section"   : ""}' http://cslab241.cs.aueb.gr:5000/just_the_json</code>
+        </br>
+        </br>
+        All provided <b>for research and demo purposes only</b>. Search engine running on a <b>weak server</b>. Please use responsibly.
+        </br>
+        </br>
+        If you can host the search engine on a stronger server, or if you can help improve the UI of the web demo, please let us know.
+        </br>
+    </p>
+    </div>
+</footer>
+</html>
