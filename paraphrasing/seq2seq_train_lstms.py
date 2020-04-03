@@ -95,13 +95,13 @@ class S2S_lstm(nn.Module):
         )
         # print(hidden_concat.size())
         # print(trg_input.size())
-        trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_input)
+        trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_embeds[:,:-1,:])
         # print(trg_contextual.size())
         out_vecs                    = self.projection(trg_contextual)
         # print(out_vecs.size())
         # print(trg_embeds)
         loss_                       = self.loss_f(
-            trg_embeds.reshape(-1, 1, self.embedding_dim),
+            trg_embeds[:,1:,:].reshape(-1, 1, self.embedding_dim),
             out_vecs.reshape(-1, 1, self.embedding_dim)
         )
         # print(loss_)
@@ -142,6 +142,7 @@ val_part.to_csv("val.csv", index=False)
 print('Reload to train the model')
 data_fields             = [('src', EN_TEXT_1), ('trg', EN_TEXT_2)]
 train_part, val_part    = data.TabularDataset.splits(path='./', train='train.csv', validation='val.csv', format='csv', fields=data_fields)
+print('Building vocab')
 EN_TEXT_1.build_vocab(train_part, val_part)
 EN_TEXT_2.build_vocab(train_part, val_part)
 ######################################################################################################
