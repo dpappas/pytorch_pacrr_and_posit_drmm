@@ -96,8 +96,9 @@ class S2S_lstm(nn.Module):
         trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_input)
         # print(trg_contextual.size())
         out_vecs                    = self.projection(trg_contextual)
-        # print(out_vecs.size())
-        # print(trg_embeds)
+        print(out_vecs.size())
+        print(trg_embeds.size())
+        print(trg_tokens.size())
         loss_                       = self.loss_f(
             trg_embeds[:,1:,:].reshape(-1, 1, self.embedding_dim),
             out_vecs.reshape(-1, 1, self.embedding_dim)
@@ -158,7 +159,10 @@ TRGT_PAD_TOKEN  = EN_TEXT_2.vocab.stoi[EN_TEXT_2.pad_token]
 train_iter      = BucketIterator(train_part, batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
 valid_iter      = BucketIterator(val_part,   batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
 ######################################################################################################
-model           = S2S_lstm(vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim).to(device)
+model           = S2S_lstm(
+    vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim,
+    src_pad_token=SRC_PAD_TOKEN, trg_pad_token=TRGT_PAD_TOKEN
+).to(device)
 optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 ######################################################################################################
 
