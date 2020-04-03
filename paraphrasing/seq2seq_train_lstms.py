@@ -159,13 +159,20 @@ model           = S2S_lstm(vocab_size = vocab_size, embedding_dim=embedding_dim,
 optim           = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 ######################################################################################################
 
-best_valid_loss = float('inf')
+def train_one():
+    model.train()
+    pass
 
+def eval_one():
+    model.eval()
+    pass
+
+best_valid_loss = float('inf')
 print('TRAINING the model')
 for epoch in tqdm(range(N_EPOCHS)):
     start_time  = time.time()
-    train_loss  =
-    valid_loss  =
+    train_loss  = train_one()
+    valid_loss  = eval_one()
     end_time    = time.time()
     epoch_mins, epoch_secs = epoch_time(start_time, end_time)
     if valid_loss < best_valid_loss:
