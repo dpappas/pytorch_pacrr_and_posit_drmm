@@ -1,19 +1,26 @@
 
-import json, torch, re, pickle, random, os, sys
-import  torch.nn as nn
+import json, torch, re, pickle, random, os, sys, csv, spacy
+import torch.nn as nn
 import numpy as np
-from torch import FloatTensor as FT
+import pandas as pd
 from tqdm import tqdm
 from torch import optim
+from torchtext import data
+from torch import FloatTensor as FT
+from sklearn.model_selection import train_test_split
+from torchtext.data import Field, BucketIterator, TabularDataset
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
-######################################################################
-
+######################################################################################################
 use_cuda    = torch.cuda.is_available()
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
+######################################################################################################
 
-######################################################################
+en = spacy.load('en')
+
+def tokenize_en(sentence):
+    return [tok.text for tok in en.tokenizer(sentence)]
 
 class SGNS(nn.Module):
     def __init__(self, embedding, vocab_size=20000, n_negs=20, weights=None):
@@ -82,8 +89,8 @@ class S2S_lstm(nn.Module):
         hidden_concat               = torch.cat([h_n[0], h_n[1]], dim=1)
         trg_input                   = torch.cat(
             [
-                hidden_concat.unsqueeze(1).expand_as(src_tokens),
-                src_tokens
+                hidden_concat.unsqueeze(1).expand_as(src_contextual),
+                src_contextual
             ], dim=-1
         )
         # print(hidden_concat.size())
@@ -92,27 +99,66 @@ class S2S_lstm(nn.Module):
         # print(trg_contextual.size())
         out_vecs                    = self.projection(trg_contextual)
         # print(out_vecs.size())
+        # print(trg_embeds)
         loss_                       = self.loss_f(
             trg_embeds.reshape(-1, 1, self.embedding_dim),
             out_vecs.reshape(-1, 1, self.embedding_dim)
         )
-        print(loss_)
+        # print(loss_)
         return loss_
 
+######################################################################################################
+data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
+to_text, from_text = [], []
+with open(data_path, 'rt', encoding='utf8') as tsvin:
+    tsvin = csv.reader(tsvin, delimiter='\t')
+    for row in tqdm(tsvin):
+        from_text.append(row[3])
+        from_text.append(row[4])
+        to_text.append(row[4])
+        to_text.append(row[3])
+######################################################################################################
+EN_TEXT_1 = Field(tokenize=tokenize_en, init_token = "<sos>", eos_token = "<eos>")
+EN_TEXT_2 = Field(tokenize=tokenize_en, init_token = "<sos>", eos_token = "<eos>")
+######################################################################################################
+raw_data = {'src' : [line for line in from_text], 'trg': [line for line in to_text]}
+df = pd.DataFrame(raw_data, columns=["src", "trg"])
+df['eng_len'] = df['src'].str.count(' ')
+df['fr_len'] = df['trg'].str.count(' ')
+df = df.query('fr_len < 80 & eng_len < 80')
+df = df.query('fr_len < eng_len * 1.5 & fr_len * 1.5 > eng_len')
+######################################################################################################
+print('create train and validation set and save to csv')
+train_part, val_part = train_test_split(df, test_size=0.1)
+train_part.to_csv("train.csv", index=False)
+val_part.to_csv("val.csv", index=False)
+######################################################################################################
+print('Reload to train the model')
+data_fields             = [('src', EN_TEXT_1), ('trg', EN_TEXT_2)]
+train_part, val_part    = data.TabularDataset.splits(path='./', train='train.csv', validation='val.csv', format='csv', fields=data_fields)
+EN_TEXT_1.build_vocab(train_part, val_part)
+EN_TEXT_2.build_vocab(train_part, val_part)
+######################################################################################################
 b_size          = 64
-vocab_size      = 100
+vocab_size      = len(EN_TEXT_1.vocab)
 embedding_dim   = 30
 hidden_dim      = 100
 timesteps       = 50
+######################################################################################################
+train_iter = BucketIterator(train_part, batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
+valid_iter = BucketIterator(val_part, batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
+test_iter  = valid_iter
+######################################################################################################
 
 model           = S2S_lstm(vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim).to(device)
 
 src_tokens      = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
 trg_tokens      = torch.LongTensor(b_size, timesteps).random_(0, vocab_size).to(device)
 
-optim       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+optim           = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 for i in range(1000):
     loss = model(src_tokens, trg_tokens)
+    print(loss)
     optim.zero_grad()
     loss.backward()
     optim.step()
