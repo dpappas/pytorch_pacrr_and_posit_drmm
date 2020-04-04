@@ -64,7 +64,7 @@ def train_one(clip):
     model.train()
     epoch_loss, i   = 0, 0
     train_iterator  = data_handler.iter_train_batches(b_size)
-    pbar            = tqdm(train_iterator, total= int(data_handler.number_of_train_instances / batch_size)+1)
+    pbar            = tqdm(train_iterator, total= int(data_handler.number_of_train_instances / b_size) +1)
     for i, batch in pbar:
         src         = batch['src_ids']
         trg         = batch['trg_ids']
@@ -84,7 +84,7 @@ def eval_one():
     with torch.no_grad():
         epoch_loss, i   = 0, 0
         dev_iterator    = data_handler.iter_dev_batches(b_size)
-        pbar            = tqdm(dev_iterator, total= int(data_handler.number_of_dev_instances / batch_size)+1)
+        pbar            = tqdm(dev_iterator, total= int(data_handler.number_of_dev_instances / b_size)+1)
         for i, batch in pbar:
             src         = batch['src_ids']
             trg         = batch['trg_ids']
