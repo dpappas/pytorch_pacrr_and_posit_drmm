@@ -83,7 +83,7 @@ class DataHandler:
         return batch
     def iter_train_batches(self, batch_size):
         self.train_total_batches = len(self.train_instances) / batch_size
-        pbar         = tqdm(total=self.train_total_batches)
+        pbar         = tqdm(total=self.train_total_batches+1)
         batch        = {'src_ids': [], 'trg_ids': []}
         for text_s, text_t in self.train_instances:
             batch['src_ids'].append([self.stoi[token] if token in self.stoi else self.stoi['<UNK>'] for token in text_s.split()])
@@ -92,9 +92,12 @@ class DataHandler:
                 pbar.update(1)
                 yield self.fix_one_batch(batch)
                 batch = {'src_ids': [], 'trg_ids': []}
+        if(len(batch['src_ids'])):
+            pbar.update(1)
+            yield self.fix_one_batch(batch)
     def iter_dev_batches(self, batch_size):
         self.dev_total_batches   = len(self.dev_instances) / batch_size
-        pbar                     = tqdm(total=self.dev_total_batches)
+        pbar                     = tqdm(total=self.dev_total_batches+1)
         batch                    = {'src_ids': [], 'trg_ids': []}
         for text_s, text_t in self.dev_instances:
             batch['src_ids'].append([self.stoi[token] if token in self.stoi else self.stoi['<UNK>'] for token in text_s.split()])
@@ -102,6 +105,9 @@ class DataHandler:
             if(len(batch['src_ids']) == batch_size):
                 pbar.update(1)
                 batch = {'src_ids': [], 'trg_ids': []}
+        if(len(batch['src_ids'])):
+            pbar.update(1)
+            yield self.fix_one_batch(batch)
 
 
 

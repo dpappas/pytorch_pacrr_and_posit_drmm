@@ -158,6 +158,11 @@ for batch in dh.iter_train_batches(64):
     print(batch['src_ids'].shape)
     print(20 * '-')
 
+for batch in dh.iter_dev_batches(64):
+    print(batch['trg_ids'].shape)
+    print(batch['src_ids'].shape)
+    print(20 * '-')
+
 exit()
 
 to_text, from_text = [], []
