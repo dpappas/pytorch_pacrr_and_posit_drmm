@@ -121,7 +121,6 @@ class S2S_lstm(nn.Module):
         #####################################################################################
     def forward(self, src_tokens, trg_tokens):
         src_tokens, trg_tokens      = src_tokens.to(device), trg_tokens.to(device)
-        src_tokens, trg_tokens      = src_tokens.transpose(0,1), trg_tokens.transpose(0,1)
         # print(src_tokens.size())
         # print(trg_tokens.size())
         src_embeds                  = self.embed(src_tokens)
@@ -183,7 +182,6 @@ for epoch in tqdm(range(N_EPOCHS)):
         best_valid_loss = valid_loss
         torch.save(model.state_dict(), 'my_s2s_lstms.pt')
 
-
 # for i in range(1000):
 #     loss = model(src_tokens, trg_tokens)
 #     print(loss)
@@ -194,8 +192,6 @@ for epoch in tqdm(range(N_EPOCHS)):
 '''
 python -m spacy download en
 '''
-
-
 
 '''
 import pandas as pd
