@@ -58,6 +58,7 @@ class DataHandler:
             ################################################ SORT INSTANCES BY SIZE
             self.train_instances  = sorted(list(zip(self.train_from_text, self.train_to_text)), key= lambda x: len(x[0].split())*10000+len(x[1].split()))
             self.dev_instances    = sorted(list(zip(self.dev_from_text, self.dev_to_text)),     key= lambda x: len(x[0].split())*10000+len(x[1].split()))
+            print('{} instances for training and {} for eval'.format(len(self.train_instances), len(self.dev_instances)))
             # print(self.dev_instances[0])
             # print(self.train_instances[0])
             ################################################
@@ -104,6 +105,7 @@ class DataHandler:
             batch['trg_ids'].append([self.stoi[token] if token in self.stoi else self.stoi['<UNK>'] for token in text_t.split()])
             if(len(batch['src_ids']) == batch_size):
                 pbar.update(1)
+                yield self.fix_one_batch(batch)
                 batch = {'src_ids': [], 'trg_ids': []}
         if(len(batch['src_ids'])):
             pbar.update(1)
