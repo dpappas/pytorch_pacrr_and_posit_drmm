@@ -151,29 +151,53 @@ class S2S_lstm(nn.Module):
 data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
 # data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
 
-dh          = DataHandler(data_path)
+data_handler        = DataHandler(data_path)
 
-c = 0
-for batch in dh.iter_train_batches(64):
-    # print(batch['trg_ids'].shape)
-    # print(batch['src_ids'].shape)
-    # print(20 * '-')
-    c += 1
+b_size          = 64
+vocab_size      = data_handler.vocab_size
+SRC_PAD_TOKEN   = data_handler.pad_index
+TRGT_PAD_TOKEN  = data_handler.pad_index
+embedding_dim   = 30
+hidden_dim      = 100
+timesteps       = 50
+N_EPOCHS        = 10
+CLIP            = 1
+######################################################################################################
+model           = S2S_lstm(
+    vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim,
+    src_pad_token=SRC_PAD_TOKEN, trg_pad_token=TRGT_PAD_TOKEN
+).to(device)
+optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+######################################################################################################
 
-print(c)
+best_valid_loss = float('inf')
+print('TRAINING the model')
+for epoch in tqdm(range(N_EPOCHS)):
+    start_time  = time.time()
+    train_loss  = train_one(train_iter, clip=CLIP)
+    valid_loss  = eval_one(valid_iter)
+    end_time    = time.time()
+    epoch_mins, epoch_secs = epoch_time(start_time, end_time)
+    if valid_loss < best_valid_loss:
+        best_valid_loss = valid_loss
+        torch.save(model.state_dict(), 'my_s2s_lstms.pt')
 
-c = 0
-for batch in dh.iter_dev_batches(64):
-    # print(batch['trg_ids'].shape)
-    # print(batch['src_ids'].shape)
-    # print(20 * '-')
-    c += 1
 
-print(c)
+# for i in range(1000):
+#     loss = model(src_tokens, trg_tokens)
+#     print(loss)
+#     optim.zero_grad()
+#     loss.backward()
+#     optim.step()
 
-exit()
+'''
+python -m spacy download en
+'''
 
-to_text, from_text = [], []
+
+
+'''
+to_text, from_text  = [], []
 with open(data_path, 'rt', encoding='utf8') as tsvin:
     tsvin = csv.reader(tsvin, delimiter='\t')
     for row in tqdm(tsvin, total=404291):
@@ -210,53 +234,13 @@ print('Building vocab')
 EN_TEXT_1.build_vocab(train_part, val_part)
 EN_TEXT_2.build_vocab(train_part, val_part)
 ######################################################################################################
-b_size          = 64
-vocab_size      = max([len(EN_TEXT_1.vocab), len(EN_TEXT_2.vocab)])
-embedding_dim   = 30
-hidden_dim      = 100
-timesteps       = 50
-N_EPOCHS        = 10
-CLIP            = 1
 SRC_PAD_TOKEN   = EN_TEXT_1.vocab.stoi[EN_TEXT_2.pad_token]
 TRGT_PAD_TOKEN  = EN_TEXT_2.vocab.stoi[EN_TEXT_2.pad_token]
 ######################################################################################################
 train_iter      = BucketIterator(train_part, batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
 valid_iter      = BucketIterator(val_part,   batch_size=b_size, sort_key=lambda x: len(x.trg), shuffle=True)
 ######################################################################################################
-model           = S2S_lstm(
-    vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim,
-    src_pad_token=SRC_PAD_TOKEN, trg_pad_token=TRGT_PAD_TOKEN
-).to(device)
-optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-######################################################################################################
-
-best_valid_loss = float('inf')
-print('TRAINING the model')
-for epoch in tqdm(range(N_EPOCHS)):
-    start_time  = time.time()
-    train_loss  = train_one(train_iter, clip=CLIP)
-    valid_loss  = eval_one(valid_iter)
-    end_time    = time.time()
-    epoch_mins, epoch_secs = epoch_time(start_time, end_time)
-    if valid_loss < best_valid_loss:
-        best_valid_loss = valid_loss
-        torch.save(model.state_dict(), 'my_s2s_lstms.pt')
-
-
-# for i in range(1000):
-#     loss = model(src_tokens, trg_tokens)
-#     print(loss)
-#     optim.zero_grad()
-#     loss.backward()
-#     optim.step()
-
 '''
-python -m spacy download en
-'''
-
-
-
-
 
 
 

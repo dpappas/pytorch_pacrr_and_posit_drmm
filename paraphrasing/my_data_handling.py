@@ -62,19 +62,25 @@ class DataHandler:
             # # print(self.dev_instances[0])
             # # print(self.train_instances[0])
             ################################################
-            self.vocab           = Counter()
+            self.vocab                  = Counter()
             self.vocab.update(Counter(' '.join(self.train_from_text).split()))
             self.vocab.update(Counter(' '.join(self.train_to_text).split()))
             ################################################
-            self.vocab                   = sorted([
+            self.vocab                  = sorted([
                    word
                    for word in tqdm(self.vocab, desc='Building VOCAB')
                    if(self.vocab[word]>=self.occur_thresh)
                ], key= lambda x: self.vocab[x])
-            self.vocab                   = ['<PAD>', '<UNK>', '<SOS>', '<EOS>'] + self.vocab
-            self.itos                    = dict(enumerate(self.vocab))
-            self.stoi                    = dict((v, k) for k,v in self.itos.items())
+            self.vocab                  = ['<PAD>', '<UNK>', '<SOS>', '<EOS>'] + self.vocab
+            self.itos                   = dict(enumerate(self.vocab))
+            self.stoi                   = dict((v, k) for k,v in self.itos.items())
+            self.vocab_size             = len(self.vocab)
             print('Kept {} total words'.format(len(self.vocab)))
+            ################################################
+            self.unk_token              = '<UNK>'
+            self.pad_token              = '<PAD>'
+            self.unk_index              = self.stoi['<UNK>']
+            self.pad_index              = self.stoi['<PAD>']
             ################################################
     def fix_one_batch(self, batch):
         max_len_s = max([len(row) for row in batch['src_ids']])
