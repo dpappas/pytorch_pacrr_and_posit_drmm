@@ -80,8 +80,13 @@ class DataHandler:
        pbar         = tqdm(total=self.train_total_batches)
        batch        = {'src_ids': [], 'trg_ids': []}
        for text_s, text_t in self.train_instances:
-           batch['src_ids'].append([self.stoi[token] for token in text_s.split()])
-           batch['trg_ids'].append([self.stoi[token] for token in text_t.split()])
+           batch['src_ids'].append([
+               self.stoi[token] if token in self.stoi else self.stoi['<UNK>']
+               for token in text_s.split()])
+           batch['trg_ids'].append([
+               self.stoi[token] if token in self.stoi else self.stoi['<UNK>']
+               for token in text_t.split()
+           ])
            if(len(batch['src_ids']) == batch_size):
                max_len_s = max([len(row) for row in batch['src_ids']])
                max_len_t = max([len(row) for row in batch['trg_ids']])
