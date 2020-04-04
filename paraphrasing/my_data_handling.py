@@ -12,6 +12,7 @@ class DataHandler:
        ################################################
        with open(data_path, 'rt', encoding='utf8') as tsvin:
            tsvin = csv.reader(tsvin, delimiter='\t')
+           headers = next(tsvin)
            for row in tqdm(tsvin, total=404291, desc='Reading file'):
                ################################################
                text1 = bioclean(row[3])
@@ -20,6 +21,16 @@ class DataHandler:
                if(not text1):
                    continue
                if(not text2):
+                   continue
+               if(len(text1.split())<=3):
+                   continue
+               if(len(text2.split())<=3):
+                   continue
+               if(text1 == text2[:len(text1)]):
+                   continue
+               if(text2 == text1[:len(text2)]):
+                   continue
+               if(all(t in set(text2.split()) for t in set(text1.split()))):
                    continue
                ################################################
                self.from_text.append(text1)
