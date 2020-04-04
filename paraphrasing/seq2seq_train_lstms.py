@@ -69,8 +69,8 @@ def train_one(clip):
     train_iterator  = data_handler.iter_train_batches(b_size)
     pbar            = tqdm(enumerate(train_iterator), total= int(data_handler.number_of_train_instances / b_size) +1)
     for i, batch in pbar:
-        src         = batch['src_ids']
-        trg         = batch['trg_ids']
+        src         = torch.LongTensor(batch['src_ids'])
+        trg         = torch.LongTensor(batch['trg_ids'])
         ##########################################
         optimizer.zero_grad()
         loss = model(src, trg)
@@ -89,8 +89,8 @@ def eval_one():
         dev_iterator    = data_handler.iter_dev_batches(b_size)
         pbar            = tqdm(enumerate(dev_iterator), total= int(data_handler.number_of_dev_instances / b_size)+1)
         for i, batch in pbar:
-            src         = batch['src_ids']
-            trg         = batch['trg_ids']
+            src         = torch.LongTensor(batch['src_ids'])
+            trg         = torch.LongTensor(batch['trg_ids'])
             loss        = model(src, trg[:, :-1])
             epoch_loss += loss.item()
             pbar.set_description('eval_aver_loss batch {}: {}'.format(i, epoch_loss / float(i+1)))
