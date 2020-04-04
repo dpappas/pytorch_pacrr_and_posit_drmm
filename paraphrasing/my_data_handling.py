@@ -5,6 +5,23 @@ from collections import Counter
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower())
 
+def check_texts(text1, text2):
+    if (not text1):
+        return False
+    if (not text2):
+        return False
+    if (len(text1.split()) <= 3):
+        return False
+    if (len(text2.split()) <= 3):
+        return False
+    if (text1 == text2[:len(text1)]):
+        return False
+    if (text2 == text1[:len(text2)]):
+        return False
+    if (all(t in set(text2.split()) for t in set(text1.split()))):
+        return False
+    return True
+
 class DataHandler:
    def __init__(self, data_path= '/home/dpappas/quora_duplicate_questions.tsv', occur_thresh=5, valid_split=0.1):
        self.to_text, self.from_text = [], []
@@ -19,19 +36,7 @@ class DataHandler:
                text1 = bioclean(row[3])
                text2 = bioclean(row[4])
                ################################################
-               if(not text1):
-                   continue
-               if(not text2):
-                   continue
-               if(len(text1.split())<=3):
-                   continue
-               if(len(text2.split())<=3):
-                   continue
-               if(text1 == text2[:len(text1)]):
-                   continue
-               if(text2 == text1[:len(text2)]):
-                   continue
-               if(all(t in set(text2.split()) for t in set(text1.split()))):
+               if(not check_texts(text1, text2)):
                    continue
                ################################################
                self.from_text.append(text1)
