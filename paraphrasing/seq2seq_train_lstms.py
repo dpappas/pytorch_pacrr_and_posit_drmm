@@ -1,5 +1,5 @@
 
-import json, torch, re, pickle, random, os, sys, csv, spacy, time
+import torch, re, random, spacy, time
 import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
@@ -7,6 +7,10 @@ from torch import optim
 from torch import FloatTensor as FT
 from my_data_handling import DataHandler
 from pprint import pprint
+
+my_seed = 1989
+random.seed(my_seed)
+torch.manual_seed(my_seed)
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
