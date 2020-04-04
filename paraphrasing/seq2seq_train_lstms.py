@@ -2,13 +2,9 @@
 import json, torch, re, pickle, random, os, sys, csv, spacy, time
 import torch.nn as nn
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 from torch import optim
-from torchtext import data
 from torch import FloatTensor as FT
-from sklearn.model_selection import train_test_split
-from torchtext.data import Field, BucketIterator, TabularDataset
 from my_data_handling import DataHandler
 from pprint import pprint
 
@@ -64,13 +60,14 @@ def epoch_time(start_time, end_time):
     elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
     return elapsed_mins, elapsed_secs
 
-def train_one(iterator, clip):
+def train_one(clip):
     model.train()
-    epoch_loss = 0
-    pbar = tqdm(enumerate(iterator), total=len(iterator))
+    epoch_loss, i   = 0, 0
+    train_iterator  = data_handler.iter_train_batches(b_size)
+    pbar            = tqdm(train_iterator, total= int(data_handler.number_of_train_instances / batch_size)+1)
     for i, batch in pbar:
-        src = batch.src
-        trg = batch.trg
+        src         = batch['src_ids']
+        trg         = batch['trg_ids']
         ##########################################
         optimizer.zero_grad()
         loss = model(src, trg)
@@ -80,20 +77,21 @@ def train_one(iterator, clip):
         epoch_loss += loss.item()
         ##########################################
         pbar.set_description('train_aver_loss batch {}: {}'.format(i, epoch_loss / float(i+1)))
-    return epoch_loss / len(iterator)
+    return epoch_loss / float(i+1)
 
-def eval_one(iterator):
+def eval_one():
     model.eval()
-    epoch_loss = 0
     with torch.no_grad():
-        pbar = tqdm(enumerate(iterator), total=len(iterator))
+        epoch_loss, i   = 0, 0
+        dev_iterator    = data_handler.iter_dev_batches(b_size)
+        pbar            = tqdm(dev_iterator, total= int(data_handler.number_of_dev_instances / batch_size)+1)
         for i, batch in pbar:
-            src = batch.src
-            trg = batch.trg
-            loss = model(src, trg[:, :-1])
+            src         = batch['src_ids']
+            trg         = batch['trg_ids']
+            loss        = model(src, trg[:, :-1])
             epoch_loss += loss.item()
             pbar.set_description('eval_aver_loss batch {}: {}'.format(i, epoch_loss / float(i+1)))
-    return epoch_loss / len(iterator)
+    return epoch_loss / float(i+1)
 
 class S2S_lstm(nn.Module):
     def __init__(self, vocab_size = 100, embedding_dim=30, hidden_dim = 256, src_pad_token=1, trg_pad_token=1):
@@ -174,8 +172,8 @@ best_valid_loss = float('inf')
 print('TRAINING the model')
 for epoch in tqdm(range(N_EPOCHS)):
     start_time  = time.time()
-    train_loss  = train_one(train_iter, clip=CLIP)
-    valid_loss  = eval_one(valid_iter)
+    train_loss  = train_one(clip=CLIP)
+    valid_loss  = eval_one()
     end_time    = time.time()
     epoch_mins, epoch_secs = epoch_time(start_time, end_time)
     if valid_loss < best_valid_loss:
@@ -197,6 +195,12 @@ python -m spacy download en
 
 
 '''
+import pandas as pd
+from torchtext import data
+from sklearn.model_selection import train_test_split
+from torchtext.data import Field, BucketIterator, TabularDataset
+
+
 to_text, from_text  = [], []
 with open(data_path, 'rt', encoding='utf8') as tsvin:
     tsvin = csv.reader(tsvin, delimiter='\t')

@@ -58,6 +58,8 @@ class DataHandler:
             ################################################ SORT INSTANCES BY SIZE
             self.train_instances  = sorted(list(zip(self.train_from_text, self.train_to_text)), key= lambda x: len(x[0].split())*10000+len(x[1].split()))
             self.dev_instances    = sorted(list(zip(self.dev_from_text, self.dev_to_text)),     key= lambda x: len(x[0].split())*10000+len(x[1].split()))
+            self.number_of_train_instances  = len(self.train_instances)
+            self.number_of_dev_instances    = len(self.dev_instances)
             # print('{} instances for training and {} for eval'.format(len(self.train_instances), len(self.dev_instances)))
             # # print(self.dev_instances[0])
             # # print(self.train_instances[0])
@@ -90,17 +92,17 @@ class DataHandler:
         return batch
     def iter_train_batches(self, batch_size):
         self.train_total_batches = int(len(self.train_instances) / batch_size)
-        pbar         = tqdm(total=self.train_total_batches+1)
+        # pbar         = tqdm(total=self.train_total_batches+1)
         batch        = {'src_ids': [], 'trg_ids': []}
         for text_s, text_t in self.train_instances:
             batch['src_ids'].append([self.stoi[token] if token in self.stoi else self.stoi['<UNK>'] for token in text_s.split()])
             batch['trg_ids'].append([self.stoi[token] if token in self.stoi else self.stoi['<UNK>'] for token in text_t.split()])
             if(len(batch['src_ids']) == batch_size):
-                pbar.update(1)
+                # pbar.update(1)
                 yield self.fix_one_batch(batch)
                 batch = {'src_ids': [], 'trg_ids': []}
         if(len(batch['src_ids'])):
-            pbar.update(1)
+            # pbar.update(1)
             yield self.fix_one_batch(batch)
     def iter_dev_batches(self, batch_size):
         self.dev_total_batches   = int(len(self.dev_instances) / batch_size)
