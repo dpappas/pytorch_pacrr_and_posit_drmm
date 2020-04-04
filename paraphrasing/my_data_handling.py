@@ -58,9 +58,9 @@ class DataHandler:
             ################################################ SORT INSTANCES BY SIZE
             self.train_instances  = sorted(list(zip(self.train_from_text, self.train_to_text)), key= lambda x: len(x[0].split())*10000+len(x[1].split()))
             self.dev_instances    = sorted(list(zip(self.dev_from_text, self.dev_to_text)),     key= lambda x: len(x[0].split())*10000+len(x[1].split()))
-            print('{} instances for training and {} for eval'.format(len(self.train_instances), len(self.dev_instances)))
-            # print(self.dev_instances[0])
-            # print(self.train_instances[0])
+            # print('{} instances for training and {} for eval'.format(len(self.train_instances), len(self.dev_instances)))
+            # # print(self.dev_instances[0])
+            # # print(self.train_instances[0])
             ################################################
             self.vocab           = Counter()
             self.vocab.update(Counter(' '.join(self.train_from_text).split()))
