@@ -71,8 +71,8 @@ class DataHandler:
                if(self.vocab[word]>=self.occur_thresh)
            ], key= lambda x: self.vocab[x])
        self.vocab                   = ['<PAD>', '<UNK>', '<SOS>', '<EOS>'] + self.vocab
-       self.stoi                    = dict(enumerate(self.vocab))
-       self.itos                    = dict((v, k) for k,v in self.stoi.items())
+       self.itos                    = dict(enumerate(self.vocab))
+       self.stoi                    = dict((v, k) for k,v in self.itos.items())
        print('Kept {} total words'.format(len(self.vocab)))
        ################################################
    def iter_train_batches(self, batch_size):
