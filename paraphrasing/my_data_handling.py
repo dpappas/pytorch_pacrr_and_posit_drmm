@@ -6,30 +6,46 @@ from collections import Counter
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower())
 
 class DataHandler:
-   def __init__(self, data_path= '/home/dpappas/quora_duplicate_questions.tsv', occur_thresh=3):
+   def __init__(self, data_path= '/home/dpappas/quora_duplicate_questions.tsv', occur_thresh=5, valid_split=0.1):
        self.to_text, self.from_text = [], []
        self.occur_thresh            = occur_thresh
-       self.vocab                   = Counter()
+       ################################################
        with open(data_path, 'rt', encoding='utf8') as tsvin:
-            tsvin = csv.reader(tsvin, delimiter='\t')
-            for row in tqdm(tsvin, total=404291, desc='Reading file'):
-                ################################################
-                text1 = bioclean(row[3])
-                text2 = bioclean(row[4])
-                ################################################
-                if(not text1):
-                    continue
-                if(not text2):
-                    continue
-                ################################################
-                self.vocab.update(Counter(text1))
-                self.vocab.update(Counter(text2))
-                ################################################
-                self.from_text.append(text1)
-                self.from_text.append(text2)
-                self.to_text.append(text2)
-                self.to_text.append(text1)
-                ################################################
+           tsvin = csv.reader(tsvin, delimiter='\t')
+           for row in tqdm(tsvin, total=404291, desc='Reading file'):
+               ################################################
+               text1 = bioclean(row[3])
+               text2 = bioclean(row[4])
+               ################################################
+               if(not text1):
+                   continue
+               if(not text2):
+                   continue
+               ################################################
+               self.from_text.append(text1)
+               self.from_text.append(text2)
+               self.to_text.append(text2)
+               self.to_text.append(text1)
+       print('Created {} examples'.format(len(self.from_text)))
+       ################################################
+       self.train_from_text = self.from_text[:int(len(self.from_text)*(1. - valid_split))]
+       self.train_to_text   = self.to_text[:int(len(self.to_text)*(1. - valid_split))]
+       self.dev_from_text   = self.from_text[-int(len(self.from_text)*(valid_split)):]
+       self.dev_to_text     = self.to_text[-int(len(self.to_text)*(valid_split)):]
+       print('FROM: kept {} instances for training and {} for eval'.format(len(self.train_from_text), len(self.dev_from_text)))
+       print('TO: kept {} instances for training and {} for eval'.format(len(self.train_to_text), len(self.dev_to_text)))
+       del(self.to_text)
+       del(self.from_text)
+       ################################################ SORT INSTANCES BY SIZE
+       train_instances  = sorted(list(zip(self.train_from_text, self.train_to_text)), key= lambda x: len(x[0].split())*10000+len(x[1].split()))
+       dev_instances    = sorted(list(zip(self.dev_from_text, self.dev_to_text)),     key= lambda x: len(x[0].split())*10000+len(x[1].split()))
+       print(dev_instances[0])
+       print(train_instances[0])
+       ################################################
+       self.vocab           = Counter()
+       self.vocab.update(Counter(' '.join(self.train_from_text).split()))
+       self.vocab.update(Counter(' '.join(self.train_to_text).split()))
+       ################################################
        self.vocab                   = sorted(
            [
                word
