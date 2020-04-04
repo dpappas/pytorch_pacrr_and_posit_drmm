@@ -167,7 +167,7 @@ model           = S2S_lstm(
     vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim,
     src_pad_token=SRC_PAD_TOKEN, trg_pad_token=TRGT_PAD_TOKEN
 ).to(device)
-optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01)
 ######################################################################################################
 
 best_valid_loss = float('inf')
