@@ -12,6 +12,7 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').re
 
 ######################################################################################################
 use_cuda    = torch.cuda.is_available()
+use_cuda    = False
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ######################################################################################################
 en = spacy.load('en_core_web_sm')
