@@ -13,6 +13,7 @@ class DataHandler:
        with open(data_path, 'rt', encoding='utf8') as tsvin:
            tsvin = csv.reader(tsvin, delimiter='\t')
            headers = next(tsvin)
+           del(headers)
            for row in tqdm(tsvin, total=404291, desc='Reading file'):
                ################################################
                text1 = bioclean(row[3])
