@@ -153,15 +153,23 @@ data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
 
 dh          = DataHandler(data_path)
 
+c = 0
 for batch in dh.iter_train_batches(64):
-    print(batch['trg_ids'].shape)
-    print(batch['src_ids'].shape)
-    print(20 * '-')
+    # print(batch['trg_ids'].shape)
+    # print(batch['src_ids'].shape)
+    # print(20 * '-')
+    c += 1
 
+print(c)
+
+c = 0
 for batch in dh.iter_dev_batches(64):
-    print(batch['trg_ids'].shape)
-    print(batch['src_ids'].shape)
-    print(20 * '-')
+    # print(batch['trg_ids'].shape)
+    # print(batch['src_ids'].shape)
+    # print(20 * '-')
+    c += 1
+
+print(c)
 
 exit()
 
