@@ -2,6 +2,7 @@
 import csv, re
 from tqdm import tqdm
 from collections import Counter
+import numpy as np
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower())
 
@@ -43,6 +44,7 @@ class DataHandler:
                self.from_text.append(text2)
                self.to_text.append(text2)
                self.to_text.append(text1)
+               ################################################
        print('Created {} examples'.format(len(self.from_text)))
        ################################################
        self.train_from_text = self.from_text[:int(len(self.from_text)*(1. - valid_split))]
@@ -54,29 +56,43 @@ class DataHandler:
        del(self.to_text)
        del(self.from_text)
        ################################################ SORT INSTANCES BY SIZE
-       train_instances  = sorted(list(zip(self.train_from_text, self.train_to_text)), key= lambda x: len(x[0].split())*10000+len(x[1].split()))
-       dev_instances    = sorted(list(zip(self.dev_from_text, self.dev_to_text)),     key= lambda x: len(x[0].split())*10000+len(x[1].split()))
-       print(dev_instances[0])
-       print(train_instances[0])
+       self.train_instances  = sorted(list(zip(self.train_from_text, self.train_to_text)), key= lambda x: len(x[0].split())*10000+len(x[1].split()))
+       self.dev_instances    = sorted(list(zip(self.dev_from_text, self.dev_to_text)),     key= lambda x: len(x[0].split())*10000+len(x[1].split()))
+       # print(self.dev_instances[0])
+       # print(self.train_instances[0])
        ################################################
        self.vocab           = Counter()
        self.vocab.update(Counter(' '.join(self.train_from_text).split()))
        self.vocab.update(Counter(' '.join(self.train_to_text).split()))
        ################################################
-       self.vocab                   = sorted(
-           [
+       self.vocab                   = sorted([
                word
                for word in tqdm(self.vocab, desc='Building VOCAB')
                if(self.vocab[word]>=self.occur_thresh)
-           ],
-           key= lambda x: self.vocab[x]
-       )
+           ], key= lambda x: self.vocab[x])
        self.vocab                   = ['<PAD>', '<UNK>', '<SOS>', '<EOS>'] + self.vocab
        self.stoi                    = dict(enumerate(self.vocab))
        self.itos                    = dict((v, k) for k,v in self.stoi.items())
        print('Kept {} total words'.format(len(self.vocab)))
-   def displayEmployee(self):
-      print("Name : ", self.name,  ", Salary: ", self.salary)
+       ################################################
+   def iter_train_batches(self, batch_size):
+       self.train_total_batches = len(self.train_instances) / batch_size
+       pbar         = tqdm(total=self.train_total_batches)
+       batch        = {'src_ids': [], 'trg_ids': []}
+       for text_s, text_t in self.train_instances:
+           batch['src_ids'].append([self.stoi[token] for token in text_s.split()])
+           batch['trg_ids'].append([self.stoi[token] for token in text_t.split()])
+           if(len(batch['src_ids']) == batch_size):
+               max_len_s = max([len(row) for row in batch['src_ids']])
+               max_len_t = max([len(row) for row in batch['trg_ids']])
+               batch['src_ids'] = np.array([row + ([self.stoi['<PAD>']] * (max_len_s - len(row))) for row in batch['src_ids']])
+               batch['trg_ids'] = np.array([row + ([self.stoi['<PAD>']] * (max_len_t - len(row))) for row in batch['trg_ids']])
+               pbar.update(1)
+               yield batch
+               batch = {'src_ids': [], 'trg_ids': []}
+   def iter_dev_batches(self, batch_size):
+       self.dev_total_batches = len(self.dev_instances) / batch_size
+       pbar = tqdm(total=self.dev_total_batches)
 
 
 
