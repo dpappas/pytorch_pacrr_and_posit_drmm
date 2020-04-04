@@ -10,6 +10,7 @@ from torch import FloatTensor as FT
 from sklearn.model_selection import train_test_split
 from torchtext.data import Field, BucketIterator, TabularDataset
 from my_data_handling import DataHandler
+from pprint import pprint
 
 bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -151,6 +152,11 @@ data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
 # data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
 
 dh          = DataHandler(data_path)
+
+for batch in dh.iter_train_batches(64):
+    pprint(batch)
+    break
+
 exit()
 
 to_text, from_text = [], []
