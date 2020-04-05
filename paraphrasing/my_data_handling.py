@@ -1,5 +1,5 @@
 
-import csv, re
+import csv, re, pickle
 from tqdm import tqdm
 from collections import Counter
 import numpy as np
@@ -119,6 +119,17 @@ class DataHandler:
         if(len(batch['src_ids'])):
             pbar.update(1)
             yield self.fix_one_batch(batch)
+    def save_model(self, pickle_datapath):
+        data_handler_data = {
+            'stoi'      : self.stoi,
+            'vocab'     : self.vocab,
+            'data_path' : self.data_path,
+            'unk_token' : self.unk_token,
+            'pad_token' : self.pad_token
+        }
+        pickle.dump(data_handler_data, open(pickle_datapath, 'wb'))
+    def load_model(self):
+        pass
 
 
 

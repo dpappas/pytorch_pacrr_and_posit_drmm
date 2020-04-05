@@ -153,15 +153,6 @@ data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
 
 data_handler    = DataHandler(data_path)
 
-data_handler_data   = {
-    'stoi'      : data_handler.stoi,
-    'vocab'     : data_handler.vocab,
-    'data_path' : data_handler.data_path,
-    'unk_token' : data_handler.unk_token,
-    'pad_token' : data_handler.pad_token
-}
-pickle.dump(data_handler_data, open('DataHandler_data.p', 'wb'))
-
 b_size          = 64
 vocab_size      = data_handler.vocab_size
 SRC_PAD_TOKEN   = data_handler.pad_index
