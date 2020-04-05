@@ -26,7 +26,8 @@ def check_texts(text1, text2):
 class DataHandler:
     def __init__(self, data_path= '/home/dpappas/quora_duplicate_questions.tsv', occur_thresh=5, valid_split=0.1):
         self.to_text, self.from_text = [], []
-        self.occur_thresh            = occur_thresh
+        self.occur_thresh   = occur_thresh
+        self.data_path      = data_path
         ################################################
         with open(data_path, 'rt', encoding='utf8') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
