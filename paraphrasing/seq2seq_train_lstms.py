@@ -17,7 +17,7 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').re
 
 ######################################################################################################
 use_cuda    = torch.cuda.is_available()
-use_cuda    = False
+# use_cuda    = False
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ######################################################################################################
 en = spacy.load('en_core_web_sm')
@@ -48,10 +48,10 @@ class SGNS(nn.Module):
         # print(true_vecs.size())
         # print(nvectors.size())
         oloss       = torch.bmm(out_vecs, true_vecs.transpose(1,2))
-        oloss       = (oloss.sigmoid()+1).log()
+        oloss       = (oloss.sigmoid()+1e-05).log()
         oloss       = oloss.mean(1)
         nloss       = torch.bmm(nvectors, true_vecs.transpose(1,2))
-        nloss       = (nloss.squeeze().sigmoid()+1).log()
+        nloss       = (nloss.squeeze().sigmoid()+1e-05).log()
         nloss       = nloss.view(-1, context_size, self.n_negs)
         nloss       = nloss.sum(2).mean(1)
         # print(oloss.size())
@@ -150,8 +150,8 @@ class S2S_lstm(nn.Module):
         return loss_
 
 ######################################################################################################
-data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
-# data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
+# data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
+data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
 
 data_handler    = DataHandler(data_path)
 data_handler.save_model('datahandler_model.p')
@@ -174,7 +174,7 @@ model           = S2S_lstm(
     vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim,
     src_pad_token=SRC_PAD_TOKEN, trg_pad_token=TRGT_PAD_TOKEN
 ).to(device)
-optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.001)
+optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 ######################################################################################################
 
 best_valid_loss = float('inf')
