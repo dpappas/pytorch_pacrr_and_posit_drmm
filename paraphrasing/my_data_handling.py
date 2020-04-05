@@ -128,14 +128,19 @@ class DataHandler:
             'pad_token' : self.pad_token
         }
         pickle.dump(data_handler_data, open(pickle_datapath, 'wb'))
+        print('Saved data handling model!')
     def load_model(self, pickle_datapath):
         data_handler_data   = pickle.load(open(pickle_datapath, 'rb'))
         self.stoi           = data_handler_data['stoi']
         self.itos           = dict((v, k) for k,v in self.stoi.items())
-        self.vocab          = data_handler_data['vocab']
         self.data_path      = data_handler_data['data_path']
         self.unk_token      = data_handler_data['unk_token']
         self.pad_token      = data_handler_data['pad_token']
+        self.vocab          = data_handler_data['vocab']
+        self.vocab_size     = len(self.vocab)
+        self.unk_index      = self.stoi[self.unk_token]
+        self.pad_index      = self.stoi[self.pad_token]
+        print('Loaded data handling model!')
 
 
 
