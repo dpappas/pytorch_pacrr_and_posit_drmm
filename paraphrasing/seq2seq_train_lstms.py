@@ -138,7 +138,7 @@ class S2S_lstm(nn.Module):
         trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_input)
         # print(trg_contextual.size())
         out_vecs                    = self.projection(trg_contextual)
-        out_vecs                    = F.sigmoid(self.projection(out_vecs))
+        out_vecs                    = F.sigmoid(out_vecs)
         #################################################
         maska                       = (trg_tokens == self.trg_pad_token).float()
         maska                       = (maska-1).abs().unsqueeze(-1)[:,1:].expand_as(out_vecs)
