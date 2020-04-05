@@ -1,5 +1,5 @@
 
-import torch, re, random, spacy, time
+import torch, re, random, spacy, time, pickle
 import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
@@ -151,7 +151,10 @@ class S2S_lstm(nn.Module):
 data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
 # data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
 
-data_handler        = DataHandler(data_path)
+data_handler    = DataHandler(data_path)
+
+pickle.dump(data_handler.vocab, open('DataHandler_vocab.p', 'wb'))
+pickle.dump(data_handler.stoi,  open('DataHandler_stoi.p', 'wb'))
 
 b_size          = 64
 vocab_size      = data_handler.vocab_size
