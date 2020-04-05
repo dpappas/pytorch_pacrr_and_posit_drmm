@@ -152,6 +152,10 @@ data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
 # data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
 
 data_handler    = DataHandler(data_path)
+data_handler.save_model('datahandler_model.p')
+data_handler.load_model('datahandler_model.p')
+
+exit()
 
 b_size          = 64
 vocab_size      = data_handler.vocab_size
