@@ -141,6 +141,13 @@ class DataHandler:
         self.unk_index      = self.stoi[self.unk_token]
         self.pad_index      = self.stoi[self.pad_token]
         print('Loaded data handling model!')
+    def encode_one(self, text):
+        return np.array([
+            [
+                self.stoi[token] if token in self.stoi else self.stoi['<UNK>']
+                for token in bioclean(text).split()
+            ]
+        ])
 
 
 
