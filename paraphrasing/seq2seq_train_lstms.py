@@ -179,7 +179,7 @@ optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), ep
 
 best_valid_loss = float('inf')
 print('TRAINING the model')
-for epoch in tqdm(range(N_EPOCHS)):
+for epoch in tqdm(range(N_EPOCHS), ascii=True):
     start_time  = time.time()
     train_loss  = train_one(clip=CLIP)
     valid_loss  = eval_one()
