@@ -33,7 +33,7 @@ class DataHandler:
             tsvin = csv.reader(tsvin, delimiter='\t')
             headers = next(tsvin)
             del(headers)
-            for row in tqdm(tsvin, total=404291, desc='Reading file'):
+            for row in tqdm(tsvin, total=404291, desc='Reading file', ascii=True):
                 ################################################
                 text1 = bioclean(row[3])
                 text2 = bioclean(row[4])
@@ -71,7 +71,7 @@ class DataHandler:
             ################################################
             self.vocab                  = sorted([
                    word
-                   for word in tqdm(self.vocab, desc='Building VOCAB')
+                   for word in tqdm(self.vocab, desc='Building VOCAB', ascii=True)
                    if(self.vocab[word]>=self.occur_thresh)
                ], key= lambda x: self.vocab[x])
             self.vocab                  = ['<PAD>', '<UNK>', '<SOS>', '<EOS>'] + self.vocab
@@ -107,7 +107,7 @@ class DataHandler:
             yield self.fix_one_batch(batch)
     def iter_dev_batches(self, batch_size):
         self.dev_total_batches   = int(len(self.dev_instances) / batch_size)
-        pbar                     = tqdm(total=self.dev_total_batches+1)
+        pbar                     = tqdm(total=self.dev_total_batches+1, ascii=True)
         batch                    = {'src_ids': [], 'trg_ids': []}
         for text_s, text_t in self.dev_instances:
             batch['src_ids'].append([self.stoi[token] if token in self.stoi else self.stoi['<UNK>'] for token in text_s.split()])
