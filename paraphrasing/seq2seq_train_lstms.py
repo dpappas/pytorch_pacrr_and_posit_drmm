@@ -166,7 +166,6 @@ SRC_PAD_TOKEN   = data_handler.pad_index
 TRGT_PAD_TOKEN  = data_handler.pad_index
 embedding_dim   = 30
 hidden_dim      = 50
-timesteps       = 120
 N_EPOCHS        = 10
 CLIP            = 1
 ######################################################################################################
