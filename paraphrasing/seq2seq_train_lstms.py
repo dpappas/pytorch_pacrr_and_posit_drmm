@@ -118,7 +118,7 @@ class S2S_lstm(nn.Module):
         ).to(device)
         self.projection         = nn.Linear(self.hidden_dim, self.embedding_dim)
         #####################################################################################
-        self.loss_f             = SGNS(self.embed, vocab_size=vocab_size, n_negs=20).to(device)
+        self.loss_f             = SGNS(self.embed, vocab_size=vocab_size, n_negs=40).to(device)
         #####################################################################################
     def forward(self, src_tokens, trg_tokens):
         src_tokens, trg_tokens      = src_tokens.to(device), trg_tokens.to(device)
