@@ -1199,7 +1199,7 @@ min_doc_score               = -1000.
 min_sent_score              = -1000.
 emit_only_abstract_sents    = False
 ###########################################################
-use_cuda = torch.cuda.is_available()
+use_cuda            = torch.cuda.is_available()
 ###########################################################
 batch_no            = sys.argv[1]
 f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch_no, batch_no)
