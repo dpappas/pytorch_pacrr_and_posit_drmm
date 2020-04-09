@@ -194,7 +194,8 @@ def submit_question():
     print(section)
     ###############################################################################################
     text_to_return  = r1 + '\n' # + r2
-    text_to_return  += '<h2>Results for the question: {}</h2>'.format(question_text) + '\n'
+    text_to_return  += '<h2 class="block uppercase tracking-wide text-gray-700 text-base font-normal mb-2">' \
+                       'Results for the question: {}</h2>'.format(question_text) + '\n'
     ret_dummy       = retrieve_given_question(question_text, n=20, section=section)
     if(len(ret_dummy)==0):
         text_to_return += '\n' + r2
