@@ -1151,6 +1151,10 @@ model               = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for
 # resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_frozen_run_0/'
 resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_unfrozen_run_0/'
 load_model_from_checkpoint(resume_from)
+for param in model.parameters():
+    param.requires_grad = False
+for param in bert_model.parameters():
+    param.requires_grad = False
 print_params(model)
 print_params(bert_model)
 bert_model.to(device)
