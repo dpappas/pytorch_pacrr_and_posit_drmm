@@ -1211,15 +1211,10 @@ CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 5
 
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' \
 evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"./test_bert_jpdrmm_high_batch1/v3 test_emit_bioasq.json"
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
+"./test_bert_jpdrmm_high_batch5/v3 test_emit_bioasq.json"
 
-
-python \
-/home/dpappas/bioasq_all/eval/run_eval.py \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"./test_bert_jpdrmm_high_batch1/v3 test_emit_bioasq.json" \
- | grep map
+/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_unfrozen_run_0/best_checkpoint.pth.tar
 
 '''
 
