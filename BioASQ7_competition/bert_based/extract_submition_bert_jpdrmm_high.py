@@ -766,22 +766,23 @@ def print_params(model):
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
     bert_model.eval()
-    ##################################################################################################
-    ret_data = {'questions': []}
-    all_bioasq_subm_data_v3 = {"questions": []}
-    all_bioasq_gold_data = {'questions': []}
-    data_for_revision = {}
-    ##################################################################################################
+    #
+    ret_data                        = {'questions': []}
+    all_bioasq_subm_data_v3         = {"questions": []}
+    all_bioasq_subm_data_known_v3   = {"questions": []}
+    all_bioasq_gold_data            = {'questions': []}
+    data_for_revision               = {}
+    #
     for dato in tqdm(data['queries'], ascii=True):
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
         data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(
-            docs, dato,
-            dato['retrieved_documents'],
-            data_for_revision, ret_data,
-            use_sent_tokenizer
-        )
+            docs, dato, dato['retrieved_documents'], data_for_revision, ret_data,use_sent_tokenizer)
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
-    ##################################################################################################
+        all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
+    #
+    print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3,
+                      data_for_revision)
+    #
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
@@ -1114,7 +1115,7 @@ batch_no            = sys.argv[1]
 f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch_no, batch_no)
 f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch_no)
 f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch_no)
-odir                = './test_bert_jpdrmm_unfrozen_high_batch{}/'.format(batch_no)
+odir                = './test_bert_jpdrmm_frozen_high_batch{}/'.format(batch_no)
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1148,8 +1149,8 @@ bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=Tr
 bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
 model               = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 ###########################################################
-# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_frozen_run_0/'
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_unfrozen_run_0/'
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_frozen_run_0/'
+# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_unfrozen_run_0/'
 load_model_from_checkpoint(resume_from)
 for param in model.parameters():
     param.requires_grad = False
@@ -1207,12 +1208,11 @@ python3.6 tt.py -30. -30. False
 grep -E '\"body\"|\"text\"' "test_bert_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
 cp "/home/dpappas/test_bert_jpdrmm_high_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bert_jpdrmm.json" 
 
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 1
-CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm.py 2
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 3
-CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm.py 4
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 1 &
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm.py 2 &
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 3 &
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm.py 4 &
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 5
-
 
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' \
 evaluation.EvaluatorTask1b -phaseA -e 5 \
@@ -1220,6 +1220,10 @@ evaluation.EvaluatorTask1b -phaseA -e 5 \
 "./test_bert_jpdrmm_high_batch5/v3 test_emit_bioasq.json"
 
 /media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_unfrozen_run_0/best_checkpoint.pth.tar
+
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/test_bert_jpdrmm_frozen_high_batch1/v3 test_emit_bioasq.json"
 
 '''
 
