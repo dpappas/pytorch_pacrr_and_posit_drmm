@@ -88,7 +88,7 @@ def eval_one():
     with torch.no_grad():
         epoch_loss, i   = 0, 0
         dev_iterator    = data_handler.iter_dev_batches(b_size)
-        pbar            = tqdm(enumerate(dev_iterator), total= int(data_handler.number_of_dev_instances / b_size)+1, ascii=True)
+        pbar            = tqdm(enumerate(dev_iterator), total=int(data_handler.number_of_dev_instances / b_size)+1, ascii=True)
         for i, batch in pbar:
             src         = torch.LongTensor(batch['src_ids'])
             trg         = torch.LongTensor(batch['trg_ids'])

@@ -162,7 +162,7 @@ model.eval()
 
 # pprint(data_handler.train_instances[:10])
 
-question    = 'what is an ethical dilemma ?'
+question    = 'does meditation increase creativity ?'
 src_tokens  = data_handler.encode_one(question)
 src_tokens  = torch.LongTensor(src_tokens).to(device)
 ############################################################
