@@ -1,5 +1,5 @@
 
-import torch, re, random, spacy, time, pickle
+import torch, re, random, spacy, time, pickle, os
 import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
@@ -64,39 +64,6 @@ def epoch_time(start_time, end_time):
     elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
     return elapsed_mins, elapsed_secs
 
-def train_one(clip):
-    model.train()
-    epoch_loss, i   = 0, 0
-    train_iterator  = data_handler.iter_train_batches(b_size)
-    pbar            = tqdm(enumerate(train_iterator), total= int(data_handler.number_of_train_instances / b_size) +1, ascii=True)
-    for i, batch in pbar:
-        src         = torch.LongTensor(batch['src_ids'])
-        trg         = torch.LongTensor(batch['trg_ids'])
-        ##########################################
-        optimizer.zero_grad()
-        loss = model(src, trg)
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
-        optimizer.step()
-        epoch_loss += loss.item()
-        ##########################################
-        pbar.set_description('train_aver_loss batch {}: {}'.format(i, epoch_loss / float(i+1)))
-    return epoch_loss / float(i+1)
-
-def eval_one():
-    model.eval()
-    with torch.no_grad():
-        epoch_loss, i   = 0, 0
-        dev_iterator    = data_handler.iter_dev_batches(b_size)
-        pbar            = tqdm(enumerate(dev_iterator), total= int(data_handler.number_of_dev_instances / b_size)+1, ascii=True)
-        for i, batch in pbar:
-            src         = torch.LongTensor(batch['src_ids'])
-            trg         = torch.LongTensor(batch['trg_ids'])
-            loss        = model(src, trg[:, :-1])
-            epoch_loss += loss.item()
-            pbar.set_description('eval_aver_loss batch {}: {}'.format(i, epoch_loss / float(i+1)))
-    return epoch_loss / float(i+1)
-
 class S2S_lstm(nn.Module):
     def __init__(self, vocab_size = 100, embedding_dim=30, hidden_dim = 256, src_pad_token=1, trg_pad_token=1):
         super(S2S_lstm, self).__init__()
@@ -160,11 +127,7 @@ class S2S_lstm(nn.Module):
 data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
 
 data_handler    = DataHandler(data_path)
-data_handler.save_model('datahandler_model.p')
 data_handler.load_model('datahandler_model.p')
-
-# print(data_handler.encode_one('This is cool !'))
-# exit()
 
 b_size          = 64
 vocab_size      = data_handler.vocab_size
@@ -179,19 +142,72 @@ model           = S2S_lstm(
     vocab_size = vocab_size, embedding_dim=embedding_dim, hidden_dim = hidden_dim,
     src_pad_token=SRC_PAD_TOKEN, trg_pad_token=TRGT_PAD_TOKEN
 ).to(device)
-optimizer       = optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 ######################################################################################################
 
-best_valid_loss = float('inf')
-print('TRAINING the model')
-for epoch in tqdm(range(N_EPOCHS), ascii=True):
-    start_time  = time.time()
-    train_loss  = train_one(clip=CLIP)
-    valid_loss  = eval_one()
-    end_time    = time.time()
-    epoch_mins, epoch_secs = epoch_time(start_time, end_time)
-    if valid_loss < best_valid_loss:
-        best_valid_loss = valid_loss
-        torch.save(model.state_dict(), 'my_s2s_lstms.pt')
+def load_model_from_checkpoint(resume_dir):
+    global start_epoch, optimizer
+    resume_from = os.path.join(resume_dir, 'my_s2s_lstms.pt')
+    if os.path.isfile(resume_from):
+        print("=> loading checkpoint '{}'".format(resume_from))
+        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
+        #############################################################################################
+        model.load_state_dict(checkpoint)
+        #############################################################################################
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
+resume_dir = './'
+load_model_from_checkpoint(resume_dir)
+
+model.eval()
+
+# pprint(data_handler.train_instances[:10])
+
+question    = 'what is an ethical dilemma ?'
+src_tokens  = data_handler.encode_one(question)
+src_tokens  = torch.LongTensor(src_tokens).to(device)
+############################################################
+src_embeds  = model.embed(src_tokens)
+src_contextual, (h_n, c_n) = model.bi_lstm_src(src_embeds)
+############################################################
+h_0             = None #  (num_layers * num_directions, batch, hidden_size)
+c_0             = None #  (num_layers * num_directions, batch, hidden_size)
+next_token      = '<EOS>'
+all_tokens      = [next_token]
+while(True):
+    c1              = torch.cat((h_n[0], h_n[1]), dim=1).unsqueeze(1)
+    c2              = model.embed(torch.LongTensor(data_handler.encode_one(next_token)).to(device))
+    ############################################################
+    if(h_0 is None):
+        trg_input                   = torch.cat((c1, c2), dim=-1)
+        trg_contextual, (h_0, c_0)  = model.bi_lstm_trg(trg_input)
+        # next_token                  = data_handler.itos[model.out_layer(trg_contextual).argmax().item()]
+        ############################################################
+        tt                          = model.out_layer(trg_contextual).sort().indices.squeeze()
+        j                           = len(tt)-1
+        while True:
+            if(tt[j] != 1):
+                break
+            j -= 1
+        next_token                  = data_handler.itos[tt[j].item()]
+        ############################################################
+    else:
+        trg_input                   = torch.cat((c1, c2), dim=-1)
+        trg_contextual, (h_0, c_0)  = model.bi_lstm_trg(trg_input, (h_0, c_0))
+        # next_token                  = data_handler.itos[model.out_layer(trg_contextual).argmax().item()]
+        ############################################################
+        tt                          = model.out_layer(trg_contextual).sort().indices.squeeze()
+        j                           = len(tt)-1
+        while True:
+            if(tt[j] != 1):
+                break
+            j -= 1
+        next_token                  = data_handler.itos[tt[j].item()]
+        ############################################################
+    all_tokens.append(next_token)
+    if(len(all_tokens) == 10 or next_token == '<EOS>'):
+        break
+
+print(all_tokens)
+
+############################################################
 
