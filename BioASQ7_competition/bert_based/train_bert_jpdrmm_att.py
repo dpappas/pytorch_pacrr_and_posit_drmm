@@ -1561,15 +1561,8 @@ optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-0
 bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
 bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2).to(device)
 for param in bert_model.parameters():
-    param.requires_grad = False
-if(frozen_or_unfrozen == 'frozen'):
-    optimizer_2 = None
-    scheduler   = None
-else:
-    for param in bert_model.bert.encoder.layer.parameters():
-        param.requires_grad = True
-    optimizer_2 = optim.Adam(list(bert_model.bert.encoder.layer.parameters()), lr=lr2)
-    scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
+    param.requires_grad = True
+
 #####################
 print('JPDRMM part')
 logger.info('JPDRMM part')
