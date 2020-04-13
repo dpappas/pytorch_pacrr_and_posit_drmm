@@ -1431,7 +1431,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
     def attend(self, mat):
         ret = self.att(mat.transpose(0,2))
-        ret = ret.transpose(0,2).squeeze(-1)
+        ret = ret.transpose(0,2).squeeze(0)
         # return sum([self.att[i]*mat[i] for i in range(int(mat.size(0)))])
         return ret
 
