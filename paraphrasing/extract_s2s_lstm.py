@@ -162,7 +162,7 @@ model.eval()
 
 # pprint(data_handler.train_instances[:10])
 
-question    = 'does meditation increase creativity ?'
+question    = 'what would be a good example ?'
 src_tokens  = data_handler.encode_one(question)
 src_tokens  = torch.LongTensor(src_tokens).to(device)
 ############################################################
@@ -204,7 +204,7 @@ while(True):
         next_token                  = data_handler.itos[tt[j].item()]
         ############################################################
     all_tokens.append(next_token)
-    if(len(all_tokens) == 10 or next_token == '<EOS>'):
+    if(len(all_tokens) == 100 or next_token == '<EOS>'):
         break
 
 print(all_tokens)
