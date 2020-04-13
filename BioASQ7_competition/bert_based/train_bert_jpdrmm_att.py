@@ -1395,6 +1395,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
         doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
         #
+        ################################################################
+        doc1_sents_embeds   = [self.attend(t) for t in doc1_sents_embeds]
+        question_embeds     = self.attend(question_embeds)
+        ################################################################
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
         #
