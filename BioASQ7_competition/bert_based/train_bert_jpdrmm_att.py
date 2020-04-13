@@ -920,6 +920,7 @@ def print_params(model):
     :param model:   The pytorch model
     :return:        Nothing.
     '''
+    ###########################################################
     print(40 * '=')
     print(model)
     print(40 * '=')
@@ -944,6 +945,25 @@ def print_params(model):
     logger.info(40 * '=')
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
+    ###########################################################
+    print('Named trainable params')
+    logger.info(40 * '=')
+    logger.info('Named trainable params')
+    logger.info(40 * '=')
+    for name, param in model.named_parameters():
+        if (param.requires_grad):
+            print(param.requires_grad, name, param.size())
+            logger.info(param.requires_grad, name, param.size())
+    ###########################################################
+    print('Named not trainable params')
+    logger.info(40 * '=')
+    logger.info('Named not trainable params')
+    logger.info(40 * '=')
+    for name, param in model.named_parameters():
+        if (not param.requires_grad):
+            print(param.requires_grad, name, param.size())
+            logger.info(param.requires_grad, name, param.size())
+    ###########################################################
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
