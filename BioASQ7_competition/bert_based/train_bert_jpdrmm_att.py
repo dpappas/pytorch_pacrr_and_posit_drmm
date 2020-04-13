@@ -1191,7 +1191,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # doc loss func
         self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
         # att
-        self.att            = torch.nn.Parameter(torch.randn(12).uniform_(-1, 1))
+        self.att            = nn.Linear(12, 1, bias=False).to(device)
     def init_mesh_module(self):
         self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim)).to(device)
         self.mesh_gru = nn.GRU(self.embedding_dim, self.embedding_dim).to(device)
@@ -1430,7 +1430,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return final_good_output, gs_emits
 
     def attend(self, mat):
-        return sum([self.att[i]*mat[i] for i in range(int(mat.size(0)))])
+        ret = self.att(mat.transpose(0,2))
+        ret = ret.transpose(0,2).squeeze(-1)
+        # return sum([self.att[i]*mat[i] for i in range(int(mat.size(0)))])
+        return ret
 
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
                 question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
