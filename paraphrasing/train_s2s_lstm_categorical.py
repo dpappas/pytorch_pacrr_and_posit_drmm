@@ -17,7 +17,7 @@ bioclean = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').re
 
 ######################################################################################################
 use_cuda    = torch.cuda.is_available()
-# use_cuda    = False
+use_cuda    = False
 device      = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ######################################################################################################
 en = spacy.load('en_core_web_sm')
@@ -118,7 +118,8 @@ class S2S_lstm(nn.Module):
         ).to(device)
         self.out_layer          = nn.Linear(self.hidden_dim, self.vocab_size)
         #####################################################################################
-        self.loss_f             = SGNS(self.embed, vocab_size=vocab_size, n_negs=40).to(device)
+        # self.loss_f             = SGNS(self.embed, vocab_size=vocab_size, n_negs=40).to(device)
+        self.loss_f             = nn.CrossEntropyLoss()
         #####################################################################################
     def forward(self, src_tokens, trg_tokens):
         src_tokens, trg_tokens      = src_tokens.to(device), trg_tokens.to(device)
@@ -138,22 +139,25 @@ class S2S_lstm(nn.Module):
         trg_contextual, (h_n, c_n)  = self.bi_lstm_trg(trg_input)
         # print(trg_contextual.size())
         out_vecs                    = self.out_layer(trg_contextual)
-        print(out_vecs.size())
-        return
-        out_vecs                    = F.sigmoid(out_vecs)
-        #################################################
-        maska                       = (trg_tokens == self.trg_pad_token).float()
-        maska                       = (maska-1).abs().unsqueeze(-1)[:,1:].expand_as(out_vecs)
-        o1                          = (maska * trg_embeds[:, 1:, :]).reshape(-1, 1, self.embedding_dim)
-        o2                          = (maska * out_vecs).reshape(-1, 1, self.embedding_dim)
-        #################################################
-        loss_                       = self.loss_f(o1, o2)
-        # print(loss_)
+        # # print(out_vecs.size())
+        # # return
+        # out_vecs                    = F.sigmoid(out_vecs)
+        # #################################################
+        # maska                       = (trg_tokens == self.trg_pad_token).float()
+        # maska                       = (maska-1).abs().unsqueeze(-1)[:,1:].expand_as(out_vecs)
+        # o1                          = (maska * trg_embeds[:, 1:, :]).reshape(-1, 1, self.embedding_dim)
+        # o2                          = (maska * out_vecs).reshape(-1, 1, self.embedding_dim)
+        # #################################################
+        # loss_                       = self.loss_f(o1, o2)
+        # # print(loss_)
+        # print(out_vecs.size())
+        # print(trg_tokens.size())
+        loss_                       = self.loss_f(out_vecs.reshape(-1, out_vecs.size(2)), trg_tokens[:,1:].reshape(-1))
         return loss_
 
 #############################################################
-data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
-# data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
+# data_path = 'C:\\Users\\dvpap\\Downloads\\quora_duplicate_questions.tsv'
+data_path   = '/home/dpappas/quora_duplicate_questions.tsv'
 
 data_handler    = DataHandler(data_path)
 data_handler.save_model('datahandler_model.p')
