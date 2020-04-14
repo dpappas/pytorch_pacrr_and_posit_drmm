@@ -1138,13 +1138,16 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 print(test_map)
 
 
-# CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 0
-
 '''
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 1
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 2
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 3
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 4
 CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 5
+
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/test_bert_jpdrmm_unfrozen_att_high_batch1/v3 test_emit_bioasq.json" | grep "^MAP"
 
 '''
