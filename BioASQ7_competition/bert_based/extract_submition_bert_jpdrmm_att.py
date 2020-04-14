@@ -1150,7 +1150,8 @@ bert_model          = BertForSequenceClassification.from_pretrained(bert_model, 
 model               = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 ###########################################################
 # resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_frozen_run_0/'
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_unfrozen_run_0/'
+# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_unfrozen_run_0/'
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_att_2L_0p01_unfrozen_run_0/'
 load_model_from_checkpoint(resume_from)
 for param in model.parameters():
     param.requires_grad = False
@@ -1182,50 +1183,4 @@ idf, max_idf = load_idfs(idf_pickle_path, words)
 ###########################################################
 test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 print(test_map)
-
-
-'''
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' \
-evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/media/dpappas/dpappas_data/models_out/ablations/test_ablation_1111111_batch1/v3 test_emit_bioasq.json"
-
-python \
-/home/dpappas/bioasq_all/eval/run_eval.py \
-"/home/dpappas/test_bert_jpdrmm/v3 test_gold_bioasq.json" \
-"/home/dpappas/test_bert_jpdrmm/elk_relevant_abs_posit_drmm_lists_test.json" \
- | grep map
-
-MAP documents   : 0.08401785714285709
-MAP snippets    : 0.05846759009205377
-GMAP documents  : 0.003971499747357504
-GMAP snippets   : 9.80472859647476E-4
-F1 snippets     : 0.09388342171746662
-
-trec map doc    : 0.4252
-
-python3.6 tt.py -30. -30. False
-grep -E '\"body\"|\"text\"' "test_bert_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
-cp "/home/dpappas/test_bert_jpdrmm_high_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/bert_jpdrmm.json" 
-
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 1 &
-CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm.py 2 &
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 3 &
-CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm.py 4 &
-CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm.py 5
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' \
-evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"./test_bert_jpdrmm_high_batch5/v3 test_emit_bioasq.json"
-
-/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_unfrozen_run_0/best_checkpoint.pth.tar
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/home/dpappas/test_bert_jpdrmm_frozen_high_batch1/v3 test_emit_bioasq.json"
-
-'''
-
-
 
