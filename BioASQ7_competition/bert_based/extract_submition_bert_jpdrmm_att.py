@@ -1202,3 +1202,12 @@ print(test_map)
 
 
 # CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 0
+
+'''
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 1
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 2
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 3
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 4
+CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_att.py 5
+
+'''
