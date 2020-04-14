@@ -675,7 +675,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     extracted_snippets_known_rel_num    = []
     for retr in retr_docs:
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, quest_tokens)
-        doc_emit_, gs_emits_ = model.emit_one(
+        doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
             doc1_oh_sim         = datum['oh_sims'],
             question_embeds     = qemb,
@@ -713,7 +713,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         extracted_snippets_v3 = []
         extracted_snippets_known_rel_num_v3 = []
     #
-    snips_res_v3 = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_v3 = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10],
+                                           dato['query_text'])
     #
     snips_res_known_rel_num_v3 = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'],
                                                          doc_res[:10], dato['query_text'])
@@ -767,22 +768,41 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
     bert_model.eval()
     #
-    ret_data                        = {'questions': []}
-    all_bioasq_subm_data_v3         = {"questions": []}
-    all_bioasq_subm_data_known_v3   = {"questions": []}
-    all_bioasq_gold_data            = {'questions': []}
-    data_for_revision               = {}
+    ret_data = {'questions': []}
+    all_bioasq_subm_data_v3 = {"questions": []}
+    all_bioasq_subm_data_known_v3 = {"questions": []}
+    all_bioasq_gold_data = {'questions': []}
+    data_for_revision = {}
     #
     for dato in tqdm(data['queries'], ascii=True):
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(
-            docs, dato, dato['retrieved_documents'], data_for_revision, ret_data,use_sent_tokenizer)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato,
+                                                                                        dato['retrieved_documents'],
+                                                                                        data_for_revision, ret_data,
+                                                                                        use_sent_tokenizer)
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
     #
     print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3,
                       data_for_revision)
     #
+    if (prefix == 'dev'):
+        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
+            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
+        res_map = get_map_res(
+            os.path.join(odir, 'v3 dev_gold_bioasq.json'),
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'),
+            eval_path
+        )
+    else:
+        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
+            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
+        res_map = get_map_res(
+            os.path.join(odir, 'v3 test_gold_bioasq.json'),
+            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'),
+            eval_path
+        )
+    return res_map
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
