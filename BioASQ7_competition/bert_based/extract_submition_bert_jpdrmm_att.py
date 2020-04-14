@@ -787,12 +787,12 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
-        self.k = k_for_maxpool
-        self.k_sent_maxpool = k_sent_maxpool
-        self.doc_add_feats = 11
-        self.sent_add_feats = 10
+        self.k                   = k_for_maxpool
+        self.k_sent_maxpool      = k_sent_maxpool
+        self.doc_add_feats       = 11
+        self.sent_add_feats      = 10
         #
-        self.embedding_dim = embedding_dim
+        self.embedding_dim       = embedding_dim
         self.sentence_out_method = sentence_out_method
         # to create q weights
         self.init_context_module()
@@ -801,7 +801,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
-        self.margin_loss = nn.MarginRankingLoss(margin=1.0).to(device)
+        self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
+        # att
+        self.att            = nn.Linear(12, 1, bias=False).to(device)
 
     def init_mesh_module(self):
         self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim)).to(device)
@@ -1006,6 +1008,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
         doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
         #
+        ################################################################
+        doc1_sents_embeds   = [self.attend(t) for t in doc1_sents_embeds]
+        question_embeds     = self.attend(question_embeds)
+        ################################################################
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
         #
@@ -1036,19 +1042,29 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         return final_good_output, gs_emits
 
+    def attend(self, mat):
+        ret = self.att(mat.transpose(0,2))
+        ret = ret.transpose(0,2).squeeze(0)
+        # return sum([self.att[i]*mat[i] for i in range(int(mat.size(0)))])
+        return ret
+
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
                 question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        q_idfs = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
+        q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
         doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(device)
-        #
+        ################################################################
+        doc1_sents_embeds   = [self.attend(t) for t in doc1_sents_embeds]
+        doc2_sents_embeds   = [self.attend(t) for t in doc2_sents_embeds]
+        question_embeds     = self.attend(question_embeds)
+        ################################################################
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
-        #
+        ################################################################
         q_weights = torch.cat([q_context, q_idfs], -1)
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
-        #
+        ################################################################
         good_out, gs_emits = self.do_for_one_doc_cnn(
             doc1_sents_embeds,
             doc1_oh_sim,
@@ -1067,29 +1083,29 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             q_weights,
             self.k_sent_maxpool
         )
-        #
+        ################################################################
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp = torch.cat([bad_out, doc_baf], -1)
-        #
+        ################################################################
         final_good_output = self.final_layer_1(good_out_pp)
         final_good_output = self.final_activ_1(final_good_output)
         final_good_output = self.final_layer_2(final_good_output)
-        #
+        ################################################################
         gs_emits = gs_emits.unsqueeze(-1)
         gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
         gs_emits = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits = torch.sigmoid(gs_emits)
-        #
+        ################################################################
         final_bad_output = self.final_layer_1(bad_out_pp)
         final_bad_output = self.final_activ_1(final_bad_output)
         final_bad_output = self.final_layer_2(final_bad_output)
-        #
+        ################################################################
         bs_emits = bs_emits.unsqueeze(-1)
         # bs_emits = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
         bs_emits = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
         bs_emits = self.oo_layer(bs_emits).squeeze(-1)
         bs_emits = torch.sigmoid(bs_emits)
-        #
+        ################################################################
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
