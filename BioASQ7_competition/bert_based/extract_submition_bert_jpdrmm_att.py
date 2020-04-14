@@ -487,14 +487,6 @@ def embed_the_sent(sent):
     fixed_tokens = fix_bert_tokens(tokens)
     return fixed_tokens, embs
 
-def get_map_res(fgold, femit, eval_path):
-    trec_eval_res = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
-    (out, err) = trec_eval_res.communicate()
-    lines = out.decode("utf-8").split('\n')
-    map_res = [l for l in lines if (l.startswith('map '))][0].split('\t')
-    map_res = float(map_res[-1])
-    return map_res
-
 def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
     '''
     java -Xmx10G -cp /home/dpappas/for_ryan/bioasq6_eval/flat/BioASQEvaluation/dist/BioASQEvaluation.jar
@@ -787,23 +779,8 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3,
                       data_for_revision)
     #
-    if (prefix == 'dev'):
-        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 dev_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'),
-            eval_path
-        )
-    else:
-        with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
-            f.write(json.dumps(ret_data, indent=4, sort_keys=True))
-        res_map = get_map_res(
-            os.path.join(odir, 'v3 test_gold_bioasq.json'),
-            os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'),
-            eval_path
-        )
-    return res_map
+    with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
+        f.write(json.dumps(ret_data, indent=4, sort_keys=True))
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
     def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
