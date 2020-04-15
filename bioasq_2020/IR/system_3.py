@@ -71,7 +71,7 @@ idf_pickle_path = '/home/dpappas/bioasq_all/idf.pkl'
 docs_data       = pickle.load(open(os.path.join(in_dir, 'bioasq8_bm25_docset_top100.test.pkl'), 'rb'))
 ret_data        = json.load(open(ret_data_path))
 
-avgdl, mean, deviation      = 21.1907, 0.6275, 1.2210
+avgdl, mean, deviation = 21.1907, 0.6275, 1.2210
 print(avgdl, mean, deviation)
 ###########################################################
 print('loading idfs')
@@ -158,5 +158,6 @@ with open(os.path.join(odir, 'bioasq8_batch{}_system3_results.json'.format(b)), 
 python3.6 system_3.py 1
 python3.6 system_3.py 2
 python3.6 system_3.py 3
+python3.6 system_3.py 4
 
 '''
