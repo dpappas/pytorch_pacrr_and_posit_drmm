@@ -1319,7 +1319,7 @@ CUDA_VISIBLE_DEVICES=0 python3.6 system_1.py 3 \
 /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_2020/system1_output_b3
 
-CUDA_VISIBLE_DEVICES=1 python3.6 system_1.py 1 \
+CUDA_VISIBLE_DEVICES=1 python3.6 system_1.py 4 \
 /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_2020/system1_output_b4
 
