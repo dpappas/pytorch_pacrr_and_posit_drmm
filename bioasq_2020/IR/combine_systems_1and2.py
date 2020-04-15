@@ -12,13 +12,13 @@ es = Elasticsearch(['palomar.ilsp.gr:9201'], verify_certs=True, timeout=150, max
 
 b = '4'
 
-d1 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system1_output_b{}\\v3 test_data_for_revision.json'.format(b)))
-d2 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system2_output_b{}\\v3 test_data_for_revision.json'.format(b)))
+d1 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system1_output_b{}\\v3 test_data_for_revision.json'.format(b, b)))
+d2 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system2_output_b{}\\v3 test_data_for_revision.json'.format(b, b)))
 
-d3 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system1_output_b{}\\v3 test_emit_bioasq.json'.format(b)))
-d4 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system2_output_b{}\\v3 test_emit_bioasq.json'.format(b)))
+d3 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system1_output_b{}\\v3 test_emit_bioasq.json'.format(b, b)))
+d4 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system2_output_b{}\\v3 test_emit_bioasq.json'.format(b, b)))
 
-opath = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system4_output_b{}\\ensembe_sys1_and sys2.json'.format(b)
+opath = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system4_output_b{}\\ensembe_sys1_and sys2.json'.format(b, b)
 
 pmidtext_to_other   = {}
 qid2qtext           = {}
