@@ -10,11 +10,15 @@ index, doc_type = 'pubmed_abstracts_joint_0_1', 'abstract_map_joint_0_1'
 
 es = Elasticsearch(['palomar.ilsp.gr:9201'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
-d1 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system1_output_b3\\v3 test_data_for_revision.json'))
-d2 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system2_output_b3\\v3 test_data_for_revision.json'))
+b = '4'
 
-d3 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system1_output_b3\\v3 test_emit_bioasq.json'))
-d4 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system2_output_b3\\v3 test_emit_bioasq.json'))
+d1 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system1_output_b{}\\v3 test_data_for_revision.json'.format(b)))
+d2 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system2_output_b{}\\v3 test_data_for_revision.json'.format(b)))
+
+d3 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system1_output_b{}\\v3 test_emit_bioasq.json'.format(b)))
+d4 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system2_output_b{}\\v3 test_emit_bioasq.json'.format(b)))
+
+opath = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\batch3_submit_files\\ir_results\\system4_output_b{}\\ensembe_sys1_and sys2.json'.format(b)
 
 pmidtext_to_other   = {}
 qid2qtext           = {}
@@ -103,7 +107,7 @@ for qid, doc_dat in tqdm(combined_data_docs.items()):
     }
     extract_data['questions'].append(quest_data)
 
-opath = 'ensembe_sys1_and sys2.json'
+
 with open(opath, 'w') as f:
     f.write(json.dumps(extract_data, indent=4, sort_keys=False))
     f.close()
