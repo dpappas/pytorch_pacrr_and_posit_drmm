@@ -6,13 +6,13 @@ import  torch.nn.functional     as F
 import  numpy                   as np
 from    nltk.tokenize           import sent_tokenize
 from    tqdm                    import tqdm
-from    sklearn.preprocessing   import LabelEncoder
-from    sklearn.preprocessing   import OneHotEncoder
 from    difflib                 import SequenceMatcher
 from    pprint                  import pprint
 import  torch.nn                as nn
 import  torch.optim             as optim
 import  torch.autograd          as autograd
+from    sklearn.preprocessing   import LabelEncoder
+from    sklearn.preprocessing   import OneHotEncoder
 from    pytorch_pretrained_bert.tokenization    import BertTokenizer
 from    pytorch_pretrained_bert.modeling        import BertForSequenceClassification
 from    pytorch_pretrained_bert.file_utils      import PYTORCH_PRETRAINED_BERT_CACHE
@@ -1503,7 +1503,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 #####################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/media/dpappas/dpappas_data/models_out/'
+# odd                 = '/media/dpappas/dpappas_data/models_out/'
+odd                 = '/home/dpappas/dpappas_data/models_out/'
 #####################
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
@@ -1637,5 +1638,25 @@ CUDA_VISIBLE_DEVICES=1 python3.6 train_bert_jpdrmm.py 3
 CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py 4
 
 
+
+'''
+
+'''
+sudo apt-get install --upgrade python3.6
+sudo apt-get install --upgrade python3-dev libffi-dev libssl-dev
+sudo apt-get install --upgrade libssl-dev libncurses5-dev libsqlite3-dev libreadline-dev libtk8.5 libgdm-dev libdb4o-cil-dev libpcap-dev
+virtualenv --python=/usr/bin/python3.6 bioasq_2020
+cd bioasq_2020
+source ./bin/activate
+pip install tqdm
+pip install -Iv scikit-learn==0.21.3
+pip install nltk
+pip install -Iv torch==1.2.0
+pip install pytorch-pretrained-bert
+
+python
+import nltk
+nltk.download('stopwords')
+quit()
 
 '''
