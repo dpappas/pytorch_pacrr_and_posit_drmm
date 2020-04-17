@@ -23,7 +23,8 @@ matcher = Matcher(nlp.vocab)
 
 age_words = [
     "boy", "girl", "man", "woman", 'men', 'women', 'girls', 'boys', 'baby', 'babies', 'infant',
-    'male', 'female', 'males', 'females', 'adult', 'adults', 'children', 'child', 'newborn',
+    'male', 'female', 'males', 'females', 'adult', 'adults', 'children', 'child', 'newborn', 'neonates',
+    'toddlers', 'neonate', 'toddler'
 ]
 
 age_pattern_1 = [  # this is simple. It will match everything
@@ -231,4 +232,8 @@ def do_for_doc(all_text):
                 all_phrases.extend(kept_phrases)
                 # do_for_sent_1(sent)
     return all_phrases
+
+text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
+pprint(do_for_sent(text))
+
 

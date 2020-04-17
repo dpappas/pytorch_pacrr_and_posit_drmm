@@ -15,6 +15,7 @@ from flask import request
 from flask import jsonify
 from collections import OrderedDict
 from pprint import pprint
+from rule_matching import do_for_sent
 
 white           = Color("white")
 yellow_colors   = list(white.range_to(Color("yellow"), 101))
@@ -155,7 +156,7 @@ def just_the_json():
                         sent_score = 1
                     if(sent_score<0.45):
                         sent_score = 0.0
-                    doc_datum['sentences'].append((sent_score, sent_text))
+                    doc_datum['sentences'].append((sent_score, sent_text, do_for_sent(sent_text)))
                 ret['results']['docs'].append(doc_datum)
             return jsonify(ret)
         else:
