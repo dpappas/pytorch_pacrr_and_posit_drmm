@@ -217,15 +217,18 @@ def do_for_sent_1(sent):
         # print([(token.text, token.lemma_, token.pos_) for token in doc])
     # print(sent)
 
-def do_for_text(all_text):
+def do_for_doc(all_text):
     segments    = [all_text.split('------------------------------')[0].strip()]
     segments    = segments + [t.strip() for t in all_text.split('------------------------------')[1].strip().split('\n')]
+    all_phrases = []
     for segment in segments:
         for sent in get_sents(segment):
             sent = re.sub(r'\([^()]*\)', '', sent)
             sent = re.sub(r'__.*?__', '', sent)
             sent = re.sub(r'\s+', ' ', sent)
             if(len(sent)>10):
-                do_for_sent(sent)
+                kept_phrases = do_for_sent(sent)
+                all_phrases.extend(kept_phrases)
                 # do_for_sent_1(sent)
+    return all_phrases
 
