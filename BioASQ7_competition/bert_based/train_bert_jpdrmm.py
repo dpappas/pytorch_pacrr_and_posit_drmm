@@ -1521,10 +1521,12 @@ lr                  = 0.01
 b_size              = 32
 max_epoch           = 4
 #####################
+import sys
+run                 = int(sys.argv[1])
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
-frozen_or_unfrozen  = 'unfrozen'
-last_layers         = 4
+frozen_or_unfrozen  = sys.argv[2]       # 'unfrozen'
+last_layers         = int(sys.argv[3])  # 4
 lr2                 = 2e-5
 #####################
 
@@ -1532,9 +1534,7 @@ lr2                 = 2e-5
     dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
 )
 
-import sys
 hdlr = None
-run = int(sys.argv[1])
 my_seed = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
@@ -1630,6 +1630,8 @@ pprint(d['abs_bert_original_tokens'])
 ['[CLS]', 'new', 'ins', '##om', '##nia', 'the', '##ra', '##pies', 'will', 'most', 'likely', 'move', 'away', 'from', 'ga', '##ba', '##ar', 'receptors', 'modulation', 'to', 'more', 'subtle', 'neurological', 'pathways', 'that', 'regulate', 'the', 'sleep', '-', 'wake', 'cycle', '[SEP]']
 ]
 
+python train_bert_jpdrmm.py 0 unfrozen 12
+python train_bert_jpdrmm.py 0 frozen -1
 
 CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py 0
 CUDA_VISIBLE_DEVICES=1 python3.6 train_bert_jpdrmm.py 1
@@ -1651,7 +1653,8 @@ source ./bin/activate
 pip install tqdm
 pip install -Iv scikit-learn==0.21.3
 pip install nltk
-pip install -Iv torch==1.2.0
+/usr/local/cuda/bin/nvcc --version
+pip install torch===1.2.0 torchvision===0.4.0 -f https://download.pytorch.org/whl/torch_stable.html
 pip install pytorch-pretrained-bert
 
 python
