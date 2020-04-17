@@ -178,16 +178,17 @@ def do_for_sent(sent):
             flag = True
             # print(sent)
             # print(all_ncs)
+    kept_phrases_2 = []
     if(flag):
-        kept_phrases_2 = []
         kp_concat = ' || '.join(kept_phrases)
         for phrase in kept_phrases:
             if(kp_concat.count(phrase) ==1):
                 kept_phrases_2.append(phrase)
-        print('\n'.join(kept_phrases_2))
-        # print(all_ncs)
-        # print([(token.text, token.lemma_, token.pos_) for token in doc])
+        # print('\n'.join(kept_phrases_2))
+        # # print(all_ncs)
+        # # print([(token.text, token.lemma_, token.pos_) for token in doc])
     # print(sent)
+    return kept_phrases_2
 
 def do_for_sent_1(sent):
     doc = nlp(sent)
