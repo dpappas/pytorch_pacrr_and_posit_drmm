@@ -144,8 +144,10 @@ def get_entities_and_abbrev(text):
 # print([(token.text, token.lemma_, token.pos_) for token in doc])
 # exit()
 
-def do_for_sent(sent):
+def do_for_sent(sent, printout=False):
     doc = nlp(sent)
+    if (printout):
+        print([(token.text, token.lemma_, token.pos_) for token in doc])
     # pprint(ent._.umls_ents for ent in doc.ents)
     # exit()
     # print(50 * '-')
@@ -187,7 +189,6 @@ def do_for_sent(sent):
                 kept_phrases_2.append(phrase)
         # print('\n'.join(kept_phrases_2))
         # # print(all_ncs)
-        # # print([(token.text, token.lemma_, token.pos_) for token in doc])
     # print(sent)
     return kept_phrases_2
 
@@ -233,7 +234,8 @@ def do_for_doc(all_text):
                 # do_for_sent_1(sent)
     return all_phrases
 
-text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
-pprint(do_for_sent(text))
+if __name__ == '__main__':
+    text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
+    pprint(do_for_sent(text, printout=True))
 
 
