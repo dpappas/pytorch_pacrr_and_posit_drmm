@@ -148,9 +148,6 @@ def do_for_sent(sent, printout=False):
     doc = nlp(sent)
     if (printout):
         print([(token.text, token.lemma_, token.pos_) for token in doc])
-    # pprint(ent._.umls_ents for ent in doc.ents)
-    # exit()
-    # print(50 * '-')
     matches = matcher(doc)
     flag    = False
     all_ncs = set([nc.text.lower() for nc in doc.noun_chunks])
@@ -160,36 +157,14 @@ def do_for_sent(sent, printout=False):
                 all_ncs.add(tok.text.lower())
     kept_phrases = []
     for match_id, start, end in matches:
-        string_id = nlp.vocab.strings[match_id]  # Get string representation
-        span = doc[start:end]  # The matched span
-        #################################################
-        # print(match_id, string_id, start, end, span.text)
-        # #################################################
-        # pprint([(token.text, token.lemma_, token.pos_) for token in span])
-        # pprint(list(span.noun_chunks))
-        if(
-            any(span.text.lower().startswith(nc) for nc in all_ncs)     # starts with noun chunk
-            and
-            any(span.text.lower().endswith(nc) for nc in all_ncs)       # ends with noun chunk
-            and
-            sum(int(nc in span.text.lower()) for nc in all_ncs) < 6     # has up to k noun chunks
-            and
-            len(span) <= 12                                             # has length up to k
-        ):
-            # print(string_id, span.text)
-            kept_phrases.append(span.text)
-            flag = True
-            # print(sent)
-            # print(all_ncs)
+        string_id   = nlp.vocab.strings[match_id]  # Get string representation
+        span        = doc[start:end]  # The matched span
+        kept_phrases.append(span.text)
     kept_phrases_2 = []
-    if(flag):
-        kp_concat = ' || '.join(kept_phrases)
-        for phrase in kept_phrases:
-            if(kp_concat.count(phrase) ==1):
-                kept_phrases_2.append(phrase)
-        # print('\n'.join(kept_phrases_2))
-        # # print(all_ncs)
-    # print(sent)
+    kp_concat = ' || '.join(kept_phrases)
+    for phrase in kept_phrases:
+        if(kp_concat.count(phrase) ==1):
+            kept_phrases_2.append(phrase)
     return kept_phrases_2
 
 def do_for_sent_1(sent):
