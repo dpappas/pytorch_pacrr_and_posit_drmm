@@ -152,7 +152,7 @@ def do_for_sent(sent, printout=False):
     # exit()
     # print(50 * '-')
     matches = matcher(doc)
-    flag = False
+    flag    = False
     all_ncs = set([nc.text.lower() for nc in doc.noun_chunks])
     for tok in doc:
         if tok.pos_ in ['NOUN', 'PROPN']:
