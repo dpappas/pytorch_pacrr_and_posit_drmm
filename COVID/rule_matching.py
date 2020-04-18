@@ -95,7 +95,7 @@ age_pattern_9 = [
     {"OP": "?", "LOWER": "old"},
 ]
 age_pattern_10 = [
-    {"LOWER": {"IN": ["patient", "patients"]}},
+    {"LOWER": {"IN": ["patient", "patients"]}, "POS": {"IN":["NOUN"]}},
     {"LOWER": {"IN": ["aged"]}},
     {"POS": {"IN": ["NUM"]}},
     {"OP": "?", "LOWER": {"IN": ["month", 'months', 'year', 'years']}},
