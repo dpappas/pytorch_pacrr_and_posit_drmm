@@ -257,6 +257,7 @@ if __name__ == '__main__':
         'To describe the late results of the placement of skin graft over conjunctiva-Müller muscle complex in 3 patients with ablepharon-macrostomia syndrome (AMS) and to review the procedures used to manage the upper eyelids in AMS.',
         'There are unique considerations for many adult patients with gliomas who are vulnerable to the novel coronavirus due to older age and immunosuppression.',
         'As patients with terminal illnesses, they present ethical challenges for centers that may need to ration access to ventilator care due to insufficient critical care capacity.',
+        'This study focused on determining risks from stereotactic radiotherapy using flattening filter-free (FFF) beams for patients with cardiac implantable electronic device (CIEDs).',
     ]
     for text in texts:
         pprint(do_for_sent(text, printout=True))
