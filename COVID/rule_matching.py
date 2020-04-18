@@ -86,6 +86,15 @@ age_pattern_8 = [  # this is simple. It will match everything
     {"LOWER": "years"},
     {"LOWER": "old"},
 ]
+age_pattern_9 = [
+    {"LOWER": {"IN": ["age", "ages"]}},
+    {"POS": {"IN": ["NUM"]}},
+    {"LOWER": {"IN": ["to"]}},
+    {"POS": {"IN": ["NUM"]}},
+    {"LOWER":{"IN": ["years", 'year']}},
+    {"OP": "?", "LOWER": "old"},
+]
+# ages 6 to 25 years
 
 matcher.add("AGE", None, age_pattern_1)
 matcher.add("AGE", None, age_pattern_2)
@@ -95,6 +104,7 @@ matcher.add("AGE", None, age_pattern_5)
 matcher.add("AGE", None, age_pattern_6)
 matcher.add("AGE", None, age_pattern_7)
 matcher.add("AGE", None, age_pattern_8)
+matcher.add("AGE", None, age_pattern_9)
 
 patient_pattern_1 = [  # this is simple. It will match everything
     {"POS": {"IN":["NUM"]}},
