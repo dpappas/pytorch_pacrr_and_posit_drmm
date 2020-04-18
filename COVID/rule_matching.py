@@ -29,7 +29,7 @@ age_words     = [
 
 age_pattern_1 = [  # this is simple. It will match everything
     {"OP": "?", "LOWER": {"IN":["young", 'elderly', 'newborn']}},
-    {"LOWER": {"IN":age_words}}
+    {"LOWER": {"IN":age_words}, "POS": {"IN":["NOUN"]}}
 ]
 age_pattern_2 = [  # this is simple. It will match everything
     {"OP": "*", "LOWER": {"IN":["over", "under"]}},
