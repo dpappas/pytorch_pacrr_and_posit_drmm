@@ -95,7 +95,7 @@ age_pattern_9 = [
     {"OP": "?", "LOWER": "old"},
 ]
 age_pattern_10 = [
-    {"LOWER": {"IN": ["patient", "patients"]}, "POS": {"IN":["NOUN"]}},
+    {"LOWER": {"IN": ["patient", "patients", 'probands', 'proband']}, "POS": {"IN":["NOUN"]}},
     {"LOWER": {"IN": ["aged"]}},
     {"POS": {"IN": ["NUM"]}},
     {"OP": "?", "LOWER": {"IN": ["month", 'months', 'year', 'years']}},
@@ -136,6 +136,20 @@ patient_pattern_3 = [  # this is simple. It will match everything
 matcher.add("PATIENTS NO", None, patient_pattern_1)
 matcher.add("PATIENTS NO", None, patient_pattern_2)
 matcher.add("PATIENTS NO", None, patient_pattern_3)
+
+cond_patt_1 = [  # this is simple. It will match everything
+    {"LOWER": {"IN": age_words+['patient', 'patients']}},
+    {"LOWER": {"IN": ['with']}},
+    {"OP": "?", "POS": {"IN":["ADJ"]}},
+    {"OP": "?", "POS": {"IN":["ADJ"]}},
+    {"OP": "?", "POS": {"IN":["ADJ"]}},
+    {"OP": "?", "POS": {"IN":["ADJ"]}},
+    {"OP": "?", "POS": {"IN":["NOUN"]}},
+    {"OP": "?", "POS": {"IN":["PROPN"]}},
+    {"OP": "?", "POS": {"IN":["NOUN"]}}
+]
+
+matcher.add("CONDITION", None, cond_patt_1)
 
 # pattern2 = [
 #     # {"POS": "ADJ", "OP": "*"},
@@ -232,7 +246,9 @@ def do_for_doc(all_text):
 
 if __name__ == '__main__':
     # text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
-    text = 'It can be difficult for adolescents with inflammatory bowel disease (IBD) to make the transition from paediatric to adult care.'
+    # text = 'It can be difficult for adolescents with inflammatory bowel disease (IBD) to make the transition from paediatric to adult care.'
+    # text = 'Association between miR-200c and the survival of patients with stage I epithelial ovarian cancer: a retrospective study of two independent tumour tissue collections.'
+    text = 'To compare the efficiency of releasable scleral buckling (RSB) and pars plana vitrectomy (PPV) in the treatment of phakic patients with primary rhegmatogenous retinal detachment.'
     pprint(do_for_sent(text, printout=True))
 
 
