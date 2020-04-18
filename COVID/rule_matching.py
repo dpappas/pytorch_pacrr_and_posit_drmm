@@ -29,7 +29,8 @@ age_words     = [
 
 age_pattern_1 = [  # this is simple. It will match everything
     {"OP": "?", "LOWER": {"IN":["young", 'elderly', 'newborn']}},
-    {"LOWER": {"IN":age_words}, "POS": {"IN":["NOUN"]}}
+    {"LOWER": {"IN":age_words}, "POS": {"IN":["NOUN"]}},
+    {"OP": "?", "LOWER": {"IN":['patient', 'patients']}}
 ]
 age_pattern_2 = [  # this is simple. It will match everything
     {"OP": "*", "LOWER": {"IN":["over", "under"]}},
@@ -246,12 +247,19 @@ def do_for_doc(all_text):
     return all_phrases
 
 if __name__ == '__main__':
-    text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
+    # text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
     # text = 'It can be difficult for adolescents with inflammatory bowel disease (IBD) to make the transition from paediatric to adult care.'
     # text = 'Association between miR-200c and the survival of patients with stage I epithelial ovarian cancer: a retrospective study of two independent tumour tissue collections.'
     # text = 'To compare the efficiency of releasable scleral buckling (RSB) and pars plana vitrectomy (PPV) in the treatment of phakic patients with primary rhegmatogenous retinal detachment.'
     # text = 'To evaluate the changes in activity of biomarkers of Mu[Combining Diaeresis]ller cells (MC) in aqueous humor of patients with diabetic macular edema after subthreshold micropulse laser, over 1 year.'
     # text = 'Rates of Adverse IBD-Related Outcomes for Patients With IBD and Concomitant Prostate Cancer Treated With Radiation Therapy.'
-    pprint(do_for_sent(text, printout=True))
+    # text = 'External and middle ear resonance frequency of fourty patients with tympanoplasty and mastoidectomy.'
+    # text = 'To describe the late results of the placement of skin graft over conjunctiva-Müller muscle complex in 3 patients with ablepharon-macrostomia syndrome (AMS) and to review the procedures used to manage the upper eyelids in AMS.'
+    text = '''
+    There are unique considerations for many adult patients with gliomas who are vulnerable to the novel coronavirus 
+    due to older age and immunosuppression. As patients with terminal illnesses, they present ethical challenges for 
+    centers that may need to ration access to ventilator care due to insufficient critical care capacity.
+    '''
+    pprint(do_for_sent(text.replace('\n', ' '), printout=True))
 
 
