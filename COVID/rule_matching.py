@@ -146,7 +146,7 @@ cond_patt_1 = [  # this is simple. It will match everything
 matcher.add("CONDITION", None, cond_patt_1)
 
 cond_patt_2 = [  # this is simple. It will match everything
-    {"LOWER": {"IN": age_words+['patient', 'patients']}},
+    {"OP": "+", "LOWER": {"IN": age_words+['patient', 'patients']}},
     {"LOWER": {"IN": ['with']}},
     {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}}
 ]
@@ -255,11 +255,8 @@ if __name__ == '__main__':
     # text = 'Rates of Adverse IBD-Related Outcomes for Patients With IBD and Concomitant Prostate Cancer Treated With Radiation Therapy.'
     # text = 'External and middle ear resonance frequency of fourty patients with tympanoplasty and mastoidectomy.'
     # text = 'To describe the late results of the placement of skin graft over conjunctiva-Müller muscle complex in 3 patients with ablepharon-macrostomia syndrome (AMS) and to review the procedures used to manage the upper eyelids in AMS.'
-    text = '''
-    There are unique considerations for many adult patients with gliomas who are vulnerable to the novel coronavirus 
-    due to older age and immunosuppression. As patients with terminal illnesses, they present ethical challenges for 
-    centers that may need to ration access to ventilator care due to insufficient critical care capacity.
-    '''
+    text = 'There are unique considerations for many adult patients with gliomas who are vulnerable to the novel coronavirus due to older age and immunosuppression.'
+    # text = 'As patients with terminal illnesses, they present ethical challenges for centers that may need to ration access to ventilator care due to insufficient critical care capacity.'
     pprint(do_for_sent(text.replace('\n', ' '), printout=True))
 
 
