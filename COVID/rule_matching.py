@@ -21,14 +21,14 @@ nlp.add_pipe(abbreviation_pipe)
 
 matcher = Matcher(nlp.vocab)
 
-age_words = [
+age_words     = [
     "boy", "girl", "man", "woman", 'men', 'women', 'girls', 'boys', 'baby', 'babies', 'infant',
     'male', 'female', 'males', 'females', 'adult', 'adults', 'children', 'child', 'newborn', 'neonates',
-    'toddlers', 'neonate', 'toddler'
+    'toddlers', 'neonate', 'toddler', 'adolescent', 'adolescents'
 ]
 
 age_pattern_1 = [  # this is simple. It will match everything
-    {"LOWER": {"IN":["young", 'elderly', 'newborn']}},
+    {"OP": "?", "LOWER": {"IN":["young", 'elderly', 'newborn']}},
     {"LOWER": {"IN":age_words}}
 ]
 age_pattern_2 = [  # this is simple. It will match everything
