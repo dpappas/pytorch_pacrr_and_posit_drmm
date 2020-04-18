@@ -68,10 +68,10 @@ age_pattern_6 = [  # this is simple. It will match everything
     {"LOWER": {"IN":["year", 'years']}},
     {"OP": "*", "LOWER": "-"},
     {"LOWER": "old"},
-    {"LOWER": {"IN":age_words}},
+    {"LOWER": {"IN":age_words}, "POS": {"IN":["NOUN"]}},
 ]
 age_pattern_7 = [  # this is simple. It will match everything
-    {"LOWER": {"IN": age_words}},
+    {"LOWER": {"IN": age_words}, "POS": {"IN":["NOUN"]}},
     {"LOWER": {"IN":["between"]}},
     {"POS": {"IN": ["NUM"]}},
     {"LOWER": {"IN": ["and"]}},
