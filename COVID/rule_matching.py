@@ -24,13 +24,12 @@ matcher = Matcher(nlp.vocab)
 age_words     = [
     "boy", "girl", "man", "woman", 'men', 'women', 'girls', 'boys', 'baby', 'babies', 'infant',
     'male', 'female', 'males', 'females', 'adult', 'adults', 'children', 'child', 'newborn', 'neonates',
-    'toddlers', 'neonate', 'toddler', 'adolescent', 'adolescents'
+    'toddlers', 'neonate', 'toddler', 'adolescent', 'adolescents', 'elderly', 'young'
 ]
 
 age_pattern_1 = [  # this is simple. It will match everything
-    {"OP": "?", "LOWER": {"IN":["young", 'elderly', 'newborn']}},
-    {"LOWER": {"IN":age_words}, "POS": {"IN":["NOUN"]}},
-    {"OP": "?", "LOWER": {"IN":['patient', 'patients']}}
+    {"OP": "+", "LOWER": {"IN": age_words}, "POS": {"IN": ["NOUN"]}},
+    {"OP": "?", "LOWER": {"IN": ['patient', 'patients']}}
 ]
 age_pattern_2 = [  # this is simple. It will match everything
     {"OP": "*", "LOWER": {"IN":["over", "under"]}},
