@@ -230,7 +230,8 @@ def do_for_doc(all_text):
     return all_phrases
 
 if __name__ == '__main__':
-    text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
+    # text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
+    text = 'It can be difficult for adolescents with inflammatory bowel disease (IBD) to make the transition from paediatric to adult care.'
     pprint(do_for_sent(text, printout=True))
 
 
