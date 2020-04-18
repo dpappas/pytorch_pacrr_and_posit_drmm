@@ -149,8 +149,9 @@ cond_patt_2 = [  # this is simple. It will match everything
     {"LOWER": {"IN": ['with']}},
     {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
     {"OP": "*", "LOWER": {"IN":["("]}},
-    {"OP": "*", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}}
+    {"OP": "*", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
     {"OP": "*", "LOWER": {"IN": [")"]}},
+    {"OP": "*", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
 ]
 
 matcher.add("CONDITION", None, cond_patt_2)
