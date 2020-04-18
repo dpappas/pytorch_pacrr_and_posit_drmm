@@ -140,7 +140,11 @@ matcher.add("PATIENTS NO", None, patient_pattern_3)
 cond_patt_1 = [  # this is simple. It will match everything
     {"LOWER": {"IN": ['symptom', 'symptoms']}},
     {"LOWER": {"IN": ['of']}},
-    {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}}
+    {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
+    {"OP": "*", "LOWER": {"IN":["("]}},
+    {"OP": "*", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
+    {"OP": "*", "LOWER": {"IN": [")"]}},
+    {"OP": "*", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
 ]
 matcher.add("CONDITION", None, cond_patt_1)
 
