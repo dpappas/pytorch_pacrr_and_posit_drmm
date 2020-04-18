@@ -115,6 +115,7 @@ matcher.add("AGE", None, age_pattern_6)
 matcher.add("AGE", None, age_pattern_7)
 matcher.add("AGE", None, age_pattern_8)
 matcher.add("AGE", None, age_pattern_9)
+matcher.add("AGE", None, age_pattern_10)
 
 patient_pattern_1 = [  # this is simple. It will match everything
     {"POS": {"IN":["NUM"]}},
