@@ -138,18 +138,19 @@ matcher.add("PATIENTS NO", None, patient_pattern_2)
 matcher.add("PATIENTS NO", None, patient_pattern_3)
 
 cond_patt_1 = [  # this is simple. It will match everything
+    {"LOWER": {"IN": ['symptom', 'symptoms']}},
+    {"LOWER": {"IN": ['of']}},
+    {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}}
+]
+matcher.add("CONDITION", None, cond_patt_1)
+
+cond_patt_2 = [  # this is simple. It will match everything
     {"LOWER": {"IN": age_words+['patient', 'patients']}},
     {"LOWER": {"IN": ['with']}},
-    {"OP": "?", "POS": {"IN":["ADJ"]}},
-    {"OP": "?", "POS": {"IN":["ADJ"]}},
-    {"OP": "?", "POS": {"IN":["ADJ"]}},
-    {"OP": "?", "POS": {"IN":["ADJ"]}},
-    {"OP": "?", "POS": {"IN":["NOUN"]}},
-    {"OP": "?", "POS": {"IN":["PROPN"]}},
-    {"OP": "?", "POS": {"IN":["NOUN"]}}
+    {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}}
 ]
 
-matcher.add("CONDITION", None, cond_patt_1)
+matcher.add("CONDITION", None, cond_patt_2)
 
 # pattern2 = [
 #     # {"POS": "ADJ", "OP": "*"},
@@ -245,10 +246,12 @@ def do_for_doc(all_text):
     return all_phrases
 
 if __name__ == '__main__':
-    # text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
+    text = "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache."
     # text = 'It can be difficult for adolescents with inflammatory bowel disease (IBD) to make the transition from paediatric to adult care.'
     # text = 'Association between miR-200c and the survival of patients with stage I epithelial ovarian cancer: a retrospective study of two independent tumour tissue collections.'
-    text = 'To compare the efficiency of releasable scleral buckling (RSB) and pars plana vitrectomy (PPV) in the treatment of phakic patients with primary rhegmatogenous retinal detachment.'
+    # text = 'To compare the efficiency of releasable scleral buckling (RSB) and pars plana vitrectomy (PPV) in the treatment of phakic patients with primary rhegmatogenous retinal detachment.'
+    # text = 'To evaluate the changes in activity of biomarkers of Mu[Combining Diaeresis]ller cells (MC) in aqueous humor of patients with diabetic macular edema after subthreshold micropulse laser, over 1 year.'
+    # text = 'Rates of Adverse IBD-Related Outcomes for Patients With IBD and Concomitant Prostate Cancer Treated With Radiation Therapy.'
     pprint(do_for_sent(text, printout=True))
 
 
