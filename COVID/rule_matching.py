@@ -94,7 +94,17 @@ age_pattern_9 = [
     {"LOWER":{"IN": ["years", 'year']}},
     {"OP": "?", "LOWER": "old"},
 ]
+age_pattern_10 = [
+    {"LOWER": {"IN": ["patient", "patients"]}},
+    {"LOWER": {"IN": ["aged"]}},
+    {"POS": {"IN": ["NUM"]}},
+    {"OP": "?", "LOWER": {"IN": ["month", 'months', 'year', 'years']}},
+    {"LOWER": {"IN": ["to"]}},
+    {"POS": {"IN": ["NUM"]}},
+    {"LOWER":{"IN": ["years", 'year', 'months']}}
+]
 # ages 6 to 25 years
+# patients aged 6 months to 18 years
 
 matcher.add("AGE", None, age_pattern_1)
 matcher.add("AGE", None, age_pattern_2)
