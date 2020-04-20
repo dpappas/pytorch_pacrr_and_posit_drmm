@@ -25,6 +25,7 @@ age_words     = [
     "boy", "girl", "man", "woman", 'men', 'women', 'girls', 'boys', 'baby', 'babies', 'infant', 'mother', 'father',
     'male', 'female', 'males', 'females', 'adult', 'adults', 'children', 'child', 'newborn', 'neonates', 'fathers',
     'toddlers', 'neonate', 'toddler', 'adolescent', 'adolescents', 'elderly', 'young', 'newborns', 'mothers',
+    'persons', 'person'
 ]
 
 age_pattern_1 = [  # this is simple. It will match everything
@@ -163,7 +164,9 @@ cond_patt_2 = [  # this is simple. It will match everything
 matcher.add("CONDITION", None, cond_patt_2)
 
 cond_patt_3 = [  # this is simple. It will match everything
+    {"OP": "!", "LOWER": {"IN": ['other']}},
     {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
+    {"OP": "!", "LOWER": {"IN": ['index']}},
     {"OP": "+", "LOWER": {"IN": age_words+['patient', 'patients']}}
 ]
 
@@ -285,6 +288,8 @@ if __name__ == '__main__':
         "In a previous study of MERS-CoV, there were 11 pregnant women [7] .",
         "Of 9 pregnant women, 4 (44%) had premature delivery [5] .",
         "In this systematic review, women affected by COVID-19 disease had higher rates of miscarriage, 326 preterm birth, preeclampsia, while the babies had higher rates of perinatal mortality (7-11%) and of 327 admission to NICU.",
+        "Most notably, the other two admitted patients were asymptomatic on admission to the hospital, presenting instead for obstetrically-indicated labor inductions; both of these patients became symptomatic post-partum, each requiring intensive care unit admission.",
+        "The current coronavirus disease 2019 (COVID-19) pneumonia pandemic, caused by the 68 severe acute respiratory syndrome 2 (SARS-CoV-2) virus, is spreading globally at an 69 accelerated rate, with a basic reproduction number (R0) of 2 -2.5, indicating that 2 -3 70 persons will be infected from an index patient.",
     ]
     for text in texts:
         pprint(do_for_sent(text, printout=True))
