@@ -212,13 +212,14 @@ def do_for_sent(sent, printout=False):
         kept_phrases.append(span.text)
         if(printout):
             print(string_id, span.text)
-    # kept_phrases_2 = []
-    # kp_concat = ' || '.join(kept_phrases)
-    # for phrase in kept_phrases:
-    #     if(kp_concat.count(phrase) ==1):
-    #         kept_phrases_2.append(phrase)
-    # return kept_phrases_2
-    return set(kept_phrases)
+    kept_phrases = set(kept_phrases)
+    kept_phrases_2 = []
+    kp_concat = ' || '.join(kept_phrases)
+    for phrase in kept_phrases:
+        if(kp_concat.count(phrase) ==1):
+            kept_phrases_2.append(phrase)
+    return kept_phrases_2
+    # return set(kept_phrases)
 
 def do_for_sent_1(sent):
     doc = nlp(sent)
