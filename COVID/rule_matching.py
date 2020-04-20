@@ -212,6 +212,8 @@ def do_for_sent(sent, printout=False):
     kept_phrases = []
     for match_id, start, end in matches:
         string_id   = nlp.vocab.strings[match_id]  # Get string representation
+        if(doc[start].text.lower() in ['other', 'the']):
+            start += 1
         span        = doc[start:end]  # The matched span
         kept_phrases.append(span.text)
         # if(printout):
