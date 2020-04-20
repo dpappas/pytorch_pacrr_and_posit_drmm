@@ -165,7 +165,9 @@ cond_patt_2 = [  # this is simple. It will match everything
 matcher.add("CONDITION", None, cond_patt_2)
 
 cond_patt_3 = [  # this is simple. It will match everything
+    {"OP": "!","LOWER": {"IN":['extent']}},
     {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
+    {"OP": "!","LOWER": {"IN":['extent']}},
     {"OP": "+", "LOWER": {"IN": age_words+['patient', 'patients']}}
 ]
 
