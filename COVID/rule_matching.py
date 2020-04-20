@@ -119,9 +119,7 @@ matcher.add("AGE", None, age_pattern_10)
 
 patient_pattern_1 = [  # this is simple. It will match everything
     {"POS": {"IN":["NUM"]}},
-    {"OP": "!","LOWER": {"IN":['extent']}},
     {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
-    {"OP": "!","LOWER": {"IN":['extent']}},
     {"LOWER": {"IN":['patient', 'patients']}},
 ]
 patient_pattern_2 = [  # this is simple. It will match everything
@@ -165,9 +163,7 @@ cond_patt_2 = [  # this is simple. It will match everything
 matcher.add("CONDITION", None, cond_patt_2)
 
 cond_patt_3 = [  # this is simple. It will match everything
-    {"OP": "!","LOWER": {"IN":['extent']}},
     {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
-    {"OP": "!","LOWER": {"IN":['extent']}},
     {"OP": "+", "LOWER": {"IN": age_words+['patient', 'patients']}}
 ]
 
