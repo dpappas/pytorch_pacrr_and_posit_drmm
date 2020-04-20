@@ -210,8 +210,8 @@ def do_for_sent(sent, printout=False):
         string_id   = nlp.vocab.strings[match_id]  # Get string representation
         span        = doc[start:end]  # The matched span
         kept_phrases.append(span.text)
-        if(printout):
-            print(string_id, span.text)
+        # if(printout):
+        #     print(string_id, span.text)
     kept_phrases = set(kept_phrases)
     kept_phrases_2 = []
     kp_concat = ' || '.join(kept_phrases)
