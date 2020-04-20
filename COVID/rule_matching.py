@@ -119,7 +119,9 @@ matcher.add("AGE", None, age_pattern_10)
 
 patient_pattern_1 = [  # this is simple. It will match everything
     {"POS": {"IN":["NUM"]}},
+    {"OP": "!","LOWER": {"IN":['extent']}},
     {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
+    {"OP": "!","LOWER": {"IN":['extent']}},
     {"LOWER": {"IN":['patient', 'patients']}},
 ]
 patient_pattern_2 = [  # this is simple. It will match everything
