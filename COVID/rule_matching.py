@@ -272,9 +272,10 @@ if __name__ == '__main__':
         # 'There are unique considerations for many adult patients with gliomas who are vulnerable to the novel coronavirus due to older age and immunosuppression.',
         # 'As patients with terminal illnesses, they present ethical challenges for centers that may need to ration access to ventilator care due to insufficient critical care capacity.',
         # 'This study focused on determining risks from stereotactic radiotherapy using flattening filter-free (FFF) beams for patients with cardiac implantable electronic device (CIEDs).',
-        'This research aims to clarify to what extent dengue patients were managed in accordance with the guidelines in Japan.',
-        'Pre-death grief in caregivers of Alzheimer patients.',
-        'This study examined memory and executive functions of switching and distributing attention in 25 Alzheimer patients (AD), 9 patients with frontal variant of frontotemporal dementia (fvFTD), and 25 healthy older people, as a control group, in three tasks: verbal digit span, Brown-Peterson (B-P) task, and dual-task.'
+        # 'This research aims to clarify to what extent dengue patients were managed in accordance with the guidelines in Japan.',
+        # 'Pre-death grief in caregivers of Alzheimer patients.',
+        'This study examined memory and executive functions of switching and distributing attention in 25 Alzheimer patients (AD), 9 patients with frontal variant of frontotemporal dementia (fvFTD), and 25 healthy older people, as a control group, in three tasks: verbal digit span, Brown-Peterson (B-P) task, and dual-task.',
+        'Similarly, by now, there have been over 60 cases of pregnant women with confirmed COVID-19 in China and the vast majority of these women have had mild to moderate pneumonia.',
     ]
     for text in texts:
         pprint(do_for_sent(text, printout=True))
