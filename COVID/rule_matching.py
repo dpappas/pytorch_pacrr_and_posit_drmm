@@ -123,8 +123,8 @@ patient_pattern_1 = [  # this is simple. It will match everything
     {"LOWER": {"IN":['patient', 'patients']}},
 ]
 patient_pattern_2 = [  # this is simple. It will match everything
-    {"OP": "?", "POS": {"IN":["NUM"]}},
-    {"LOWER": {"IN":['pregnant']}},
+    {"OP": "+", "POS": {"IN":["NUM"]}},
+    {"LOWER": {"IN": ['pregnant']}},
     {"LOWER": {"IN": ['woman', 'women']}},
 ]
 patient_pattern_3 = [  # this is simple. It will match everything
@@ -200,7 +200,6 @@ def do_for_sent(sent, printout=False):
     if (printout):
         print([(token.text, token.lemma_, token.pos_) for token in doc])
     matches = matcher(doc)
-    flag    = False
     all_ncs = set([nc.text.lower() for nc in doc.noun_chunks])
     for tok in doc:
         if tok.pos_ in ['NOUN', 'PROPN']:
@@ -211,12 +210,15 @@ def do_for_sent(sent, printout=False):
         string_id   = nlp.vocab.strings[match_id]  # Get string representation
         span        = doc[start:end]  # The matched span
         kept_phrases.append(span.text)
-    kept_phrases_2 = []
-    kp_concat = ' || '.join(kept_phrases)
-    for phrase in kept_phrases:
-        if(kp_concat.count(phrase) ==1):
-            kept_phrases_2.append(phrase)
-    return kept_phrases_2
+        if(printout):
+            print(string_id, span.text)
+    # kept_phrases_2 = []
+    # kp_concat = ' || '.join(kept_phrases)
+    # for phrase in kept_phrases:
+    #     if(kp_concat.count(phrase) ==1):
+    #         kept_phrases_2.append(phrase)
+    # return kept_phrases_2
+    return set(kept_phrases)
 
 def do_for_sent_1(sent):
     doc = nlp(sent)
@@ -277,6 +279,8 @@ if __name__ == '__main__':
         # 'Pre-death grief in caregivers of Alzheimer patients.',
         'This study examined memory and executive functions of switching and distributing attention in 25 Alzheimer patients (AD), 9 patients with frontal variant of frontotemporal dementia (fvFTD), and 25 healthy older people, as a control group, in three tasks: verbal digit span, Brown-Peterson (B-P) task, and dual-task.',
         'Similarly, by now, there have been over 60 cases of pregnant women with confirmed COVID-19 in China and the vast majority of these women have had mild to moderate pneumonia.',
+        "In a previous study of MERS-CoV, there were 11 pregnant women [7] .",
+        "Of 9 pregnant women, 4 (44%) had premature delivery [5] .",
     ]
     for text in texts:
         pprint(do_for_sent(text, printout=True))
