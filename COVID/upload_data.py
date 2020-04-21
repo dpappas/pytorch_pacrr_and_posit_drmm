@@ -49,7 +49,8 @@ bert_model      = BertModel.from_pretrained(scibert_dir,  output_hidden_states=F
 # zip_path    = '/home/dpappas/db_entries.zip'
 # zip_path = '/home/dpappas/COVID/data/28_03_2020/db_entries.zip'
 # zip_path = '/home/dpappas/COVID/data/01_04_2020/db_new_entries.zip'
-zip_path = '/home/dpappas/COVID/data/12_04_2020/db_new_entries.zip'
+# zip_path = '/home/dpappas/COVID/data/12_04_2020/db_new_entries.zip'
+zip_path = '/home/dpappas/COVID/data/21_04_2020/db_new_entries.zip'
 archive     = zipfile.ZipFile(zip_path, 'r')
 d           = json.loads(archive.read('db_new_entries.json'))
 
