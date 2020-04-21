@@ -65,12 +65,12 @@ actions     = []
 b_size      = 200
 for item in tqdm(d[fromm:too]):
     if(len(item['date'])==0):
-        item['date'] = None
+        item['date']        = None
     else:
         try:
-            item['date'] = parser.parse(item['date']).strftime('%Y-%m-%d')
+            item['date']    = parser.parse(item['date']).strftime('%Y-%m-%d')
         except:
-            item['date'] = None
+            item['date']    = None
     # hash_object     = hashlib.md5(item['joint_text'].encode()).hexdigest()
     idd                     = '{}_{}_{}_{}'.format(item['pmid'], item['pmcid'], item['doi'], item['joint_text'][-50:])
     vec                     = encode_sent_with_bert(item['joint_text'].replace('\n------------------------------', ''), max_len=512)
