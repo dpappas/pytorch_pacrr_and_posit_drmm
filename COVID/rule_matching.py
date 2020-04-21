@@ -146,8 +146,6 @@ cond_patt_1 = [  # this is simple. It will match everything
     {"OP": "*", "LOWER": {"IN": [")"]}},
     {"OP": "*", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
 ]
-matcher.add("CONDITION", None, cond_patt_1)
-
 cond_patt_2 = [  # this is simple. It will match everything
     {"OP": "?", "POS": {"IN":["NUM"]}},
     {"OP": "?", "LOWER": {"IN": ['pregnant']}},
@@ -161,15 +159,15 @@ cond_patt_2 = [  # this is simple. It will match everything
     {"OP": "*", "LOWER": {"IN": [")"]}},
     {"OP": "*", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM", "ADV"]}},
 ]
-
-matcher.add("CONDITION", None, cond_patt_2)
-
 cond_patt_3 = [  # this is simple. It will match everything
     {"OP": "+", "POS": {"IN":["ADJ", "PROPN", "NOUN", "CCONJ", "NUM"]}},
     {"OP": "+", "LOWER": {"IN": age_words+['patient', 'patients']}}
 ]
 
+matcher.add("CONDITION", None, cond_patt_1)
+matcher.add("CONDITION", None, cond_patt_2)
 matcher.add("CONDITION", None, cond_patt_3)
+
 
 # pattern2 = [
 #     # {"POS": "ADJ", "OP": "*"},
