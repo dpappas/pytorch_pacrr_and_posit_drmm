@@ -37,7 +37,7 @@ for topic in tqdm(soup.find_all('topic')):
     aggregated_results = sorted(aggregated_results.items(), key=lambda x: x[1], reverse=True)[:1000]
     ######################################################################################################
     for rank, (docid,score)  in enumerate(aggregated_results):
-        print('{} {} {} {} {} {}'.format(topicid, 'Q0', docid, rank, score, run_tag))
+        fp.write('{} {} {} {} {} {}\n'.format(topicid, 'Q0', docid, rank, score, run_tag))
 
 fp.close()
 
