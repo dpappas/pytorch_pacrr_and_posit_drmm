@@ -270,21 +270,21 @@ def do_for_doc(all_text):
 
 if __name__ == '__main__':
     texts = [
-        # "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache.",
-        # 'It can be difficult for adolescents with inflammatory bowel disease (IBD) to make the transition from paediatric to adult care.',
-        # 'Association between miR-200c and the survival of patients with stage I epithelial ovarian cancer: a retrospective study of two independent tumour tissue collections.',
-        # 'To compare the efficiency of releasable scleral buckling (RSB) and pars plana vitrectomy (PPV) in the treatment of phakic patients with primary rhegmatogenous retinal detachment.',
-        # 'To evaluate the changes in activity of biomarkers of Mu[Combining Diaeresis]ller cells (MC) in aqueous humor of patients with diabetic macular edema after subthreshold micropulse laser, over 1 year.',
-        # 'Rates of Adverse IBD-Related Outcomes for Patients With IBD and Concomitant Prostate Cancer Treated With Radiation Therapy.',
-        # 'External and middle ear resonance frequency of fourty patients with tympanoplasty and mastoidectomy.',
-        # 'To describe the late results of the placement of skin graft over conjunctiva-Müller muscle complex in 3 patients with ablepharon-macrostomia syndrome (AMS) and to review the procedures used to manage the upper eyelids in AMS.',
-        # 'There are unique considerations for many adult patients with gliomas who are vulnerable to the novel coronavirus due to older age and immunosuppression.',
-        # 'As patients with terminal illnesses, they present ethical challenges for centers that may need to ration access to ventilator care due to insufficient critical care capacity.',
-        # 'This study focused on determining risks from stereotactic radiotherapy using flattening filter-free (FFF) beams for patients with cardiac implantable electronic device (CIEDs).',
-        # 'This research aims to clarify to what extent dengue patients were managed in accordance with the guidelines in Japan.',
-        # 'Pre-death grief in caregivers of Alzheimer patients.',
-        # 'This study examined memory and executive functions of switching and distributing attention in 25 Alzheimer patients (AD), 9 patients with frontal variant of frontotemporal dementia (fvFTD), and 25 healthy older people, as a control group, in three tasks: verbal digit span, Brown-Peterson (B-P) task, and dual-task.',
-        # 'Similarly, by now, there have been over 60 cases of pregnant women with confirmed COVID-19 in China and the vast majority of these women have had mild to moderate pneumonia.',
+        "Five of the seven patients presented with symptoms of COVID-19, including cough, myalgias, fevers, chest pain, and headache.",
+        'It can be difficult for adolescents with inflammatory bowel disease (IBD) to make the transition from paediatric to adult care.',
+        'Association between miR-200c and the survival of patients with stage I epithelial ovarian cancer: a retrospective study of two independent tumour tissue collections.',
+        'To compare the efficiency of releasable scleral buckling (RSB) and pars plana vitrectomy (PPV) in the treatment of phakic patients with primary rhegmatogenous retinal detachment.',
+        'To evaluate the changes in activity of biomarkers of Mu[Combining Diaeresis]ller cells (MC) in aqueous humor of patients with diabetic macular edema after subthreshold micropulse laser, over 1 year.',
+        'Rates of Adverse IBD-Related Outcomes for Patients With IBD and Concomitant Prostate Cancer Treated With Radiation Therapy.',
+        'External and middle ear resonance frequency of fourty patients with tympanoplasty and mastoidectomy.',
+        'To describe the late results of the placement of skin graft over conjunctiva-Müller muscle complex in 3 patients with ablepharon-macrostomia syndrome (AMS) and to review the procedures used to manage the upper eyelids in AMS.',
+        'There are unique considerations for many adult patients with gliomas who are vulnerable to the novel coronavirus due to older age and immunosuppression.',
+        'As patients with terminal illnesses, they present ethical challenges for centers that may need to ration access to ventilator care due to insufficient critical care capacity.',
+        'This study focused on determining risks from stereotactic radiotherapy using flattening filter-free (FFF) beams for patients with cardiac implantable electronic device (CIEDs).',
+        'This research aims to clarify to what extent dengue patients were managed in accordance with the guidelines in Japan.',
+        'Pre-death grief in caregivers of Alzheimer patients.',
+        'This study examined memory and executive functions of switching and distributing attention in 25 Alzheimer patients (AD), 9 patients with frontal variant of frontotemporal dementia (fvFTD), and 25 healthy older people, as a control group, in three tasks: verbal digit span, Brown-Peterson (B-P) task, and dual-task.',
+        'Similarly, by now, there have been over 60 cases of pregnant women with confirmed COVID-19 in China and the vast majority of these women have had mild to moderate pneumonia.',
         "In a previous study of MERS-CoV, there were 11 pregnant women [7] .",
         "Of 9 pregnant women, 4 (44%) had premature delivery [5] .",
         "In this systematic review, women affected by COVID-19 disease had higher rates of miscarriage, 326 preterm birth, preeclampsia, while the babies had higher rates of perinatal mortality (7-11%) and of 327 admission to NICU.",
@@ -292,6 +292,7 @@ if __name__ == '__main__':
         "The current coronavirus disease 2019 (COVID-19) pneumonia pandemic, caused by the 68 severe acute respiratory syndrome 2 (SARS-CoV-2) virus, is spreading globally at an 69 accelerated rate, with a basic reproduction number (R0) of 2 -2.5, indicating that 2 -3 70 persons will be infected from an index patient.",
     ]
     for text in texts:
-        pprint(do_for_sent(text, printout=True))
+        print(text)
+        pprint(do_for_sent(text, printout=False))
 
 
