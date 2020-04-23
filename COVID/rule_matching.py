@@ -168,7 +168,6 @@ matcher.add("CONDITION", None, cond_patt_1)
 matcher.add("CONDITION", None, cond_patt_2)
 matcher.add("CONDITION", None, cond_patt_3)
 
-
 # pattern2 = [
 #     # {"POS": "ADJ", "OP": "*"},
 #     # {"POS": "NOUN", "OP": "+"},
