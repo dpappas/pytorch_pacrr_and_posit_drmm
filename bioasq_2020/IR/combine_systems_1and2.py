@@ -80,8 +80,8 @@ def get_pmid2text(sn):
 
 extract_data = {'questions' : []}
 for qid, doc_dat in tqdm(combined_data_docs.items()):
-    max1 = max([abs(t[0]) for t in doc_dat.values()])
-    max2 = max([abs(t[1]) for t in doc_dat.values()])
+    max1    = max([abs(t[0]) for t in doc_dat.values()])
+    max2    = max([abs(t[1]) for t in doc_dat.values()])
     doc_ids = [t[0] for t in sorted(doc_dat.items(), key= lambda x : (x[1][0]/max1)+(x[1][1]/max2), reverse=True)[:10]]
     # doc_ids = [t[0] for t in sorted(doc_dat.items(), key= lambda x : max(x[1]), reverse=True)[:10]]
     # doc_ids = [t for t in sorted(doc_dat.items(), key= lambda x : sum(x[1]), reverse=True)[:10]]
