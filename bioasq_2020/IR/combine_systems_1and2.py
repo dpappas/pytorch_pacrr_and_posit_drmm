@@ -83,8 +83,10 @@ extract_data = {'questions' : []}
 for qid, doc_dat in tqdm(combined_data_docs.items()):
     max1        = max([abs(t[0]) for t in doc_dat.values()])
     max2        = max([abs(t[1]) for t in doc_dat.values()])
-    doc_ids     = [t[0] for t in sorted(doc_dat.items(), key= lambda x : (x[1][0]/max1)+(x[1][1]/max2), reverse=True)[:10]]
-    # doc_ids   = [t[0] for t in sorted(doc_dat.items(), key= lambda x : max(x[1]), reverse=True)[:10]]
+    # We used sum in batch 4 of bioasq 2020
+    # doc_ids     = [t[0] for t in sorted(doc_dat.items(), key= lambda x : (x[1][0]/max1)+(x[1][1]/max2), reverse=True)[:10]]
+    # We used max in batch 5 of bioasq 2020
+    doc_ids   = [t[0] for t in sorted(doc_dat.items(), key= lambda x : max(x[1]), reverse=True)[:10]]
     # doc_ids   = [t for t in sorted(doc_dat.items(), key= lambda x : sum(x[1]), reverse=True)[:10]]
     # doc_ids   = [t[0] for t in sorted(doc_dat.items(), key= lambda x : x[1][0]*x[1][1], reverse=True)[:10]]
     # pprint(doc_ids)
@@ -92,7 +94,10 @@ for qid, doc_dat in tqdm(combined_data_docs.items()):
     for docid in doc_ids:
         # all_snips.extend(sorted(combined_data_sents[qid][docid].items(), key=lambda x: x[1][0]*x[1][1],reverse = True)[:2])
         all_snips.extend(sorted(combined_data_sents[qid][docid].items(), key=lambda x: max(x[1]),reverse = True)[:2])
-    all_snips = [t[0] for t in sorted(all_snips, key=lambda x: sum(x[1]), reverse=True)[:10]]
+    # We used sum in batch 4 of bioasq 2020
+    # all_snips = [t[0] for t in sorted(all_snips, key=lambda x: sum(x[1]), reverse=True)[:10]]
+    # We used max in batch 5 of bioasq 2020
+    all_snips = [t[0] for t in sorted(all_snips, key=lambda x: max(x[1]), reverse=True)[:10]]
     # pprint(all_snips)
     # extract_data[qid] = {
     #     'doc_ids'   : doc_ids,
