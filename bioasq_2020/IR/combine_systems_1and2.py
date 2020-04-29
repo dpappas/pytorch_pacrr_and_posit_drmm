@@ -3,6 +3,7 @@ import json
 from pprint import pprint
 import collections
 from tqdm import tqdm
+import sys
 nested_dict     = lambda: collections.defaultdict(nested_dict)
 
 from elasticsearch import Elasticsearch
@@ -10,15 +11,15 @@ index, doc_type = 'pubmed_abstracts_joint_0_1', 'abstract_map_joint_0_1'
 
 es = Elasticsearch(['palomar.ilsp.gr:9201'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
-b = '4'
+b       = '5'
 
-d1 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system1_output_b{}\\v3 test_data_for_revision.json'.format(b, b)))
-d2 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system2_output_b{}\\v3 test_data_for_revision.json'.format(b, b)))
+d1      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system1_output_b{}\\v3 test_data_for_revision.json'.format(b, b)))
+d2      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system2_output_b{}\\v3 test_data_for_revision.json'.format(b, b)))
 
-d3 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system1_output_b{}\\v3 test_emit_bioasq.json'.format(b, b)))
-d4 = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system2_output_b{}\\v3 test_emit_bioasq.json'.format(b, b)))
+d3      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system1_output_b{}\\v3 test_emit_bioasq.json'.format(b, b)))
+d4      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system2_output_b{}\\v3 test_emit_bioasq.json'.format(b, b)))
 
-opath = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system4_output_b{}\\ensembe_sys1_and sys2.json'.format(b, b)
+opath   = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\BIOASQ_2020\\batch{}_submit_files\\ir_results\\system4_output_b{}\\ensembe_sys1_and sys2.json'.format(b, b)
 
 pmidtext_to_other   = {}
 qid2qtext           = {}
@@ -107,14 +108,15 @@ for qid, doc_dat in tqdm(combined_data_docs.items()):
     }
     extract_data['questions'].append(quest_data)
 
-
 with open(opath, 'w') as f:
     f.write(json.dumps(extract_data, indent=4, sort_keys=False))
     f.close()
 
 
 
-
+'''
+python3.6 combine_1_and_2.py 5
+'''
 
 
 
