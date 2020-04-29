@@ -1323,6 +1323,10 @@ CUDA_VISIBLE_DEVICES=1 python3.6 system_1.py 4 \
 /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_2020/system1_output_b4
 
+CUDA_VISIBLE_DEVICES=1 python3.6 system_1.py 5 \
+/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_2020/system1_output_b5
+
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq8/data/test_batch_1/BioASQ-task8bPhaseB-testset1" \
