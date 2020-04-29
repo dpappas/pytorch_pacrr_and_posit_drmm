@@ -9,7 +9,7 @@ nested_dict     = lambda: collections.defaultdict(nested_dict)
 from elasticsearch import Elasticsearch
 index, doc_type = 'pubmed_abstracts_joint_0_1', 'abstract_map_joint_0_1'
 
-es = Elasticsearch(['palomar.ilsp.gr:9201'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+es      = Elasticsearch(['palomar.ilsp.gr:9201'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
 b       = '5'
 
