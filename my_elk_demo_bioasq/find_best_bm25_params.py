@@ -276,7 +276,6 @@ with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
 
 print(stopwords)
 
-
 for b_ in tqdm(range(0, 105, 10)):
     for k1_ in tqdm(range(0, 205, 20)):
         #################
