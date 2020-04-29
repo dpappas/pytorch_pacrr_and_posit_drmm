@@ -159,3 +159,12 @@ if (not os.path.exists(odir)):
 with open(os.path.join(odir, 'bioasq8_batch{}_system5_results.json'.format(b)), 'w') as f:
     f.write(json.dumps(system_subm_data, indent=4, sort_keys=True))
 
+'''
+
+python3.6 system_5.py 1
+python3.6 system_5.py 2
+python3.6 system_5.py 3
+python3.6 system_5.py 4
+python3.6 system_5.py 5
+'''
+
