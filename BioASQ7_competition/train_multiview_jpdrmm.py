@@ -645,32 +645,27 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_sents_graph_embeds = []
     for good_text in good_sents:
         sent_toks                   = tokenize(good_text)
-        good_tokens, good_embeds    = get_embeds(sent_toks, wv)
-        good_sents_graph_embeds     = get_graph_embeds(sent_toks, graph_embeds)
-        good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
+        ########################################################################################################
+        _, good_embeds              = get_embeds(sent_toks, wv)
+        good_sents_embeds.append(good_embeds)
+        ########################################################################################################
+        good_graph_embeds           = get_graph_embeds(sent_toks, graph_embeds)
+        good_sents_graph_embeds.append(good_graph_embeds)
+        ########################################################################################################
+        good_escores        = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
         good_escores.append(len(sent_toks) / 342.)
-        if (len(good_embeds) > 0):
-            #
-            tomi                = (set(sent_toks) & set(quest_toks))
-            tomi_no_stop        = tomi - set(stopwords)
-            BM25score           = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
-            tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
-            tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
-            quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
-            features            = [
-                len(quest)              / 300.,
-                len(good_text)          / 300.,
-                len(tomi_no_stop)       / 100.,
-                BM25score,
-                sum(tomi_no_stop_idfs)  / 100.,
-                sum(tomi_idfs)          / sum(quest_idfs),
-            ]
-            #
-            good_sents_embeds.append(good_embeds)
-            good_sents_escores.append(good_escores+features)
-            held_out_sents.append(good_text)
-            good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
-    ####
+        tomi                = (set(sent_toks) & set(quest_toks))
+        tomi_no_stop        = tomi - set(stopwords)
+        BM25score           = similarity_score(quest_toks, sent_toks, 1.2, 0.75, idf, avgdl, True, mean, deviation, max_idf)
+        tomi_no_stop_idfs   = [idf_val(w, idf, max_idf) for w in tomi_no_stop]
+        tomi_idfs           = [idf_val(w, idf, max_idf) for w in tomi]
+        quest_idfs          = [idf_val(w, idf, max_idf) for w in quest_toks]
+        features            = [len(quest)/300., len(good_text)/300., len(tomi_no_stop)/100., BM25score, sum(tomi_no_stop_idfs)/100., sum(tomi_idfs)/sum(quest_idfs)]
+        ########################################################################################################
+        good_sents_escores.append(good_escores+features)
+        held_out_sents.append(good_text)
+        good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
+        ########################################################################################################
     return {
         'sents_embeds'       : good_sents_embeds,
         'sents_graph_embeds' : good_sents_graph_embeds,
