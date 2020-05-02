@@ -1106,6 +1106,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.trigram_conv_2             = self.trigram_conv_2.cuda()
             self.trigram_conv_activation_1  = self.trigram_conv_activation_1.cuda()
             self.trigram_conv_activation_2  = self.trigram_conv_activation_2.cuda()
+        ###########################################################################################
+        self.trigram_graph_conv_1               = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_graph_conv_activation_1    = torch.nn.Sigmoid()
+        self.trigram_graph_conv_2               = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True)
+        self.trigram_graph_conv_activation_2    = torch.nn.Sigmoid()
+        if(use_cuda):
+            self.trigram_graph_conv_1             = self.trigram_graph_conv_1.cuda()
+            self.trigram_graph_conv_2             = self.trigram_graph_conv_2.cuda()
+            self.trigram_graph_conv_activation_1  = self.trigram_graph_conv_activation_1.cuda()
+            self.trigram_graph_conv_activation_2  = self.trigram_graph_conv_activation_2.cuda()
     def init_question_weight_module(self):
         self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
         if(use_cuda):
@@ -1335,17 +1345,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return final_good_output, gs_emits
     def forward(
             self,
-            doc1_sents_embeds,
-            doc2_sents_embeds,
-            doc1_graph_embeds,
-            doc2_graph_embeds,
-            question_embeds,
-            quest_graph_embeds,
-            q_idfs,
-            sents_gaf,
-            sents_baf,
-            doc_gaf,
-            doc_baf
+            doc1_sents_embeds, doc2_sents_embeds, doc1_graph_embeds, doc2_graph_embeds,
+            question_embeds, quest_graph_embeds,
+            q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf
     ):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False)
@@ -1353,13 +1355,17 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False)
         if(use_cuda):
-            q_idfs          = q_idfs.cuda()
-            question_embeds = question_embeds.cuda()
-            doc_gaf         = doc_gaf.cuda()
-            doc_baf         = doc_baf.cuda()
+            q_idfs              = q_idfs.cuda()
+            question_embeds     = question_embeds.cuda()
+            quest_graph_embeds  = quest_graph_embeds.cuda()
+            doc_gaf             = doc_gaf.cuda()
+            doc_baf             = doc_baf.cuda()
         #
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        #
+        q_g_context         = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+        q_g_context         = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
         q_weights           = torch.cat([q_context, q_idfs], -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
@@ -1430,7 +1436,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'bioasq_jpdrmm_2L_0p01_weight_{}_run_{}/'.format(weight, run)
+    odir    = 'bioasq_MV_jpdrmm_2L_0p01_weight_{}_run_{}/'.format(weight, run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
@@ -1468,11 +1474,11 @@ for run in range(run_from, run_to):
             logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
             break
 
-# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 0.01
-# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 0.1
-# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 0.2
-# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 1
-# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 5
-# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 10
-# CUDA_VISIBLE_DEVICES=1 python3.6 weight_tune.py 100
+# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 0.01
+# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 0.1
+# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 0.2
+# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 1
+# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 5
+# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 10
+# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 100
 
