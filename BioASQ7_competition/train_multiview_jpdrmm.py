@@ -701,6 +701,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         #
         datum                       = prep_data(quest_text, docs[gid], bm25s_gid, wv, good_snips, idf, max_idf, use_sent_tokenizer)
         good_sents_embeds           = datum['sents_embeds']
+        good_graph_embeds           = datum['sents_graph_embeds']
         good_sents_escores          = datum['sents_escores']
         good_doc_af                 = datum['doc_af']
         good_sent_tags              = datum['sent_tags']
@@ -708,29 +709,34 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         #
         datum                       = prep_data(quest_text, docs[bid], bm25s_bid, wv, [], idf, max_idf, use_sent_tokenizer)
         bad_sents_embeds            = datum['sents_embeds']
+        bad_graph_embeds            = datum['sents_graph_embeds']
         bad_sents_escores           = datum['sents_escores']
         bad_doc_af                  = datum['doc_af']
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
         #
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
+        quest_graph_embeds          = get_graph_embeds(tokenize(quest_text), graph_embeds)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
             yield {
                 'good_sents_embeds'     : good_sents_embeds,
+                'good_graph_embeds'     : good_graph_embeds,
                 'good_sents_escores'    : good_sents_escores,
                 'good_doc_af'           : good_doc_af,
                 'good_sent_tags'        : good_sent_tags,
                 'good_held_out_sents'   : good_held_out_sents,
                 #
                 'bad_sents_embeds'      : bad_sents_embeds,
+                'bad_graph_embeds'      : bad_graph_embeds,
                 'bad_sents_escores'     : bad_sents_escores,
                 'bad_doc_af'            : bad_doc_af,
                 'bad_sent_tags'         : bad_sent_tags,
                 'bad_held_out_sents'    : bad_held_out_sents,
                 #
                 'quest_embeds'          : quest_embeds,
+                'quest_graph_embeds'    : quest_graph_embeds,
                 'q_idfs'                : q_idfs,
             }
 
