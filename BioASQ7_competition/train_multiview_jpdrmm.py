@@ -1400,7 +1400,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output   = self.final_layer_2(final_good_output)
         #
         gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        gs_emits            = torch.cat((gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)), -1)
         gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits            = torch.sigmoid(gs_emits)
         #
