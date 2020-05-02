@@ -646,7 +646,7 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
         _, good_embeds              = get_embeds(sent_toks, wv)
         good_sents_embeds.append(good_embeds)
         ########################################################################################################
-        good_graph_embeds           = get_graph_embeds(sent_toks, graph_embeds)
+        _,good_graph_embeds         = get_graph_embeds(sent_toks, graph_embeds)
         good_sents_graph_embeds.append(good_graph_embeds)
         ########################################################################################################
         good_escores        = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
@@ -713,7 +713,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_held_out_sents          = datum['held_out_sents']
         #
         quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-        quest_graph_embeds          = get_graph_embeds(tokenize(quest_text), graph_embeds)
+        _, quest_graph_embeds       = get_graph_embeds(tokenize(quest_text), graph_embeds)
         q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
         #
         if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
@@ -1065,7 +1065,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
              embedding_dim          = 30,
              k_for_maxpool          = 5,
              sentence_out_method    = 'MLP',
-             k_sent_maxpool         = 1
+             k_sent_maxpool         = 1,
+             graph_dim              = 120
          ):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                                      = k_for_maxpool
@@ -1074,6 +1075,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.sent_add_feats                         = 10
         #
         self.embedding_dim                          = embedding_dim
+        self.graph_dim                              = graph_dim
         self.sentence_out_method                    = sentence_out_method
         # to create q weights
         self.init_context_module()
@@ -1092,7 +1094,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
         self.trigram_conv_activation_2 = torch.nn.Sigmoid().to(device)
         ###########################################################################################
-        self.trigram_graph_conv_1               = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
+        self.trigram_graph_conv_1               = nn.Conv1d(self.graph_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
         self.trigram_graph_conv_activation_1    = torch.nn.Sigmoid().to(device)
         self.trigram_graph_conv_2               = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
         self.trigram_graph_conv_activation_2    = torch.nn.Sigmoid().to(device)
@@ -1362,6 +1364,7 @@ idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 ##########################################
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, wv, bioasq7_data) = load_all_data(dataloc, w2v_bin_path, idf_pickle_path)
+print('loading graph embeds')
 graph_labels_fpath  = '/home/dpappas/bioasq_all/pubtator_word_embeddings_labels.tsv'
 graph_vecs_fpath    = '/home/dpappas/bioasq_all/pubtator_word_embeddings.tsv'
 graph_embeds        = load_graph_embeds(graph_labels_fpath, graph_vecs_fpath)
