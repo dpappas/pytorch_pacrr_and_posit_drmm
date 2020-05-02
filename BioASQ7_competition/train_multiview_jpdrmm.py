@@ -1174,7 +1174,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = []
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False).to(device)
-            sent_g_embeds       = autograd.Variable(torch.FloatTensor(doc_graph_embeds[i]), requires_grad=False).to(devide)
+            sent_g_embeds       = autograd.Variable(torch.FloatTensor(doc_graph_embeds[i]), requires_grad=False).to(device)
             gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(device)
             #
             conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -1425,10 +1425,4 @@ for run in range(run_from, run_to):
             break
 
 # CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 0.01
-# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 0.1
-# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 0.2
-# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 1
-# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 5
-# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 10
-# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 100
 
