@@ -1173,7 +1173,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 oh_pooled           = self.pooling_method(sim_oh)
                 sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             else:
-                sent_emit           = torch.FloatTensor([0.])
+                sent_emit           = torch.FloatTensor([0.]).squeeze().to(device)
             if(len(doc_graph_embeds[i])>0):
                 sent_g_embeds       = autograd.Variable(torch.FloatTensor(doc_graph_embeds[i]), requires_grad=False).to(device)
                 conv_res_g          = self.apply_context_convolution(sent_g_embeds, self.trigram_graph_conv_1, self.trigram_graph_conv_activation_1)
@@ -1186,7 +1186,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 oh_pooled_g             = self.pooling_method(sim_oh_g)
                 sent_emit_g             = self.get_output([oh_pooled_g, insensitive_pooled_g, sensitive_pooled_g], q_g_weights)
             else:
-                sent_emit_g         = torch.FloatTensor([0.])
+                sent_emit_g         = torch.FloatTensor([0.]).squeeze().to(device)
             gaf                     = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(device)
             sent_add_feats      = torch.cat((gaf, sent_emit.unsqueeze(-1), sent_emit_g.unsqueeze(-1)))
             res.append(sent_add_feats)
@@ -1301,7 +1301,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_g_idfs            = autograd.Variable(torch.FloatTensor(q_g_idfs),            requires_grad=False).to(device)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False).to(device)
         quest_graph_embeds  = autograd.Variable(torch.FloatTensor(quest_graph_embeds),  requires_grad=False).to(device)
-        print(quest_graph_embeds.size())
+        #
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False).to(device)
         doc_baf             = autograd.Variable(torch.FloatTensor(doc_baf),             requires_grad=False).to(device)
         #
@@ -1319,9 +1319,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_g_weights         = self.q_weights_graph_mlp(q_g_weights).squeeze(-1)
         q_g_weights         = F.softmax(q_g_weights, dim=-1)
         #
-        print(quest_graph_embeds.size())
-        print(quest_graph_embeds)
-        #
         good_out, gs_emits  = self.do_for_one_doc_cnn(
             doc1_sents_embeds, doc1_graph_embeds, sents_gaf,
             question_embeds, q_context, quest_graph_embeds, q_g_context,
@@ -1329,7 +1326,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         )
         bad_out, bs_emits   = self.do_for_one_doc_cnn(
             doc2_sents_embeds, doc2_graph_embeds, sents_baf,
-            question_embeds, q_context, q_weights, q_g_context,
+            question_embeds, q_context, quest_graph_embeds, q_g_context,
             q_weights, q_g_weights, self.k_sent_maxpool
         )
         #
