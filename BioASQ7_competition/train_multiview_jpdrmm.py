@@ -410,24 +410,12 @@ def get_embeds(tokens, wv):
             ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
-def get_embeds_use_unk(tokens, wv):
+def get_graph_embeds(tokens, wv):
     ret1, ret2 = [], []
     for tok in tokens:
         if(tok in wv):
             ret1.append(tok)
             ret2.append(wv[tok])
-        else:
-            wv[tok] = np.random.randn(embedding_dim)
-            ret1.append(tok)
-            ret2.append(wv[tok])
-    return ret1, np.array(ret2, 'float64')
-
-def get_embeds_use_only_unk(tokens, wv):
-    ret1, ret2 = [], []
-    for tok in tokens:
-        wv[tok] = np.random.randn(embedding_dim)
-        ret1.append(tok)
-        ret2.append(wv[tok])
     return ret1, np.array(ret2, 'float64')
 
 def load_idfs(idf_path, words):
@@ -654,11 +642,13 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
     good_doc_af.extend(features)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags = [], [], [], []
+    good_sents_graph_embeds = []
     for good_text in good_sents:
         sent_toks                   = tokenize(good_text)
         good_tokens, good_embeds    = get_embeds(sent_toks, wv)
+        good_sents_graph_embeds     = get_graph_embeds(sent_toks, graph_embeds)
         good_escores                = GetScores(quest, good_text, the_bm25, idf, max_idf)[:-1]
-        good_escores.append(len(sent_toks)/ 342.)
+        good_escores.append(len(sent_toks) / 342.)
         if (len(good_embeds) > 0):
             #
             tomi                = (set(sent_toks) & set(quest_toks))
@@ -682,11 +672,12 @@ def prep_data(quest, the_doc, the_bm25, wv, good_snips, idf, max_idf, use_sent_t
             good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
     return {
-        'sents_embeds'     : good_sents_embeds,
-        'sents_escores'    : good_sents_escores,
-        'doc_af'           : good_doc_af,
-        'sent_tags'        : good_sent_tags,
-        'held_out_sents'   : held_out_sents,
+        'sents_embeds'       : good_sents_embeds,
+        'sents_graph_embeds' : good_sents_graph_embeds,
+        'sents_escores'      : good_sents_escores,
+        'doc_af'             : good_doc_af,
+        'sent_tags'          : good_sent_tags,
+        'held_out_sents'     : held_out_sents,
     }
 
 def train_data_step1(train_data):
