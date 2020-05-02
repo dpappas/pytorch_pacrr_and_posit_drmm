@@ -1180,23 +1180,34 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                            quest_graph_embeds, q_g_context, q_weights, q_g_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
-            sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False).to(device)
-            sent_g_embeds       = autograd.Variable(torch.FloatTensor(doc_graph_embeds[i]), requires_grad=False).to(device)
-            gaf                 = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(device)
-            #
-            conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-            conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
-            #
-            sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
-            sim_oh              = (sim_insens > (1 - (1e-3))).float()
-            sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
-            #
-            insensitive_pooled  = self.pooling_method(sim_insens)
-            sensitive_pooled    = self.pooling_method(sim_sens)
-            oh_pooled           = self.pooling_method(sim_oh)
-            #
-            sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
-            sent_add_feats      = torch.cat([gaf, sent_emit.unsqueeze(-1)])
+            if(len(doc_sents_embeds[i])>0):
+                sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False).to(device)
+                conv_res            = self.apply_context_convolution(sent_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
+                conv_res            = self.apply_context_convolution(conv_res,      self.trigram_conv_2, self.trigram_conv_activation_2)
+                sim_insens          = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
+                sim_oh              = (sim_insens > (1 - (1e-3))).float()
+                sim_sens            = self.my_cosine_sim(q_conv_res_trigram, conv_res).squeeze(0)
+                insensitive_pooled  = self.pooling_method(sim_insens)
+                sensitive_pooled    = self.pooling_method(sim_sens)
+                oh_pooled           = self.pooling_method(sim_oh)
+                sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
+            else:
+                sent_emit           = torch.FloatTensor([0.])
+            if(len(doc_graph_embeds[i])>0):
+                sent_g_embeds       = autograd.Variable(torch.FloatTensor(doc_graph_embeds[i]), requires_grad=False).to(device)
+                conv_res_g          = self.apply_context_convolution(sent_g_embeds, self.trigram_graph_conv_1, self.trigram_graph_conv_activation_1)
+                conv_res_g          = self.apply_context_convolution(conv_res_g,    self.trigram_graph_conv_2, self.trigram_graph_conv_activation_2)
+                sim_insens_g        = self.my_cosine_sim(quest_graph_embeds, sent_g_embeds).squeeze(0)
+                sim_oh_g            = (sim_insens > (1 - (1e-3))).float()
+                sim_sens_g          = self.my_cosine_sim(q_g_context, conv_res_g).squeeze(0)
+                insensitive_pooled_g    = self.pooling_method(sim_insens_g)
+                sensitive_pooled_g      = self.pooling_method(sim_sens_g)
+                oh_pooled_g             = self.pooling_method(sim_oh_g)
+                sent_emit_g             = self.get_output([oh_pooled_g, insensitive_pooled_g, sensitive_pooled_g], q_g_weights)
+            else:
+                sent_emit_g         = torch.FloatTensor([0.])
+            gaf                     = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(device)
+            sent_add_feats      = torch.cat((gaf, sent_emit.unsqueeze(-1)))
             res.append(sent_add_feats)
         res = torch.stack(res)
         if(self.sentence_out_method == 'MLP'):
