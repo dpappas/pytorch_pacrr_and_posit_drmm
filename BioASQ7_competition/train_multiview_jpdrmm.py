@@ -712,9 +712,10 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
         bad_sent_tags               = [0] * len(datum['sent_tags'])
         bad_held_out_sents          = datum['held_out_sents']
         #
-        quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-        _, quest_graph_embeds       = get_graph_embeds(tokenize(quest_text), graph_embeds)
-        q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        quest_tokens, quest_embeds              = get_embeds(tokenize(quest_text), wv)
+        quest_graph_tokens, quest_graph_embeds  = get_graph_embeds(tokenize(quest_text), graph_embeds)
+        q_idfs                                  = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+        q_g_idfs                                = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_graph_tokens], 'float')
         #
         if(use_sent_tokenizer == False or sum(good_sent_tags)>0):
             yield {
@@ -735,6 +736,7 @@ def train_data_step2(instances, docs, wv, bioasq6_data, idf, max_idf, use_sent_t
                 'quest_embeds'          : quest_embeds,
                 'quest_graph_embeds'    : quest_graph_embeds,
                 'q_idfs'                : q_idfs,
+                'q_g_idfs'              : q_g_idfs,
             }
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
@@ -759,6 +761,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             question_embeds     = datum['quest_embeds'],
             quest_graph_embeds  = datum['quest_graph_embeds'],
             q_idfs              = datum['q_idfs'],
+            q_g_idfs            = datum['q_g_idfs'],
             sents_gaf           = datum['good_sents_escores'],
             sents_baf           = datum['bad_sents_escores'],
             doc_gaf             = datum['good_doc_af'],
@@ -1094,12 +1097,13 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.trigram_conv_2             = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
         self.trigram_conv_activation_2 = torch.nn.Sigmoid().to(device)
         ###########################################################################################
-        self.trigram_graph_conv_1               = nn.Conv1d(self.graph_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
+        self.trigram_graph_conv_1               = nn.Conv1d(self.graph_dim, self.graph_dim, 3, padding=2, bias=True).to(device)
         self.trigram_graph_conv_activation_1    = torch.nn.Sigmoid().to(device)
-        self.trigram_graph_conv_2               = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
+        self.trigram_graph_conv_2               = nn.Conv1d(self.graph_dim, self.graph_dim, 3, padding=2, bias=True).to(device)
         self.trigram_graph_conv_activation_2    = torch.nn.Sigmoid().to(device)
     def init_question_weight_module(self):
-        self.q_weights_mlp      = nn.Linear(self.embedding_dim+self.embedding_dim+1, 1, bias=True).to(device)
+        self.q_weights_mlp          = nn.Linear(self.embedding_dim+1, 1, bias=True).to(device)
+        self.q_weights_graph_mlp    = nn.Linear(self.graph_dim+1, 1, bias=True).to(device)
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1      = nn.Linear(3 * 3, 8, bias=True).to(device)
         self.my_relu1           = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
@@ -1172,7 +1176,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output          = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-    def do_for_one_doc_cnn(self, doc_sents_embeds, doc_graph_embeds, sents_af, question_embeds, q_conv_res_trigram, quest_graph_embeds, q_g_context, q_weights, k2):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, doc_graph_embeds, sents_af, question_embeds, q_conv_res_trigram,
+                           quest_graph_embeds, q_g_context, q_weights, q_g_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False).to(device)
@@ -1276,9 +1281,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_weights           = torch.cat([q_context, q_idfs], -1)
-        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
+        q_weights           =   self.q_weights_mlp(torch.cat([q_context, q_idfs], -1)).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
+        q_weights           +=  self.q_weights_graph_mlp(torch.cat([q_context, q_idfs], -1)).squeeze(-1)
         #
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
@@ -1298,9 +1303,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self,
             doc1_sents_embeds, doc2_sents_embeds, doc1_graph_embeds, doc2_graph_embeds,
             question_embeds, quest_graph_embeds,
-            q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf
+            q_idfs, q_g_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf
     ):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False).to(device)
+        q_g_idfs            = autograd.Variable(torch.FloatTensor(q_g_idfs),            requires_grad=False).to(device)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False).to(device)
         quest_graph_embeds  = autograd.Variable(torch.FloatTensor(quest_graph_embeds),  requires_grad=False).to(device)
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False).to(device)
@@ -1312,17 +1318,21 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_g_context         = self.apply_context_convolution(quest_graph_embeds, self.trigram_graph_conv_1, self.trigram_graph_conv_activation_1)
         q_g_context         = self.apply_context_convolution(q_g_context,        self.trigram_graph_conv_2, self.trigram_graph_conv_activation_2)
         #
-        q_weights           = torch.cat((q_context, q_g_context, q_idfs), -1)
+        q_weights           = torch.cat((q_context, q_idfs), -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
+        q_g_weights         = torch.cat((q_g_context, q_g_idfs), -1)
+        q_g_weights         = self.q_weights_graph_mlp(q_g_weights).squeeze(-1)
+        q_g_weights         = F.softmax(q_g_weights, dim=-1)
+        #
         good_out, gs_emits  = self.do_for_one_doc_cnn(
             doc1_sents_embeds, doc1_graph_embeds, sents_gaf, question_embeds, q_context,
-            quest_graph_embeds, q_g_context, q_weights, self.k_sent_maxpool
+            quest_graph_embeds, q_g_context, q_weights, q_g_weights, self.k_sent_maxpool
         )
         bad_out, bs_emits   = self.do_for_one_doc_cnn(
             doc2_sents_embeds, doc2_graph_embeds, sents_baf, question_embeds, q_context,
-            q_weights, q_g_context, q_weights, self.k_sent_maxpool
+            q_weights, q_g_context, q_weights, q_g_weights, self.k_sent_maxpool
         )
         #
         good_out_pp         = torch.cat((good_out, doc_gaf), -1)
