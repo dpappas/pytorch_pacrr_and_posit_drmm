@@ -1117,7 +1117,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.trigram_graph_conv_activation_1  = self.trigram_graph_conv_activation_1.cuda()
             self.trigram_graph_conv_activation_2  = self.trigram_graph_conv_activation_2.cuda()
     def init_question_weight_module(self):
-        self.q_weights_mlp      = nn.Linear(self.embedding_dim+1, 1, bias=True)
+        self.q_weights_mlp      = nn.Linear(self.embedding_dim+self.embedding_dim+1, 1, bias=True)
         if(use_cuda):
             self.q_weights_mlp  = self.q_weights_mlp.cuda()
     def init_mlps_for_pooled_attention(self):
@@ -1209,7 +1209,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output, hn      = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output          = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
+    def do_for_one_doc_cnn(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, quest_graph_embeds, q_g_context, q_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
             sent_embeds         = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False)
@@ -1364,18 +1364,36 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_g_context         = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_g_context         = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
+        q_g_context         = self.apply_context_convolution(quest_graph_embeds, self.trigram_graph_conv_1, self.trigram_graph_conv_activation_1)
+        q_g_context         = self.apply_context_convolution(q_g_context,        self.trigram_graph_conv_2, self.trigram_graph_conv_activation_2)
         #
-        q_weights           = torch.cat([q_context, q_idfs], -1)
+        q_weights           = torch.cat((q_context, q_g_context, q_idfs), -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        good_out, gs_emits  = self.do_for_one_doc_cnn(
+            doc1_sents_embeds,
+            sents_gaf,
+            question_embeds,
+            q_context,
+            quest_graph_embeds,
+            q_g_context,
+            q_weights,
+            self.k_sent_maxpool
+        )
+        bad_out, bs_emits   = self.do_for_one_doc_cnn(
+            doc2_sents_embeds,
+            sents_baf,
+            question_embeds,
+            q_context,
+            q_weights,
+            q_g_context,
+            q_weights,
+            self.k_sent_maxpool
+        )
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
+        good_out_pp         = torch.cat((good_out, doc_gaf), -1)
+        bad_out_pp          = torch.cat((bad_out, doc_baf), -1)
         #
         final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
