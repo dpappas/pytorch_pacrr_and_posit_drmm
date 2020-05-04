@@ -851,8 +851,11 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     #
     quest_text                  = dato['query_text']
     #
-    quest_tokens, quest_embeds  = get_embeds(tokenize(quest_text), wv)
-    q_idfs                      = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    quest_tokens, quest_embeds = get_embeds(tokenize(quest_text), wv)
+    quest_graph_tokens, quest_graph_embeds = get_graph_embeds(tokenize(quest_text), graph_embeds)
+    q_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
+    q_g_idfs = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_graph_tokens], 'float')
+    #
     gold_snips                  = get_gold_snips(dato['query_id'], bioasq7_data)
     #
     doc_res, extracted_snippets         = {}, []
@@ -861,8 +864,11 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], wv, gold_snips, idf, max_idf, use_sent_tokenizer=use_sent_tokenizer)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
+            doc1_graph_embeds   = datum['sents_graph_embeds'],
             question_embeds     = quest_embeds,
+            quest_graph_embeds  = quest_graph_embeds,
             q_idfs              = q_idfs,
+            q_g_idfs            = q_g_idfs,
             sents_gaf           = datum['sents_escores'],
             doc_gaf             = datum['doc_af']
         )
@@ -1266,28 +1272,50 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim         = torch.sort(sim_matrix, -1)[0][:, -1]
         output          = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
-    def emit_one(self, doc1_sents_embeds, question_embeds, q_idfs, sents_gaf, doc_gaf):
+    def emit_one(
+            self,
+            doc1_sents_embeds, doc1_graph_embeds,
+            question_embeds, quest_graph_embeds,
+            q_idfs, q_g_idfs, sents_gaf, doc_gaf
+    ):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False).to(device)
+        q_g_idfs            = autograd.Variable(torch.FloatTensor(q_g_idfs),            requires_grad=False).to(device)
         question_embeds     = autograd.Variable(torch.FloatTensor(question_embeds),     requires_grad=False).to(device)
+        quest_graph_embeds  = autograd.Variable(torch.FloatTensor(quest_graph_embeds),  requires_grad=False).to(device)
+        #
         doc_gaf             = autograd.Variable(torch.FloatTensor(doc_gaf),             requires_grad=False).to(device)
         #
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_weights           =   self.q_weights_mlp(torch.cat([q_context, q_idfs], -1)).squeeze(-1)
+        q_weights           = torch.cat((q_context, q_idfs), -1)
+        q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
-        q_weights           +=  self.q_weights_graph_mlp(torch.cat([q_context, q_idfs], -1)).squeeze(-1)
         #
-        good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        if(len(quest_graph_embeds)):
+            q_g_context         = self.apply_context_convolution(quest_graph_embeds, self.trigram_graph_conv_1, self.trigram_graph_conv_activation_1)
+            q_g_context         = self.apply_context_convolution(q_g_context,        self.trigram_graph_conv_2, self.trigram_graph_conv_activation_2)
+            q_g_weights         = torch.cat((q_g_context, q_g_idfs), -1)
+            q_g_weights         = self.q_weights_graph_mlp(q_g_weights).squeeze(-1)
+            q_g_weights         = F.softmax(q_g_weights, dim=-1)
+        else:
+            q_g_context         = None
+            q_g_weights         = None
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
+        good_out, gs_emits  = self.do_for_one_doc_cnn(
+            doc1_sents_embeds, doc1_graph_embeds, sents_gaf,
+            question_embeds, q_context, quest_graph_embeds, q_g_context,
+            q_weights, q_g_weights, self.k_sent_maxpool
+        )
+        #
+        good_out_pp         = torch.cat((good_out, doc_gaf), -1)
         #
         final_good_output   = self.final_layer_1(good_out_pp)
         final_good_output   = self.final_activ_1(final_good_output)
         final_good_output   = self.final_layer_2(final_good_output)
         #
         gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        gs_emits            = torch.cat((gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)), -1)
         gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
         gs_emits            = torch.sigmoid(gs_emits)
         #
