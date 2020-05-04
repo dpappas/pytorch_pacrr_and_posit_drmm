@@ -1184,7 +1184,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 sent_g_embeds       = autograd.Variable(torch.FloatTensor(doc_graph_embeds[i]), requires_grad=False).to(device)
                 conv_res_g          = self.apply_context_convolution(sent_g_embeds, self.trigram_graph_conv_1, self.trigram_graph_conv_activation_1)
                 conv_res_g          = self.apply_context_convolution(conv_res_g,    self.trigram_graph_conv_2, self.trigram_graph_conv_activation_2)
-                print(quest_graph_embeds.size())
                 sim_insens_g        = self.my_cosine_sim(quest_graph_embeds, sent_g_embeds).squeeze(0)
                 sim_oh_g            = (sim_insens_g > (1 - (1e-3))).float()
                 sim_sens_g          = self.my_cosine_sim(q_g_context, conv_res_g).squeeze(0)
@@ -1386,7 +1385,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
-
 
 ##########################################
 use_cuda    = torch.cuda.is_available()
