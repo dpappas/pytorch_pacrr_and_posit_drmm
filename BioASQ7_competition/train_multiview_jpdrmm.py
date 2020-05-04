@@ -1174,10 +1174,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
                 sent_emit           = self.get_output([oh_pooled, insensitive_pooled, sensitive_pooled], q_weights)
             else:
                 sent_emit           = torch.FloatTensor([0.]).squeeze().to(device)
-            if(len(doc_graph_embeds[i])>0):
+            if(len(doc_graph_embeds[i])>0 and quest_graph_embeds.size(0)>0):
                 sent_g_embeds       = autograd.Variable(torch.FloatTensor(doc_graph_embeds[i]), requires_grad=False).to(device)
                 conv_res_g          = self.apply_context_convolution(sent_g_embeds, self.trigram_graph_conv_1, self.trigram_graph_conv_activation_1)
                 conv_res_g          = self.apply_context_convolution(conv_res_g,    self.trigram_graph_conv_2, self.trigram_graph_conv_activation_2)
+                print(quest_graph_embeds.size())
                 sim_insens_g        = self.my_cosine_sim(quest_graph_embeds, sent_g_embeds).squeeze(0)
                 sim_oh_g            = (sim_insens_g > (1 - (1e-3))).float()
                 sim_sens_g          = self.my_cosine_sim(q_g_context, conv_res_g).squeeze(0)
@@ -1308,16 +1309,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_context           = self.apply_context_convolution(question_embeds,   self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context           = self.apply_context_convolution(q_context,         self.trigram_conv_2, self.trigram_conv_activation_2)
         #
-        q_g_context         = self.apply_context_convolution(quest_graph_embeds, self.trigram_graph_conv_1, self.trigram_graph_conv_activation_1)
-        q_g_context         = self.apply_context_convolution(q_g_context,        self.trigram_graph_conv_2, self.trigram_graph_conv_activation_2)
-        #
         q_weights           = torch.cat((q_context, q_idfs), -1)
         q_weights           = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights           = F.softmax(q_weights, dim=-1)
         #
-        q_g_weights         = torch.cat((q_g_context, q_g_idfs), -1)
-        q_g_weights         = self.q_weights_graph_mlp(q_g_weights).squeeze(-1)
-        q_g_weights         = F.softmax(q_g_weights, dim=-1)
+        if(len(quest_graph_embeds)):
+            q_g_context         = self.apply_context_convolution(quest_graph_embeds, self.trigram_graph_conv_1, self.trigram_graph_conv_activation_1)
+            q_g_context         = self.apply_context_convolution(q_g_context,        self.trigram_graph_conv_2, self.trigram_graph_conv_activation_2)
+            q_g_weights         = torch.cat((q_g_context, q_g_idfs), -1)
+            q_g_weights         = self.q_weights_graph_mlp(q_g_weights).squeeze(-1)
+            q_g_weights         = F.softmax(q_g_weights, dim=-1)
+        else:
+            q_g_context         = None
+            q_g_weights         = None
         #
         good_out, gs_emits  = self.do_for_one_doc_cnn(
             doc1_sents_embeds, doc1_graph_embeds, sents_gaf,
