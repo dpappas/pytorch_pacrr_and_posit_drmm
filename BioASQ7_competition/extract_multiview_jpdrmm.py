@@ -1347,8 +1347,8 @@ print(test_map)
 
 '''
 
-CUDA_VISIBLE_DEVICES=0 python3.6 extraact_mvjpdrmm.py 1 \
-/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_2020/mvjpdrmm
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 1 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_2020/mvjpdrmm_bioasq2020_batch1
 
 '''
