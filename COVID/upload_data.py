@@ -50,20 +50,25 @@ bert_model      = BertModel.from_pretrained(scibert_dir,  output_hidden_states=F
 # zip_path = '/home/dpappas/COVID/data/28_03_2020/db_entries.zip'
 # zip_path = '/home/dpappas/COVID/data/01_04_2020/db_new_entries.zip'
 # zip_path = '/home/dpappas/COVID/data/12_04_2020/db_new_entries.zip'
-zip_path = '/home/dpappas/COVID/data/21_04_2020/db_new_entries.zip'
+# zip_path = '/home/dpappas/COVID/data/21_04_2020/db_new_entries.zip'
+# zip_path = '/home/dpappas/COVID/data/04_05_2020/db_new_entries.zip'
+
+fromm       = int(sys.argv[1])
+too         = int(sys.argv[2])
+zip_path    = sys.argv[3]
+
 archive     = zipfile.ZipFile(zip_path, 'r')
 d           = json.loads(archive.read('db_new_entries.json'))
 
 index       = 'covid_index_0_1'
 elastic_con = Elasticsearch(['127.0.01:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
-fromm       = int(sys.argv[1])
-too         = int(sys.argv[2])
 # fromm       = 0
 # too         = 10000000000000
 
 actions     = []
 b_size      = 200
+print('total: {}'.format(len(d)))
 for item in tqdm(d[fromm:too]):
     if(len(item['date'])==0):
         item['date']        = None
@@ -85,15 +90,9 @@ for item in tqdm(d[fromm:too]):
 send_to_elk(actions)
 
 '''
-python3.6 index_sents.py 0 125000 &
-python3.6 index_sents.py 125000 250000 &
-python3.6 index_sents.py 250000 375000 &
-python3.6 index_sents.py 375000 500000 &
-python3.6 index_sents.py 500000 625000 &
-python3.6 index_sents.py 625000 750000 &
-python3.6 index_sents.py 750000 875000 &
-python3.6 index_sents.py 875000 1000000 &
-python3.6 index_sents.py 1000000 1250000
+python3.6 upload_data.py 0 130000 "/home/dpappas/COVID/data/04_05_2020/db_new_entries.zip"
+python3.6 upload_data.py 130000 260000 "/home/dpappas/COVID/data/04_05_2020/db_new_entries.zip"
+
 '''
 
 '''
