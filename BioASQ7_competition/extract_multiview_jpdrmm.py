@@ -1360,6 +1360,21 @@ CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 1 \
 /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/mvjpdrmm/
 
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 2 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/mvjpdrmm/
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 3 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/mvjpdrmm/
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 4 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/mvjpdrmm/
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 5 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/mvjpdrmm/
 
 
 '''
