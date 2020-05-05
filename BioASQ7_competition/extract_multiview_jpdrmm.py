@@ -1282,11 +1282,14 @@ eval_path                   = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path          = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 ###########################################################
 b                           = sys.argv[1]
-f_in1                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/BioASQ-task8bPhaseA-testset{}'.format(b, b)
-f_in2                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/bioasq8_bm25_top100.test.pkl'.format(b)
-f_in3                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/bioasq8_bm25_docset_top100.test.pkl'.format(b)
 resume_from                 = sys.argv[2]
 odir                        = sys.argv[3]
+# f_in1                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/BioASQ-task8bPhaseA-testset{}'.format(b, b)
+# f_in2                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/bioasq8_bm25_top100.test.pkl'.format(b)
+# f_in3                       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/bioasq8_bm25_docset_top100.test.pkl'.format(b)
+f_in1                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(b, b)
+f_in2                       = '/home/dpappas/bioasq_all/bioasq7//data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(b)
+f_in3                       = '/home/dpappas/bioasq_all/bioasq7//data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(b)
 ###########################################################
 ddd                         = resume_from.split(os.path.sep)[-2].split('_')[1].strip()
 ###########################################################
@@ -1350,5 +1353,13 @@ print(test_map)
 CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 1 \
 /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
 /home/dpappas/bioasq_2020/mvjpdrmm_bioasq2020_batch1
+
+
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 1 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/mvjpdrmm/
+
+
 
 '''
