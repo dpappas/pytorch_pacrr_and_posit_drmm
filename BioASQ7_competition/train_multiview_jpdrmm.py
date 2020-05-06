@@ -1463,4 +1463,5 @@ for run in range(run_from, run_to):
             break
 
 # CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 0.01
+# CUDA_VISIBLE_DEVICES=1 python3.6 mvjpdrmm.py 1.0
 
