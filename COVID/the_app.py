@@ -16,6 +16,9 @@ from flask import jsonify
 from collections import OrderedDict
 from pprint import pprint
 from rule_matching import do_for_sent
+from flask.ext.cors import CORS, cross_origin
+
+# pip3.6 install -U flask-cors
 
 white           = Color("white")
 yellow_colors   = list(white.range_to(Color("yellow"), 101))
@@ -272,4 +275,5 @@ def submit_question():
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
     # app.add_url_rule('/favicon.ico', redirect_to=url_for('static', filename='aueb_favicon.png'))
+    CORS(app)
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
