@@ -31,8 +31,8 @@ green_colors    = list(white.range_to(Color("green"), 101))
 green_colors    = [c.get_hex_l() for c in green_colors]
 
 app = Flask(__name__)
-sslify = SSLify(app)
 CORS(app)
+sslify = SSLify(app)
 
 @app.route("/")
 def get_news():
