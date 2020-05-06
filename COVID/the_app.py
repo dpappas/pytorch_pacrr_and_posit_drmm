@@ -31,8 +31,8 @@ green_colors    = list(white.range_to(Color("green"), 101))
 green_colors    = [c.get_hex_l() for c in green_colors]
 
 app = Flask(__name__)
-CORS(app)
 sslify = SSLify(app)
+CORS(app)
 
 @app.route("/")
 def get_news():
@@ -279,5 +279,5 @@ def submit_question():
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
     # app.add_url_rule('/favicon.ico', redirect_to=url_for('static', filename='aueb_favicon.png'))
-    # app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False, ssl_context='adhoc')
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False, ssl_context='adhoc')
+    # app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
