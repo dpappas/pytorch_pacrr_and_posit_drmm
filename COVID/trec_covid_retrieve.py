@@ -5,11 +5,21 @@ from bs4 import BeautifulSoup
 from retrieve_and_rerank import retrieve_given_question
 from tqdm import tqdm
 
-mappings            = json.load(open('cord_uid_mappings.json'))
+mappings_1          = json.load(open('C:/Users/dvpap/Downloads/TREC-COVID/batch1/cord_uid_mappings.json'))
+mappings_2          = json.load(open('C:/Users/dvpap/Downloads/TREC-COVID/batch2/cord_uid_mappings.json'))
+
+mappings = {
+    'dois'      : {},
+    'pmcids'    : {},
+    'pmids'     : {},
+}
+for k in mappings_2:
+    for item in mappings_2[k].items():
+        if(not item[0] in mappings_1[k]):
+            mappings[k][item[0]] = item[1]
+
 soup                = BeautifulSoup(open('topics-rnd1.xml').read(), "lxml")
 run_tag             = 'AUEB_NLP_GROUP'
-
-exclude_ids         =
 
 fp                  = open('trec_results.txt', 'w')
 for topic in tqdm(soup.find_all('topic')):
@@ -17,13 +27,10 @@ for topic in tqdm(soup.find_all('topic')):
     query       = topic.find('query').text.strip()
     question    = topic.find('question').text.strip()
     narrative   = topic.find('narrative').text.strip()
-    ret_dummy   = retrieve_given_question(
-        query + ' ' + question + ' '+narrative, n=2500, section=None
-    )
+    ret_dummy   = retrieve_given_question(query + ' ' + question + ' '+narrative, n=5000, section=None)
     ######################################################################################################
     aggregated_results  = {}
     for item in ret_dummy:
-        # pprint(item)
         docid = None
         if(not docid and item['doi'] in mappings['dois']):
             docid = mappings['dois'][item['doi']]
@@ -33,10 +40,6 @@ for topic in tqdm(soup.find_all('topic')):
             docid = mappings['pmids'][item['pmid']]
         if(docid):
             aggregated_results[docid] = item['doc_score']
-            # try:
-            #     aggregated_results[docid].append(item['doc_score'])
-            # except:
-            #     aggregated_results[docid] = [item['doc_score']]
     ######################################################################################################
     aggregated_results = sorted(aggregated_results.items(), key=lambda x: x[1], reverse=True)[:1000]
     ######################################################################################################
