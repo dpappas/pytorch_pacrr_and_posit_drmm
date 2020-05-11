@@ -9,13 +9,17 @@ mappings            = json.load(open('cord_uid_mappings.json'))
 soup                = BeautifulSoup(open('topics-rnd1.xml').read(), "lxml")
 run_tag             = 'AUEB_NLP_GROUP'
 
-fp              = open('trec_results.txt', 'w')
+exclude_ids         =
+
+fp                  = open('trec_results.txt', 'w')
 for topic in tqdm(soup.find_all('topic')):
     topicid     = topic.get('number')
     query       = topic.find('query').text.strip()
     question    = topic.find('question').text.strip()
     narrative   = topic.find('narrative').text.strip()
-    ret_dummy   = retrieve_given_question(query + ' ' + question+' '+narrative, n=2500, section=None)
+    ret_dummy   = retrieve_given_question(
+        query + ' ' + question + ' '+narrative, n=2500, section=None
+    )
     ######################################################################################################
     aggregated_results  = {}
     for item in ret_dummy:
