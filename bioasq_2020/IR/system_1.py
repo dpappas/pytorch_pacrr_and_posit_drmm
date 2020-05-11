@@ -1287,7 +1287,6 @@ java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.E
 grep -E '^MAP snippets:|^MAP documents:' \
 > "/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/test/results.txt"
 
-
 sh test_bioasq_2.sh 0111111_0p01
 
 sh test_bioasq_2.sh 0111111_100p0
