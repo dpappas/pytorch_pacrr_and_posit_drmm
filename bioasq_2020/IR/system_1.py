@@ -1230,101 +1230,26 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 print(test_map)
 
 '''
-CUDA_VISIBLE_DEVICES=0 python3.6 t.py 1 &
-CUDA_VISIBLE_DEVICES=0 python3.6 t.py 2 &
-CUDA_VISIBLE_DEVICES=1 python3.6 t.py 3 &
-CUDA_VISIBLE_DEVICES=1 python3.6 t.py 4 &
-CUDA_VISIBLE_DEVICES=1 python3.6 t.py 5
-'''
-
-'''
-java \
--Xmx10G \
--cp \
-/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
-evaluation.EvaluatorTask1b \
--phaseA \
--e \
-5 \
-"/home/dpappas/test_jpdrmm_high/v3 test_gold_bioasq.json" \
-"/home/dpappas/test_jpdrmm_high/v3 test_emit_bioasq.json"
-
-python3.6 \
-/home/dpappas/bioasq_all/eval/run_eval.py \
-"/home/dpappas/test_jpdrmm_high_batch2/v3 test_gold_bioasq.json" \
-"/home/dpappas/test_jpdrmm_high_batch2/elk_relevant_abs_posit_drmm_lists_test.json" \
- | grep map
-
-MAP documents   : 0.08420833333333327
-MAP snippets    : 0.05073454275074414
-GMAP documents  : 0.004855196367864728
-GMAP snippets   : 0.0010611736668060376
-F1 snippets     : 0.09489153914914335
-
-trec map doc    : 0.4328
-
-python3.6 tt.py -30. -30. 0
-grep -E '\"body\"|\"text\"' "test_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
-cp "/home/dpappas/test_jpdrmm_high_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/jpdrmm.json" 
-'''
-
-'''
-CUDA_VISIBLE_DEVICES=0 python3.6 extr_bioasq8.py 1 \
-/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq8_batch1_out_jpdrmm
-
-'''
-
-'''
-
-CUDA_VISIBLE_DEVICES=0 python3.6 eval_test.py 12345 \
-/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_1_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_1_bioasq_jpdrmm_2L_0p01_run_0/test/
-
-java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345" \
-"/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/test/v3 test_emit_bioasq.json" | \
-grep -E '^MAP snippets:|^MAP documents:' \
-> "/media/dpappas/dpappas_data/models_out/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/test/results.txt"
-
-sh test_bioasq_2.sh 0111111_0p01
-
-sh test_bioasq_2.sh 0111111_100p0
-sh test_bioasq_2.sh 0111111_10p0
-sh test_bioasq_2.sh 0111111_1p0
-sh test_bioasq_2.sh 1011111_0p01
-sh test_bioasq_2.sh 1011111_100p0
-sh test_bioasq_2.sh 1011111_10p0
-sh test_bioasq_2.sh 1011111_1p0
-sh test_bioasq_2.sh 1111111_0p01
-sh test_bioasq_2.sh 1111111_0p1
-sh test_bioasq_2.sh 1111111_100p0
-sh test_bioasq_2.sh 1111111_10p0
-sh test_bioasq_2.sh 1111111_1p0
-
-'''
-
-'''
 
 CUDA_VISIBLE_DEVICES=1 python3.6 system_1.py 1 \
-/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_2020/system1_output_b1
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_2020/system1_output_ft_b1
 
 CUDA_VISIBLE_DEVICES=0 python3.6 system_1.py 2 \
-/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_2020/system1_output_b2
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_2020/system1_output_ft_b2
 
 CUDA_VISIBLE_DEVICES=0 python3.6 system_1.py 3 \
-/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_2020/system1_output_b3
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_2020/system1_output_ft_b3
 
 CUDA_VISIBLE_DEVICES=1 python3.6 system_1.py 4 \
-/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_2020/system1_output_b4
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_2020/system1_output_ft_b4
 
 CUDA_VISIBLE_DEVICES=1 python3.6 system_1.py 5 \
-/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_2020/system1_output_b5
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_2020/system1_output_ft_b5
 
 
 java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar evaluation.EvaluatorTask1b -phaseA -e 5 \
