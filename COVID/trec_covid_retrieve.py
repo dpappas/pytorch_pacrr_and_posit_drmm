@@ -5,8 +5,10 @@ from bs4 import BeautifulSoup
 from retrieve_and_rerank import retrieve_given_question
 from tqdm import tqdm
 
-mappings_1          = json.load(open('C:/Users/dvpap/Downloads/TREC-COVID/batch1/cord_uid_mappings.json'))
-mappings_2          = json.load(open('C:/Users/dvpap/Downloads/TREC-COVID/batch2/cord_uid_mappings.json'))
+opath       = './batch2/trec_results.txt'
+topics_path = './batch2/topics-rnd2.xml'
+mappings_1  = json.load(open('./batch1/cord_uid_mappings.json'))
+mappings_2  = json.load(open('./batch2/cord_uid_mappings.json'))
 
 mappings = {
     'dois'      : {},
@@ -18,10 +20,10 @@ for k in mappings_2:
         if(not item[0] in mappings_1[k]):
             mappings[k][item[0]] = item[1]
 
-soup                = BeautifulSoup(open('topics-rnd1.xml').read(), "lxml")
+soup                = BeautifulSoup(open(topics_path).read(), "lxml")
 run_tag             = 'AUEB_NLP_GROUP'
 
-fp                  = open('trec_results.txt', 'w')
+fp                  = open(opath, 'w')
 for topic in tqdm(soup.find_all('topic')):
     topicid     = topic.get('number')
     query       = topic.find('query').text.strip()
