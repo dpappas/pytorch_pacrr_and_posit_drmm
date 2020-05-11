@@ -1167,13 +1167,13 @@ odir                        = sys.argv[3]
 ###########################################################
 ddd                         = resume_from.split(os.path.sep)[-2].split('_')[1].strip()
 print(ddd)
-use_sent_extra              = ddd[0] == '1'
-use_doc_extra               = ddd[1] == '1'
-use_OH_sim                  = ddd[2] == '1'
-use_W2V_sim                 = ddd[3] == '1'
-use_context_sim             = ddd[4] == '1'
-use_sent_loss               = ddd[5] == '1'
-use_last_layer              = ddd[6] == '1'
+use_sent_extra              = True
+use_doc_extra               = True
+use_OH_sim                  = True
+use_W2V_sim                 = True
+use_context_sim             = True
+use_sent_loss               = True
+use_last_layer              = True
 ###########################################################
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
