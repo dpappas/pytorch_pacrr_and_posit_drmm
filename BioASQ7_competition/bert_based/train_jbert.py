@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# import sys
+import sys
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 
@@ -1225,7 +1225,7 @@ bert_model          = BertForQuestionAnswering.from_pretrained(
     bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1)
 )#.to(device)
 #####################
-weight              = 1.0
+weight              = float(sys.argv[1]) #1.0
 embedding_dim       = 768 # 50  # 30  # 200
 # lrs                  = [1e-03, 1e-04, 5e-04, 5e-05, 5e-06]
 lr                  = 1e-04
@@ -1241,7 +1241,6 @@ for run in range(0, 1):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     ######
-    # odir = 'frozen_bioasq7_JBERT_2L_{}_run_{}/'.format(str(lr), run)
     odir = 'bioasq7_JBERT_2L_{}_run_{}_weight_{}/'.format(str(lr), run, weight)
     odir = os.path.join(odd, odir)
     print(odir)
@@ -1276,7 +1275,8 @@ for run in range(0, 1):
 
 '''
 
-CUDA_VISIBLE_DEVICES=1 python3.6 train_jbert.py
+CUDA_VISIBLE_DEVICES=1 python3.6 train_jbert.py 1.0
+CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert.py 0.01
 
 '''
 
