@@ -1393,7 +1393,7 @@ b_size          = 32
 max_epoch       = 30
 early_stop      = 4
 
-weight      = 0.01
+weight      = float(sys.argv[1]) # 0.01
 run_from    = 0
 run_to      = 1
 hdlr        = None
@@ -1441,5 +1441,11 @@ for run in range(run_from, run_to):
             break
 
 
+'''
 
+CUDA_VISIBLE_DEVICES=0 python3.6 train_graph_jpdrmm.py 1.0
+CUDA_VISIBLE_DEVICES=1 python3.6 train_graph_jpdrmm.py 0.01
+
+
+'''
 
