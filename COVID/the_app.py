@@ -16,8 +16,8 @@ from flask import jsonify
 from collections import OrderedDict
 from pprint import pprint
 from rule_matching import do_for_sent
-from flask_cors import CORS
-from flask_sslify import SSLify
+# from flask_cors import CORS
+# from flask_sslify import SSLify
 
 # pip3.6 install -U flask-cors
 # pip3.6  install Flask-SSLify
@@ -31,7 +31,7 @@ green_colors    = list(white.range_to(Color("green"), 101))
 green_colors    = [c.get_hex_l() for c in green_colors]
 
 app = Flask(__name__)
-CORS(app)
+# CORS(app)
 # sslify = SSLify(app)
 
 @app.route("/")
