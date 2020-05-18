@@ -828,11 +828,10 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         )
         #
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
-        if (two_losses):
-            sn_d1_l, sn_d2_l = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss = sn_d1_l + sn_d2_l
-            l = 0.5
-            cost_ = ((1 - l) * snip_loss) + (l * cost_)
+        if(two_losses):
+            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            snip_loss                       = sn_d1_l + sn_d2_l
+            cost_                           = weight * snip_loss + cost_
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1209,7 +1208,7 @@ class JBERT_Modeler(nn.Module):
 #####################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
+odd                 = '/media/dpappas/dpappas_data/models_out/'
 #####################
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
@@ -1226,6 +1225,7 @@ bert_model          = BertForQuestionAnswering.from_pretrained(
     bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1)
 )#.to(device)
 #####################
+weight              = 1.0
 embedding_dim       = 768 # 50  # 30  # 200
 # lrs                  = [1e-03, 1e-04, 5e-04, 5e-05, 5e-06]
 lr                  = 1e-04
@@ -1242,7 +1242,7 @@ for run in range(0, 1):
     torch.manual_seed(my_seed)
     ######
     # odir = 'frozen_bioasq7_JBERT_2L_{}_run_{}/'.format(str(lr), run)
-    odir = 'bioasq7_JBERT_2L_{}_run_{}/'.format(str(lr), run)
+    odir = 'bioasq7_JBERT_2L_{}_run_{}_weight_{}/'.format(str(lr), run, weight)
     odir = os.path.join(odd, odir)
     print(odir)
     if (not os.path.exists(odir)):
