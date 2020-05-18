@@ -1358,44 +1358,87 @@ CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 1 \
 
 CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 1 \
 /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/mvjpdrmm/
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/mvjpdrmm0p01/
 
 CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 2 \
 /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/mvjpdrmm/
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/mvjpdrmm0p01/
 
 CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 3 \
 /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/mvjpdrmm/
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/mvjpdrmm0p01/
 
 CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 4 \
 /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/mvjpdrmm/
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/mvjpdrmm0p01/
 
 CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 5 \
 /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/mvjpdrmm/
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/mvjpdrmm0p01/
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 1 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_1.0_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/mvjpdrmm1p0/
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 2 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_1.0_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/mvjpdrmm1p0/
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 3 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_1.0_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/mvjpdrmm1p0/
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 4 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_1.0_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/mvjpdrmm1p0/
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extract_mvjpdrmm.py 5 \
+/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_MV_jpdrmm_2L_0p01_weight_1.0_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/mvjpdrmm1p0/
+
 
 
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/mvjpdrmm/v3 test_emit_bioasq.json" | grep "^MAP"
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/mvjpdrmm0p01/v3 test_emit_bioasq.json" | grep "^MAP"
 
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/mvjpdrmm/v3 test_emit_bioasq.json" | grep "^MAP"
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/mvjpdrmm0p01/v3 test_emit_bioasq.json" | grep "^MAP"
 
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
-"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/mvjpdrmm/v3 test_emit_bioasq.json" | grep "^MAP"
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/mvjpdrmm0p01/v3 test_emit_bioasq.json" | grep "^MAP"
 
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
-"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/mvjpdrmm/v3 test_emit_bioasq.json" | grep "^MAP"
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/mvjpdrmm0p01/v3 test_emit_bioasq.json" | grep "^MAP"
 
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/mvjpdrmm/v3 test_emit_bioasq.json" | grep "^MAP"
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/mvjpdrmm0p01/v3 test_emit_bioasq.json" | grep "^MAP"
+
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/mvjpdrmm1p0/v3 test_emit_bioasq.json" | grep "^MAP"
+
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_2/mvjpdrmm1p0/v3 test_emit_bioasq.json" | grep "^MAP"
+
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_3/mvjpdrmm1p0/v3 test_emit_bioasq.json" | grep "^MAP"
+
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_4/mvjpdrmm1p0/v3 test_emit_bioasq.json" | grep "^MAP"
+
+java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
+"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
+"/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_5/mvjpdrmm1p0/v3 test_emit_bioasq.json" | grep "^MAP"
+
+
 
 
 '''

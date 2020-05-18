@@ -1416,7 +1416,7 @@ b_size              = 32
 max_epoch           = 30
 early_stop          = 4
 
-weight    = float(sys.argv[1])
+weight      = float(sys.argv[1])
 run_from    = 0
 run_to      = 1
 hdlr        = None
