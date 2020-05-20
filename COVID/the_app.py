@@ -99,6 +99,8 @@ def just_the_json():
         if(req is not None):
             question_text   = req['question']
             section         = req['section']
+            min_year        = req['min_year'] if 'min_year' in req else None
+            max_year        = req['max_year'] if 'max_year' in req else None
             if(len(section.strip())==0):
                 section = None
             ###############################################################################################
@@ -114,7 +116,7 @@ def just_the_json():
                     'docs'  : []
                 }
             }
-            ret_dummy       = retrieve_given_question(question_text, n=20, section=section)
+            ret_dummy       = retrieve_given_question(question_text, n=20, section=section, min_year=min_year, max_year=max_year)
             ret['results']['total'] = len(ret_dummy)
             if(len(ret_dummy)==0):
                 return jsonify(ret)

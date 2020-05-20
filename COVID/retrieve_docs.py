@@ -42,7 +42,7 @@ doc_index   = 'covid_index_0_1'
 def tokenize(x):
   return bioclean(x)
 
-def get_first_n_1(qtext, n, section=None, max_year=2020):
+def get_first_n_1(qtext, n, section=None, min_year=1600, max_year=2020):
     tokenized_body  = bioclean_mod(qtext)
     tokenized_body  = [t for t in tokenized_body if t not in stopwords]
     question        = ' '.join(tokenized_body)
@@ -63,7 +63,7 @@ def get_first_n_1(qtext, n, section=None, max_year=2020):
         "query": {
             "bool": {
                 "must": [
-                    {"range": {"date": {"gte": "1800", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}
+                    {"range": {"date": {"gte": str(min_year), "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}
                 ],
                 "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}],
                 "minimum_should_match": 1,

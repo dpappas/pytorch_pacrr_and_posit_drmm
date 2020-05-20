@@ -811,8 +811,8 @@ wv = dict([(word, wv[word]) for word in wv.vocab.keys()])
 model.eval()
 ###########################################################
 
-def retrieve_given_question(quest, n=100, section=None, max_year=2021):
-    docs                                = get_first_n_1(qtext= quest, n=n, section=section, max_year= max_year)
+def retrieve_given_question(quest, n=100, section=None, min_year=1600, max_year=2021):
+    docs                                = get_first_n_1(qtext= quest, n=n, section=section, min_year=min_year, max_year= max_year)
     quest_tokens, quest_embeds          = get_embeds(tokenize(quest), wv)
     q_idfs                              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     results                             = []
