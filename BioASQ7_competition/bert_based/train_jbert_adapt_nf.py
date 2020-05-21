@@ -598,7 +598,7 @@ def save_checkpoint(epoch, model, bert_model, max_dev_map, optimizer1, optimizer
     }
     torch.save(state, filename)
 
-def embed_the_sents(sents):
+def embed_the_sents(sents, layers_weights):
     eval_examples       = []
     for c, sent in zip(range(len(sents)), sents):
         eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=None, label=str(c)))
@@ -612,7 +612,6 @@ def embed_the_sents(sents):
         embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
         sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
         first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
-        layers_weights          = torch.ones((13, 1)).float().to(device)
         weighted_vecs           = torch.matmul(first_token_tensors, layers_weights).squeeze(-1)
     return weighted_vecs
 
@@ -1595,6 +1594,7 @@ optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-0
 scibert_dir         = '/home/dpappas/scibert_scivocab_uncased'
 bert_tokenizer      = BertTokenizer.from_pretrained(scibert_dir)
 bert_model          = BertModel.from_pretrained(scibert_dir,  output_hidden_states=True, output_attentions=False).to(device)
+layers_weights      = torch.ones((13, 1)).float().to(device)
 for param in bert_model.parameters():
     param.requires_grad = False
 
