@@ -1194,29 +1194,36 @@ max_epoch           = 4
 model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
 optimizer_1         = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
+frozen_or_unfrozen  = 'unfrozen'
+adapt               = False
+#####################
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
 bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
-layers_weights      = torch.ones((13, 1)).float().to(device)/13.0
 for param in bert_model.parameters():
     param.requires_grad = False
-#####################
-lr2                 = 2e-5
-optimizer_2         = optim.Adam(bert_model.parameters(), lr=lr2)
-scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
-#####################
 
+if(adapt):
+    layers_weights  = torch.ones((13, 1)).float().to(device) / 13.0
+else:
+    layers_weights          = torch.ones((13, 1)).float().to(device)
+    layers_weights[1:,:]    = 0.
+    layers_weights.requires_grad = False
+
+if(frozen_or_unfrozen == 'frozen'):
+    optimizer_2, scheduler  = None, None
+else:
+    lr2                 = 2e-5
+    optimizer_2         = optim.Adam(bert_model.parameters(), lr=lr2)
+    scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 
 
 import sys
 hdlr        = None
-run         = 0 #int(sys.argv[1])
+run         = 0         # int(sys.argv[1])
 my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
-#
-frozen_or_unfrozen  = 'unfrozen'
-adapt               = True
 #
 odir        = 'bioasq7_jbertadaptnf_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
 odir        = os.path.join(odd, odir)
@@ -1235,8 +1242,8 @@ print('Compiling model...')
 logger.info('Compiling model...')
 #
 #####################
-print('JPDRMM part')
-logger.info('JPDRMM part')
+print('JBERT part')
+logger.info('JBERT part')
 print_params(model)
 print('BERT part')
 logger.info('BERT part')
@@ -1244,7 +1251,7 @@ print_params(bert_model)
 #####################
 best_dev_map, test_map = None, None
 for epoch in range(max_epoch):
-    # train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+    train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
     epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
     if (best_dev_map is None or epoch_dev_map >= best_dev_map):
         best_dev_map = epoch_dev_map
