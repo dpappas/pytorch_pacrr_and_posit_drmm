@@ -598,7 +598,7 @@ def save_checkpoint(epoch, model, bert_model, max_dev_map, optimizer1, optimizer
     }
     torch.save(state, filename)
 
-def embed_the_sents(sents, questions, layers_weights):
+def embed_the_sents(sents, questions):
     eval_examples       = []
     c = 0
     for sent, question in zip(sents, questions):
@@ -752,11 +752,9 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     ]
     good_doc_af.extend(features)
     ####
-    good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
+    good_sents_escores, held_out_sents, good_sent_tags = [], [], []
     for good_text in good_sents:
-        sent_toks, sent_embeds  = embed_the_sent(' '.join(bioclean(good_text)))
-        oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
-        good_oh_sim.append(oh_sim)
+        sent_toks               = bioclean(good_text)
         good_escores            = GetScores(quest, good_text, the_bm25)[:-1]
         good_escores.append(len(sent_toks) / 342.)
         tomi                    = (set(sent_toks) & set(quest_toks))
@@ -774,18 +772,18 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
             sum(tomi_idfs) / sum(quest_idfs),
         ]
         #
-        good_sents_embeds.append(sent_embeds)
         good_sents_escores.append(good_escores + features)
         held_out_sents.append(good_text)
         good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
+    sents_embeds = embed_the_sents(held_out_sents, [quest] * len(held_out_sents))
+    ####
     return {
-        'sents_embeds': good_sents_embeds,
-        'sents_escores': good_sents_escores,
-        'doc_af': good_doc_af,
-        'sent_tags': good_sent_tags,
-        'held_out_sents': held_out_sents,
-        'oh_sims': good_oh_sim
+        'sents_embeds'  : sents_embeds,
+        'sents_escores' : good_sents_escores,
+        'doc_af'        : good_doc_af,
+        'sent_tags'     : good_sent_tags,
+        'held_out_sents': held_out_sents
     }
 
 def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, use_sent_tokenizer):
@@ -961,23 +959,23 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
     ###########################################################
-    print('Named trainable params')
-    logger.info(40 * '=')
-    logger.info('Named trainable params')
-    logger.info(40 * '=')
-    for name, param in model.named_parameters():
-        if (param.requires_grad):
-            print(param.requires_grad, name, param.size())
-            logger.info(param.requires_grad, name, param.size())
-    ###########################################################
-    print('Named not trainable params')
-    logger.info(40 * '=')
-    logger.info('Named not trainable params')
-    logger.info(40 * '=')
-    for name, param in model.named_parameters():
-        if (not param.requires_grad):
-            print(param.requires_grad, name, param.size())
-            logger.info(param.requires_grad, name, param.size())
+    # print('Named trainable params')
+    # logger.info(40 * '=')
+    # logger.info('Named trainable params')
+    # logger.info(40 * '=')
+    # for name, param in model.named_parameters():
+    #     if (param.requires_grad):
+    #         print(param.requires_grad, name, param.size())
+    #         logger.info(param.requires_grad, name, param.size())
+    # ###########################################################
+    # print('Named not trainable params')
+    # logger.info(40 * '=')
+    # logger.info('Named not trainable params')
+    # logger.info(40 * '=')
+    # for name, param in model.named_parameters():
+    #     if (not param.requires_grad):
+    #         print(param.requires_grad, name, param.size())
+    #         logger.info(param.requires_grad, name, param.size())
     ###########################################################
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
@@ -1042,8 +1040,7 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         good_snips          = get_snips(quest_id, gid, bioasq6_data)
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        quest_tokens, qemb  = embed_the_sent(quest_text)
-        q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
+        quest_tokens        = quest_text.split()
         ####
         datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens)
         good_sents_embeds   = datum['sents_embeds']
@@ -1051,7 +1048,6 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         good_doc_af         = datum['doc_af']
         good_sent_tags      = datum['sent_tags']
         good_held_out_sents = datum['held_out_sents']
-        good_oh_sims        = datum['oh_sims']
         #
         datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], quest_tokens)
         bad_sents_embeds    = datum['sents_embeds']
@@ -1059,26 +1055,20 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         bad_doc_af          = datum['doc_af']
         bad_sent_tags       = [0] * len(datum['sent_tags'])
         bad_held_out_sents  = datum['held_out_sents']
-        bad_oh_sims         = datum['oh_sims']
         #
-        if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
-            yield {
-                'good_sents_embeds': good_sents_embeds,
-                'good_sents_escores': good_sents_escores,
-                'good_doc_af': good_doc_af,
-                'good_sent_tags': good_sent_tags,
-                'good_held_out_sents': good_held_out_sents,
-                'good_oh_sims': good_oh_sims,
+        yield {
+                'good_sents_embeds'     : good_sents_embeds,
+                'good_sents_escores'    : good_sents_escores,
+                'good_doc_af'           : good_doc_af,
+                'good_sent_tags'        : good_sent_tags,
+                'good_held_out_sents'   : good_held_out_sents,
                 #
-                'bad_sents_embeds': bad_sents_embeds,
-                'bad_sents_escores': bad_sents_escores,
-                'bad_doc_af': bad_doc_af,
-                'bad_sent_tags': bad_sent_tags,
-                'bad_held_out_sents': bad_held_out_sents,
-                'bad_oh_sims': bad_oh_sims,
+                'bad_sents_embeds'      : bad_sents_embeds,
+                'bad_sents_escores'     : bad_sents_escores,
+                'bad_doc_af'            : bad_doc_af,
+                'bad_sent_tags'         : bad_sent_tags,
+                'bad_held_out_sents'    : bad_held_out_sents
                 #
-                'quest_embeds': qemb,
-                'q_idfs': q_idfs,
             }
 
 def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
@@ -1098,16 +1088,12 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     )
     for datum in pbar:
         cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds=datum['good_sents_embeds'],
-            doc2_sents_embeds=datum['bad_sents_embeds'],
-            doc1_oh_sim=datum['good_oh_sims'],
-            doc2_oh_sim=datum['bad_oh_sims'],
-            question_embeds=datum['quest_embeds'],
-            q_idfs=datum['q_idfs'],
-            sents_gaf=datum['good_sents_escores'],
-            sents_baf=datum['bad_sents_escores'],
-            doc_gaf=datum['good_doc_af'],
-            doc_baf=datum['bad_doc_af']
+            doc1_sents_embeds   = datum['good_sents_embeds'],
+            doc2_sents_embeds   = datum['bad_sents_embeds'],
+            doc1_saf            = datum['good_sents_escores'],
+            doc2_saf            = datum['bad_sents_escores'],
+            doc1_daf            = datum['good_doc_af'],
+            doc2_daf            = datum['bad_doc_af']
         )
         #
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
@@ -1171,10 +1157,8 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     #
     for dato in tqdm(data['queries'], ascii=True):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato,
-                                                                                        dato['retrieved_documents'],
-                                                                                        data_for_revision, ret_data,
-                                                                                        use_sent_tokenizer)
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(
+            docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
         all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
         all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
@@ -1207,9 +1191,10 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         )
     return res_map
 
-class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim=768, k_sent_maxpool=1):
-        super(Sent_Posit_Drmm_Modeler, self).__init__()
+class JBERT(nn.Module):
+    def __init__(self, embedding_dim=768, k_for_maxpool=5, k_sent_maxpool=1):
+        super(JBERT, self).__init__()
+        self.k                      = k_for_maxpool
         self.k_sent_maxpool         = k_sent_maxpool
         self.doc_add_feats          = 11
         self.sent_add_feats         = 10
@@ -1223,46 +1208,52 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.doc_scorer_1           = nn.Linear(8, 1)
         ##########################
     #
-    def forward(
-            self,
-            doc1_sents_embeds,
-            doc2_sents_embeds,
-            doc1_saf,
-            doc2_saf,
-            doc1_daf,
-            doc2_daf
-    ):
+    def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_saf, doc2_saf, doc1_daf, doc2_daf):
         doc1_saf = autograd.Variable(torch.FloatTensor(doc1_saf), requires_grad=False).to(device)
         doc2_saf = autograd.Variable(torch.FloatTensor(doc2_saf), requires_grad=False).to(device)
         doc1_daf = autograd.Variable(torch.FloatTensor(doc1_daf), requires_grad=False).to(device)
         doc2_daf = autograd.Variable(torch.FloatTensor(doc2_daf), requires_grad=False).to(device)
         ################################################################
-
-        ################################################################
-        good_out_pp = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp = torch.cat([bad_out, doc_baf], -1)
-        ################################################################
-        final_good_output = self.final_layer_1(good_out_pp)
-        final_good_output = self.final_activ_1(final_good_output)
-        final_good_output = self.final_layer_2(final_good_output)
-        ################################################################
-        gs_emits = gs_emits.unsqueeze(-1)
-        gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits = torch.sigmoid(gs_emits)
-        ################################################################
-        final_bad_output = self.final_layer_1(bad_out_pp)
-        final_bad_output = self.final_activ_1(final_bad_output)
-        final_bad_output = self.final_layer_2(final_bad_output)
-        ################################################################
-        bs_emits = bs_emits.unsqueeze(-1)
-        # bs_emits = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits = self.oo_layer(bs_emits).squeeze(-1)
-        bs_emits = torch.sigmoid(bs_emits)
-        ################################################################
-        loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        doc1_sent_scores        = F.tanh(self.sentence_scorer_0(doc1_sents_embeds))
+        doc1_sent_scores        = F.sigmoid(self.sentence_scorer_1(doc1_sent_scores))
+        doc1_sent_scores        = torch.cat((doc1_sent_scores, doc1_saf), dim=-1)
+        doc1_sent_scores        = F.sigmoid(self.sentence_scorer_2(doc1_sent_scores))
+        doc1_sent_max_score     = doc1_sent_scores.max()
+        print(doc1_sent_max_score)
+        print(doc1_sent_max_score.unsqueeze(1).size())
+        print(doc1_daf.size())
+        doc1_doc_score          = torch.cat((doc1_sent_max_score.unsqueeze(1), doc1_daf))
+        print(doc1_doc_score.size())
+        doc1_doc_score          = self.doc_scorer_0(doc1_doc_score)
+        print(doc1_doc_score.size())
+        doc1_doc_score          = self.doc_scorer_1(doc1_doc_score)
+        print(doc1_doc_score.size())
+        ###############################################################
+        ###############################################################
+        # good_out_pp = torch.cat([good_out, doc_gaf], -1)
+        # bad_out_pp = torch.cat([bad_out, doc_baf], -1)
+        # ################################################################
+        # final_good_output = self.final_layer_1(good_out_pp)
+        # final_good_output = self.final_activ_1(final_good_output)
+        # final_good_output = self.final_layer_2(final_good_output)
+        # ################################################################
+        # gs_emits = gs_emits.unsqueeze(-1)
+        # gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
+        # gs_emits = self.oo_layer(gs_emits).squeeze(-1)
+        # gs_emits = torch.sigmoid(gs_emits)
+        # ################################################################
+        # final_bad_output = self.final_layer_1(bad_out_pp)
+        # final_bad_output = self.final_activ_1(final_bad_output)
+        # final_bad_output = self.final_layer_2(final_bad_output)
+        # ################################################################
+        # bs_emits = bs_emits.unsqueeze(-1)
+        # # bs_emits = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        # bs_emits = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
+        # bs_emits = self.oo_layer(bs_emits).squeeze(-1)
+        # bs_emits = torch.sigmoid(bs_emits)
+        # ################################################################
+        # loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
+        # return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 #####################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
@@ -1292,7 +1283,7 @@ max_epoch           = 4
 # batch sizes       : 8, 16, 32, 64, 128
 # learning rates    : 3e-4, 1e-4, 5e-5, 3e-5
 #####################
-model               = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
+model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
 optimizer_1         = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
@@ -1311,7 +1302,7 @@ scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97
 
 import sys
 hdlr        = None
-run         = int(sys.argv[1])
+run         = 0 #int(sys.argv[1])
 my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
@@ -1353,47 +1344,3 @@ for epoch in range(max_epoch):
 
 # CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm_att.py 0
 
-'''
-['[CLS]', 'the', 'drugs', 'covered', 'target', 'ga', '##ba', '##a', 'za', '##le', '##pl', '##on', '-', 'cr', 'lore', '##di', '##pl', '##on', 'ev', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tam', '##ine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'ser', '##oton', '##in', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'mel', '##aton', '##ins', '##ero', '##ton', '##in', '##5', '-', 'h', '##t', '##1', '##a', 'pi', '##rom', '##ela', '##tine', 'and', 'mel', '##aton', '##in', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'mel', '##aton', '##in', 'and', 'ta', '##si', '##mel', '##te', '##on', 'for', 'pediatric', 'sleep', 'and', 'circa', '##dian', '[SEP]']
-len([
-'the', 'drugs', 'covered', 'target', 'gabaa', 'zaleplon', '-', 'cr', 'lorediplon', 'evt', '-', '201', 'orexin', 
-'filorexant', 'min', '-', '202', 'histamine', '-', 'h1', 'ly2624803', 'serotonin', '5', '-', 'ht2a', 'iti', '-', 
-'007', 'melatoninserotonin5', '-', 'ht1a', 'piromelatine', 'and', 'melatonin', 'indication', 'expansions', 
-'of', 'prolonged', '-', 'release', 'melatonin', 'and', 'tasimelteon', 'for', 'pediatric', 'sleep', 'and', 
-'circadian'
-])
-
-['the', 'drugs', 'covered', 'target', 'gabaa', 'zaleplon-cr', 'lorediplon', 'evt-201', 'orexin', 
-'filorexant', 'min-202', 'histamine-h1', 'ly2624803', 'serotonin', '5-ht2a', 'iti-007',
-'melatoninserotonin5-ht1a', 'piromelatine', 'and', 'melatonin', 'indication', 'expansions', 
-'of', 'prolonged-release', 'melatonin', 'and', 'tasimelteon', 'for', 'pediatric', 'sleep', 'and', 'circadian', 
-'rhythm', 'disorders', 'receptors']
-
-python3.6
-import pickle
-from pprint import pprint
-d = pickle.load(open('/home/dpappas/bioasq_all/bert_elmo_embeds/25423562.p','rb'))
-pprint(list(d.keys()))
-
-pprint(d['abs_bert_original_tokens'])
-
-[
-['[CLS]', 'introduction', 'ins', '##om', '##nia', 'is', 'ty', '##pi', '##fied', 'by', 'a', 'difficulty', 'in', 'sleep', 'initiation', 'maintenance', 'and', '##or', 'quality', 'non', '-', 'rest', '##ora', '##tive', 'sleep', 'resulting', 'in', 'significant', 'daytime', 'distress', '[SEP]'], 
-['[CLS]', 'areas', 'covered', 'this', 'review', 'sum', '##mar', '##izes', 'the', 'available', 'efficacy', 'and', 'safety', 'data', 'for', 'drugs', 'currently', 'in', 'the', 'pipeline', 'for', 'treating', 'ins', '##om', '##nia', '[SEP]'], 
-['[CLS]', 'specifically', 'the', 'authors', 'performed', 'med', '##line', 'and', 'internet', 'searches', 'using', 'the', 'key', '##words', 'phase', 'ii', 'and', 'ins', '##om', '##nia', '[SEP]'], 
-['[CLS]', 'the', 'drugs', 'covered', 'target', 'ga', '##ba', '##a', 'za', '##le', '##pl', '##on', '-', 'cr', 'lore', '##di', '##pl', '##on', 'ev', '##t', '-', '201', 'ore', '##xin', 'fi', '##lore', '##xa', '##nt', 'min', '-', '202', 'his', '##tam', '##ine', '-', 'h', '##1', 'l', '##y', '##26', '##24', '##80', '##3', 'ser', '##oton', '##in', '5', '-', 'h', '##t', '##2', '##a', 'it', '##i', '-', '00', '##7', 'mel', '##aton', '##ins', '##ero', '##ton', '##in', '##5', '-', 'h', '##t', '##1', '##a', 'pi', '##rom', '##ela', '##tine', 'and', 'mel', '##aton', '##in', 'indication', 'expansion', '##s', 'of', 'prolonged', '-', 'release', 'mel', '##aton', '##in', 'and', 'ta', '##si', '##mel', '##te', '##on', 'for', 'pediatric', 'sleep', 'and', 'circa', '##dian', '[SEP]'], 
-['[CLS]', 'expert', 'opinion', 'low', '-', 'priced', 'generic', 'environments', 'and', 'high', 'development', 'costs', 'limit', 'the', 'further', 'development', 'of', 'drugs', 'that', 'treat', 'ins', '##om', '##nia', '[SEP]'], 
-['[CLS]', 'however', 'the', 'bid', '##ire', '##ction', '##al', 'link', 'between', 'sleep', 'and', 'certain', 'como', '##rb', '##idi', '##ties', 'may', 'encourage', 'development', 'of', 'specific', 'drugs', 'for', 'como', '##rb', '##id', 'ins', '##om', '##nia', '[SEP]'], 
-['[CLS]', 'new', 'ins', '##om', '##nia', 'the', '##ra', '##pies', 'will', 'most', 'likely', 'move', 'away', 'from', 'ga', '##ba', '##ar', 'receptors', 'modulation', 'to', 'more', 'subtle', 'neurological', 'pathways', 'that', 'regulate', 'the', 'sleep', '-', 'wake', 'cycle', '[SEP]']
-]
-
-
-CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py 0
-CUDA_VISIBLE_DEVICES=1 python3.6 train_bert_jpdrmm.py 1
-CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py 2
-CUDA_VISIBLE_DEVICES=1 python3.6 train_bert_jpdrmm.py 3
-CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm.py 4
-
-
-
-'''
