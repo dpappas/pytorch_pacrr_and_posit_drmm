@@ -1208,52 +1208,39 @@ class JBERT(nn.Module):
         self.doc_scorer_1           = nn.Linear(8, 1)
         ##########################
     #
+    def my_hinge_loss(self, positives, negatives, margin=1.0):
+        delta = negatives - positives
+        loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
+        return loss_q_pos
+    #
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_saf, doc2_saf, doc1_daf, doc2_daf):
         doc1_saf = autograd.Variable(torch.FloatTensor(doc1_saf), requires_grad=False).to(device)
         doc2_saf = autograd.Variable(torch.FloatTensor(doc2_saf), requires_grad=False).to(device)
         doc1_daf = autograd.Variable(torch.FloatTensor(doc1_daf), requires_grad=False).to(device)
         doc2_daf = autograd.Variable(torch.FloatTensor(doc2_daf), requires_grad=False).to(device)
         ################################################################
-        doc1_sent_scores        = F.tanh(self.sentence_scorer_0(doc1_sents_embeds))
-        doc1_sent_scores        = F.sigmoid(self.sentence_scorer_1(doc1_sent_scores))
+        doc1_sent_scores        = torch.tanh(self.sentence_scorer_0(doc1_sents_embeds))
+        doc1_sent_scores        = torch.sigmoid(self.sentence_scorer_1(doc1_sent_scores))
         doc1_sent_scores        = torch.cat((doc1_sent_scores, doc1_saf), dim=-1)
-        doc1_sent_scores        = F.sigmoid(self.sentence_scorer_2(doc1_sent_scores))
+        doc1_sent_scores        = torch.sigmoid(self.sentence_scorer_2(doc1_sent_scores))
+        ###############################################################
         doc1_sent_max_score     = doc1_sent_scores.max()
-        print(doc1_sent_max_score)
-        print(doc1_sent_max_score.unsqueeze(1).size())
-        print(doc1_daf.size())
-        doc1_doc_score          = torch.cat((doc1_sent_max_score.unsqueeze(1), doc1_daf))
-        print(doc1_doc_score.size())
-        doc1_doc_score          = self.doc_scorer_0(doc1_doc_score)
-        print(doc1_doc_score.size())
+        doc1_doc_score          = torch.cat((doc1_sent_max_score.unsqueeze(0), doc1_daf))
+        doc1_doc_score          = F.leaky_relu(self.doc_scorer_0(doc1_doc_score))
         doc1_doc_score          = self.doc_scorer_1(doc1_doc_score)
-        print(doc1_doc_score.size())
         ###############################################################
+        doc2_sent_scores        = torch.tanh(self.sentence_scorer_0(doc2_sents_embeds))
+        doc2_sent_scores        = torch.sigmoid(self.sentence_scorer_1(doc2_sent_scores))
+        doc2_sent_scores        = torch.cat((doc2_sent_scores, doc2_saf), dim=-1)
+        doc2_sent_scores        = torch.sigmoid(self.sentence_scorer_2(doc2_sent_scores))
         ###############################################################
-        # good_out_pp = torch.cat([good_out, doc_gaf], -1)
-        # bad_out_pp = torch.cat([bad_out, doc_baf], -1)
-        # ################################################################
-        # final_good_output = self.final_layer_1(good_out_pp)
-        # final_good_output = self.final_activ_1(final_good_output)
-        # final_good_output = self.final_layer_2(final_good_output)
-        # ################################################################
-        # gs_emits = gs_emits.unsqueeze(-1)
-        # gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        # gs_emits = self.oo_layer(gs_emits).squeeze(-1)
-        # gs_emits = torch.sigmoid(gs_emits)
-        # ################################################################
-        # final_bad_output = self.final_layer_1(bad_out_pp)
-        # final_bad_output = self.final_activ_1(final_bad_output)
-        # final_bad_output = self.final_layer_2(final_bad_output)
-        # ################################################################
-        # bs_emits = bs_emits.unsqueeze(-1)
-        # # bs_emits = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        # bs_emits = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        # bs_emits = self.oo_layer(bs_emits).squeeze(-1)
-        # bs_emits = torch.sigmoid(bs_emits)
-        # ################################################################
-        # loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
-        # return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
+        doc2_sent_max_score     = doc2_sent_scores.max()
+        doc2_doc_score          = torch.cat((doc2_sent_max_score.unsqueeze(0), doc2_daf))
+        doc2_doc_score          = F.leaky_relu(self.doc_scorer_0(doc2_doc_score))
+        doc2_doc_score          = self.doc_scorer_1(doc2_doc_score)
+        ###############################################################
+        loss1                   = self.my_hinge_loss(doc1_doc_score, doc2_doc_score)
+        return loss1, doc1_doc_score, doc2_doc_score, doc1_sent_scores, doc2_sent_scores
 
 #####################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
