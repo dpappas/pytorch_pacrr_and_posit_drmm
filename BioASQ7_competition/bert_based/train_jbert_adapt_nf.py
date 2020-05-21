@@ -604,9 +604,9 @@ def embed_the_sents(sents):
         eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=None, label=str(c)))
     eval_features       = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
     input_ids           = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(device)
+    attention_mask      = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(device)
     with torch.no_grad():
-        attention_mask          = torch.ones_like(input_ids).float().to(device)
-        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
+        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
         head_mask               = [None] * bert_model.config.num_hidden_layers
         token_type_ids          = torch.zeros_like(input_ids).to(device)
         embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
