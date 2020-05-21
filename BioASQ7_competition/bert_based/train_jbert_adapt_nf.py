@@ -684,7 +684,7 @@ def load_all_data(dataloc, idf_pickle_path, bert_all_words_path):
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition = doc_emit_.cpu().item()
-    emitss  = gs_emits_.tolist()
+    emitss  = gs_emits_.squeeze().tolist()
     mmax    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
@@ -1086,10 +1086,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     bert_model.eval()
     #
     ret_data = {'questions': []}
-    all_bioasq_subm_data_v1 = {"questions": []}
-    all_bioasq_subm_data_known_v1 = {"questions": []}
-    all_bioasq_subm_data_v2 = {"questions": []}
-    all_bioasq_subm_data_known_v2 = {"questions": []}
     all_bioasq_subm_data_v3 = {"questions": []}
     all_bioasq_subm_data_known_v3 = {"questions": []}
     all_bioasq_gold_data = {'questions': []}
@@ -1099,17 +1095,9 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
         data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(
             docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
-        all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
-        all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
-        all_bioasq_subm_data_known_v1['questions'].append(snips_res_known['v1'])
-        all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
     #
-    print_the_results('v1 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1,
-                      data_for_revision)
-    print_the_results('v2 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2,
-                      data_for_revision)
     print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3,
                       data_for_revision)
     #
