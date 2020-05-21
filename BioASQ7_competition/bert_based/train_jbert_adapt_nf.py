@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import  torch, pickle, os, re, nltk, logging, subprocess, json, math, random, time
+import  torch, pickle, os, re, nltk, logging, subprocess, json, math, random, time, sys
 import  torch.nn.functional     as F
 import  numpy                   as np
 from    nltk.tokenize           import sent_tokenize
@@ -1217,8 +1217,6 @@ else:
     optimizer_2         = optim.Adam(bert_model.parameters(), lr=lr2)
     scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 
-
-import sys
 hdlr        = None
 run         = 0         # int(sys.argv[1])
 my_seed     = run
