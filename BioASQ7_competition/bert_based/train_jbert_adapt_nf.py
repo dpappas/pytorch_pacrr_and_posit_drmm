@@ -507,42 +507,16 @@ def get_norm_doc_scores(the_doc_scores):
         norm_doc_scores[ks[i]] = vs[i]
     return norm_doc_scores
 
-def select_snippets_v1(extracted_snippets):
-    '''
-    :param extracted_snippets:
-    :param doc_res:
-    :return: returns the best 10 snippets of all docs (0..n from each doc)
-    '''
-    sorted_snips = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-    return sorted_snips[:10]
-
-def select_snippets_v2(extracted_snippets):
-    '''
-    :param extracted_snippets:
-    :param doc_res:
-    :return: returns the best snippet of each doc  (1 from each doc)
-    '''
-    # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
-    ret = {}
-    for es in extracted_snippets:
-        if (es[2] in ret):
-            if (es[1] > ret[es[2]][1]):
-                ret[es[2]] = es
-        else:
-            ret[es[2]] = es
-    sorted_snips = sorted(ret.values(), key=lambda x: x[1], reverse=True)
-    return sorted_snips[:10]
-
 def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
     :param      extracted_snippets:
     :param      doc_res:
     :return:    returns the top 10 snippets across all documents (0..n from each doc)
     '''
-    norm_doc_scores = get_norm_doc_scores(the_doc_scores)
+    norm_doc_scores     = get_norm_doc_scores(the_doc_scores)
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
-    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
-    sorted_snips = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
+    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
+    sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
 
 def similar(upstream_seq, downstream_seq):
@@ -710,8 +684,8 @@ def load_all_data(dataloc, idf_pickle_path, bert_all_words_path):
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
     emition = doc_emit_.cpu().item()
-    emitss = gs_emits_.tolist()
-    mmax = max(emitss)
+    emitss  = gs_emits_.tolist()
+    mmax    = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
         t = (
@@ -723,6 +697,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
         all_emits.append(t)
         # if (emitss[ind] == mmax):
         #     extracted_from_one.append(t)
+        print(t)
         extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
@@ -795,9 +770,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     ####
     quest_text          = dato['query_text']
     quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-    quest_tokens, qemb  = embed_the_sent(quest_text)
+    quest_tokens        = quest_text.split()
     ####
-    q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     gold_snips          = get_gold_snips(dato['query_id'])
     #
     doc_res, extracted_snippets         = {}, []
@@ -806,11 +780,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
         datum                   = prep_data(quest_text, docs[retr['doc_id']], retr['norm_bm25_score'], gold_snips, quest_tokens)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
-            doc1_oh_sim         = datum['oh_sims'],
-            question_embeds     = qemb,
-            q_idfs              = q_idfs,
-            sents_gaf           = datum['sents_escores'],
-            doc_gaf             = datum['doc_af']
+            doc1_saf            = datum['sents_escores'],
+            doc1_daf            = datum['doc_af']
         )
         doc_res, extracted_from_one, all_emits = do_for_one_retrieved(
             doc_emit_, gs_emits_, datum['held_out_sents'], retr, doc_res, gold_snips
@@ -836,48 +807,17 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
     extracted_snippets_known_rel_num = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
     if (use_sent_tokenizer):
-        extracted_snippets_v1 = select_snippets_v1(extracted_snippets)
-        extracted_snippets_v2 = select_snippets_v2(extracted_snippets)
         extracted_snippets_v3 = select_snippets_v3(extracted_snippets, the_doc_scores)
-        extracted_snippets_known_rel_num_v1 = select_snippets_v1(extracted_snippets_known_rel_num)
-        extracted_snippets_known_rel_num_v2 = select_snippets_v2(extracted_snippets_known_rel_num)
         extracted_snippets_known_rel_num_v3 = select_snippets_v3(extracted_snippets_known_rel_num, the_doc_scores)
     else:
-        extracted_snippets_v1, extracted_snippets_v2, extracted_snippets_v3 = [], [], []
-        extracted_snippets_known_rel_num_v1, extracted_snippets_known_rel_num_v2, extracted_snippets_known_rel_num_v3 = [], [], []
+        extracted_snippets_v3 = []
+        extracted_snippets_known_rel_num_v3 = []
     #
-    # pprint(extracted_snippets_v1)
-    # pprint(extracted_snippets_v2)
-    # pprint(extracted_snippets_v3)
-    # exit()
-    snips_res_v1 = prep_extracted_snippets(extracted_snippets_v1, docs, dato['query_id'], doc_res[:10],
-                                           dato['query_text'])
-    snips_res_v2 = prep_extracted_snippets(extracted_snippets_v2, docs, dato['query_id'], doc_res[:10],
-                                           dato['query_text'])
-    snips_res_v3 = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10],
-                                           dato['query_text'])
-    # pprint(snips_res_v1)
-    # pprint(snips_res_v2)
-    # pprint(snips_res_v3)
-    # exit()
+    snips_res_v3 = prep_extracted_snippets(extracted_snippets_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
+    snips_res_known_rel_num_v3 = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'], doc_res[:10], dato['query_text'])
     #
-    snips_res_known_rel_num_v1 = prep_extracted_snippets(extracted_snippets_known_rel_num_v1, docs, dato['query_id'],
-                                                         doc_res[:10], dato['query_text'])
-    snips_res_known_rel_num_v2 = prep_extracted_snippets(extracted_snippets_known_rel_num_v2, docs, dato['query_id'],
-                                                         doc_res[:10], dato['query_text'])
-    snips_res_known_rel_num_v3 = prep_extracted_snippets(extracted_snippets_known_rel_num_v3, docs, dato['query_id'],
-                                                         doc_res[:10], dato['query_text'])
-    #
-    snips_res = {
-        'v1': snips_res_v1,
-        'v2': snips_res_v2,
-        'v3': snips_res_v3,
-    }
-    snips_res_known = {
-        'v1': snips_res_known_rel_num_v1,
-        'v2': snips_res_known_rel_num_v2,
-        'v3': snips_res_known_rel_num_v3,
-    }
+    snips_res = {'v3': snips_res_v3}
+    snips_res_known = {'v3': snips_res_known_rel_num_v3}
     return data_for_revision, ret_data, snips_res, snips_res_known
 
 def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bioasq_subm_data_known, data_for_revision):
@@ -1213,6 +1153,20 @@ class JBERT(nn.Module):
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
     #
+    def emit_one(self, doc1_sents_embeds, doc1_saf, doc1_daf):
+        doc1_saf = autograd.Variable(torch.FloatTensor(doc1_saf), requires_grad=False).to(device)
+        doc1_daf = autograd.Variable(torch.FloatTensor(doc1_daf), requires_grad=False).to(device)
+        ################################################################
+        doc1_sent_scores        = torch.tanh(self.sentence_scorer_0(doc1_sents_embeds))
+        doc1_sent_scores        = torch.sigmoid(self.sentence_scorer_1(doc1_sent_scores))
+        doc1_sent_scores        = torch.cat((doc1_sent_scores, doc1_saf), dim=-1)
+        doc1_sent_scores        = torch.sigmoid(self.sentence_scorer_2(doc1_sent_scores))
+        ###############################################################
+        doc1_sent_max_score     = doc1_sent_scores.max()
+        doc1_doc_score          = torch.cat((doc1_sent_max_score.unsqueeze(0), doc1_daf))
+        doc1_doc_score          = F.leaky_relu(self.doc_scorer_0(doc1_doc_score))
+        doc1_doc_score          = self.doc_scorer_1(doc1_doc_score)
+        return doc1_doc_score, doc1_sent_scores
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_saf, doc2_saf, doc1_daf, doc2_daf):
         doc1_saf = autograd.Variable(torch.FloatTensor(doc1_saf), requires_grad=False).to(device)
         doc2_saf = autograd.Variable(torch.FloatTensor(doc2_saf), requires_grad=False).to(device)
@@ -1321,7 +1275,7 @@ print_params(bert_model)
 #####################
 best_dev_map, test_map = None, None
 for epoch in range(max_epoch):
-    train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
+    # train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
     epoch_dev_map = get_one_map('dev', dev_data, dev_docs, use_sent_tokenizer=True)
     if (best_dev_map is None or epoch_dev_map >= best_dev_map):
         best_dev_map = epoch_dev_map
