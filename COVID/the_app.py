@@ -99,8 +99,8 @@ def just_the_json():
         if(req is not None):
             question_text   = req['question']
             section         = req['section']
-            min_year        = req['min_year'] if 'min_year' in req else None
-            max_year        = req['max_year'] if 'max_year' in req else None
+            min_year        = req['min_year'] if 'min_year' in req else '1600'
+            max_year        = req['max_year'] if 'max_year' in req else '3000'
             if(len(section.strip())==0):
                 section = None
             ###############################################################################################
