@@ -587,8 +587,11 @@ def embed_the_sents(sents, questions):
         token_type_ids          = torch.zeros_like(input_ids).to(device)
         embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
         sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
-        first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
-        weighted_vecs           = torch.matmul(first_token_tensors, layers_weights).squeeze(-1)
+        if(adapt):
+            first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
+            weighted_vecs           = torch.matmul(first_token_tensors, layers_weights).squeeze(-1)
+        else:
+            weighted_vecs           = sequence_output[:, 0, :]
     return weighted_vecs
 
 def get_map_res(fgold, femit, eval_path):
@@ -1192,31 +1195,29 @@ max_epoch           = 4
 # learning rates    : 3e-4, 1e-4, 5e-5, 3e-5
 #####################
 model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
-optimizer_1         = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
-frozen_or_unfrozen  = 'unfrozen'
-adapt               = False
+frozen_or_unfrozen  = 'frozen'
+adapt               = True
 #####################
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
 bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
 for param in bert_model.parameters():
     param.requires_grad = False
-
+#####################
 if(adapt):
-    layers_weights  = torch.ones((13, 1)).float().to(device) / 13.0
+    layers_weights  = nn.Parameter(torch.ones((13, 1)).float().to(device) / 13.0)
+    optimizer_1     = optim.Adam(list(model.parameters()) + [layers_weights], lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 else:
-    layers_weights          = torch.ones((13, 1)).float().to(device)
-    layers_weights[1:,:]    = 0.
-    layers_weights.requires_grad = False
-
+    optimizer_1     = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+#####################
 if(frozen_or_unfrozen == 'frozen'):
     optimizer_2, scheduler  = None, None
 else:
     lr2                 = 2e-5
     optimizer_2         = optim.Adam(bert_model.parameters(), lr=lr2)
     scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
-
+#####################
 hdlr        = None
 run         = 0         # int(sys.argv[1])
 my_seed     = run
