@@ -1583,23 +1583,25 @@ print('Compiling model...')
 logger.info('Compiling model...')
 #
 #####################
-# bert : https://github.com/google-research/bert
-# batch sizes: 8, 16, 32, 64, 128
-# learning rates: 3e-4, 1e-4, 5e-5, 3e-5
+# bert              : https://github.com/google-research/bert
+# batch sizes       : 8, 16, 32, 64, 128
+# learning rates    : 3e-4, 1e-4, 5e-5, 3e-5
 #####################
 
 model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
 optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
-scibert_dir         = '/home/dpappas/scibert_scivocab_uncased'
-bert_tokenizer      = BertTokenizer.from_pretrained(scibert_dir)
-bert_model          = BertModel.from_pretrained(scibert_dir,  output_hidden_states=True, output_attentions=False).to(device)
-layers_weights      = torch.ones((13, 1)).float().to(device)
+frozen_or_unfrozen  = 'unfrozen'
+cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
+bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
+bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
+layers_weights      = torch.ones((13, 1)).float().to(device)/13.0
 for param in bert_model.parameters():
     param.requires_grad = False
-
-optimizer_2 = optim.Adam(bert_model.parameters(), lr=lr2)
-scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
+#####################
+lr2                 = 2e-5
+optimizer_2         = optim.Adam(bert_model.parameters(), lr=lr2)
+scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 
 #####################
 print('JPDRMM part')
