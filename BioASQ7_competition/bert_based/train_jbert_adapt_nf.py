@@ -697,7 +697,6 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
         all_emits.append(t)
         # if (emitss[ind] == mmax):
         #     extracted_from_one.append(t)
-        print(t)
         extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
@@ -899,24 +898,6 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
     ###########################################################
-    # print('Named trainable params')
-    # logger.info(40 * '=')
-    # logger.info('Named trainable params')
-    # logger.info(40 * '=')
-    # for name, param in model.named_parameters():
-    #     if (param.requires_grad):
-    #         print(param.requires_grad, name, param.size())
-    #         logger.info(param.requires_grad, name, param.size())
-    # ###########################################################
-    # print('Named not trainable params')
-    # logger.info(40 * '=')
-    # logger.info('Named not trainable params')
-    # logger.info(40 * '=')
-    # for name, param in model.named_parameters():
-    #     if (not param.requires_grad):
-    #         print(param.requires_grad, name, param.size())
-    #         logger.info(param.requires_grad, name, param.size())
-    ###########################################################
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
     if (avgdl == 0):
@@ -1078,8 +1059,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
                                                                        batch_aver_acc, epoch_aver_acc, elapsed_time))
     print('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info(
-        'Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
+    logger.info('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
@@ -1098,8 +1078,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
     #
-    print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3,
-                      data_for_revision)
+    print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
     #
     if (prefix == 'dev'):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
@@ -1237,8 +1216,10 @@ random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
 frozen_or_unfrozen  = 'unfrozen'
-odir = 'bioasq7_jbertadaptnf_{}_run_{}/'.format(frozen_or_unfrozen, run)
-odir = os.path.join(odd, odir)
+adapt               = True
+#
+odir        = 'bioasq7_jbertadaptnf_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
+odir        = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
     os.makedirs(odir)
