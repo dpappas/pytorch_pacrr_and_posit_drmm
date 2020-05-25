@@ -1043,7 +1043,6 @@ deviation           = 1.2210
 print(avgdl, mean, deviation)
 ###########################################################
 k_for_maxpool       = 5
-k_sent_maxpool      = 5
 embedding_dim       = 768 #200
 ###########################################################
 my_seed     = 1
@@ -1092,4 +1091,5 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 print(test_map)
 ###########################################################
 
+# CUDA_VISIBLE_DEVICES=1 python3.6 extract_jbert_adapt_nf.py 1
 
