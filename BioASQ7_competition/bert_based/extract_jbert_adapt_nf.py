@@ -808,10 +808,6 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    logger.info('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    logger.info('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
-    logger.info('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    logger.info('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
@@ -819,34 +815,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    logger.info('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    logger.info('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
-    logger.info('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
-
-def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
-    batch_cost = sum(batch_costs) / float(len(batch_costs))
-    # batch_cost = sum(batch_costs)
-    batch_cost.backward()
-    ###################################
-    optimizer_1.step()
-    if(optimizer_2 is not None):
-        optimizer_2.step()
-        scheduler.step()
-    ###################################
-    optimizer_1.zero_grad()
-    if(optimizer_2 is not None):
-        optimizer_2.zero_grad()
-    ###################################
-    # model.zero_grad()
-    # bert_model.zero_grad()
-    ###################################
-    batch_aver_cost = batch_cost.cpu().item()
-    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    batch_aver_acc = sum(batch_acc) / float(len(batch_acc))
-    epoch_aver_acc = sum(epoch_acc) / float(len(epoch_acc))
-    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def print_params(model):
     '''
@@ -1042,9 +1011,6 @@ def load_model_from_checkpoint(resume_dir):
         #############################################################################################
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
-# /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen
-odir = 'asdsadasdasad'
-
 ###########################################################
 use_cuda            = torch.cuda.is_available()
 ###########################################################
@@ -1052,7 +1018,14 @@ batch_no            = sys.argv[1]
 f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseA-testset{}'.format(batch_no, batch_no)
 f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch_no)
 f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch_no)
-# odir                = './test_bert_jpdrmm_unfrozen_att_high_batch{}/'.format(batch_no)
+###########################################################
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/'
+odir                = os.path.join(resume_from, 'batch_{}'.format(batch_no))
+adapt               = '_adapt_' in resume_from
+if(adapt):
+    layers_weights  = None
+else:
+    layers_weights  = None
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1085,7 +1058,6 @@ model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_max
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
 bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_att_2L_0p01_unfrozen_run_0/'
 load_model_from_checkpoint(resume_from)
 for param in model.parameters():
     param.requires_grad = False
@@ -1118,6 +1090,6 @@ idf, max_idf = load_idfs(idf_pickle_path, words)
 ###########################################################
 test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 print(test_map)
-
+###########################################################
 
 
