@@ -1197,8 +1197,9 @@ max_epoch           = 4
 #####################
 model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
 #####################
-frozen_or_unfrozen  = 'frozen'
-adapt               = True
+frozen_or_unfrozen  = int(sys.argv[1]) == 1 # True
+frozen_or_unfrozen  = 'frozen' if frozen_or_unfrozen else 'unfrozen'
+adapt               = int(sys.argv[2]) == 1 # True
 #####################
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
@@ -1220,7 +1221,7 @@ else:
     scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 #####################
 hdlr        = None
-run         = 0         # int(sys.argv[1])
+run         = 0
 my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
@@ -1240,7 +1241,6 @@ print(avgdl, mean, deviation)
 #
 print('Compiling model...')
 logger.info('Compiling model...')
-#
 #####################
 print('JBERT part')
 logger.info('JBERT part')
@@ -1263,5 +1263,5 @@ for epoch in range(max_epoch):
     print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
     logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
-# CUDA_VISIBLE_DEVICES=0 python3.6 train_bert_jpdrmm_att.py 0
+# CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert_adapt_nf.py 0
 
