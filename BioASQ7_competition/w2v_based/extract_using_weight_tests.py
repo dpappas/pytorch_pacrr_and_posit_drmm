@@ -1050,6 +1050,15 @@ print(test_map)
 
 
 '''
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 1.0
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 1.0
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 1.0
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 1.0
+CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 1.0
+
+
+
+
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 1
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 1
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 1
