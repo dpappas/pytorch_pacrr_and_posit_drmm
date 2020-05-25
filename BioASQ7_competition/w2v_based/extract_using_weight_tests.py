@@ -997,7 +997,7 @@ f_in3                       = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
-odir                        = '/media/dpappas/dpappas_data/models_out/weight_tuning/test_weight_{}_batch{}/'.format(weight, b)
+odir                        = '/media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_{}_run_0/bioasq7batch{}/'.format(weight, b)
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
