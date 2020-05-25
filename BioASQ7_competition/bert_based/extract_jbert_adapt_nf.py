@@ -897,7 +897,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
         res_map = get_map_res(
-            os.path.join(odir, 'v3 test_gold_bioasq.json'),
+            os.path.join(odir, 'v3 test_emit_bioasq.json'),
             os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'),
             eval_path
         )
@@ -1061,4 +1061,10 @@ print(test_map)
 ###########################################################
 
 # CUDA_VISIBLE_DEVICES=1 python3.6 extract_jbert_adapt_nf.py 1
+
+'''
+python "/home/dpappas/bioasq_all/eval/run_eval.py" \
+"/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/batch_1/v3 test_emit_bioasq.json" \
+"/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/batch_1/elk_relevant_abs_posit_drmm_lists_test.json"
+'''
 
