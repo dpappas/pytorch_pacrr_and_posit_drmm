@@ -1263,5 +1263,6 @@ for epoch in range(max_epoch):
     print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
     logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
-# CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert_adapt_nf.py 0
+# CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert_adapt_nf.py 1 0
+# CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert_adapt_nf.py 1 1
 
