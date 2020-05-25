@@ -1057,28 +1057,7 @@ CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 1.0
 CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 1.0
 
 
-
-
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 1
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 1
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 1
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 1
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 1
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 5
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 5
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 5
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 5
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 5
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 10
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 10
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 10
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 10
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 10
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 1 100
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 2 100
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 3 100
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 4 100
-CUDA_VISIBLE_DEVICES=-1 python3.6 extract_using_weight.py 5 100
+    
 
 
 grep -E 'INFO v3 dev MAP|best_dev_map' /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_0.001_run_0/model.log
