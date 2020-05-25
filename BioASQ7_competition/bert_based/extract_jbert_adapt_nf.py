@@ -1077,25 +1077,23 @@ my_seed     = 1
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 ###########################################################
-print('Compiling model...')
-max_seq_length      = 50
+use_cuda            = True
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
-bert_model          = 'bert-base-uncased'
-cache_dir           = '/home/dpappas/bert_cache/'
-bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
-bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2)
-model               = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool)
 ###########################################################
-# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_frozen_run_0/'
-# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_2L_0p01_unfrozen_run_0/'
+model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
+#####################
+cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
+bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
+bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
 resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bert_jpdrmm_att_2L_0p01_unfrozen_run_0/'
 load_model_from_checkpoint(resume_from)
 for param in model.parameters():
     param.requires_grad = False
 for param in bert_model.parameters():
     param.requires_grad = False
-print_params(model)
-print_params(bert_model)
+###########################################################
+# print_params(model)
+# print_params(bert_model)
 bert_model.to(device)
 model.to(device)
 ###########################################################
