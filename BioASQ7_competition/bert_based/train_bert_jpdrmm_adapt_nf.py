@@ -1617,8 +1617,13 @@ bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states
 for param in bert_model.parameters():
     param.requires_grad = False
 
-optimizer_2 = optim.Adam(bert_model.parameters(), lr=lr2)
-scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
+#####################
+if(frozen_or_unfrozen == 'frozen'):
+    optimizer_2, scheduler  = None, None
+else:
+    lr2                 = 2e-5
+    optimizer_2         = optim.Adam(bert_model.parameters(), lr=lr2)
+    scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 
 #####################
 print('JPDRMM part')
