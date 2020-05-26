@@ -1621,6 +1621,8 @@ for param in bert_model.parameters():
 if(frozen_or_unfrozen == 'frozen'):
     optimizer_2, scheduler  = None, None
 else:
+    for param in bert_model.encoder.parameters():
+        param.requires_grad = True
     lr2                 = 2e-5
     optimizer_2         = optim.Adam(bert_model.parameters(), lr=lr2)
     scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
@@ -1644,5 +1646,8 @@ for epoch in range(max_epoch):
     print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
     logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
+
+# CUDA_VISIBLE_DEVICES=1 python3.6 train_bertjpdrmm_adapt_nf.py 1 0
+# CUDA_VISIBLE_DEVICES=1 python3.6 train_bertjpdrmm_adapt_nf.py 1 1
 
 
