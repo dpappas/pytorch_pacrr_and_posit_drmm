@@ -13,9 +13,10 @@ from    pprint                  import pprint
 import  torch.nn                as nn
 import  torch.optim             as optim
 import  torch.autograd          as autograd
-from    pytorch_pretrained_bert.tokenization    import BertTokenizer
-from    pytorch_pretrained_bert.modeling        import BertForSequenceClassification
-from    pytorch_pretrained_bert.file_utils      import PYTORCH_PRETRAINED_BERT_CACHE
+# from    pytorch_pretrained_bert.tokenization    import BertTokenizer
+# from    pytorch_pretrained_bert.modeling        import BertForSequenceClassification
+# from    pytorch_pretrained_bert.file_utils      import PYTORCH_PRETRAINED_BERT_CACHE
+from    pytorch_transformers import BertModel, BertTokenizer
 
 softmax         = lambda z: np.exp(z) / np.sum(np.exp(z))
 stopwords       = nltk.corpus.stopwords.words("english")
@@ -1572,10 +1573,6 @@ lr                  = 0.01
 b_size              = 32
 max_epoch           = 4
 #####################
-bert_model          = 'bert-base-uncased'
-cache_dir           = '/home/dpappas/bert_cache/'
-lr2                 = 2e-5
-#####################
 
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(
     dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
@@ -1612,10 +1609,12 @@ logger.info('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
 optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
-bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
-bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2).to(device)
+lr2                 = 2e-5
+cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
+bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
+bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
 for param in bert_model.parameters():
-    param.requires_grad = True
+    param.requires_grad = False
 
 optimizer_2 = optim.Adam(bert_model.parameters(), lr=lr2)
 scheduler   = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
