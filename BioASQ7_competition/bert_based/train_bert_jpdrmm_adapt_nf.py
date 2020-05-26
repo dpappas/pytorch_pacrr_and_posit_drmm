@@ -610,16 +610,15 @@ def embed_the_sents_tokens(sents, questions=None):
         rest = layers_weights(rest).squeeze(-1)
     else:
         rest = sequence_output
-    ret_tokens, ret_vecs = [], []
+    ret = []
     for i in range(len(sents)):
         bpes     = eval_features[i].tokens
         bpes     = bpes[:bpes.index('[SEP]')]
         tok_inds = [i for i in range(len(bpes)) if (not bpes[i].startswith('##') and bpes[i] not in ['[CLS]', '[SEP]'])]
         embeds   = rest[i][tok_inds]
         fixed_tokens = [ tok for tok in fix_bert_tokens(bpes) if tok not in ['[CLS]', '[SEP]']]
-        ret_tokens.append(fixed_tokens)
-        ret_vecs.append(embeds)
-    return ret_tokens, ret_vecs
+        ret.append((fixed_tokens, embeds))
+    return ret
 
 # def embed_the_sents(sents):
 #     eval_examples       = []
@@ -796,8 +795,9 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     good_doc_af.extend(features)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
-    for good_text in good_sents:
-        sent_toks, sent_embeds  = embed_the_sent(' '.join(bioclean(good_text)))
+    sents                       = good_sents
+    sents_tokens_embeds         = embed_the_sents_tokens(sents, quest)
+    for good_text, (sent_toks, sent_embeds) in zip(good_sents, sents_tokens_embeds):
         oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
         good_escores            = GetScores(quest, good_text, the_bm25)[:-1]
@@ -1087,7 +1087,11 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         good_snips          = get_snips(quest_id, gid, bioasq6_data)
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        quest_tokens, qemb  = embed_the_sent(quest_text)
+        #####################
+        quest_tokens, qemb = embed_the_sents_tokens([quest_text])
+        quest_tokens = quest_tokens[0]
+        qemb = qemb[0]
+        #####################
         q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         ####
         datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens)
