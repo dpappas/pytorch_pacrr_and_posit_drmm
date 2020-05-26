@@ -1000,10 +1000,6 @@ f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioas
 resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/'
 odir                = os.path.join(resume_from, 'batch_{}'.format(batch_no))
 adapt               = '_adapt_' in resume_from
-if(adapt):
-    layers_weights  = None
-else:
-    layers_weights  = None
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1030,7 +1026,7 @@ torch.manual_seed(my_seed)
 use_cuda            = True
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ###########################################################
-model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
+model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, adapt=adapt).to(device)
 #####################
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)

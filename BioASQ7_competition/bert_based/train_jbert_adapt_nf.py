@@ -1190,6 +1190,10 @@ lr                  = 0.01
 b_size              = 32
 max_epoch           = 4
 #####################
+frozen_or_unfrozen  = int(sys.argv[1]) == 1 # True
+frozen_or_unfrozen  = 'frozen' if frozen_or_unfrozen else 'unfrozen'
+adapt               = int(sys.argv[2]) == 1 # True
+#####################
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(
     dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
 )
@@ -1198,11 +1202,7 @@ max_epoch           = 4
 # batch sizes       : 8, 16, 32, 64, 128
 # learning rates    : 3e-4, 1e-4, 5e-5, 3e-5
 #####################
-model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
-#####################
-frozen_or_unfrozen  = int(sys.argv[1]) == 1 # True
-frozen_or_unfrozen  = 'frozen' if frozen_or_unfrozen else 'unfrozen'
-adapt               = int(sys.argv[2]) == 1 # True
+model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, adapt=adapt).to(device)
 #####################
 print('adapt val: {}'.format(adapt))
 print('frozen_or_unfrozen val: {}'.format(frozen_or_unfrozen))
