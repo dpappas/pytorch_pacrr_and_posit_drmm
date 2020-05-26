@@ -1243,6 +1243,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
         # att
         self.att            = nn.Linear(12, 1, bias=False).to(device)
+
     def init_mesh_module(self):
         self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim)).to(device)
         self.mesh_gru = nn.GRU(self.embedding_dim, self.embedding_dim).to(device)
