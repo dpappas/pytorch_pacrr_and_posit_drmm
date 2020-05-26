@@ -141,6 +141,32 @@ def embed_the_sents(sents, questions):
         weighted_vecs           = sequence_output[:, 0, :]
     return weighted_vecs
 
+use_cuda            = False
+max_seq_length      = 50
+device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
+adapt               = True
+layers_weights      = nn.Linear(13, 1, bias=False)
+layers_weights.weight.data = torch.ones(13) / 13.
+#####################
+
+cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
+bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
+bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
+for param in bert_model.parameters():
+    param.requires_grad = False
+
+sents     = ['i am happy', 'i am unwell']
+questions = ['are you happy ?', 'are you happy ?']
+
+def fix_bert_tokens(tokens):
+    ret = []
+    for t in tokens:
+        if (t.startswith('##')):
+            ret[-1] = ret[-1] + t[2:]
+        else:
+            ret.append(t)
+    return ret
+
 def embed_the_sents_tokens(sents, questions=None):
     ##########################################################################
     if(questions is None):
@@ -166,33 +192,18 @@ def embed_the_sents_tokens(sents, questions=None):
         rest = layers_weights(rest).squeeze(-1)
     else:
         rest = sequence_output
+    ret_tokens, ret_vecs = [], []
     for i in range(len(sents)):
-        sent   = sents[i]
-        bpes   = eval_features[i].tokens
-        embeds = rest[i][:len(bpes)]
-        print(sent)
-        print(bpes)
-        print(embeds.size())
-    return sequence_output
+        bpes     = eval_features[i].tokens
+        bpes     = bpes[:bpes.index('[SEP]')]
+        tok_inds = [i for i in range(len(bpes)) if (not bpes[i].startswith('##') and bpes[i] not in ['[CLS]', '[SEP]'])]
+        embeds   = rest[i][tok_inds]
+        fixed_tokens = [ tok for tok in fix_bert_tokens(bpes) if tok not in ['[CLS]', '[SEP]']]
+        ret_tokens.append(fixed_tokens)
+        ret_vecs.append(embeds)
+    return ret_tokens, ret_vecs
 
-use_cuda            = False
-max_seq_length      = 50
-device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
-adapt               = True
-layers_weights      = nn.Linear(13, 1, bias=False)
-layers_weights.weight.data = torch.ones(13) / 13.
-#####################
-
-cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
-bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
-bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
-for param in bert_model.parameters():
-    param.requires_grad = False
-
-sents     = ['i am happy', 'i am unwell']
-questions = ['are you happy ?', 'are you happy ?']
-
-vv        = embed_the_sents_tokens(sents, questions)
+ret_tokens, ret_vecs = embed_the_sents_tokens(sents, questions)
 
 
 

@@ -585,44 +585,80 @@ def save_checkpoint(epoch, model, bert_model, max_dev_map, optimizer1, optimizer
     }
     torch.save(state, filename)
 
-def embed_the_sents(sents):
+def embed_the_sents_tokens(sents, questions=None):
+    ##########################################################################
+    if(questions is None):
+        questions = [None] * len(sents)
     eval_examples       = []
     c = 0
-    for sent in sents:
-        eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=None, label=str(c)))
+    for sent, question in zip(sents, questions):
+        eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=question, label=str(c)))
         c+=1
-    eval_features       = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
-    input_ids           = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(device)
-    attention_mask      = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(device)
-    with torch.no_grad():
-        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
-        head_mask               = [None] * bert_model.config.num_hidden_layers
-        token_type_ids          = torch.zeros_like(input_ids).to(device)
-        embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
-        sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
-        if(adapt):
-            first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
-            weighted_vecs           = torch.matmul(first_token_tensors, layers_weights).squeeze(-1)
-        else:
-            weighted_vecs           = sequence_output[:, 0, :]
-    return weighted_vecs
+    ##########################################################################
+    eval_features           = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
+    input_ids               = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(device)
+    attention_mask          = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(device)
+    ##########################################################################
+    extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
+    head_mask               = [None] * bert_model.config.num_hidden_layers
+    token_type_ids          = torch.zeros_like(input_ids).to(device)
+    embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
+    sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
+    rest                    = torch.stack(rest, dim=-1)
+    ##########################################################################
+    if(adapt):
+        rest = layers_weights(rest).squeeze(-1)
+    else:
+        rest = sequence_output
+    ret_tokens, ret_vecs = [], []
+    for i in range(len(sents)):
+        bpes     = eval_features[i].tokens
+        bpes     = bpes[:bpes.index('[SEP]')]
+        tok_inds = [i for i in range(len(bpes)) if (not bpes[i].startswith('##') and bpes[i] not in ['[CLS]', '[SEP]'])]
+        embeds   = rest[i][tok_inds]
+        fixed_tokens = [ tok for tok in fix_bert_tokens(bpes) if tok not in ['[CLS]', '[SEP]']]
+        ret_tokens.append(fixed_tokens)
+        ret_vecs.append(embeds)
+    return ret_tokens, ret_vecs
 
-def embed_the_sent(sent):
-    eval_examples   = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
-    eval_features   = convert_examples_to_features(eval_examples)
-    eval_feat       = eval_features[0]
-    input_ids       = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
-    input_mask      = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
-    segment_ids     = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
-    tokens          = eval_feat.tokens
-    with torch.no_grad():
-        token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=True)
-        tok_inds                    = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
-        # token_embeds                = token_embeds.squeeze(0)
-        token_embeds                = torch.cat(token_embeds, dim=0)
-        embs                        = token_embeds[:, tok_inds,:]
-    fixed_tokens = fix_bert_tokens(tokens)
-    return fixed_tokens, embs
+# def embed_the_sents(sents):
+#     eval_examples       = []
+#     c = 0
+#     for sent in sents:
+#         eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=None, label=str(c)))
+#         c+=1
+#     eval_features       = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
+#     input_ids           = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(device)
+#     attention_mask      = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(device)
+#     with torch.no_grad():
+#         extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
+#         head_mask               = [None] * bert_model.config.num_hidden_layers
+#         token_type_ids          = torch.zeros_like(input_ids).to(device)
+#         embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
+#         sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
+#         if(adapt):
+#             first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
+#             weighted_vecs           = torch.matmul(first_token_tensors, layers_weights).squeeze(-1)
+#         else:
+#             weighted_vecs           = sequence_output[:, 0, :]
+#     return weighted_vecs
+
+# def embed_the_sent(sent):
+#     eval_examples   = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
+#     eval_features   = convert_examples_to_features(eval_examples)
+#     eval_feat       = eval_features[0]
+#     input_ids       = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
+#     input_mask      = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
+#     segment_ids     = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
+#     tokens          = eval_feat.tokens
+#     with torch.no_grad():
+#         token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=True)
+#         tok_inds                    = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
+#         # token_embeds                = token_embeds.squeeze(0)
+#         token_embeds                = torch.cat(token_embeds, dim=0)
+#         embs                        = token_embeds[:, tok_inds,:]
+#     fixed_tokens = fix_bert_tokens(tokens)
+#     return fixed_tokens, embs
 
 def get_map_res(fgold, femit, eval_path):
     trec_eval_res = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
@@ -804,7 +840,9 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     ####
     quest_text          = dato['query_text']
     quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-    quest_tokens, qemb  = embed_the_sent(quest_text)
+    quest_tokens, qemb  = embed_the_sents_tokens([quest_text])
+    quest_tokens        = quest_tokens[0]
+    qemb                = qemb[0]
     ####
     q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     gold_snips          = get_gold_snips(dato['query_id'])
