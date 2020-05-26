@@ -1628,6 +1628,7 @@ print('BERT part')
 logger.info('BERT part')
 print_params(bert_model)
 #####################
+
 best_dev_map, test_map = None, None
 for epoch in range(max_epoch):
     train_one(epoch + 1, bioasq6_data, two_losses=True, use_sent_tokenizer=True)
