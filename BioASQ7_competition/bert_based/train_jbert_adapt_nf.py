@@ -849,7 +849,6 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
 
 def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     batch_cost = sum(batch_costs) / float(len(batch_costs))
-    # batch_cost = sum(batch_costs)
     batch_cost.backward()
     ###################################
     optimizer_1.step()
