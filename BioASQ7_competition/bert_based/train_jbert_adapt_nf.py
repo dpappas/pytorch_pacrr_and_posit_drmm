@@ -861,9 +861,6 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     if(optimizer_2 is not None):
         optimizer_2.zero_grad()
     ###################################
-    # model.zero_grad()
-    # bert_model.zero_grad()
-    ###################################
     batch_aver_cost = batch_cost.cpu().item()
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
     batch_aver_acc = sum(batch_acc) / float(len(batch_acc))

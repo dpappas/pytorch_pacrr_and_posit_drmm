@@ -1109,7 +1109,6 @@ java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation
 "/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/batch_1/v3 test_emit_bioasq.json" \
 | grep "^MAP documents:\|^MAP snippets:"
 
-
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
 "/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
 "/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/batch_2/v3 test_emit_bioasq.json" \
