@@ -1636,3 +1636,6 @@ for epoch in range(max_epoch):
         save_checkpoint(epoch, model, bert_model, best_dev_map, optimizer_1, optimizer_2, filename=os.path.join(odir, 'best_checkpoint.pth.tar'))
     print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
     logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
+
+
+
