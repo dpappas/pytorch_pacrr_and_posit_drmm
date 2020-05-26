@@ -985,8 +985,6 @@ def load_model_from_checkpoint(resume_dir):
         #############################################################################################
         model.load_state_dict(checkpoint['model_state_dict'])
         bert_model.load_state_dict(checkpoint['bert_state_dict'])
-        print(checkpoint['layers_weights'])
-        layers_weights = torch.FloatTensor(checkpoint['layers_weights']).to(device)
         #############################################################################################
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
 
