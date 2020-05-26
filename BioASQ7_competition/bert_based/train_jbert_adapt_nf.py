@@ -1214,11 +1214,7 @@ bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states
 for param in bert_model.parameters():
     param.requires_grad = False
 #####################
-if(adapt):
-    layers_weights  = nn.Parameter(torch.ones((13, 1)).float().to(device) / 13.0)
-    optimizer_1     = optim.Adam(list(model.parameters()) + [layers_weights], lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-else:
-    optimizer_1     = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+optimizer_1         = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
 if(frozen_or_unfrozen == 'frozen'):
     optimizer_2, scheduler  = None, None
