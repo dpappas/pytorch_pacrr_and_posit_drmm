@@ -607,9 +607,9 @@ def embed_the_sents_tokens(sents, questions=None):
     rest                    = torch.stack(rest, dim=-1)
     ##########################################################################
     if(adapt):
-        rest = layers_weights(rest).squeeze(-1)
+        rest                = model.layers_weights(rest).squeeze(-1)
     else:
-        rest = sequence_output
+        rest                = sequence_output
     ret = []
     for i in range(len(sents)):
         bpes     = eval_features[i].tokens
@@ -619,45 +619,6 @@ def embed_the_sents_tokens(sents, questions=None):
         fixed_tokens = [ tok for tok in fix_bert_tokens(bpes) if tok not in ['[CLS]', '[SEP]']]
         ret.append((fixed_tokens, embeds))
     return ret
-
-# def embed_the_sents(sents):
-#     eval_examples       = []
-#     c = 0
-#     for sent in sents:
-#         eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=None, label=str(c)))
-#         c+=1
-#     eval_features       = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
-#     input_ids           = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(device)
-#     attention_mask      = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(device)
-#     with torch.no_grad():
-#         extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
-#         head_mask               = [None] * bert_model.config.num_hidden_layers
-#         token_type_ids          = torch.zeros_like(input_ids).to(device)
-#         embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
-#         sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
-#         if(adapt):
-#             first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
-#             weighted_vecs           = torch.matmul(first_token_tensors, layers_weights).squeeze(-1)
-#         else:
-#             weighted_vecs           = sequence_output[:, 0, :]
-#     return weighted_vecs
-
-# def embed_the_sent(sent):
-#     eval_examples   = [InputExample(guid='example_dato_1', text_a=sent, text_b=None, label='1')]
-#     eval_features   = convert_examples_to_features(eval_examples)
-#     eval_feat       = eval_features[0]
-#     input_ids       = torch.tensor([eval_feat.input_ids], dtype=torch.long).to(device)
-#     input_mask      = torch.tensor([eval_feat.input_mask], dtype=torch.long).to(device)
-#     segment_ids     = torch.tensor([eval_feat.segment_ids], dtype=torch.long).to(device)
-#     tokens          = eval_feat.tokens
-#     with torch.no_grad():
-#         token_embeds, pooled_output = bert_model.bert(input_ids, segment_ids, input_mask, output_all_encoded_layers=True)
-#         tok_inds                    = [i for i in range(len(tokens)) if(not tokens[i].startswith('##'))]
-#         # token_embeds                = token_embeds.squeeze(0)
-#         token_embeds                = torch.cat(token_embeds, dim=0)
-#         embs                        = token_embeds[:, tok_inds,:]
-#     fixed_tokens = fix_bert_tokens(tokens)
-#     return fixed_tokens, embs
 
 def get_map_res(fgold, femit, eval_path):
     trec_eval_res = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
@@ -1257,12 +1218,17 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     return res_map
 
 class Sent_Posit_Drmm_Modeler(nn.Module):
-    def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1):
+    def __init__(self, embedding_dim=30, k_for_maxpool=5, sentence_out_method='MLP', k_sent_maxpool=1, adapt=False):
         super(Sent_Posit_Drmm_Modeler, self).__init__()
         self.k                   = k_for_maxpool
         self.k_sent_maxpool      = k_sent_maxpool
         self.doc_add_feats       = 11
         self.sent_add_feats      = 10
+        if(adapt):
+            self.layers_weights             = nn.Linear(13, 1, bias=False)
+            self.layers_weights.weight.data = torch.ones(13) / 13.
+        else:
+            self.layers_weights             = None
         #
         self.embedding_dim       = embedding_dim
         self.sentence_out_method = sentence_out_method
@@ -1587,10 +1553,9 @@ device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 #####################
 frozen_or_unfrozen  = 'frozen' if (int(sys.argv[1]) == 1) else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
-if(adapt):
-    layers_weights  = nn.Parameter(torch.ones((13, 1)).float().to(device) / 13.0)
-else:
-    layers_weights = None
+#####################
+print('adapt val: {}'.format(adapt))
+print('frozen_or_unfrozen val: {}'.format(frozen_or_unfrozen))
 #####################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1623,7 +1588,7 @@ my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir = 'bioasq7_bert_jpdrmm_adaapth_2L_0p01_{}_run_{}/'.format(frozen_or_unfrozen, run)
+odir = 'bioasq7_bertjpdrmadaptnf_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
 odir = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
