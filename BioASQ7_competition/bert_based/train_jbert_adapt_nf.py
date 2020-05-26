@@ -1197,6 +1197,9 @@ frozen_or_unfrozen  = int(sys.argv[1]) == 1 # True
 frozen_or_unfrozen  = 'frozen' if frozen_or_unfrozen else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
 #####################
+print('adapt val: {}'.format(adapt))
+print('frozen_or_unfrozen val: {}'.format(frozen_or_unfrozen))
+#####################
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
 bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
@@ -1231,6 +1234,9 @@ if (not os.path.exists(odir)):
 logger, hdlr = init_the_logger(hdlr)
 print('random seed: {}'.format(my_seed))
 logger.info('random seed: {}'.format(my_seed))
+#
+logger.info('adapt val: {}'.format(adapt))
+logger.info('frozen_or_unfrozen val: {}'.format(frozen_or_unfrozen))
 #
 avgdl, mean, deviation = get_bm25_metrics(avgdl=21.2508, mean=0.5973, deviation=0.5926)
 print(avgdl, mean, deviation)
