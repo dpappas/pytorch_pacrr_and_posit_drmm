@@ -628,12 +628,18 @@ def embed_the_sents_tokens(sents, questions=None):
         rest                = sequence_output
     ret = []
     for i in range(len(sents)):
-        bpes     = eval_features[i].tokens
-        bpes     = bpes[:bpes.index('[SEP]')]
-        tok_inds = [i for i in range(len(bpes)) if (not bpes[i].startswith('##') and bpes[i] not in ['[CLS]', '[SEP]'])]
-        embeds   = rest[i][tok_inds]
-        fixed_tokens = [ tok for tok in fix_bert_tokens(bpes) if tok not in ['[CLS]', '[SEP]']]
-        ret.append((fixed_tokens, embeds))
+        try:
+            bpes     = eval_features[i].tokens
+            bpes     = bpes[:bpes.index('[SEP]')]
+            tok_inds = [i for i in range(len(bpes)) if (not bpes[i].startswith('##') and bpes[i] not in ['[CLS]', '[SEP]'])]
+            embeds   = rest[i][tok_inds]
+            fixed_tokens = [tok for tok in fix_bert_tokens(bpes) if tok not in ['[CLS]', '[SEP]']]
+            ret.append((fixed_tokens, embeds))
+        except:
+            print(c, len(sents), len(eval_features), len(eval_examples))
+            print('-' + sents[i])
+            print('-' + eval_features[i])
+            exit()
     return ret
 
 def get_map_res(fgold, femit, eval_path):
@@ -748,7 +754,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     return doc_res, extracted_from_one, all_emits
 
 def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
-    good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    good_sents          = [sent for sent in sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText']) if len(bioclean(sent))>0]
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25)
     good_doc_af.append(len(good_sents) / 60.)
@@ -772,8 +778,8 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     good_doc_af.extend(features)
     ####
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
-    sents                       = good_sents
-    sents_tokens_embeds         = embed_the_sents_tokens(sents, quest)
+    sents                       = [' '.join(bioclean(ss)).strip() for ss in good_sents]
+    sents_tokens_embeds         = embed_the_sents_tokens(sents, len(sents) * [quest])
     for good_text, (sent_toks, sent_embeds) in zip(good_sents, sents_tokens_embeds):
         oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
@@ -982,23 +988,23 @@ def print_params(model):
     logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     logger.info(40 * '=')
     ###########################################################
-    print('Named trainable params')
-    logger.info(40 * '=')
-    logger.info('Named trainable params')
-    logger.info(40 * '=')
-    for name, param in model.named_parameters():
-        if (param.requires_grad):
-            print(param.requires_grad, name, param.size())
-            logger.info(param.requires_grad, name, param.size())
-    ###########################################################
-    print('Named not trainable params')
-    logger.info(40 * '=')
-    logger.info('Named not trainable params')
-    logger.info(40 * '=')
-    for name, param in model.named_parameters():
-        if (not param.requires_grad):
-            print(param.requires_grad, name, param.size())
-            logger.info(param.requires_grad, name, param.size())
+    # print('Named trainable params')
+    # logger.info(40 * '=')
+    # logger.info('Named trainable params')
+    # logger.info(40 * '=')
+    # for name, param in model.named_parameters():
+    #     if (param.requires_grad):
+    #         print(param.requires_grad, name, param.size())
+    #         logger.info(param.requires_grad, name, param.size())
+    # ###########################################################
+    # print('Named not trainable params')
+    # logger.info(40 * '=')
+    # logger.info('Named not trainable params')
+    # logger.info(40 * '=')
+    # for name, param in model.named_parameters():
+    #     if (not param.requires_grad):
+    #         print(param.requires_grad, name, param.size())
+    #         logger.info(param.requires_grad, name, param.size())
     ###########################################################
 
 def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
@@ -1254,8 +1260,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
-        # att
-        self.att            = nn.Linear(12, 1, bias=False).to(device)
 
     def init_mesh_module(self):
         self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim)).to(device)
@@ -1494,21 +1498,11 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         return final_good_output, gs_emits
 
-    def attend(self, mat):
-        ret = self.att(mat.transpose(0,2))
-        ret = ret.transpose(0,2).squeeze(0)
-        # return sum([self.att[i]*mat[i] for i in range(int(mat.size(0)))])
-        return ret
-
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
                 question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
         doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(device)
-        ################################################################
-        doc1_sents_embeds   = [self.attend(t) for t in doc1_sents_embeds]
-        doc2_sents_embeds   = [self.attend(t) for t in doc2_sents_embeds]
-        question_embeds     = self.attend(question_embeds)
         ################################################################
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
