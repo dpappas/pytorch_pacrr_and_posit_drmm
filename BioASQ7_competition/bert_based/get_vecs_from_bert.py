@@ -141,6 +141,40 @@ def embed_the_sents(sents, questions):
         weighted_vecs           = sequence_output[:, 0, :]
     return weighted_vecs
 
+def embed_the_sents_tokens(sents, questions=None):
+    ##########################################################################
+    if(questions is None):
+        questions = [None] * len(sents)
+    eval_examples       = []
+    c = 0
+    for sent, question in zip(sents, questions):
+        eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=question, label=str(c)))
+        c+=1
+    ##########################################################################
+    eval_features           = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
+    input_ids               = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(device)
+    attention_mask          = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(device)
+    ##########################################################################
+    extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
+    head_mask               = [None] * bert_model.config.num_hidden_layers
+    token_type_ids          = torch.zeros_like(input_ids).to(device)
+    embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
+    sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
+    rest                    = torch.stack(rest, dim=-1)
+    ##########################################################################
+    if(adapt):
+        rest = layers_weights(rest).squeeze(-1)
+    else:
+        rest = sequence_output
+    for i in range(len(sents)):
+        sent   = sents[i]
+        bpes   = eval_features[i].tokens
+        embeds = rest[i][:len(bpes)]
+        print(sent)
+        print(bpes)
+        print(embeds.size())
+    return sequence_output
+
 use_cuda            = False
 max_seq_length      = 50
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
@@ -158,8 +192,12 @@ for param in bert_model.parameters():
 sents     = ['i am happy', 'i am unwell']
 questions = ['are you happy ?', 'are you happy ?']
 
-optimizer_1     = optim.Adam(layers_weights.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+vv        = embed_the_sents_tokens(sents, questions)
 
+
+
+
+optimizer_1     = optim.Adam(layers_weights.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 
 for i in range(10):
     optimizer_1.zero_grad()
