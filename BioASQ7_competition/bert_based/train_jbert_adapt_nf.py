@@ -574,25 +574,28 @@ def save_checkpoint(epoch, model, bert_model, max_dev_map, optimizer1, optimizer
     torch.save(state, filename)
 
 def embed_the_sents(sents, questions):
+    ##########################################################################
     eval_examples       = []
     c = 0
     for sent, question in zip(sents, questions):
         eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=question, label=str(c)))
         c+=1
+    ##########################################################################
     eval_features       = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
     input_ids           = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(device)
     attention_mask      = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(device)
-    with torch.no_grad():
-        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
-        head_mask               = [None] * bert_model.config.num_hidden_layers
-        token_type_ids          = torch.zeros_like(input_ids).to(device)
-        embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
-        sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
-        if(adapt):
-            first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
-            weighted_vecs           = torch.matmul(first_token_tensors, layers_weights).squeeze(-1)
-        else:
-            weighted_vecs           = sequence_output[:, 0, :]
+    ##########################################################################
+    extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
+    head_mask               = [None] * bert_model.config.num_hidden_layers
+    token_type_ids          = torch.zeros_like(input_ids).to(device)
+    embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
+    sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
+    ##########################################################################
+    if(adapt):
+        first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
+        weighted_vecs           = model.layers_weights(first_token_tensors).squeeze(-1)
+    else:
+        weighted_vecs           = sequence_output[:, 0, :]
     return weighted_vecs
 
 def get_map_res(fgold, femit, eval_path):
@@ -1099,13 +1102,18 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     return res_map
 
 class JBERT(nn.Module):
-    def __init__(self, embedding_dim=768, k_for_maxpool=5, k_sent_maxpool=1):
+    def __init__(self, embedding_dim=768, k_for_maxpool=5, k_sent_maxpool=1, adapt=False):
         super(JBERT, self).__init__()
         self.k                      = k_for_maxpool
         self.k_sent_maxpool         = k_sent_maxpool
         self.doc_add_feats          = 11
         self.sent_add_feats         = 10
         self.embedding_dim          = embedding_dim
+        if(adapt):
+            self.layers_weights             = nn.Linear(13, 1, bias=False)
+            self.layers_weights.weight.data = torch.ones(13) / 13.
+        else:
+            self.layers_weights             = None
         ##########################
         self.sentence_scorer_0      = nn.Linear(self.embedding_dim, 8)
         self.sentence_scorer_1      = nn.Linear(8, 1)
