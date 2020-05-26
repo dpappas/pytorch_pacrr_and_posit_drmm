@@ -42,12 +42,13 @@ class InputExample(object):
         self.label = label
 
 class InputFeatures(object):
-    """A single set of features of data."""
-    def __init__(self, input_ids, input_mask, segment_ids, label_id):
-        self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.segment_ids = segment_ids
-        self.label_id = label_id
+  """A single set of features of data."""
+  def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids):
+    self.unique_id = unique_id
+    self.tokens = tokens
+    self.input_ids = input_ids
+    self.input_mask = input_mask
+    self.input_type_ids = input_type_ids
 
 def init_the_logger(hdlr):
     if not os.path.exists(odir):
@@ -107,41 +108,55 @@ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
         else:
             tokens_b.pop()
 
-def convert_examples_to_features(examples):
+def convert_examples_to_features(examples, seq_length, tokenizer):
     """Loads a data file into a list of `InputBatch`s."""
     features = []
     for (ex_index, example) in enumerate(examples):
-        tokens_a = bert_tokenizer.tokenize(example.text_a)
+        tokens_a = tokenizer.tokenize(example.text_a)
         tokens_b = None
         if example.text_b:
-            tokens_b = bert_tokenizer.tokenize(example.text_b)
-            _truncate_seq_pair(tokens_a, tokens_b, max_seq_length - 3)
-        else:
-            if len(tokens_a) > max_seq_length - 2:
-                tokens_a = tokens_a[:(max_seq_length - 2)]
-        ####
-        tokens          = ["[CLS]"] + tokens_a + ["[SEP]"]
-        segment_ids     = [0] * len(tokens)
-        ####
+            tokens_b = tokenizer.tokenize(example.text_b)
         if tokens_b:
-            tokens      += tokens_b + ["[SEP]"]
-            segment_ids += [1] * (len(tokens_b) + 1)
-        input_ids       = bert_tokenizer.convert_tokens_to_ids(tokens)
-        ####
-        input_mask      = [1] * len(input_ids)
-        ####
-        padding         = [0] * (max_seq_length - len(input_ids))
-        input_ids       += padding
-        input_mask      += padding
-        segment_ids     += padding
-        ####
-        assert len(input_ids)   == max_seq_length
-        assert len(input_mask)  == max_seq_length
-        assert len(segment_ids) == max_seq_length
-        ####
-        in_f        = InputFeatures(input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=0)
-        in_f.tokens = tokens
-        features.append(in_f)
+            _truncate_seq_pair(tokens_a, tokens_b, seq_length - 3)
+        else:
+            if len(tokens_a) > seq_length - 2:
+                tokens_a = tokens_a[0:(seq_length - 2)]
+        tokens          = []
+        input_type_ids  = []
+        tokens.append("[CLS]")
+        input_type_ids.append(0)
+        for token in tokens_a:
+            tokens.append(token)
+            input_type_ids.append(0)
+        tokens.append("[SEP]")
+        input_type_ids.append(0)
+        #
+        if tokens_b:
+            for token in tokens_b:
+                tokens.append(token)
+                input_type_ids.append(1)
+            tokens.append("[SEP]")
+            input_type_ids.append(1)
+        #
+        input_ids = tokenizer.convert_tokens_to_ids(tokens)
+        #
+        input_mask = [1] * len(input_ids)
+        while len(input_ids) < seq_length:
+            input_ids.append(0)
+            input_mask.append(0)
+            input_type_ids.append(0)
+        assert len(input_ids) == seq_length
+        assert len(input_mask) == seq_length
+        assert len(input_type_ids) == seq_length
+        features.append(
+            InputFeatures(
+                unique_id       = example.guid,
+                tokens          = tokens,
+                input_ids       = input_ids,
+                input_mask      = input_mask,
+                input_type_ids  = input_type_ids
+            )
+        )
     return features
 
 def tf(term, document):
@@ -802,9 +817,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     ####
     quest_text          = dato['query_text']
     quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-    quest_tokens, qemb  = embed_the_sents_tokens([quest_text])
-    quest_tokens        = quest_tokens[0]
-    qemb                = qemb[0]
+    ttttt               = embed_the_sents_tokens([quest_text])
+    quest_tokens, qemb  = ttttt[0]
     ####
     q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
     gold_snips          = get_gold_snips(dato['query_id'])
@@ -1050,9 +1064,8 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
         quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
         #####################
-        quest_tokens, qemb = embed_the_sents_tokens([quest_text])
-        quest_tokens = quest_tokens[0]
-        qemb = qemb[0]
+        tttttt = embed_the_sents_tokens([quest_text])
+        quest_tokens, qemb = tttttt[0]
         #####################
         q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         ####
