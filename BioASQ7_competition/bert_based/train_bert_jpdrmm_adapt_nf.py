@@ -1103,7 +1103,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
     start_time = time.time()
     pbar = tqdm(
         iterable= train_data_step2(train_instances, train_docs, bioasq6_data, use_sent_tokenizer),
-        total   = 14288, #9684, # 378,
+        total   = 17850, #9684, # 378,
         ascii   = True
     )
     for datum in pbar:
@@ -1574,7 +1574,6 @@ max_epoch           = 4
 #####################
 bert_model          = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
-frozen_or_unfrozen  = 'unfrozen'
 lr2                 = 2e-5
 #####################
 
