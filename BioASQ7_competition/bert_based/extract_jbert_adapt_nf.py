@@ -977,7 +977,7 @@ class JBERT(nn.Module):
         return loss1, doc1_doc_score, doc2_doc_score, doc1_sent_scores, doc2_sent_scores
 
 def load_model_from_checkpoint(resume_dir):
-    global start_epoch, optimizer, layers_weights
+    global start_epoch, optimizer
     resume_from = os.path.join(resume_dir, 'best_checkpoint.pth.tar')
     if os.path.isfile(resume_from):
         print("=> loading checkpoint '{}'".format(resume_from))
