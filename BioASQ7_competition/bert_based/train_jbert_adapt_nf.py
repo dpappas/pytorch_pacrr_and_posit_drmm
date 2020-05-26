@@ -862,8 +862,8 @@ def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
     ###################################
     batch_aver_cost = batch_cost.cpu().item()
     epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    batch_aver_acc = sum(batch_acc) / float(len(batch_acc))
-    epoch_aver_acc = sum(epoch_acc) / float(len(epoch_acc))
+    batch_aver_acc  = sum(batch_acc) / float(len(batch_acc))
+    epoch_aver_acc  = sum(epoch_acc) / float(len(epoch_acc))
     return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def print_params(model):
