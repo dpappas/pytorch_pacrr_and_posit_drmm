@@ -634,6 +634,8 @@ def embed_the_sents_tokens(sents, questions=None):
             tok_inds = [i for i in range(len(bpes)) if (not bpes[i].startswith('##') and bpes[i] not in ['[CLS]', '[SEP]'])]
             embeds   = rest[i][tok_inds]
             fixed_tokens = [tok for tok in fix_bert_tokens(bpes) if tok not in ['[CLS]', '[SEP]']]
+            if(len(fixed_tokens)==0):
+                continue
             ret.append((fixed_tokens, embeds))
         except:
             print(c, len(sents), len(eval_features), len(eval_examples))
