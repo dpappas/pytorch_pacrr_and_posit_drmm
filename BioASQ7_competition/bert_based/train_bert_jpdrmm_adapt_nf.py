@@ -781,9 +781,9 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     sents                       = [' '.join(bioclean(ss)).strip() for ss in good_sents]
     sents_tokens_embeds         = embed_the_sents_tokens(sents, len(sents) * [quest])
     for good_text, (sent_toks, sent_embeds) in zip(good_sents, sents_tokens_embeds):
-        oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
         if(len(sent_toks) == 0):
             continue
+        oh1, oh2, oh_sim        = create_one_hot_and_sim(quest_toks, sent_toks)
         good_oh_sim.append(oh_sim)
         good_escores            = GetScores(quest, good_text, the_bm25)[:-1]
         good_escores.append(len(sent_toks) / 342.)
