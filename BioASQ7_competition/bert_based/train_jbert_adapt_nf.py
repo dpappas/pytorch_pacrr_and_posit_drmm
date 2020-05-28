@@ -554,8 +554,8 @@ def get_snippets_loss(good_sent_tags, gs_emits_, bs_emits_):
 def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     bs_emits_       = bs_emits_.squeeze(-1)
     gs_emits_       = gs_emits_.squeeze(-1)
-    good_sent_tags  = torch.FloatTensor(good_sent_tags).to(device)
-    tags_2          = torch.zeros_like(bs_emits_).to(device)
+    good_sent_tags  = torch.FloatTensor(good_sent_tags).to(model_device)
+    tags_2          = torch.zeros_like(bs_emits_).to(model_device)
     #
     sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, reduction='sum')
     sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
@@ -581,12 +581,12 @@ def embed_the_sents(sents, questions):
         c+=1
     ##########################################################################
     eval_features       = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
-    input_ids           = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(device)
-    attention_mask      = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(device)
+    input_ids           = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(bert_device)
+    attention_mask      = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(bert_device)
     ##########################################################################
     extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
     head_mask               = [None] * bert_model.config.num_hidden_layers
-    token_type_ids          = torch.zeros_like(input_ids).to(device)
+    token_type_ids          = torch.zeros_like(input_ids).to(bert_device)
     embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
     sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
     ##########################################################################
@@ -595,7 +595,7 @@ def embed_the_sents(sents, questions):
         weighted_vecs           = model.layers_weights(first_token_tensors).squeeze(-1)
     else:
         weighted_vecs           = sequence_output[:, 0, :]
-    return weighted_vecs
+    return weighted_vecs.to(model_device)
 
 def get_map_res(fgold, femit, eval_path):
     trec_eval_res = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
@@ -1128,8 +1128,8 @@ class JBERT(nn.Module):
         return loss_q_pos
     #
     def emit_one(self, doc1_sents_embeds, doc1_saf, doc1_daf):
-        doc1_saf = autograd.Variable(torch.FloatTensor(doc1_saf), requires_grad=False).to(device)
-        doc1_daf = autograd.Variable(torch.FloatTensor(doc1_daf), requires_grad=False).to(device)
+        doc1_saf = autograd.Variable(torch.FloatTensor(doc1_saf), requires_grad=False).to(model_device)
+        doc1_daf = autograd.Variable(torch.FloatTensor(doc1_daf), requires_grad=False).to(model_device)
         ################################################################
         doc1_sent_scores        = torch.tanh(self.sentence_scorer_0(doc1_sents_embeds))
         doc1_sent_scores        = torch.sigmoid(self.sentence_scorer_1(doc1_sent_scores))
@@ -1142,10 +1142,10 @@ class JBERT(nn.Module):
         doc1_doc_score          = self.doc_scorer_1(doc1_doc_score)
         return doc1_doc_score, doc1_sent_scores
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_saf, doc2_saf, doc1_daf, doc2_daf):
-        doc1_saf = autograd.Variable(torch.FloatTensor(doc1_saf), requires_grad=False).to(device)
-        doc2_saf = autograd.Variable(torch.FloatTensor(doc2_saf), requires_grad=False).to(device)
-        doc1_daf = autograd.Variable(torch.FloatTensor(doc1_daf), requires_grad=False).to(device)
-        doc2_daf = autograd.Variable(torch.FloatTensor(doc2_daf), requires_grad=False).to(device)
+        doc1_saf = autograd.Variable(torch.FloatTensor(doc1_saf), requires_grad=False).to(model_device)
+        doc2_saf = autograd.Variable(torch.FloatTensor(doc2_saf), requires_grad=False).to(model_device)
+        doc1_daf = autograd.Variable(torch.FloatTensor(doc1_daf), requires_grad=False).to(model_device)
+        doc2_daf = autograd.Variable(torch.FloatTensor(doc2_daf), requires_grad=False).to(model_device)
         ################################################################
         doc1_sent_scores        = torch.tanh(self.sentence_scorer_0(doc1_sents_embeds))
         doc1_sent_scores        = torch.sigmoid(self.sentence_scorer_1(doc1_sent_scores))
@@ -1194,7 +1194,6 @@ bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 #####################
 use_cuda            = True
 max_seq_length      = 50
-device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 #####################
 k_for_maxpool       = 5
 embedding_dim       = 768 # 50  # 30  # 200
@@ -1206,8 +1205,12 @@ frozen_or_unfrozen  = 'frozen' if frozen_or_unfrozen else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
 if(frozen_or_unfrozen == 'unfrozen'):
     resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_{}_run_frozen/'.format('adapt' if(adapt) else 'toponly')
+    model_device    = torch.device("cuda:1") if(use_cuda) else torch.device("cpu")
+    bert_device     = torch.device("cuda:0") if (use_cuda) else torch.device("cpu")
 else:
     resume_from     = None
+    model_device    = torch.device("cuda") if (use_cuda) else torch.device("cpu")
+    bert_device     = torch.device("cuda") if (use_cuda) else torch.device("cpu")
 #####################
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(
     dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
@@ -1217,14 +1220,14 @@ else:
 # batch sizes       : 8, 16, 32, 64, 128
 # learning rates    : 3e-4, 1e-4, 5e-5, 3e-5
 #####################
-model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, adapt=adapt).to(device)
+model               = JBERT(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, adapt=adapt).to(model_device)
 #####################
 print('adapt val: {}'.format(adapt))
 print('frozen_or_unfrozen val: {}'.format(frozen_or_unfrozen))
 #####################
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
-bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
+bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(bert_device)
 
 if(resume_from is not None):
     load_model_from_checkpoint(resume_from)
@@ -1294,6 +1297,6 @@ for epoch in range(max_epoch):
 
 # CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert_adapt_nf.py 1 0
 # CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert_adapt_nf.py 1 1
-# CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert_adapt_nf.py 0 0
-# CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert_adapt_nf.py 0 1
+# python3.6 train_jbert_adapt_nf.py 0 0
+# python3.6 train_jbert_adapt_nf.py 0 1
 
