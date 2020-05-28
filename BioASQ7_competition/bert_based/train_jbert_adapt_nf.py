@@ -1205,8 +1205,7 @@ frozen_or_unfrozen  = int(sys.argv[1]) == 1 # True
 frozen_or_unfrozen  = 'frozen' if frozen_or_unfrozen else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
 if(frozen_or_unfrozen == 'unfrozen'):
-    resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_{}_run_0/'.format(
-        'adapt' if(adapt) else 'toponly', frozen_or_unfrozen)
+    resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_{}_run_frozen/'.format('adapt' if(adapt) else 'toponly')
 else:
     resume_from     = None
 #####################
@@ -1253,7 +1252,7 @@ my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir        = 'bioasq7_jbertadaptnf_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
+odir        = 'bioasq7_jbertadaptnf_{}_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
 odir        = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
