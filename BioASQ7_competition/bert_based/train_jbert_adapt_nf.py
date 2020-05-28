@@ -1170,6 +1170,18 @@ class JBERT(nn.Module):
         loss1                   = self.my_hinge_loss(doc1_doc_score, doc2_doc_score)
         return loss1, doc1_doc_score, doc2_doc_score, doc1_sent_scores, doc2_sent_scores
 
+def load_model_from_checkpoint(resume_dir):
+    global start_epoch, optimizer
+    resume_from = os.path.join(resume_dir, 'best_checkpoint.pth.tar')
+    if os.path.isfile(resume_from):
+        print("=> loading checkpoint '{}'".format(resume_from))
+        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
+        #############################################################################################
+        model.load_state_dict(checkpoint['model_state_dict'])
+        bert_model.load_state_dict(checkpoint['bert_state_dict'])
+        #############################################################################################
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
 #####################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1192,6 +1204,8 @@ max_epoch           = 4
 frozen_or_unfrozen  = int(sys.argv[1]) == 1 # True
 frozen_or_unfrozen  = 'frozen' if frozen_or_unfrozen else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_{}_run_0/'.format(
+    'adapt' if(adapt) else 'toponly', frozen_or_unfrozen)
 #####################
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(
     dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
@@ -1209,8 +1223,13 @@ print('frozen_or_unfrozen val: {}'.format(frozen_or_unfrozen))
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
 bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(device)
+
+if(resume_from is not None):
+    load_model_from_checkpoint(resume_from)
+
 for param in bert_model.parameters():
     param.requires_grad = False
+
 #####################
 optimizer_1         = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
