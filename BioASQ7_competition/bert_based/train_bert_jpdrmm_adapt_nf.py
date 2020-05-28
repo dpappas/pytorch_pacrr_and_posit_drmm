@@ -1594,7 +1594,7 @@ logger.info('Compiling model...')
 # learning rates: 3e-4, 1e-4, 5e-5, 3e-5
 #####################
 
-model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
+model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, adapt=adapt).to(device)
 optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 #####################
 lr2                 = 2e-5
