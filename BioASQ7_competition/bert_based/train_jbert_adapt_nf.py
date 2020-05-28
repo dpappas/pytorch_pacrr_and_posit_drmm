@@ -1204,8 +1204,11 @@ max_epoch           = 4
 frozen_or_unfrozen  = int(sys.argv[1]) == 1 # True
 frozen_or_unfrozen  = 'frozen' if frozen_or_unfrozen else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_{}_run_0/'.format(
-    'adapt' if(adapt) else 'toponly', frozen_or_unfrozen)
+if(frozen_or_unfrozen == 'unfrozen'):
+    resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_{}_run_0/'.format(
+        'adapt' if(adapt) else 'toponly', frozen_or_unfrozen)
+else:
+    resume_from     = None
 #####################
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(
     dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
