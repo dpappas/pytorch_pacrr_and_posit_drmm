@@ -1187,7 +1187,6 @@ device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 k_for_maxpool       = 5
 embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
-b_size              = 32
 max_epoch           = 4
 #####################
 frozen_or_unfrozen  = int(sys.argv[1]) == 1 # True
@@ -1217,10 +1216,14 @@ optimizer_1         = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), 
 #####################
 if(frozen_or_unfrozen == 'frozen'):
     optimizer_2, scheduler  = None, None
+    b_size                  = 32
 else:
-    lr2                 = 2e-5
-    optimizer_2         = optim.Adam(bert_model.parameters(), lr=lr2)
-    scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
+    for param in bert_model.encoder.parameters():
+        param.requires_grad = True
+    lr2                     = 2e-5
+    b_size                  = 6
+    optimizer_2             = optim.Adam(bert_model.encoder.parameters(), lr=lr2)
+    scheduler               = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 #####################
 hdlr        = None
 run         = 0

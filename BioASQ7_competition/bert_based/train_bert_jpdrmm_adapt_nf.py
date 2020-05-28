@@ -1558,7 +1558,6 @@ bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 k_for_maxpool       = 5
 embedding_dim       = 768 # 50  # 30  # 200
 lr                  = 0.01
-b_size              = 32
 max_epoch           = 4
 #####################
 
@@ -1607,14 +1606,16 @@ for param in bert_model.parameters():
 #####################
 if(frozen_or_unfrozen == 'frozen'):
     optimizer_2, scheduler  = None, None
+    b_size                  = 32
 else:
     for param in bert_model.encoder.parameters():
         param.requires_grad = True
-    lr2                 = 2e-5
-    optimizer_2         = optim.Adam(bert_model.parameters(), lr=lr2)
-    scheduler           = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
-
+    lr2                     = 2e-5
+    b_size                  = 6
+    optimizer_2             = optim.Adam(bert_model.encoder.parameters(), lr=lr2)
+    scheduler               = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 #####################
+
 print('JPDRMM part')
 logger.info('JPDRMM part')
 print_params(model)
