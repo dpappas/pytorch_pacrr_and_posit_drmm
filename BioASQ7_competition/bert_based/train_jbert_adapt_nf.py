@@ -1207,6 +1207,8 @@ if(frozen_or_unfrozen == 'unfrozen'):
     resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_{}_run_frozen/'.format('adapt' if(adapt) else 'toponly')
     model_device    = torch.device("cuda:1") if(use_cuda) else torch.device("cpu")
     bert_device     = torch.device("cuda:0") if (use_cuda) else torch.device("cpu")
+    # model_device    = torch.device("cuda:0") if (use_cuda) else torch.device("cpu")
+    # bert_device     = torch.device("cpu")
 else:
     resume_from     = None
     model_device    = torch.device("cuda") if (use_cuda) else torch.device("cpu")
