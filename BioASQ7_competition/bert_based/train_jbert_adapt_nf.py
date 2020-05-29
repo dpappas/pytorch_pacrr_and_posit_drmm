@@ -574,6 +574,10 @@ def save_checkpoint(epoch, model, bert_model, max_dev_map, optimizer1, optimizer
 
 def embed_the_sents(sents, questions):
     ##########################################################################
+    # for s, q in zip(sents, questions):
+    #     print(s, q)
+    # print(30 * '-')
+    ##########################################################################
     eval_examples       = []
     c = 0
     for sent, question in zip(sents, questions):
@@ -581,14 +585,17 @@ def embed_the_sents(sents, questions):
         c+=1
     ##########################################################################
     eval_features       = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
-    input_ids           = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(bert_device)
-    attention_mask      = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(bert_device)
+    input_ids           = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(model_device)
     ##########################################################################
-    extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
     head_mask               = [None] * bert_model.config.num_hidden_layers
-    token_type_ids          = torch.zeros_like(input_ids).to(bert_device)
-    embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
-    sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
+    token_type_ids          = torch.zeros_like(input_ids).to(model_device)
+    embedding_output        = bert_model.embeddings(
+        input_ids, position_ids=None, token_type_ids=token_type_ids
+    )
+    ##########################################################################
+    attention_mask          = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(bert_device)
+    extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
+    sequence_output, rest   = bert_model.encoder(embedding_output.to(bert_device), extended_attention_mask, head_mask=head_mask)
     ##########################################################################
     if(adapt):
         first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
@@ -709,7 +716,18 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     return doc_res, extracted_from_one, all_emits
 
 def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
-    good_sents          = sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText'])
+    good_sents          = sent_tokenize(the_doc['title'])
+    for section in the_doc['abstractText'].split('\n'):
+        if(len(section.strip())):
+            good_sents  = good_sents + sent_tokenize(section)
+    good_sents          = [
+        sent.strip() for sent in good_sents
+        if(
+            not sent.strip().isupper()
+            and
+            len(bioclean(sent.strip()))>5
+        )
+    ]
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25)
     good_doc_af.append(len(good_sents) / 60.)
@@ -733,7 +751,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     good_doc_af.extend(features)
     ####
     good_sents_escores, held_out_sents, good_sent_tags = [], [], []
-    for good_text in good_sents:
+    for good_text in good_sents[:12]:
         sent_toks               = bioclean(good_text)
         good_escores            = GetScores(quest, good_text, the_bm25)[:-1]
         good_escores.append(len(sent_toks) / 342.)
@@ -1193,7 +1211,6 @@ dataloc             = '/home/dpappas/bioasq_all/bioasq7_data/'
 bert_all_words_path = '/home/dpappas/bioasq_all/bert_all_words.pkl'
 #####################
 use_cuda            = True
-max_seq_length      = 50
 #####################
 k_for_maxpool       = 5
 embedding_dim       = 768 # 50  # 30  # 200
@@ -1209,10 +1226,12 @@ if(frozen_or_unfrozen == 'unfrozen'):
     bert_device     = torch.device("cuda:0") if (use_cuda) else torch.device("cpu")
     # model_device    = torch.device("cuda:0") if (use_cuda) else torch.device("cpu")
     # bert_device     = torch.device("cpu")
+    max_seq_length  = 50
 else:
     resume_from     = None
     model_device    = torch.device("cuda") if (use_cuda) else torch.device("cpu")
     bert_device     = torch.device("cuda") if (use_cuda) else torch.device("cpu")
+    max_seq_length  = 50
 #####################
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(
     dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
@@ -1244,10 +1263,11 @@ if(frozen_or_unfrozen == 'frozen'):
     optimizer_2, scheduler  = None, None
     b_size                  = 32
 else:
+    bert_model.embeddings.to(model_device)
     for param in bert_model.encoder.parameters():
         param.requires_grad = True
     lr2                     = 2e-5
-    b_size                  = 6
+    b_size                  = 1
     optimizer_2             = optim.Adam(bert_model.encoder.parameters(), lr=lr2)
     scheduler               = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 #####################
