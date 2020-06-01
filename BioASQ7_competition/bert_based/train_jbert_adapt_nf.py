@@ -598,7 +598,7 @@ def embed_the_sents(sents, questions):
     sequence_output, rest   = bert_model.encoder(embedding_output.to(bert_device), extended_attention_mask, head_mask=head_mask)
     ##########################################################################
     if(adapt):
-        first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1)
+        first_token_tensors     = torch.stack([r[:, 0, :] for r in rest], dim=-1).to(model_device)
         weighted_vecs           = model.layers_weights(first_token_tensors).squeeze(-1)
     else:
         weighted_vecs           = sequence_output[:, 0, :]
@@ -728,6 +728,8 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
             len(bioclean(sent.strip()))>5
         )
     ]
+    if(len(good_sents) == 1):
+        good_sents = good_sents + good_sents
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25)
     good_doc_af.append(len(good_sents) / 60.)
