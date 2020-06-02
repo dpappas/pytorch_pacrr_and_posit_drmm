@@ -404,13 +404,7 @@ def GetWords(data, doc_text, words):
         for j in range(len(data['queries'][i]['retrieved_documents'])):
             doc_id = data['queries'][i]['retrieved_documents'][j]['doc_id']
             dtext = (
-                    doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText'] +
-                    ' '.join(
-                        [
-                            ' '.join(mm) for mm in
-                            get_the_mesh(doc_text[doc_id])
-                        ]
-                    )
+                    doc_text[doc_id]['title'] + ' <title> ' + doc_text[doc_id]['abstractText']
             )
             dwds = tokenize(dtext)
             for w in dwds:
@@ -457,30 +451,6 @@ def get_snips(quest_id, gid, bioasq6_data):
             if (sn['document'].endswith(gid)):
                 good_snips.extend(sent_tokenize(sn['text']))
     return good_snips
-
-def get_the_mesh(the_doc):
-    good_meshes = []
-    if ('meshHeadingsList' in the_doc):
-        for t in the_doc['meshHeadingsList']:
-            t = t.split(':', 1)
-            t = t[1].strip()
-            t = t.lower()
-            good_meshes.append(t)
-    elif ('MeshHeadings' in the_doc):
-        for mesh_head_set in the_doc['MeshHeadings']:
-            for item in mesh_head_set:
-                good_meshes.append(item['text'].strip().lower())
-    if ('Chemicals' in the_doc):
-        for t in the_doc['Chemicals']:
-            t = t['NameOfSubstance'].strip().lower()
-            good_meshes.append(t)
-    good_mesh = sorted(good_meshes)
-    good_mesh = ['mesh'] + good_mesh
-    # good_mesh = ' # '.join(good_mesh)
-    # good_mesh = good_mesh.split()
-    # good_mesh = [gm.split() for gm in good_mesh]
-    good_mesh = [gm for gm in good_mesh]
-    return good_mesh
 
 def snip_is_relevant(one_sent, gold_snips):
     return int(
