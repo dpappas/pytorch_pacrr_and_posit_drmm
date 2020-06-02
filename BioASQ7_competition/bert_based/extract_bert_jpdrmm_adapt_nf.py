@@ -416,13 +416,6 @@ def GetWords(data, doc_text, words):
             for w in dwds:
                 words[w] = 1
 
-def get_gold_snips(quest_id):
-    gold_snips = []
-    if ('snippets' in bioasq6_data[quest_id]):
-        for sn in bioasq6_data[quest_id]['snippets']:
-            gold_snips.extend(sent_tokenize(sn['text']))
-    return list(set(gold_snips))
-
 def prep_extracted_snippets(extracted_snippets, docs, qid, top10docs, quest_body):
     ret = {
         'body': quest_body,
@@ -829,7 +822,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     quest_tokens, qemb  = ttttt[0]
     ####
     q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-    gold_snips          = get_gold_snips(dato['query_id'])
+    gold_snips          = []
     #
     doc_res, extracted_snippets         = {}, []
     extracted_snippets_known_rel_num    = []
@@ -918,10 +911,6 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     print('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    logger.info('{} known MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    logger.info('{} known F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
-    logger.info('{} known MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    logger.info('{} known GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
     bioasq_snip_res = get_bioasq_res(prefix, all_bioasq_gold_data, all_bioasq_subm_data, data_for_revision)
     pprint(bioasq_snip_res)
@@ -929,34 +918,7 @@ def print_the_results(prefix, all_bioasq_gold_data, all_bioasq_subm_data, all_bi
     print('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
     print('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
     print('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
-    logger.info('{} MAP documents: {}'.format(prefix, bioasq_snip_res['MAP documents']))
-    logger.info('{} F1 snippets: {}'.format(prefix, bioasq_snip_res['MF1 snippets']))
-    logger.info('{} MAP snippets: {}'.format(prefix, bioasq_snip_res['MAP snippets']))
-    logger.info('{} GMAP snippets: {}'.format(prefix, bioasq_snip_res['GMAP snippets']))
     #
-
-def back_prop(batch_costs, epoch_costs, batch_acc, epoch_acc):
-    batch_cost = sum(batch_costs) / float(len(batch_costs))
-    # batch_cost = sum(batch_costs)
-    batch_cost.backward()
-    ###################################
-    optimizer_1.step()
-    if(optimizer_2 is not None):
-        optimizer_2.step()
-        scheduler.step()
-    ###################################
-    optimizer_1.zero_grad()
-    if(optimizer_2 is not None):
-        optimizer_2.zero_grad()
-    ###################################
-    # model.zero_grad()
-    # bert_model.zero_grad()
-    ###################################
-    batch_aver_cost = batch_cost.cpu().item()
-    epoch_aver_cost = sum(epoch_costs) / float(len(epoch_costs))
-    batch_aver_acc = sum(batch_acc) / float(len(batch_acc))
-    epoch_aver_acc = sum(epoch_acc) / float(len(epoch_acc))
-    return batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc
 
 def print_params(model):
     '''
@@ -968,9 +930,6 @@ def print_params(model):
     print(40 * '=')
     print(model)
     print(40 * '=')
-    logger.info(40 * '=')
-    logger.info(model)
-    logger.info(40 * '=')
     trainable       = 0
     untrainable     = 0
     for parameter in model.parameters():
@@ -986,206 +945,6 @@ def print_params(model):
     print(40 * '=')
     print('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
     print(40 * '=')
-    logger.info(40 * '=')
-    logger.info('trainable:{} untrainable:{} total:{}'.format(trainable, untrainable, total_params))
-    logger.info(40 * '=')
-    ###########################################################
-    # print('Named trainable params')
-    # logger.info(40 * '=')
-    # logger.info('Named trainable params')
-    # logger.info(40 * '=')
-    # for name, param in model.named_parameters():
-    #     if (param.requires_grad):
-    #         print(param.requires_grad, name, param.size())
-    #         logger.info(param.requires_grad, name, param.size())
-    # ###########################################################
-    # print('Named not trainable params')
-    # logger.info(40 * '=')
-    # logger.info('Named not trainable params')
-    # logger.info(40 * '=')
-    # for name, param in model.named_parameters():
-    #     if (not param.requires_grad):
-    #         print(param.requires_grad, name, param.size())
-    #         logger.info(param.requires_grad, name, param.size())
-    ###########################################################
-
-def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
-    if (avgdl == 0):
-        total_words = 0
-        total_docs = 0
-        for dic in tqdm(train_docs, ascii=True):
-            sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-            for s in sents:
-                total_words += len(tokenize(s))
-                total_docs += 1.
-        avgdl = float(total_words) / float(total_docs)
-    else:
-        print('avgdl {} provided'.format(avgdl))
-    #
-    if (mean == 0 and deviation == 0):
-        BM25scores = []
-        k1, b = 1.2, 0.75
-        not_found = 0
-        for qid in tqdm(bioasq6_data, ascii=True):
-            qtext = bioasq6_data[qid]['body']
-            all_retr_ids = [link.split('/')[-1] for link in bioasq6_data[qid]['documents']]
-            for dic in all_retr_ids:
-                try:
-                    sents = sent_tokenize(train_docs[dic]['title']) + sent_tokenize(train_docs[dic]['abstractText'])
-                    q_toks = tokenize(qtext)
-                    for sent in sents:
-                        BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
-                        BM25scores.append(BM25score)
-                except KeyError:
-                    not_found += 1
-        #
-        mean = sum(BM25scores) / float(len(BM25scores))
-        nominator = 0
-        for score in BM25scores:
-            nominator += ((score - mean) ** 2)
-        deviation = math.sqrt((nominator) / float(len(BM25scores) - 1))
-    else:
-        print('mean {} provided'.format(mean))
-        print('deviation {} provided'.format(deviation))
-    return avgdl, mean, deviation
-
-def train_data_step1(train_data):
-    ret = []
-    for dato in tqdm(train_data['queries'], ascii=True):
-        quest = dato['query_text']
-        quest_id = dato['query_id']
-        bm25s = {t['doc_id']: t['norm_bm25_score'] for t in dato[u'retrieved_documents']}
-        ret_pmids = [t[u'doc_id'] for t in dato[u'retrieved_documents']]
-        good_pmids = [t for t in ret_pmids if t in dato[u'relevant_documents']]
-        bad_pmids = [t for t in ret_pmids if t not in dato[u'relevant_documents']]
-        if (len(bad_pmids) > 0):
-            for gid in good_pmids:
-                bid = random.choice(bad_pmids)
-                ret.append((quest, quest_id, gid, bid, bm25s[gid], bm25s[bid]))
-    print('')
-    return ret
-
-def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
-    for quest_text, quest_id, gid, bid, bm25s_gid, bm25s_bid in instances:
-        ####
-        good_snips          = get_snips(quest_id, gid, bioasq6_data)
-        good_snips          = [' '.join(bioclean(sn)) for sn in good_snips]
-        quest_text          = ' '.join(bioclean(quest_text.replace('\ufeff', ' ')))
-        #####################
-        tttttt = embed_the_sents_tokens([quest_text])
-        quest_tokens, qemb = tttttt[0]
-        #####################
-        q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
-        ####
-        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens)
-        good_sents_embeds   = datum['sents_embeds']
-        good_sents_escores  = datum['sents_escores']
-        good_doc_af         = datum['doc_af']
-        good_sent_tags      = datum['sent_tags']
-        good_held_out_sents = datum['held_out_sents']
-        good_oh_sims        = datum['oh_sims']
-        #
-        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], quest_tokens)
-        bad_sents_embeds    = datum['sents_embeds']
-        bad_sents_escores   = datum['sents_escores']
-        bad_doc_af          = datum['doc_af']
-        bad_sent_tags       = [0] * len(datum['sent_tags'])
-        bad_held_out_sents  = datum['held_out_sents']
-        bad_oh_sims         = datum['oh_sims']
-        #
-        if (use_sent_tokenizer == False or sum(good_sent_tags) > 0):
-            yield {
-                'good_sents_embeds': good_sents_embeds,
-                'good_sents_escores': good_sents_escores,
-                'good_doc_af': good_doc_af,
-                'good_sent_tags': good_sent_tags,
-                'good_held_out_sents': good_held_out_sents,
-                'good_oh_sims': good_oh_sims,
-                #
-                'bad_sents_embeds': bad_sents_embeds,
-                'bad_sents_escores': bad_sents_escores,
-                'bad_doc_af': bad_doc_af,
-                'bad_sent_tags': bad_sent_tags,
-                'bad_held_out_sents': bad_held_out_sents,
-                'bad_oh_sims': bad_oh_sims,
-                #
-                'quest_embeds': qemb,
-                'q_idfs': q_idfs,
-            }
-
-def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
-    model.train()
-    bert_model.train()
-    batch_costs, batch_acc, epoch_costs, epoch_acc = [], [], [], []
-    batch_counter, epoch_aver_cost, epoch_aver_acc = 0, 0., 0.
-    #
-    train_instances = train_data_step1(train_data)
-    random.shuffle(train_instances)
-    #
-    start_time = time.time()
-    pbar = tqdm(
-        iterable= train_data_step2(train_instances, train_docs, bioasq6_data, use_sent_tokenizer),
-        total   = 17850, #9684, # 378,
-        ascii   = True
-    )
-    for datum in pbar:
-        cost_, doc1_emit_, doc2_emit_, gs_emits_, bs_emits_ = model(
-            doc1_sents_embeds=datum['good_sents_embeds'],
-            doc2_sents_embeds=datum['bad_sents_embeds'],
-            doc1_oh_sim=datum['good_oh_sims'],
-            doc2_oh_sim=datum['bad_oh_sims'],
-            question_embeds=datum['quest_embeds'],
-            q_idfs=datum['q_idfs'],
-            sents_gaf=datum['good_sents_escores'],
-            sents_baf=datum['bad_sents_escores'],
-            doc_gaf=datum['good_doc_af'],
-            doc_baf=datum['bad_doc_af']
-        )
-        #
-        good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
-        if (two_losses):
-            sn_d1_l, sn_d2_l = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss = sn_d1_l + sn_d2_l
-            l = 0.5
-            cost_ = ((1 - l) * snip_loss) + (l * cost_)
-        #
-        batch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_acc.append(float(doc1_emit_ > doc2_emit_))
-        epoch_costs.append(cost_.cpu().item())
-        batch_costs.append(cost_)
-        if (len(batch_costs) == b_size):
-            batch_counter += 1
-            batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
-                batch_costs,
-                epoch_costs,
-                batch_acc,
-                epoch_acc
-            )
-            elapsed_time = time.time() - start_time
-            start_time = time.time()
-            print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                     batch_aver_acc, epoch_aver_acc, elapsed_time))
-            logger.info(
-                '{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                   batch_aver_acc, epoch_aver_acc, elapsed_time))
-            batch_costs, batch_acc = [], []
-    if (len(batch_costs) > 0):
-        batch_counter += 1
-        batch_aver_cost, epoch_aver_cost, batch_aver_acc, epoch_aver_acc = back_prop(
-            batch_costs,
-            epoch_costs,
-            batch_acc,
-            epoch_acc
-        )
-        elapsed_time = time.time() - start_time
-        start_time = time.time()
-        print('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                 batch_aver_acc, epoch_aver_acc, elapsed_time))
-        logger.info('{:03d} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}'.format(batch_counter, batch_aver_cost, epoch_aver_cost,
-                                                                       batch_aver_acc, epoch_aver_acc, elapsed_time))
-    print('Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
-    logger.info(
-        'Epoch:{:02d} aver_epoch_cost: {:.4f} aver_epoch_acc: {:.4f}'.format(epoch, epoch_aver_cost, epoch_aver_acc))
 
 def get_one_map(prefix, data, docs, use_sent_tokenizer):
     model.eval()
@@ -1202,7 +961,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     data_for_revision = {}
     #
     for dato in tqdm(data['queries'], ascii=True):
-        all_bioasq_gold_data['questions'].append(bioasq6_data[dato['query_id']])
+        all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
         data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato,
                                                                                         dato['retrieved_documents'],
                                                                                         data_for_revision, ret_data,
@@ -1535,6 +1294,18 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
+def load_model_from_checkpoint(resume_dir):
+    global start_epoch, optimizer
+    resume_from = os.path.join(resume_dir, 'best_checkpoint.pth.tar')
+    if os.path.isfile(resume_from):
+        print("=> loading checkpoint '{}'".format(resume_from))
+        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
+        #############################################################################################
+        model.load_state_dict(checkpoint['model_state_dict'])
+        bert_model.load_state_dict(checkpoint['bert_state_dict'])
+        #############################################################################################
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
 ###########################################################
 use_cuda            = torch.cuda.is_available()
 ###########################################################
@@ -1601,10 +1372,10 @@ with open(f_in2, 'rb') as f:
 with open(f_in3, 'rb') as f:
     test_docs = pickle.load(f)
 ###########################################################
-words = {}
+words           = {}
 GetWords(test_data, test_docs, words)
 print('loading idfs')
-idf, max_idf = load_idfs(idf_pickle_path, words)
+idf, max_idf    = load_idfs(idf_pickle_path, words)
 ###########################################################
 test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 print(test_map)
