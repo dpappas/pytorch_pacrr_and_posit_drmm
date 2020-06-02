@@ -998,8 +998,8 @@ f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioas
 ###########################################################
 # resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/'
 # resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/'
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/'
-# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/'
+# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/'
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/'
 odir                = os.path.join(resume_from, 'batch_{}'.format(batch_no))
 adapt               = '_adapt_' in resume_from
 ###########################################################
