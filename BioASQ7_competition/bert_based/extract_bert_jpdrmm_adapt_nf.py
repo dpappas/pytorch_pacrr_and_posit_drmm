@@ -1314,7 +1314,8 @@ f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioAS
 f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch_no)
 f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch_no)
 ###########################################################
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/'
+# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/'
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/'
 odir                = os.path.join(resume_from, 'batch_{}'.format(batch_no))
 adapt               = '_adapt_' in resume_from
 ###########################################################
@@ -1380,3 +1381,5 @@ idf, max_idf    = load_idfs(idf_pickle_path, words)
 test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 print(test_map)
 ###########################################################
+
+# CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_adapt_nf.py 1
