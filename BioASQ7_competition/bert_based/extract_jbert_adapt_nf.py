@@ -997,7 +997,9 @@ f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioas
 f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch_no)
 ###########################################################
 # resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/'
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/'
+# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/'
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/'
+# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/'
 odir                = os.path.join(resume_from, 'batch_{}'.format(batch_no))
 adapt               = '_adapt_' in resume_from
 ###########################################################
@@ -1005,7 +1007,6 @@ eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odd                 = '/home/dpappas/'
 ###########################################################
-w2v_bin_path        = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
 if (not os.path.exists(odir)):
