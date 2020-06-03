@@ -756,7 +756,7 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     all_emits = sorted(all_emits, key=lambda x: x[1], reverse=True)
     return doc_res, extracted_from_one, all_emits
 
-def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
+def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks, narrow_down_sents=15):
     good_sents          = sent_tokenize(the_doc['title'])
     for section in the_doc['abstractText'].split('\n'):
         if(len(section.strip())):
@@ -794,7 +794,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     good_doc_af.extend(features)
     ####
     if(frozen_or_unfrozen == 'unfrozen'):
-        good_sents          = good_sents[:8]
+        good_sents          = good_sents[:narrow_down_sents]
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     sents                       = [' '.join(bioclean(ss)).strip() for ss in good_sents]
     sents_tokens_embeds         = embed_the_sents_tokens(sents, len(sents) * [quest])
@@ -1095,7 +1095,7 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         #####################
         q_idfs              = np.array([[idf_val(qw)] for qw in quest_tokens], 'float')
         ####
-        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens)
+        datum               = prep_data(quest_text, docs[gid], bm25s_gid, good_snips, quest_tokens, narrow_down_sents=10)
         good_sents_embeds   = datum['sents_embeds']
         good_sents_escores  = datum['sents_escores']
         good_doc_af         = datum['doc_af']
@@ -1103,7 +1103,7 @@ def train_data_step2(instances, docs, bioasq6_data, use_sent_tokenizer):
         good_held_out_sents = datum['held_out_sents']
         good_oh_sims        = datum['oh_sims']
         #
-        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], quest_tokens)
+        datum               = prep_data(quest_text, docs[bid], bm25s_bid, [], quest_tokens, narrow_down_sents= 14 - len(datum['held_out_sents']))
         bad_sents_embeds    = datum['sents_embeds']
         bad_sents_escores   = datum['sents_escores']
         bad_doc_af          = datum['doc_af']
