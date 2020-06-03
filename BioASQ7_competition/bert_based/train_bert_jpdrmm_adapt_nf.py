@@ -621,7 +621,7 @@ def embed_the_sents_tokens(sents, questions=None):
     embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
     attention_mask          = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(bert_device)
     extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
-    sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
+    sequence_output, rest   = bert_model.encoder(embedding_output.to(bert_device), extended_attention_mask, head_mask=head_mask)
     rest                    = torch.stack(rest, dim=-1)
     ##########################################################################
     if(adapt):
