@@ -606,11 +606,11 @@ def embed_the_sents_tokens(sents, questions=None):
     return ret
 
 def get_map_res(fgold, femit, eval_path):
-    trec_eval_res = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
-    (out, err) = trec_eval_res.communicate()
-    lines = out.decode("utf-8").split('\n')
-    map_res = [l for l in lines if (l.startswith('map '))][0].split('\t')
-    map_res = float(map_res[-1])
+    trec_eval_res   = subprocess.Popen(['python', eval_path, fgold, femit], stdout=subprocess.PIPE, shell=False)
+    (out, err)      = trec_eval_res.communicate()
+    lines           = out.decode("utf-8").split('\n')
+    map_res         = [l for l in lines if (l.startswith('map '))][0].split('\t')
+    map_res         = float(map_res[-1])
     return map_res
 
 def get_bioasq_res(prefix, data_gold, data_emitted, data_for_revision):
@@ -921,10 +921,6 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     bert_model.eval()
     #
     ret_data = {'questions': []}
-    all_bioasq_subm_data_v1 = {"questions": []}
-    all_bioasq_subm_data_known_v1 = {"questions": []}
-    all_bioasq_subm_data_v2 = {"questions": []}
-    all_bioasq_subm_data_known_v2 = {"questions": []}
     all_bioasq_subm_data_v3 = {"questions": []}
     all_bioasq_subm_data_known_v3 = {"questions": []}
     all_bioasq_gold_data = {'questions': []}
@@ -932,23 +928,12 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
     #
     for dato in tqdm(data['queries'], ascii=True):
         all_bioasq_gold_data['questions'].append(bioasq7_data[dato['query_id']])
-        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(docs, dato,
-                                                                                        dato['retrieved_documents'],
-                                                                                        data_for_revision, ret_data,
-                                                                                        use_sent_tokenizer)
-        all_bioasq_subm_data_v1['questions'].append(snips_res['v1'])
-        all_bioasq_subm_data_v2['questions'].append(snips_res['v2'])
+        data_for_revision, ret_data, snips_res, snips_res_known = do_for_some_retrieved(
+            docs, dato, dato['retrieved_documents'], data_for_revision, ret_data, use_sent_tokenizer)
         all_bioasq_subm_data_v3['questions'].append(snips_res['v3'])
-        all_bioasq_subm_data_known_v1['questions'].append(snips_res_known['v1'])
-        all_bioasq_subm_data_known_v2['questions'].append(snips_res_known['v3'])
         all_bioasq_subm_data_known_v3['questions'].append(snips_res_known['v3'])
     #
-    print_the_results('v1 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v1, all_bioasq_subm_data_known_v1,
-                      data_for_revision)
-    print_the_results('v2 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v2, all_bioasq_subm_data_known_v2,
-                      data_for_revision)
-    print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3,
-                      data_for_revision)
+    print_the_results('v3 ' + prefix, all_bioasq_gold_data, all_bioasq_subm_data_v3, all_bioasq_subm_data_known_v3, data_for_revision)
     #
     if (prefix == 'dev'):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_dev.json'), 'w') as f:
@@ -962,7 +947,7 @@ def get_one_map(prefix, data, docs, use_sent_tokenizer):
         with open(os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'), 'w') as f:
             f.write(json.dumps(ret_data, indent=4, sort_keys=True))
         res_map = get_map_res(
-            os.path.join(odir, 'v3 test_gold_bioasq.json'),
+            os.path.join(odir, 'v3 test_emit_bioasq.json'),
             os.path.join(odir, 'elk_relevant_abs_posit_drmm_lists_test.json'),
             eval_path
         )
