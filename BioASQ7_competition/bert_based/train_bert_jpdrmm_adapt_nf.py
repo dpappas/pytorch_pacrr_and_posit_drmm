@@ -611,14 +611,16 @@ def embed_the_sents_tokens(sents, questions=None):
         eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=question, label=str(c)))
         c+=1
     ##########################################################################
-    eval_features           = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
-    input_ids               = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(bert_device)
-    attention_mask          = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(bert_device)
+    # pprint(sents)
     ##########################################################################
-    extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
+    eval_features           = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
+    input_ids               = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(model_device)
+    ##########################################################################
     head_mask               = [None] * bert_model.config.num_hidden_layers
-    token_type_ids          = torch.zeros_like(input_ids).to(bert_device)
+    token_type_ids          = torch.zeros_like(input_ids).to(model_device)
     embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
+    attention_mask          = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(bert_device)
+    extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
     sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
     rest                    = torch.stack(rest, dim=-1)
     ##########################################################################
@@ -754,7 +756,20 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
     return doc_res, extracted_from_one, all_emits
 
 def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
-    good_sents          = [sent for sent in sent_tokenize(the_doc['title']) + sent_tokenize(the_doc['abstractText']) if len(bioclean(sent))>0]
+    good_sents          = sent_tokenize(the_doc['title'])
+    for section in the_doc['abstractText'].split('\n'):
+        if(len(section.strip())):
+            good_sents  = good_sents + sent_tokenize(section)
+    good_sents          = [
+        sent.strip() for sent in good_sents
+        if(
+            not sent.strip().isupper()
+            and
+            len(bioclean(sent.strip()))>5
+        )
+    ]
+    if(len(good_sents) == 1):
+        good_sents = good_sents + good_sents
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25)
     good_doc_af.append(len(good_sents) / 60.)
@@ -777,6 +792,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     ]
     good_doc_af.extend(features)
     ####
+    good_sents          = good_sents[:12]
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     sents                       = [' '.join(bioclean(ss)).strip() for ss in good_sents]
     sents_tokens_embeds         = embed_the_sents_tokens(sents, len(sents) * [quest])
@@ -1362,7 +1378,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = []
         for i in range(len(doc_sents_embeds)):
             sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False).to(model_device)
-            sent_embeds = doc_sents_embeds[i]
+            sent_embeds = doc_sents_embeds[i].to(model_device)
             gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(model_device)
             #
             conv_res            = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
@@ -1465,6 +1481,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def emit_one(self, doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(model_device)
         doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(model_device)
+        question_embeds = question_embeds.to(model_device)
         ################################################################
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1495,6 +1512,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(model_device)
         doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(model_device)
         doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(model_device)
+        question_embeds = question_embeds.to(model_device)
         ################################################################
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1537,7 +1555,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
 #####################
 use_cuda            = True
-max_seq_length      = 50
 #####################
 frozen_or_unfrozen  = 'frozen' if (int(sys.argv[1]) == 1) else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
@@ -1580,7 +1597,7 @@ my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir = 'bioasq7_bertjpdrmadaptnf_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
+odir = 'bioasq7_bertjpdrmadaptnf_{}_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
 odir = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
@@ -1617,6 +1634,7 @@ if(frozen_or_unfrozen == 'frozen'):
     optimizer_2, scheduler  = None, None
     b_size                  = 32
 else:
+    bert_model.embeddings.to(model_device)
     for param in bert_model.encoder.parameters():
         param.requires_grad = True
     lr2                     = 2e-5

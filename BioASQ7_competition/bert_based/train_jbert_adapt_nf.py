@@ -776,7 +776,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
         held_out_sents.append(good_text)
         good_sent_tags.append(snip_is_relevant(' '.join(bioclean(good_text)), good_snips))
     ####
-    sents_embeds = embed_the_sents(held_out_sents, [quest] * len(held_out_sents))
+    sents_embeds        = embed_the_sents(held_out_sents, [quest] * len(held_out_sents))
     ####
     return {
         'sents_embeds'  : sents_embeds,
