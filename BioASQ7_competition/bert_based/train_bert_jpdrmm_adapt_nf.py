@@ -792,7 +792,7 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     ]
     good_doc_af.extend(features)
     ####
-    good_sents          = good_sents[:12]
+    good_sents          = good_sents[:10]
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     sents                       = [' '.join(bioclean(ss)).strip() for ss in good_sents]
     sents_tokens_embeds         = embed_the_sents_tokens(sents, len(sents) * [quest])
@@ -1553,13 +1553,25 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
+def load_model_from_checkpoint(resume_dir):
+    global start_epoch, optimizer
+    resume_from = os.path.join(resume_dir, 'best_checkpoint.pth.tar')
+    if os.path.isfile(resume_from):
+        print("=> loading checkpoint '{}'".format(resume_from))
+        checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
+        #############################################################################################
+        model.load_state_dict(checkpoint['model_state_dict'])
+        bert_model.load_state_dict(checkpoint['bert_state_dict'])
+        #############################################################################################
+        print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+
 #####################
 use_cuda            = True
 #####################
 frozen_or_unfrozen  = 'frozen' if (int(sys.argv[1]) == 1) else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
 if(frozen_or_unfrozen == 'unfrozen'):
-    resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_{}_run_frozen/'.format('adapt' if(adapt) else 'toponly')
+    resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_{}_run_frozen/'.format('adapt' if(adapt) else 'toponly')
     model_device    = torch.device("cuda:1") if(use_cuda) else torch.device("cpu")
     bert_device     = torch.device("cuda:0") if (use_cuda) else torch.device("cpu")
     max_seq_length  = 50
@@ -1626,6 +1638,8 @@ lr2                 = 2e-5
 cache_dir           = 'bert-base-uncased' # '/home/dpappas/bert_cache/'
 bert_tokenizer      = BertTokenizer.from_pretrained(cache_dir)
 bert_model          = BertModel.from_pretrained(cache_dir,  output_hidden_states=True, output_attentions=False).to(bert_device)
+if(resume_from is not None):
+    load_model_from_checkpoint(resume_from)
 for param in bert_model.parameters():
     param.requires_grad = False
 
