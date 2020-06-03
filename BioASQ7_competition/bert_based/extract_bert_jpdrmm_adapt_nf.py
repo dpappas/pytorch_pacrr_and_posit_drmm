@@ -1339,7 +1339,6 @@ print(test_map)
 
 # CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_adapt_nf.py 1
 
-
 '''
 
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
@@ -1368,7 +1367,6 @@ java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation
 | grep "^MAP documents:\|^MAP snippets:"
 
 '''
-
 
 '''
 
