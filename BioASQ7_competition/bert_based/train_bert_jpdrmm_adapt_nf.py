@@ -1611,7 +1611,7 @@ else:
     for param in bert_model.encoder.parameters():
         param.requires_grad = True
     lr2                     = 2e-5
-    b_size                  = 6
+    b_size                  = 1
     optimizer_2             = optim.Adam(bert_model.encoder.parameters(), lr=lr2)
     scheduler               = optim.lr_scheduler.ExponentialLR(optimizer_2, gamma = 0.97)
 #####################
