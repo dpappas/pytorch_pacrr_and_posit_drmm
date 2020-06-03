@@ -1538,10 +1538,19 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 #####################
 use_cuda            = True
 max_seq_length      = 50
-device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 #####################
 frozen_or_unfrozen  = 'frozen' if (int(sys.argv[1]) == 1) else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
+if(frozen_or_unfrozen == 'unfrozen'):
+    resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_{}_run_frozen/'.format('adapt' if(adapt) else 'toponly')
+    model_device    = torch.device("cuda:1") if(use_cuda) else torch.device("cpu")
+    bert_device     = torch.device("cuda:0") if (use_cuda) else torch.device("cpu")
+    max_seq_length  = 50
+else:
+    resume_from     = None
+    model_device    = torch.device("cuda") if (use_cuda) else torch.device("cpu")
+    bert_device     = torch.device("cuda") if (use_cuda) else torch.device("cpu")
+    max_seq_length  = 50
 #####################
 print('adapt val: {}'.format(adapt))
 print('frozen_or_unfrozen val: {}'.format(frozen_or_unfrozen))
