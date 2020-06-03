@@ -517,7 +517,7 @@ def select_snippets_v1(extracted_snippets):
     :return: returns the best 10 snippets of all docs (0..n from each doc)
     '''
     sorted_snips = sorted(extracted_snippets, key=lambda x: x[1], reverse=True)
-    return sorted_snips[:10]
+    return sorted_snips[:8]
 
 def select_snippets_v2(extracted_snippets):
     '''
@@ -622,10 +622,11 @@ def embed_the_sents_tokens(sents, questions=None):
     attention_mask          = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(bert_device)
     extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
     sequence_output, rest   = bert_model.encoder(embedding_output.to(bert_device), extended_attention_mask, head_mask=head_mask)
-    rest                    = torch.stack(rest, dim=-1)
     ##########################################################################
     if(adapt):
-        rest                = model.layers_weights(rest).squeeze(-1)
+        rest                = [r.to(model_device for r in rest)]
+        rest                = torch.stack(rest, dim=-1)
+        rest                = [model.layers_weights(r).squeeze(-1) for r in rest]
     else:
         rest                = sequence_output
     ret = []
@@ -769,11 +770,11 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
         )
     ]
     if(len(good_sents) == 1):
-        good_sents = good_sents + good_sents
+        good_sents      = good_sents + good_sents
     ####
     good_doc_af         = GetScores(quest, the_doc['title'] + the_doc['abstractText'], the_bm25)
     good_doc_af.append(len(good_sents) / 60.)
-    #
+    ####
     all_doc_text        = the_doc['title'] + ' ' + the_doc['abstractText']
     doc_toks            = tokenize(all_doc_text)
     tomi                = (set(doc_toks) & set(quest_toks))
@@ -981,8 +982,8 @@ def print_params(model):
     :return:        Nothing.
     '''
     ###########################################################
-    print(40 * '=')
-    print(model)
+    # print(40 * '=')
+    # print(model)
     print(40 * '=')
     logger.info(40 * '=')
     logger.info(model)
@@ -1556,6 +1557,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 def load_model_from_checkpoint(resume_dir):
     global start_epoch, optimizer
     resume_from = os.path.join(resume_dir, 'best_checkpoint.pth.tar')
+    print('Trying to resume from : {}'.format(resume_from))
     if os.path.isfile(resume_from):
         print("=> loading checkpoint '{}'".format(resume_from))
         checkpoint = torch.load(resume_from, map_location=lambda storage, loc: storage)
@@ -1564,6 +1566,8 @@ def load_model_from_checkpoint(resume_dir):
         bert_model.load_state_dict(checkpoint['bert_state_dict'])
         #############################################################################################
         print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
+    else:
+        print("=> failed to resume")
 
 #####################
 use_cuda            = True
@@ -1574,12 +1578,12 @@ if(frozen_or_unfrozen == 'unfrozen'):
     resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_{}_run_frozen/'.format('adapt' if(adapt) else 'toponly')
     model_device    = torch.device("cuda:1") if(use_cuda) else torch.device("cpu")
     bert_device     = torch.device("cuda:0") if (use_cuda) else torch.device("cpu")
-    max_seq_length  = 50
+    max_seq_length  = 40
 else:
     resume_from     = None
     model_device    = torch.device("cuda") if (use_cuda) else torch.device("cpu")
     bert_device     = torch.device("cuda") if (use_cuda) else torch.device("cpu")
-    max_seq_length  = 50
+    max_seq_length  = 40
 #####################
 print('adapt val: {}'.format(adapt))
 print('frozen_or_unfrozen val: {}'.format(frozen_or_unfrozen))
