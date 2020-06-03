@@ -624,7 +624,7 @@ def embed_the_sents_tokens(sents, questions=None):
     sequence_output, rest   = bert_model.encoder(embedding_output.to(bert_device), extended_attention_mask, head_mask=head_mask)
     ##########################################################################
     if(adapt):
-        rest                = [r.to(model_device for r in rest)]
+        rest                = [r.to(model_device) for r in rest]
         rest                = torch.stack(rest, dim=-1)
         rest                = [model.layers_weights(r).squeeze(-1) for r in rest]
     else:
@@ -793,7 +793,8 @@ def prep_data(quest, the_doc, the_bm25, good_snips, quest_toks):
     ]
     good_doc_af.extend(features)
     ####
-    good_sents          = good_sents[:10]
+    if(frozen_or_unfrozen == 'unfrozen'):
+        good_sents          = good_sents[:8]
     good_sents_embeds, good_sents_escores, held_out_sents, good_sent_tags, good_oh_sim = [], [], [], [], []
     sents                       = [' '.join(bioclean(ss)).strip() for ss in good_sents]
     sents_tokens_embeds         = embed_the_sents_tokens(sents, len(sents) * [quest])
