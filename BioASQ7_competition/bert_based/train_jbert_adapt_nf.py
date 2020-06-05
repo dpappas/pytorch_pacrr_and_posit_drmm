@@ -1282,7 +1282,7 @@ torch.manual_seed(my_seed)
 odir        = 'bioasq7_jbertadaptnf_{}_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
 odir        = os.path.join(odd, odir)
 print(odir)
-if (not os.path.exists(odir)):
+if (not os.path.exists  (odir)):
     os.makedirs(odir)
 #
 logger, hdlr = init_the_logger(hdlr)
