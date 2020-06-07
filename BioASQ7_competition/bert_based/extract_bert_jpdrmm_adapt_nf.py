@@ -574,22 +574,19 @@ def embed_the_sents_tokens(sents, questions=None):
         eval_examples.append(InputExample(guid='example_dato_{}'.format(str(c)), text_a=sent, text_b=question, label=str(c)))
         c+=1
     ##########################################################################
-    # pprint(sents)
-    ##########################################################################
     eval_features           = convert_examples_to_features(eval_examples, 256, bert_tokenizer)
-    input_ids               = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(model_device)
+    input_ids               = torch.tensor([ef.input_ids for ef in eval_features], dtype=torch.long).to(device)
+    attention_mask          = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(device)
     ##########################################################################
-    head_mask               = [None] * bert_model.config.num_hidden_layers
-    token_type_ids          = torch.zeros_like(input_ids).to(model_device)
-    embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
-    attention_mask          = torch.tensor([ef.input_mask for ef in eval_features], dtype=torch.long).to(bert_device)
     extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2).float()
-    sequence_output, rest   = bert_model.encoder(embedding_output.to(bert_device), extended_attention_mask, head_mask=head_mask)
+    head_mask               = [None] * bert_model.config.num_hidden_layers
+    token_type_ids          = torch.zeros_like(input_ids).to(device)
+    embedding_output        = bert_model.embeddings(input_ids, position_ids=None, token_type_ids=token_type_ids)
+    sequence_output, rest   = bert_model.encoder(embedding_output, extended_attention_mask, head_mask=head_mask)
+    rest                    = torch.stack(rest, dim=-1)
     ##########################################################################
     if(adapt):
-        rest                = [r.to(model_device) for r in rest]
-        rest                = torch.stack(rest, dim=-1)
-        rest                = [model.layers_weights(r).squeeze(-1) for r in rest]
+        rest                = model.layers_weights(rest).squeeze(-1)
     else:
         rest                = sequence_output
     ret = []
