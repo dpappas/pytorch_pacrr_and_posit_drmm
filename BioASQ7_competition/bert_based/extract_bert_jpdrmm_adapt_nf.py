@@ -975,42 +975,42 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_sent_output_layer()
         self.init_doc_out_layer()
         # doc loss func
-        self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(device)
+        self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(model_device)
 
     def init_mesh_module(self):
-        self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim)).to(device)
-        self.mesh_gru = nn.GRU(self.embedding_dim, self.embedding_dim).to(device)
+        self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim)).to(model_device)
+        self.mesh_gru = nn.GRU(self.embedding_dim, self.embedding_dim).to(model_device)
 
     def init_context_module(self):
-        self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
-        self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
-        self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(device)
-        self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
+        self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(model_device)
+        self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
+        self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(model_device)
+        self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
 
     def init_question_weight_module(self):
-        self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True).to(device)
+        self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True).to(model_device)
 
     def init_mlps_for_pooled_attention(self):
-        self.linear_per_q1 = nn.Linear(3 * 3, 8, bias=True).to(device)
-        self.my_relu1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
-        self.linear_per_q2 = nn.Linear(8, 1, bias=True).to(device)
+        self.linear_per_q1 = nn.Linear(3 * 3, 8, bias=True).to(model_device)
+        self.my_relu1 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
+        self.linear_per_q2 = nn.Linear(8, 1, bias=True).to(model_device)
 
     def init_sent_output_layer(self):
         if (self.sentence_out_method == 'MLP'):
-            self.sent_out_layer_1 = nn.Linear(self.sent_add_feats + 1, 8, bias=False).to(device)
-            self.sent_out_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
-            self.sent_out_layer_2 = nn.Linear(8, 1, bias=False).to(device)
+            self.sent_out_layer_1 = nn.Linear(self.sent_add_feats + 1, 8, bias=False).to(model_device)
+            self.sent_out_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
+            self.sent_out_layer_2 = nn.Linear(8, 1, bias=False).to(model_device)
         else:
-            self.sent_res_h0 = autograd.Variable(torch.randn(2, 1, 5)).to(device)
+            self.sent_res_h0 = autograd.Variable(torch.randn(2, 1, 5)).to(model_device)
             self.sent_res_bigru = nn.GRU(input_size=self.sent_add_feats + 1, hidden_size=5, bidirectional=True,
-                                         batch_first=False).to(device)
-            self.sent_res_mlp = nn.Linear(10, 1, bias=False).to(device)
+                                         batch_first=False).to(model_device)
+            self.sent_res_mlp = nn.Linear(10, 1, bias=False).to(model_device)
 
     def init_doc_out_layer(self):
-        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True).to(device)
-        self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(device)
-        self.final_layer_2 = nn.Linear(8, 1, bias=True).to(device)
-        self.oo_layer = nn.Linear(2, 1, bias=True).to(device)
+        self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True).to(model_device)
+        self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
+        self.final_layer_2 = nn.Linear(8, 1, bias=True).to(model_device)
+        self.oo_layer = nn.Linear(2, 1, bias=True).to(model_device)
 
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta = negatives - positives
@@ -1075,9 +1075,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
     def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
-            sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False).to(device)
-            sent_embeds = doc_sents_embeds[i]
-            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(device)
+            sim_oh = autograd.Variable(torch.FloatTensor(oh_sims[i]), requires_grad=False).to(model_device)
+            sent_embeds = doc_sents_embeds[i].to(model_device)
+            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(model_device)
             #
             conv_res            = self.apply_context_convolution(sent_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
             conv_res            = self.apply_context_convolution(conv_res, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1107,8 +1107,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         res = []
         hn = self.context_h0
         for i in range(len(doc_sents_embeds)):
-            sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False).to(device)
-            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(device)
+            sent_embeds = autograd.Variable(torch.FloatTensor(doc_sents_embeds[i]), requires_grad=False).to(model_device)
+            gaf = autograd.Variable(torch.FloatTensor(sents_af[i]), requires_grad=False).to(model_device)
             conv_res, hn = self.apply_context_gru(sent_embeds, hn)
             #
             sim_insens = self.my_cosine_sim(question_embeds, sent_embeds).squeeze(0)
@@ -1143,7 +1143,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         if (len(res.size()) == 0):
             res = res.unsqueeze(0)
         if (res.size()[0] < k):
-            to_concat = torch.zeros(k - res.size()[0]).to(device)
+            to_concat = torch.zeros(k - res.size()[0]).to(model_device)
             res = torch.cat([res, to_concat], -1)
         return res
 
@@ -1164,7 +1164,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return res
 
     def apply_mesh_gru(self, mesh_embeds):
-        mesh_embeds = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False).to(device)
+        mesh_embeds = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False).to(model_device)
         output, hn = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         return output[-1, 0, :]
 
@@ -1177,8 +1177,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         return output
 
     def emit_one(self, doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf):
-        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
-        doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
+        q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(model_device)
+        doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(model_device)
+        question_embeds = question_embeds.to(model_device)
         ################################################################
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1206,9 +1207,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
 
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
                 question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(device)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(device)
-        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(device)
+        q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(model_device)
+        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(model_device)
+        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(model_device)
+        question_embeds = question_embeds.to(model_device)
         ################################################################
         q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
         q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
@@ -1269,8 +1271,10 @@ f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioAS
 f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch_no)
 f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch_no)
 ###########################################################
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/'
+# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/'
 # resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/'
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_unfrozen_run_0/'
+# resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/'
 odir                = os.path.join(resume_from, 'batch_{}'.format(batch_no))
 adapt               = '_adapt_' in resume_from
 ###########################################################
@@ -1297,6 +1301,8 @@ torch.manual_seed(my_seed)
 ###########################################################
 use_cuda            = True
 device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
+model_device        = device
+bert_device         = device
 ###########################################################
 model               = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool, adapt=adapt).to(device)
 #####################
