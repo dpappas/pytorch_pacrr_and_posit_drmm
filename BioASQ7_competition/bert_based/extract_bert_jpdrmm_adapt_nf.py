@@ -1280,7 +1280,6 @@ adapt               = '_adapt_' in resume_from
 ###########################################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
 ###########################################################
 idf_pickle_path     = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
