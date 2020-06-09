@@ -1162,10 +1162,13 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         #
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
         if (two_losses):
-            sn_d1_l, sn_d2_l    = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss           = sn_d1_l + sn_d2_l
-            l                   = 0.5
-            cost_               = ((1 - l) * snip_loss) + (l * cost_)
+            # sn_d1_l, sn_d2_l    = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            # snip_loss           = sn_d1_l + sn_d2_l
+            # l                   = 0.5
+            # cost_               = ((1 - l) * snip_loss) + (l * cost_)
+            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            snip_loss                       = sn_d1_l + sn_d2_l
+            cost_                           = weight_loss * snip_loss + cost_
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1575,6 +1578,7 @@ use_cuda            = True
 #####################
 frozen_or_unfrozen  = 'frozen' if (int(sys.argv[1]) == 1) else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
+weight_loss         = float(sys.argv[3])
 if(frozen_or_unfrozen == 'unfrozen'):
     resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_{}_run_frozen/'.format('adapt' if(adapt) else 'toponly')
     model_device    = torch.device("cuda:1") if(use_cuda) else torch.device("cpu")
@@ -1614,7 +1618,7 @@ my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir = 'bioasq7_bertjpdrmadaptnf_{}_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
+odir = 'bioasq7_bertjpdrmadaptnf_{}_{}_run_{}_WL_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run, weight_loss)
 odir = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
@@ -1682,7 +1686,7 @@ for epoch in range(max_epoch):
 
 
 # CUDA_VISIBLE_DEVICES=1 python3.6 train_bertjpdrmm_adapt_nf.py 1 0
-# CUDA_VISIBLE_DEVICES=0 python3.6 train_bertjpdrmm_adapt_nf.py 1 1
+# CUDA_VISIBLE_DEVICES=0 python3.6 train_bertjpdrmm_adapt_nf.py 1 1 0.1
 # python3.6 train_bertjpdrmm_adapt_nf.py 0 0
 # python3.6 train_bertjpdrmm_adapt_nf.py 0 1
 
