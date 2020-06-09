@@ -1687,6 +1687,7 @@ for epoch in range(max_epoch):
 
 # CUDA_VISIBLE_DEVICES=1 python3.6 train_bertjpdrmm_adapt_nf.py 1 0
 # CUDA_VISIBLE_DEVICES=0 python3.6 train_bertjpdrmm_adapt_nf.py 1 1 0.1
+# CUDA_VISIBLE_DEVICES=0 python3.6 train_bertjpdrmm_adapt_nf.py 1 1 0.01
 # python3.6 train_bertjpdrmm_adapt_nf.py 0 0
 # python3.6 train_bertjpdrmm_adapt_nf.py 0 1
 
