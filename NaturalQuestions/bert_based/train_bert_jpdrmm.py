@@ -1403,7 +1403,7 @@ lr                  = 0.01
 b_size              = 32
 max_epoch           = 4
 ##########################################
-bert_model          = 'bert-base-uncased'
+bert_model_desc     = 'bert-base-uncased'
 cache_dir           = '/home/dpappas/bert_cache/'
 frozen_or_unfrozen  = 'frozen'
 last_layers         = -1
@@ -1415,7 +1415,7 @@ my_seed = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 ##########################################
-odir = 'NQ_bert_jpdrmm_2L_0p01_run_{}/'.format(run)
+odir = 'NQ_bert_jpdrmm_2L_0p01_{}_{}/'.format(frozen_or_unfrozen, run)
 odir = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
@@ -1431,8 +1431,8 @@ logger.info('Compiling model...')
 model       = Sent_Posit_Drmm_Modeler(embedding_dim=embedding_dim, k_for_maxpool=k_for_maxpool).to(device)
 optimizer_1 = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
 ##########################################
-bert_tokenizer      = BertTokenizer.from_pretrained(bert_model, do_lower_case=True, cache_dir=cache_dir)
-bert_model          = BertForSequenceClassification.from_pretrained(bert_model, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2).to(device)
+bert_tokenizer      = BertTokenizer.from_pretrained(bert_model_desc, do_lower_case=True, cache_dir=cache_dir)
+bert_model          = BertForSequenceClassification.from_pretrained(bert_model_desc, cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1), num_labels=2).to(device)
 for param in bert_model.parameters():
     param.requires_grad = False
 if(frozen_or_unfrozen == 'frozen'):
