@@ -1041,10 +1041,13 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
         #
         good_sent_tags, bad_sent_tags = datum['good_sent_tags'], datum['bad_sent_tags']
         if (two_losses):
-            sn_d1_l, sn_d2_l = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
-            snip_loss = sn_d1_l + sn_d2_l
-            l = 0.5
-            cost_ = ((1 - l) * snip_loss) + (l * cost_)
+            # sn_d1_l, sn_d2_l = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            # snip_loss = sn_d1_l + sn_d2_l
+            # l = 0.5
+            # cost_ = ((1 - l) * snip_loss) + (l * cost_)
+            sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
+            snip_loss                       = sn_d1_l + sn_d2_l
+            cost_                           = weight_loss * snip_loss + cost_
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1234,6 +1237,7 @@ else:
     model_device    = torch.device("cuda") if (use_cuda) else torch.device("cpu")
     bert_device     = torch.device("cuda") if (use_cuda) else torch.device("cpu")
     max_seq_length  = 50
+weight_loss         = float(sys.argv[3])
 #####################
 (dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data) = load_all_data(
     dataloc=dataloc, idf_pickle_path=idf_pickle_path, bert_all_words_path=bert_all_words_path
