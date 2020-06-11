@@ -1283,7 +1283,7 @@ my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir        = 'bioasq7_jbertadaptnf_{}_{}_run_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run)
+odir        = 'bioasq7_jbertadaptnf_{}_{}_run_{}_WL_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run, weight_loss)
 odir        = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists  (odir)):
@@ -1327,4 +1327,7 @@ for epoch in range(max_epoch):
 # CUDA_VISIBLE_DEVICES=0 python3.6 train_jbert_adapt_nf.py 1 1
 # python3.6 train_jbert_adapt_nf.py 0 0
 # python3.6 train_jbert_adapt_nf.py 0 1
+
+# python3.6 train_jbert_adapt_nf.py 0 0 0.1
+# python3.6 train_jbert_adapt_nf.py 0 0 0.01
 
