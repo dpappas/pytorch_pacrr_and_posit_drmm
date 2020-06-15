@@ -97,12 +97,3 @@ for quest in pbar:
 pickle.dump(train_data, open('/home/dpappas/NQ_data/NQ_train_data.pkl', 'wb'), protocol=2)
 pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data.pkl',   'wb'), protocol=2)
 
-
-
-
-
-
-
-
-
-
