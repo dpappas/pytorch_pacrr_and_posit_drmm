@@ -1475,6 +1475,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits = self.do_for_one_doc_cnn(
             doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool
         )
+        gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
@@ -1482,7 +1483,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output = self.final_activ_1(final_good_output)
         final_good_output = self.final_layer_2(final_good_output)
         #
-        return final_good_output, gs_emits.unsqueeze(-1)
+        return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
                 question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(model_device)
@@ -1504,6 +1505,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc2_sents_embeds, doc2_oh_sim, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool
         )
         ################################################################
+        gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
+        bs_emits    = torch.sigmoid(bs_emits.unsqueeze(-1))
+        ################################################################
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         bad_out_pp  = torch.cat([bad_out, doc_baf], -1)
         ################################################################
@@ -1516,7 +1520,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_bad_output = self.final_layer_2(final_bad_output)
         ################################################################
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits.unsqueeze(-1), bs_emits.unsqueeze(-1)
+        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 def load_model_from_checkpoint(resume_dir):
     global start_epoch, optimizer
