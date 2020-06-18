@@ -882,8 +882,8 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     emitions['documents'] = doc_res[:100]
     ret_data['questions'].append(emitions)
     #
-    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
-    extracted_snippets_known_rel_num = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
+    extracted_snippets                  = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+    extracted_snippets_known_rel_num    = [tt for tt in extracted_snippets_known_rel_num if (tt[2] in doc_res[:10])]
     if (use_sent_tokenizer):
         extracted_snippets_v1 = select_snippets_v1(extracted_snippets)
         extracted_snippets_v2 = select_snippets_v2(extracted_snippets)
@@ -1476,7 +1476,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool
         )
         gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
-        gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
@@ -1499,12 +1498,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
         ################################################################
-        good_out, gs_emits = self.do_for_one_doc_cnn(
-            doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool
-        )
-        bad_out, bs_emits = self.do_for_one_doc_cnn(
-            doc2_sents_embeds, doc2_oh_sim, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool
-        )
+        good_out, gs_emits = self.do_for_one_doc_cnn(doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        bad_out,  bs_emits = self.do_for_one_doc_cnn(doc2_sents_embeds, doc2_oh_sim, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         ################################################################
         gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
         bs_emits    = torch.sigmoid(bs_emits.unsqueeze(-1))
