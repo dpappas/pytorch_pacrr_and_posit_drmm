@@ -1518,4 +1518,3 @@ java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation
 | grep "^MAP documents:\|^MAP snippets:"
 
 '''
-
