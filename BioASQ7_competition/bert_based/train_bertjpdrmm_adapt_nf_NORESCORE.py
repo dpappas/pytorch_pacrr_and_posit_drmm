@@ -1649,8 +1649,6 @@ for epoch in range(max_epoch):
     print('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
     logger.info('epoch:{:02d} epoch_dev_map:{:.4f} best_dev_map:{:.4f}'.format(epoch + 1, epoch_dev_map, best_dev_map))
 
-# CUDA_VISIBLE_DEVICES=1 python3.6 train_bertjpdrmm_adapt_nf_NORERANK.py 1 1 0.0
 # CUDA_VISIBLE_DEVICES=1 python3.6 train_bertjpdrmm_adapt_nf_NORERANK.py 1 1 0.1
-# CUDA_VISIBLE_DEVICES=1 python3.6 train_bertjpdrmm_adapt_nf_NORERANK.py 1 1 0.01
 
 

@@ -1618,7 +1618,7 @@ my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir = 'bioasq7_bertjpdrmadaptnf_{}_{}_run_{}_WL_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run, weight_loss)
+odir = 'bioasq7_bertjpdrmadaptnf_snip_{}_{}_run_{}_WL_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run, weight_loss)
 odir = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
