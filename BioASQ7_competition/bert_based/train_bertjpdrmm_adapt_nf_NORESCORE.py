@@ -1476,6 +1476,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool
         )
         gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
+        gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
