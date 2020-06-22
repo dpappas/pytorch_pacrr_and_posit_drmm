@@ -1231,7 +1231,7 @@ f_in1               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/BioAS
 f_in2               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch_no)
 f_in3               = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch_no)
 ###########################################################
-resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_snip_adapt_frozen_run_0_WL_0.0/'
+resume_from         = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_NORESCORE_adapt_frozen_run_0_WL_0.1/'
 odir                = os.path.join(resume_from, 'batch_{}'.format(batch_no))
 adapt               = '_adapt_' in resume_from
 ###########################################################
