@@ -1168,7 +1168,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             # cost_               = ((1 - l) * snip_loss) + (l * cost_)
             sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss                       = sn_d1_l + sn_d2_l
-            cost_                           = snip_loss + weight_loss * cost_
+            cost_                           = weight_loss * snip_loss + cost_
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1618,7 +1618,7 @@ my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir = 'bioasq7_bertjpdrmadaptnf_snip_{}_{}_run_{}_WL_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run, weight_loss)
+odir = 'bioasq7_bertjpdrmadaptnf_{}_{}_run_{}_WL_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run, weight_loss)
 odir = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
