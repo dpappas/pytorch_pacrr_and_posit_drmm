@@ -976,25 +976,20 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_doc_out_layer()
         # doc loss func
         self.margin_loss    = nn.MarginRankingLoss(margin=1.0).to(model_device)
-
     def init_mesh_module(self):
         self.mesh_h0 = autograd.Variable(torch.randn(1, 1, self.embedding_dim)).to(model_device)
         self.mesh_gru = nn.GRU(self.embedding_dim, self.embedding_dim).to(model_device)
-
     def init_context_module(self):
         self.trigram_conv_1 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(model_device)
         self.trigram_conv_activation_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
         self.trigram_conv_2 = nn.Conv1d(self.embedding_dim, self.embedding_dim, 3, padding=2, bias=True).to(model_device)
         self.trigram_conv_activation_2 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
-
     def init_question_weight_module(self):
         self.q_weights_mlp = nn.Linear(self.embedding_dim + 1, 1, bias=True).to(model_device)
-
     def init_mlps_for_pooled_attention(self):
         self.linear_per_q1 = nn.Linear(3 * 3, 8, bias=True).to(model_device)
         self.my_relu1 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
         self.linear_per_q2 = nn.Linear(8, 1, bias=True).to(model_device)
-
     def init_sent_output_layer(self):
         if (self.sentence_out_method == 'MLP'):
             self.sent_out_layer_1 = nn.Linear(self.sent_add_feats + 1, 8, bias=False).to(model_device)
@@ -1005,18 +1000,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             self.sent_res_bigru = nn.GRU(input_size=self.sent_add_feats + 1, hidden_size=5, bidirectional=True,
                                          batch_first=False).to(model_device)
             self.sent_res_mlp = nn.Linear(10, 1, bias=False).to(model_device)
-
     def init_doc_out_layer(self):
         self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True).to(model_device)
         self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
         self.final_layer_2 = nn.Linear(8, 1, bias=True).to(model_device)
         self.oo_layer = nn.Linear(2, 1, bias=True).to(model_device)
-
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta = negatives - positives
         loss_q_pos = torch.sum(F.relu(margin + delta), dim=-1)
         return loss_q_pos
-
     def apply_context_gru(self, the_input, h0):
         output, hn = self.context_gru(the_input.unsqueeze(1), h0)
         output = self.context_gru_activation(output)
@@ -1025,7 +1017,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         output = out_forward + out_backward
         res = output + the_input
         return res, hn
-
     def apply_context_convolution(self, the_input, the_filters, activation):
         conv_res = the_filters(the_input.transpose(0, 1).unsqueeze(0))
         if (activation is not None):
@@ -1037,7 +1028,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         conv_res = conv_res.transpose(1, 2)
         conv_res = conv_res + the_input
         return conv_res.squeeze(0)
-
     def my_cosine_sim(self, A, B):
         A = A.unsqueeze(0)
         B = B.unsqueeze(0)
@@ -1047,7 +1037,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         den = torch.bmm(A_mag.unsqueeze(-1), B_mag.unsqueeze(-1).transpose(-1, -2))
         dist_mat = num / den
         return dist_mat
-
     def pooling_method(self, sim_matrix):
         sorted_res = torch.sort(sim_matrix, -1)[0]  # sort the input minimum to maximum
         k_max_pooled = sorted_res[:, -self.k:]  # select the last k of each instance in our data
@@ -1056,7 +1045,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         the_average_over_all = sorted_res.sum(-1) / float(sim_matrix.size(1))  # add average of all elements as long sentences might have more matches
         the_concatenation = torch.stack([the_maximum, average_k_max_pooled, the_average_over_all],dim=-1)  # concatenate maximum value and average of k-max values
         return the_concatenation  # return the concatenation
-
     def get_output(self, input_list, weights):
         temp = torch.cat(input_list, -1)
         lo = self.linear_per_q1(temp)
@@ -1066,12 +1054,10 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         lo = lo * weights
         sr = lo.sum(-1) / lo.size(-1)
         return sr
-
     def apply_sent_res_bigru(self, the_input):
         output, hn = self.sent_res_bigru(the_input.unsqueeze(1), self.sent_res_h0)
         output = self.sent_res_mlp(output)
         return output.squeeze(-1).squeeze(-1)
-
     def do_for_one_doc_cnn(self, doc_sents_embeds, oh_sims, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         for i in range(len(doc_sents_embeds)):
@@ -1102,7 +1088,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         # ret = self.get_max(res).unsqueeze(0)
         ret = self.get_kmax(res, k2)
         return ret, res
-
     def do_for_one_doc_bigru(self, doc_sents_embeds, sents_af, question_embeds, q_conv_res_trigram, q_weights, k2):
         res = []
         hn = self.context_h0
@@ -1133,10 +1118,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         ret = self.get_kmax(res, k2)
         res = torch.sigmoid(res)
         return ret, res
-
     def get_max(self, res):
         return torch.max(res)
-
     def get_kmax(self, res, k):
         res = torch.sort(res, 0)[0]
         res = res[-k:].squeeze(-1)
@@ -1146,28 +1129,23 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
             to_concat = torch.zeros(k - res.size()[0]).to(model_device)
             res = torch.cat([res, to_concat], -1)
         return res
-
     def get_max_and_average_of_k_max(self, res, k):
         k_max_pooled = self.get_kmax(res, k)
         average_k_max_pooled = k_max_pooled.sum() / float(k)
         the_maximum = k_max_pooled[-1]
         the_concatenation = torch.cat([the_maximum, average_k_max_pooled.unsqueeze(0)])
         return the_concatenation
-
     def get_average(self, res):
         res = torch.sum(res) / float(res.size()[0])
         return res
-
     def get_maxmin_max(self, res):
         res = self.min_max_norm(res)
         res = torch.max(res)
         return res
-
     def apply_mesh_gru(self, mesh_embeds):
         mesh_embeds = autograd.Variable(torch.FloatTensor(mesh_embeds), requires_grad=False).to(model_device)
         output, hn = self.mesh_gru(mesh_embeds.unsqueeze(1), self.mesh_h0)
         return output[-1, 0, :]
-
     def get_mesh_rep(self, meshes_embeds, q_context):
         meshes_embeds = [self.apply_mesh_gru(mesh_embeds) for mesh_embeds in meshes_embeds]
         meshes_embeds = torch.stack(meshes_embeds)
@@ -1175,7 +1153,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         max_sim = torch.sort(sim_matrix, -1)[0][:, -1]
         output = torch.mm(max_sim.unsqueeze(0), meshes_embeds)[0]
         return output
-
     def emit_one(self, doc1_sents_embeds, doc1_oh_sim, question_embeds, q_idfs, sents_gaf, doc_gaf):
         q_idfs          = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(model_device)
         doc_gaf         = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(model_device)
@@ -1191,6 +1168,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits = self.do_for_one_doc_cnn(
             doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool
         )
+        gs_emits    = torch.sigmoid(gs_emits)#.unsqueeze(-1)
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
@@ -1198,13 +1176,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output = self.final_activ_1(final_good_output)
         final_good_output = self.final_layer_2(final_good_output)
         #
-        gs_emits = gs_emits.unsqueeze(-1)
-        gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits = torch.sigmoid(gs_emits)
-        #
         return final_good_output, gs_emits
-
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
                 question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(model_device)
@@ -1219,34 +1191,22 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
         q_weights = F.softmax(q_weights, dim=-1)
         ################################################################
-        good_out, gs_emits = self.do_for_one_doc_cnn(
-            doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool
-        )
-        bad_out, bs_emits = self.do_for_one_doc_cnn(
-            doc2_sents_embeds, doc2_oh_sim, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool
-        )
+        good_out, gs_emits = self.do_for_one_doc_cnn(doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        bad_out,  bs_emits = self.do_for_one_doc_cnn(doc2_sents_embeds, doc2_oh_sim, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
+        ################################################################
+        gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
+        bs_emits    = torch.sigmoid(bs_emits.unsqueeze(-1))
         ################################################################
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp = torch.cat([bad_out, doc_baf], -1)
+        bad_out_pp  = torch.cat([bad_out, doc_baf], -1)
         ################################################################
         final_good_output = self.final_layer_1(good_out_pp)
         final_good_output = self.final_activ_1(final_good_output)
         final_good_output = self.final_layer_2(final_good_output)
         ################################################################
-        gs_emits = gs_emits.unsqueeze(-1)
-        gs_emits = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits = torch.sigmoid(gs_emits)
-        ################################################################
         final_bad_output = self.final_layer_1(bad_out_pp)
         final_bad_output = self.final_activ_1(final_bad_output)
         final_bad_output = self.final_layer_2(final_bad_output)
-        ################################################################
-        bs_emits = bs_emits.unsqueeze(-1)
-        # bs_emits = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits = self.oo_layer(bs_emits).squeeze(-1)
-        bs_emits = torch.sigmoid(bs_emits)
         ################################################################
         loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
@@ -1346,205 +1306,4 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 print(test_map)
 ###########################################################
 
-# CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf.py 1
-
-'''
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/batch_1/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/batch_2/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/batch_3/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/batch_4/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/batch_5/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-'''
-
-'''
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/batch_1/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/batch_2/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/batch_3/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/batch_4/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/batch_5/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-'''
-
-'''
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_unfrozen_run_0/batch_1/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_unfrozen_run_0/batch_2/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_unfrozen_run_0/batch_3/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_unfrozen_run_0/batch_4/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_unfrozen_run_0/batch_5/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-'''
-
-'''
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/batch_1/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/batch_2/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/batch_3/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/batch_4/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/batch_5/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-'''
-
-'''
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.01/batch_1/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.01/batch_2/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.01/batch_3/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.01/batch_4/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.01/batch_5/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-'''
-
-'''
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.1/batch_1/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.1/batch_2/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.1/batch_3/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.1/batch_4/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.1/batch_5/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-'''
-
-'''
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.0/batch_1/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.0/batch_2/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.0/batch_3/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.0/batch_4/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
-"/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5" \
-"/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.0/batch_5/v3 test_emit_bioasq.json" \
-| grep "^MAP documents:\|^MAP snippets:"
-
-'''
+# CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 1

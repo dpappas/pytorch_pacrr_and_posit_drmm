@@ -544,8 +544,11 @@ def select_snippets_v3(extracted_snippets, the_doc_scores):
     '''
     norm_doc_scores = get_norm_doc_scores(the_doc_scores)
     # is_relevant, the_sent_score, ncbi_pmid_link, the_actual_sent_text
-    extracted_snippets = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
-    sorted_snips = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
+    extracted_snippets  = [tt for tt in extracted_snippets if (tt[2] in norm_doc_scores)]
+    # print(40 * '=')
+    # print(norm_doc_scores)
+    # print(extracted_snippets)
+    sorted_snips        = sorted(extracted_snippets, key=lambda x: x[1] * norm_doc_scores[x[2]], reverse=True)
     return sorted_snips[:10]
 
 def similar(upstream_seq, downstream_seq):
@@ -737,9 +740,9 @@ def load_all_data(dataloc, idf_pickle_path, bert_all_words_path):
     return dev_data, dev_docs, train_data, train_docs, idf, max_idf, bioasq6_data
 
 def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, gold_snips):
-    emition = doc_emit_.cpu().item()
-    emitss = gs_emits_.tolist()
-    mmax = max(emitss)
+    emition     = doc_emit_.cpu().item()
+    emitss      = gs_emits_.tolist()
+    mmax        = max(emitss)
     all_emits, extracted_from_one = [], []
     for ind in range(len(emitss)):
         t = (
@@ -1475,7 +1478,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits = self.do_for_one_doc_cnn(
             doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool
         )
-        gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
+        gs_emits    = torch.sigmoid(gs_emits)#.unsqueeze(-1)
         #
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
