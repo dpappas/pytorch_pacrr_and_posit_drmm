@@ -1297,4 +1297,8 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 print(test_map)
 ###########################################################
 
-# CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 1
+# CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 1
+# CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 2
+# CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 3
+# CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 4
+# CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 5
