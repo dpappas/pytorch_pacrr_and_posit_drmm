@@ -1171,7 +1171,7 @@ def train_one(epoch, bioasq6_data, two_losses, use_sent_tokenizer):
             # cost_               = ((1 - l) * snip_loss) + (l * cost_)
             sn_d1_l, sn_d2_l                = get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_)
             snip_loss                       = sn_d1_l + sn_d2_l
-            cost_                           = weight_loss * snip_loss + cost_
+            cost_                           = weight_loss_snip * snip_loss + weight_loss_doc * cost_
         #
         batch_acc.append(float(doc1_emit_ > doc2_emit_))
         epoch_acc.append(float(doc1_emit_ > doc2_emit_))
@@ -1541,7 +1541,8 @@ use_cuda            = True
 #####################
 frozen_or_unfrozen  = 'frozen' if (int(sys.argv[1]) == 1) else 'unfrozen'
 adapt               = int(sys.argv[2]) == 1 # True
-weight_loss         = float(sys.argv[3])
+weight_loss_snip    = float(sys.argv[3])
+weight_loss_doc     = float(sys.argv[4])
 if(frozen_or_unfrozen == 'unfrozen'):
     resume_from     = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_{}_run_frozen/'.format('adapt' if(adapt) else 'toponly')
     model_device    = torch.device("cuda:1") if(use_cuda) else torch.device("cpu")
@@ -1581,7 +1582,7 @@ my_seed     = run
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 #
-odir = 'bioasq7_bertjpdrmadaptnf_NORESCORE_{}_{}_run_{}_WL_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run, weight_loss)
+odir = 'bioasq7_bertjpdrmadaptnf_NORESCORE_{}_{}_run_{}_WL_{}_{}/'.format('adapt' if(adapt) else 'toponly', frozen_or_unfrozen, run, weight_loss_snip, weight_loss_doc)
 odir = os.path.join(odd, odir)
 print(odir)
 if (not os.path.exists(odir)):
