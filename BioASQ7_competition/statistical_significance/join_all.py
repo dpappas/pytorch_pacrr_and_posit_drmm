@@ -18,3 +18,6 @@ for basedir in basedirs:
     except:
         print(basedir)
 
+# /home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345
+
+
