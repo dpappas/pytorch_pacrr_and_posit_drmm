@@ -95,7 +95,8 @@ def get_bioasq_res(fgold, femit):
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
 odir                = '/home/dpappas/sign_testing/'
 
-goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1'
+# goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1'
+goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345'
 
 # sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json'
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/pdrmm.json'
@@ -105,8 +106,20 @@ goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
 # sysAf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/jpdrmm.json'
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/pdrmm_pdrmm.json'
-sysAf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json'
-sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
+# sysAf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json'
+# sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
+sysAf = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/all_res_12345.json'
+sysBf = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/all_res_12345.json'
+
+'''
+/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/all_res_12345.json
+
+/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0_WL_0.1/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0_WL_0.01/all_res_12345.json
+'''
 
 temp1f  = 'C1.json'
 temp2f  = 'C2.json'
@@ -133,7 +146,7 @@ sysA_metric = scoreA
 sysB_metric = scoreB
 orig_diff   = abs(sysA_metric - sysB_metric)
 
-N           = 10000
+N           = 100
 num_invalid = 0
 
 for n in tqdm.tqdm(range(1, N+1)):
@@ -153,7 +166,8 @@ for n in tqdm.tqdm(range(1, N+1)):
         json.dump(B, f)
     new_sysA_metric = get_bioasq_res(goldf, temp1f)[metric]
     new_sysB_metric = get_bioasq_res(goldf, temp2f)[metric]
-    new_diff        = abs(new_sysA_metric - new_sysB_metric)
+    new_diff        = abs(new_sysA_metric - new_sysB_metric)  #  two-tailed
+    # new_diff        = max([new_sysA_metric - new_sysB_metric, 0])         #  single-tailed
     if new_diff >= orig_diff:
         num_invalid += 1
     if n % 20 == 0 and n > 0:
