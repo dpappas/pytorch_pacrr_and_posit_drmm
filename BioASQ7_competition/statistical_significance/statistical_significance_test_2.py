@@ -108,12 +108,12 @@ goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-
 sysAf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json'
 sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
 
-temp1f = 'C1.json'
-temp2f = 'C2.json'
+temp1f  = 'C1.json'
+temp2f  = 'C2.json'
 # metric = u'MAP documents'
 # field = 'documents'
-metric = u'MAP snippets'
-field = "snippets"
+metric  = u'MAP snippets'
+field   = "snippets"
 
 print(goldf)
 print(sysAf)

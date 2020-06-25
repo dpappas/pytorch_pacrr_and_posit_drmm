@@ -39,10 +39,10 @@ def trec_evaluate(qrels_file, qret_file):
   return trec_eval_res
 
 def getScore(goldX, sysX, metricX, nameX):
-  temp_dir = uuid.uuid4().hex
+  temp_dir        = uuid.uuid4().hex
   qrels_temp_file = '{0}/{1}'.format(temp_dir, 'qrels.txt')
-  qret_temp_file = '{0}/{1}'.format(temp_dir, 'qret.txt')
-  res_map = {}
+  qret_temp_file  = '{0}/{1}'.format(temp_dir, 'qret.txt')
+  res_map         = {}
   try:
     if not os.path.exists(temp_dir):
       os.makedirs(temp_dir)
@@ -61,10 +61,10 @@ def getScore(goldX, sysX, metricX, nameX):
     os.rmdir(temp_dir)
   return float(res_map[metricX])
 
-goldf = sys.argv[1]
-sysAf = sys.argv[2]
-sysBf = sys.argv[3]
-metric = sys.argv[4]
+goldf   = sys.argv[1]
+sysAf   = sys.argv[2]
+sysBf   = sys.argv[3]
+metric  = sys.argv[4]
 print(goldf)
 print(sysAf)
 print(sysBf)
