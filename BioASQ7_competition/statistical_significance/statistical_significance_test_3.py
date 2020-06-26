@@ -133,11 +133,6 @@ BERT JPDRMM NF ADAPT    /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrm
 /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_snip_adapt_frozen_run_0_WL_0.0/all_res_12345.json
 
 
-python3.6 statsig.py /home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345 \
-/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/all_res_12345.json \
-/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/all_res_12345.json \
-"MAP snippets"
-
 
 '''
 
