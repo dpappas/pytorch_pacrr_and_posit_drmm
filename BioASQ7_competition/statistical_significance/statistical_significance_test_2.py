@@ -10,6 +10,8 @@ import copy
 import subprocess
 import sys
 
+random.seed(1)
+
 # def ranking_rprecision_score(y_true, y_score, k=10):
 #     """Precision at rank k
 #     Parameters
@@ -192,7 +194,7 @@ BERT    - JBERT             : 0.0541
 
 
 '''
-JPDRMM                  
+JPDRMM                  /home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/all_res_12345.json
 JBERT                   /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/all_res_12345.json
 JBERT ADAPT             /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/all_res_12345.json
 JBERT NF                /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/all_res_12345.json
@@ -217,9 +219,11 @@ BERT JPDRMM NF ADAPT    /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrm
 
 python3.6 statsig.py \
 /home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPhaseB-testset12345 \
-/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/all_res_12345.json \
-/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/all_res_12345.json \
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/all_res_12345.json \
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/all_res_12345.json \
 "MAP snippets"
+
+
 
 '''
 

@@ -1317,7 +1317,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.final_layer_1 = nn.Linear(self.doc_add_feats + self.k_sent_maxpool, 8, bias=True).to(model_device)
         self.final_activ_1 = torch.nn.LeakyReLU(negative_slope=0.1).to(model_device)
         self.final_layer_2 = nn.Linear(8, 1, bias=True).to(model_device)
-        self.oo_layer = nn.Linear(2, 1, bias=True).to(model_device)
+        self.oo_layer       = nn.Linear(2, 1, bias=True).to(model_device)
 
     def my_hinge_loss(self, positives, negatives, margin=1.0):
         delta = negatives - positives
