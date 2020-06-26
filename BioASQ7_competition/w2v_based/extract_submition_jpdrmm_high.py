@@ -1162,13 +1162,23 @@ odir                        = sys.argv[3]
 ###########################################################
 ddd                         = resume_from.split(os.path.sep)[-2].split('_')[1].strip()
 print(ddd)
-use_sent_extra              = ddd[0] == '1'
-use_doc_extra               = ddd[1] == '1'
-use_OH_sim                  = ddd[2] == '1'
-use_W2V_sim                 = ddd[3] == '1'
-use_context_sim             = ddd[4] == '1'
-use_sent_loss               = ddd[5] == '1'
-use_last_layer              = ddd[6] == '1'
+if('ablation' in resume_from):
+    use_sent_extra              = ddd[0] == '1'
+    use_doc_extra               = ddd[1] == '1'
+    use_OH_sim                  = ddd[2] == '1'
+    use_W2V_sim                 = ddd[3] == '1'
+    use_context_sim             = ddd[4] == '1'
+    use_sent_loss               = ddd[5] == '1'
+    use_last_layer              = ddd[6] == '1'
+else:
+    use_sent_extra              = True
+    use_doc_extra               = True
+    use_OH_sim                  = True
+    use_W2V_sim                 = True
+    use_context_sim             = True
+    use_sent_loss               = True
+    use_last_layer              = True
+
 ###########################################################
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
@@ -1263,6 +1273,31 @@ trec map doc    : 0.4328
 python3.6 tt.py -30. -30. 0
 grep -E '\"body\"|\"text\"' "test_jpdrmm_high_batch3/v3 test_emit_bioasq.json"
 cp "/home/dpappas/test_jpdrmm_high_batch3/v3 test_emit_bioasq.json" "/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_3/jpdrmm.json" 
+'''
+
+'''
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extr_bioasq7.py 1 \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/bioasq7_outputs
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extr_bioasq7.py 2 \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/bioasq7_outputs
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extr_bioasq7.py 3 \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/bioasq7_outputs
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extr_bioasq7.py 4 \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/bioasq7_outputs
+
+CUDA_VISIBLE_DEVICES=0 python3.6 extr_bioasq7.py 5 \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar \
+/home/dpappas/bioasq_jpdrmm_2L_0p01_run_0/bioasq7_outputs
+
+
 '''
 
 '''
