@@ -1173,6 +1173,7 @@ use_last_layer              = ddd[6] == '1'
 w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
 idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
 ###########################################################
+odir = os.path.join(odir, 'batch_{}'.format(b))
 if (not os.path.exists(odir)):
     os.makedirs(odir)
 ###########################################################
