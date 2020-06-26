@@ -586,8 +586,8 @@ def get_two_snip_losses(good_sent_tags, gs_emits_, bs_emits_):
     good_sent_tags  = torch.FloatTensor(good_sent_tags).to(model_device)
     tags_2          = torch.zeros_like(bs_emits_).to(model_device)
     #
-    sn_d1_l = F.binary_cross_entropy(gs_emits_, good_sent_tags, reduction='sum')
-    sn_d2_l = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
+    sn_d1_l         = F.binary_cross_entropy(gs_emits_, good_sent_tags, reduction='sum')
+    sn_d2_l         = F.binary_cross_entropy(bs_emits_, tags_2, reduction='sum')
     return sn_d1_l, sn_d2_l
 
 def save_checkpoint(epoch, model, bert_model, max_dev_map, optimizer1, optimizer2, filename='checkpoint.pth.tar'):
