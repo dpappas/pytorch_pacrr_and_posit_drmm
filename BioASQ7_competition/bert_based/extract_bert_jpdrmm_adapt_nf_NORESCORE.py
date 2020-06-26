@@ -1170,6 +1170,7 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         )
         gs_emits    = torch.sigmoid(gs_emits)#.unsqueeze(-1)
         #
+        # final_good_output = good_out
         good_out_pp = torch.cat([good_out, doc_gaf], -1)
         #
         final_good_output = self.final_layer_1(good_out_pp)
@@ -1177,39 +1178,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         final_good_output = self.final_layer_2(final_good_output)
         #
         return final_good_output, gs_emits
-    def forward(self, doc1_sents_embeds, doc2_sents_embeds, doc1_oh_sim, doc2_oh_sim,
-                question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
-        q_idfs  = autograd.Variable(torch.FloatTensor(q_idfs), requires_grad=False).to(model_device)
-        doc_gaf = autograd.Variable(torch.FloatTensor(doc_gaf), requires_grad=False).to(model_device)
-        doc_baf = autograd.Variable(torch.FloatTensor(doc_baf), requires_grad=False).to(model_device)
-        question_embeds = question_embeds.to(model_device)
-        ################################################################
-        q_context = self.apply_context_convolution(question_embeds, self.trigram_conv_1, self.trigram_conv_activation_1)
-        q_context = self.apply_context_convolution(q_context, self.trigram_conv_2, self.trigram_conv_activation_2)
-        ################################################################
-        q_weights = torch.cat([q_context, q_idfs], -1)
-        q_weights = self.q_weights_mlp(q_weights).squeeze(-1)
-        q_weights = F.softmax(q_weights, dim=-1)
-        ################################################################
-        good_out, gs_emits = self.do_for_one_doc_cnn(doc1_sents_embeds, doc1_oh_sim, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        bad_out,  bs_emits = self.do_for_one_doc_cnn(doc2_sents_embeds, doc2_oh_sim, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
-        ################################################################
-        gs_emits    = torch.sigmoid(gs_emits.unsqueeze(-1))
-        bs_emits    = torch.sigmoid(bs_emits.unsqueeze(-1))
-        ################################################################
-        good_out_pp = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp  = torch.cat([bad_out, doc_baf], -1)
-        ################################################################
-        final_good_output = self.final_layer_1(good_out_pp)
-        final_good_output = self.final_activ_1(final_good_output)
-        final_good_output = self.final_layer_2(final_good_output)
-        ################################################################
-        final_bad_output = self.final_layer_1(bad_out_pp)
-        final_bad_output = self.final_activ_1(final_bad_output)
-        final_bad_output = self.final_layer_2(final_bad_output)
-        ################################################################
-        loss1 = self.my_hinge_loss(final_good_output, final_bad_output)
-        return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
 def load_model_from_checkpoint(resume_dir):
     global start_epoch, optimizer
@@ -1298,9 +1266,9 @@ test_map        = get_one_map('test', test_data, test_docs, use_sent_tokenizer=T
 print(test_map)
 ###########################################################
 
-# CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 1
-# CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 2
-# CUDA_VISIBLE_DEVICES=1 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 3
+# CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 1
+# CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 2
+# CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 3
 # CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 4
 # CUDA_VISIBLE_DEVICES=0 python3.6 extract_bert_jpdrmm_adapt_nf_NORESCORE.py 5
 
