@@ -73,8 +73,10 @@ print(metric)
 
 with open(goldf) as f:
   gold = json.load(f)
+
 with open(sysAf) as f:
   sysA = json.load(f)
+
 with open(sysBf) as f:
   sysB = json.load(f)
 
