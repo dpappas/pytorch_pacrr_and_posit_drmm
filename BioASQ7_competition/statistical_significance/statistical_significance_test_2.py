@@ -109,16 +109,32 @@ goldf = '/home/dpappas/bioasq_all/bioasq7/data/test_batch_12345/BioASQ-task7bPha
 # sysAf = '/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_1/bert_pdrmm.json'
 # sysBf = '/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_1/JBERT.json'
 sysAf = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/all_res_12345.json'
-sysBf = '/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/all_res_12345.json'
+sysBf = '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/all_res_12345.json'
 
 '''
-/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/all_res_12345.json
-/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/all_res_12345.json
-/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/all_res_12345.json
-/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/all_res_12345.json
+JPDRMM                  
+JBERT                   /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/all_res_12345.json
+JBERT ADAPT             /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/all_res_12345.json
+JBERT NF                /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/all_res_12345.json
+JBERT NF ADAPT          /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/all_res_12345.json
+BERT JPDRMM             /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/all_res_12345.json
+BERT JPDRMM ADAPT       /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_unfrozen_run_0/all_res_12345.json
+BERT JPDRMM NF          /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/all_res_12345.json
+BERT JPDRMM NF ADAPT    /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/all_res_12345.json
+
+
 
 /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0_WL_0.1/all_res_12345.json
 /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0_WL_0.01/all_res_12345.json
+
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.0/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.01/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.1/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_NORESCORE_adapt_frozen_run_0_WL_0.1/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_NORESCORE_adapt_frozen_run_0_WL_1.0_0.0/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_snip_adapt_frozen_run_0_WL_0.0/all_res_12345.json
+
+
 '''
 
 temp1f  = 'C1.json'

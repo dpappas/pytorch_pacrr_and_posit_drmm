@@ -65,6 +65,7 @@ goldf   = sys.argv[1]
 sysAf   = sys.argv[2]
 sysBf   = sys.argv[3]
 metric  = sys.argv[4]
+
 print(goldf)
 print(sysAf)
 print(sysBf)
@@ -105,3 +106,31 @@ for n in range(N):
     print(float(num_invalid +1) / float(n + 1))
 
 print(float(num_invalid + 1) / float(N + 1))
+
+'''
+JPDRMM                  
+JBERT                   /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0/all_res_12345.json
+JBERT ADAPT             /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_unfrozen_run_0/all_res_12345.json
+JBERT NF                /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_run_frozen/all_res_12345.json
+JBERT NF ADAPT          /media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_adapt_run_frozen/all_res_12345.json
+BERT JPDRMM             /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/all_res_12345.json
+BERT JPDRMM ADAPT       /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_unfrozen_run_0/all_res_12345.json
+BERT JPDRMM NF          /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_toponly_run_frozen/all_res_12345.json
+BERT JPDRMM NF ADAPT    /media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/all_res_12345.json
+
+
+
+/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0_WL_0.1/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_jbertadaptnf_toponly_unfrozen_run_0_WL_0.01/all_res_12345.json
+
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.0/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.01/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.1/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_NORESCORE_adapt_frozen_run_0_WL_0.1/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_NORESCORE_adapt_frozen_run_0_WL_1.0_0.0/all_res_12345.json
+/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_snip_adapt_frozen_run_0_WL_0.0/all_res_12345.json
+
+
+'''
+
+
