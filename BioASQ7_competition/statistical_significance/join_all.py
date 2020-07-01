@@ -25,7 +25,6 @@ for basedir in basedirs:
 
 #
 
-
 '''
 
 java -Xmx10G -cp '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar' evaluation.EvaluatorTask1b -phaseA -e 5 \
