@@ -60,8 +60,8 @@ np.average(lenss2)
 
 import json
 with open(dataloc+'trainining7b.json', 'r') as f:
-	bioasq7_data = json.load(f)
-	bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
+    bioasq7_data = json.load(f)
+    bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
 
 lenss_q  = []
 lenss_q2 = []
