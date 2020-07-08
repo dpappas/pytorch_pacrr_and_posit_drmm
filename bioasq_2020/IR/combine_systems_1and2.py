@@ -51,7 +51,6 @@ for qid, data in tqdm(list(d1.items()) + list(d2.items())):
             except:
                 combined_data_sents[qid][docid][':'.join([docid, snip[3]])] = [snip[1]]
 
-
 def get_pmid2text(sn):
     try:
         return pmidtext_to_other[sn]
@@ -86,14 +85,19 @@ for qid, doc_dat in tqdm(combined_data_docs.items()):
     # We used sum in batch 4 of bioasq 2020
     # doc_ids     = [t[0] for t in sorted(doc_dat.items(), key= lambda x : (x[1][0]/max1)+(x[1][1]/max2), reverse=True)[:10]]
     # We used max in batch 5 of bioasq 2020
-    doc_ids   = [t[0] for t in sorted(doc_dat.items(), key= lambda x : max(x[1]), reverse=True)[:10]]
+    doc_ids   = [
+        t[0]
+        for t in sorted(doc_dat.items(), key= lambda x : max(x[1]), reverse=True)[:10]
+    ]
     # doc_ids   = [t for t in sorted(doc_dat.items(), key= lambda x : sum(x[1]), reverse=True)[:10]]
     # doc_ids   = [t[0] for t in sorted(doc_dat.items(), key= lambda x : x[1][0]*x[1][1], reverse=True)[:10]]
     # pprint(doc_ids)
     all_snips   = []
     for docid in doc_ids:
         # all_snips.extend(sorted(combined_data_sents[qid][docid].items(), key=lambda x: x[1][0]*x[1][1],reverse = True)[:2])
-        all_snips.extend(sorted(combined_data_sents[qid][docid].items(), key=lambda x: max(x[1]),reverse = True)[:2])
+        all_snips.extend(
+            sorted(combined_data_sents[qid][docid].items(), key=lambda x: max(x[1]),reverse = True)[:2]
+        )
     # We used sum in batch 4 of bioasq 2020
     # all_snips = [t[0] for t in sorted(all_snips, key=lambda x: sum(x[1]), reverse=True)[:10]]
     # We used max in batch 5 of bioasq 2020
