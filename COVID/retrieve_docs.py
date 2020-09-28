@@ -112,6 +112,29 @@ def get_first_n_1(qtext, n, section=None, min_year=1600, max_year=2020):
         })
     return temp_1
 
+def get_from_id(item_doi):
+    try:
+        bod             = {
+            "size": 1,
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "term": {
+                                u'doi': {
+                                    "value": item_doi
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+        res = es.search(index=doc_index, doc_type=None, body=bod, request_timeout=120)
+        return [res['hits']['hits'][0]['_source']]
+    except:
+        return []
+
 # pprint(
 #     get_first_n_1(
 #         qtext       = 'A pneumonia outbreak associated with a new coronavirus of probable bat origin',

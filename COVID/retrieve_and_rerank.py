@@ -10,6 +10,7 @@ resume_from                 = 'best_dev_checkpoint.pth.tar'
 ###########################################################
 
 from    retrieve_docs  import get_first_n_1, pprint, bioclean, stopwords, os, np, pickle, tqdm, json
+from    retrieve_docs  import get_from_id as get_from_id
 from    nltk.tokenize   import sent_tokenize
 from    gensim.models.keyedvectors  import KeyedVectors
 from    difflib                     import SequenceMatcher

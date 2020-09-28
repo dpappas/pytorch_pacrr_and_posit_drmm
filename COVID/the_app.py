@@ -4,7 +4,7 @@
 # results = retrieve_given_question(quest, n=100, max_year=2021)
 # pprint(results[0])
 
-from retrieve_and_rerank import retrieve_given_question
+from retrieve_and_rerank import retrieve_given_question, get_from_id
 from sklearn.preprocessing import MinMaxScaler
 from colour import Color
 from flask import url_for
@@ -187,6 +187,40 @@ def just_the_json():
                 'date_from' : '',
                 'date_to'   : '',
             },
+            'error': 'Error: {}'.format(str(ex))
+        }
+        return jsonify(ret)
+
+@app.route("/get_using_id", methods=["POST", "GET"])
+def get_using_id():
+    try:
+        req = request.get_json()
+        print(30 * '-')
+        print('request:')
+        pprint(req)
+        print(30 * '-')
+        if(req is not None):
+            item_id   = req['id']
+            ###############################################################################################
+            ret             = {
+                'request': {'id'  : item_id},
+                'results': {
+                    'total' : None,
+                    'docs'  : []
+                }
+            }
+            ret_dummy       = get_from_id(item_id)
+            ret['results']['total'] = len(ret_dummy)
+            ret['results']['docs'] = ret_dummy
+        else:
+            ret = {
+                'request': {},
+                'error': 'empty request'
+            }
+            return jsonify(ret)
+    except Exception as ex:
+        ret = {
+            'request': {},
             'error': 'Error: {}'.format(str(ex))
         }
         return jsonify(ret)
