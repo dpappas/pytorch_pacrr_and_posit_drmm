@@ -15,12 +15,12 @@ def SubmitText(InputSTR,Bioconcept):
         code     = 404
         response = None
         while(code != 200):
-            time.sleep(5)
+            time.sleep(30)
             r = requests.get("https://www.ncbi.nlm.nih.gov/research/pubtator-api/annotations/annotate/retrieve/" + SessionNumber)
             code = r.status_code
             response = r.text #.encode("utf-8")
-            print(code)
-        print(response)
+            print(code, r.text)
+        # print(response)
         return response
 
 response = SubmitText('Is ibudilast effective for multiple sclerosis?', 'BioConcept')

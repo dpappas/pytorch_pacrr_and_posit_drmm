@@ -9,10 +9,10 @@
 # Test
 # total instances: 100
 
-
 from nltk import sent_tokenize
 from tqdm import tqdm
 import pickle, re
+import numpy as np
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 
@@ -29,13 +29,12 @@ lenss_tit2 = []
 lenss_abs2 = []
 for d in tqdm(train_docs.values()):
     lenss.append(len(bioclean(d['title'])) + len(bioclean(d['abstractText'])))
-    lenss.append(len(d['title'].split()) + len(d['abstractText'].split()))
     lenss_tit.append(len(bioclean(d['title'])))
     lenss_abs.append(len(bioclean(d['abstractText'])))
+    ###################################################
+    lenss2.append(len(d['title'].split()) + len(d['abstractText'].split()))
     lenss_tit2.append(len(d['title'].split()))
     lenss_abs2.append(len(d['abstractText'].split()))
-
-import numpy as np
 
 np.max(lenss)
 np.min(lenss)
@@ -44,7 +43,6 @@ np.average(lenss)
 np.max(lenss2)
 np.min(lenss2)
 np.average(lenss2)
-
 
 # length of titles
 # max: 73
@@ -57,8 +55,8 @@ np.average(lenss2)
 # min: 1
 # average: 184.46201389127668
 
-
 import json
+import numpy as np
 with open(dataloc+'trainining7b.json', 'r') as f:
     bioasq7_data = json.load(f)
     bioasq7_data = dict((q['id'], q) for q in bioasq7_data['questions'])
@@ -69,7 +67,6 @@ for item in bioasq7_data.values():
     lenss_q.append(len(bioclean(item['body'])))
     lenss_q2.append(len(item['body'].split()))
 
-
 np.max(lenss_q)
 np.min(lenss_q)
 np.average(lenss_q)
@@ -79,6 +76,31 @@ np.min(lenss_q2)
 np.average(lenss_q2)
 
 
+
+import json
+with open(dataloc+'training7b.dev.json', 'r') as f:
+    ddd = json.load(f)
+    print(len(ddd['questions']))
+
+import json
+with open(dataloc+'training7b.train.json', 'r') as f:
+    ddd = json.load(f)
+    print(len(ddd['questions']))
+
+from nltk import sent_tokenize
+
+qd = {}
+for q in ddd['questions']:
+    for snip in q['snippets']:
+        qid     = 'id'
+        docid   = snip['document']
+        sents   = len(sent_tokenize(snip['text']))
+        try:
+            qd['{}{}'.format(qid, docid)] = sents
+        except:
+            qd['{}{}'.format(qid, docid)] += sents
+
+print(np.average(list(qd.values())))
 
 # length of questions bioclean
 # max: 30
