@@ -200,7 +200,7 @@ def get_using_id():
         pprint(req)
         print(30 * '-')
         if(req is not None):
-            item_id   = req['id']
+            item_id         = req['id']
             ###############################################################################################
             ret             = {
                 'request': {'id'  : item_id},
@@ -212,6 +212,7 @@ def get_using_id():
             ret_dummy       = get_from_id(item_id)
             ret['results']['total'] = len(ret_dummy)
             ret['results']['docs'] = ret_dummy
+            return jsonify(ret)
         else:
             ret = {
                 'request': {},
