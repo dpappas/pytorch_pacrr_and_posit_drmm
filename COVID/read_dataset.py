@@ -7,7 +7,7 @@ targz_path = "/media/dpappas/dpappas_data/CORD_allenai_datasets/2020-11-29/docum
 tar = tarfile.open(targz_path, "r:gz")
 total_items         = 0
 total_paragraphs    = 0
-for member in tqdm(tar, total=234500):
+for member in tqdm(tar, total=234501):
     # print(member.name)
     total_items += 1
     f = tar.extractfile(member)
