@@ -3,7 +3,6 @@ from elasticsearch import Elasticsearch
 from pprint import pprint
 
 index       = 'allenai_covid_index_2020_11_29_01'
-doc_type    = 'allenai_covid_mapping_2020_11_29_01'
 
 elastic_con = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 elastic_con.indices.delete(index=index, ignore=[400,404])
@@ -21,7 +20,7 @@ mapping     = {
       }
      }
     },
-"   mappings":{
+    "mappings":{
         "properties":{
             'section_text'  : {
                 "type"              : "text",

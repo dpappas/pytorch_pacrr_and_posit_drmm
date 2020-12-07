@@ -10,7 +10,6 @@ def create_an_action(elk_dato, id):
     elk_dato['_id']      = id
     elk_dato['_op_type'] = 'index'
     elk_dato['_index']   = index
-    elk_dato['_type']    = doc_type
     return elk_dato
 
 def upload_to_elk():
@@ -30,7 +29,6 @@ def upload_to_elk():
     actions         = []
 
 index       = 'allenai_covid_index_2020_11_29_01'
-doc_type    = 'allenai_covid_mapping_2020_11_29_01'
 
 es          = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
