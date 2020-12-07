@@ -2,9 +2,14 @@
 from elasticsearch import Elasticsearch
 from pprint import pprint
 
-index       = 'covid_index_0_1'
-doc_type    = 'covid_mapping_0_1'
-elastic_con = Elasticsearch(['127.0.01:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+with open('/home/dpappas/elk_ips.txt') as fp:
+    cluster_ips = [line.strip() for line in fp.readlines() if (len(line.strip()) > 0)]
+    fp.close()
+
+index       = 'allenai_covid_index_0_1'
+doc_type    = 'allenai_covid_mapping_0_1'
+
+elastic_con = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 elastic_con.indices.delete(index=index, ignore=[400,404])
 
 mapping     = {
