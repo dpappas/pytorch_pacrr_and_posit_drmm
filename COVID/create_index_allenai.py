@@ -20,38 +20,13 @@ mapping     = {
         }
     },
     "mappings":{
-    # doc_type:{
         "properties":{
-            ######### TEXT
             'joint_text'  : {
                 "type"          : "text",
                 "analyzer"      : "english",
                 "similarity"    : "my_similarity",
             },
-            ######### KEYWORDS
-            'pmcid'             : {"type": "keyword"},
-            'doi'               : {"type": "keyword"},
-            'pmid'              : {"type": "keyword"},
-            ######### DATES
-            'date'       : {
-                "type"      : "date",
-                "format"    : "yyyy-MM-dd"
-            },
-            ######### NESTED
-            "section"          : {
-                "type"      : "text",
-                "analyzer"  : "english",
-                "fields": {
-                    "raw": {
-                        "type": "keyword"
-                    }
-                }
-            },
-            ######### NESTED
-            "doc_vec_scibert": {
-                "type": "dense_vector",
-                "dims": 768
-            },
+            'type'              : {"type": "keyword"},
         }
     # }
     }
