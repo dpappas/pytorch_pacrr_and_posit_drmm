@@ -29,8 +29,8 @@ def upload_to_elk():
                 flag = False
     actions         = []
 
-index       = 'allenai_covid_index_2020_11_29'
-doc_type    = 'allenai_covid_mapping_2020_11_29'
+index       = 'allenai_covid_index_2020_11_29_01'
+doc_type    = 'allenai_covid_mapping_2020_11_29_01'
 
 es          = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
@@ -51,8 +51,8 @@ for member in tqdm(tar, total=234501):
         title       = d['metadata']['title']
         datum       = {
             '_id'   : d['paper_id']+ ' ' +str(c),
-            'text'  : title,
-            'type'  : 'title',
+            'section_text'  : title,
+            'section_type'  : 'title',
             'rank'  : c
         }
         actions.append(create_an_action(datum, datum['_id']))
@@ -61,9 +61,9 @@ for member in tqdm(tar, total=234501):
         if 'abstract' in d:
             abstract    = '\n'.join([t['text'] for t in d['abstract']])
             datum       = {
-                'id'    : d['paper_id']+ ' ' +str(c),
-                'text'  : abstract,
-                'type'  : 'abstract',
+                '_id'   : d['paper_id']+ ' ' +str(c),
+                'section_text'  : abstract,
+                'section_type'  : 'abstract',
                 'rank'  : c
             }
             actions.append(create_an_action(datum, datum['_id']))
@@ -81,9 +81,9 @@ for member in tqdm(tar, total=234501):
                 par_text = par['text'] + '\n\n' + lezantes
                 par_text = par_text.strip()
                 datum       = {
-                    'id'    : d['paper_id']+ ' ' +str(c),
-                    'text': par_text,
-                    'type': 'paragraph',
+                    '_id'   : d['paper_id']+ ' ' +str(c),
+                    'section_text'  : par_text,
+                    'section_type'  : 'paragraph',
                     'rank'  : c
                 }
                 actions.append(create_an_action(datum, datum['_id']))
@@ -100,13 +100,13 @@ for member in tqdm(tar, total=234501):
                 par_text = par['text'] + '\n\n' + lezantes
                 par_text = par_text.strip()
                 datum       = {
-                    'id'    : d['paper_id']+ ' ' +str(c),
-                    'text'  : par_text,
-                    'type'  : 'paragraph',
+                    '_id'   : d['paper_id']+ ' ' +str(c),
+                    'section_text'  : par_text,
+                    'section_type'  : 'paragraph',
                     'rank'  : c
                 }
                 actions.append(create_an_action(datum, datum['_id']))
                 c += 1
-    upload_to_elk(finished=False)
+    upload_to_elk()
 
-upload_to_elk(finished=True)
+
