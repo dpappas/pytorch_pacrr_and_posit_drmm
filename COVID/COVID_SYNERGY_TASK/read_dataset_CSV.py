@@ -32,6 +32,7 @@ def upload_to_elk():
 index       = 'allenai_covid_index_2020_11_29_csv'
 es          = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
+b_size              = 250
 total_items         = 0
 total_paragraphs    = 0
 database_instances  = []
@@ -45,7 +46,7 @@ with open(csv_path, 'r') as read_obj:
             mag_id, who_covidence_id, arxiv_id, pdf_json_files, pmc_json_files, url, s2_id
         ) = row
         datum       = {
-            '_id'           : doi,
+            '_id'           : cord_uid,
             'joint_text'    : title + '--------------------' + abstract,
             'cord_uid'      : cord_uid,
             'doi'           : doi,
@@ -54,7 +55,7 @@ with open(csv_path, 'r') as read_obj:
             'publish_time'  : publish_time
         }
         actions.append(create_an_action(datum, datum['_id']))
-        if(len(actions) == 50):
+        if(len(actions) == b_size):
             upload_to_elk()
 
 upload_to_elk()
