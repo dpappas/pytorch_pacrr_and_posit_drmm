@@ -44,7 +44,6 @@ for question in tqdm(d['questions']):
         continue
     qtext                   = question['body']
     res                     = retrieve_given_question(qtext)
-    break
     ###############################################################################################################
     par_ex_ans_counter      = Counter()
     all_sents               = []
