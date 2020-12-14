@@ -138,7 +138,6 @@ device          = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 
 model_name      = "ktrapeznikov/biobert_v1.1_pubmed_squad_v2"
 
-
 bert_tokenizer 	= AutoTokenizer.from_pretrained(model_name, cache_dir='./')
 pprint(bert_tokenizer.special_tokens_map)
 bert_model 		= AutoModel.from_pretrained(model_name, cache_dir='./').to(device)
@@ -154,11 +153,11 @@ gb = my_model.eval()
 def emit_exact_answers(qtext, snip):
     max_span        = 6
     ##########################################################
-    sent_ids        = prep_bpe_data_text(snip.lower())[1:]
-    sent_bpes       = bert_tokenizer.convert_ids_to_tokens(sent_ids)
     quest_ids       = prep_bpe_data_text(qtext.lower())
+    sent_ids        = prep_bpe_data_text(snip.lower())[1:510-len(quest_ids)]
+    sent_bpes       = bert_tokenizer.convert_ids_to_tokens(sent_ids)
     ##########################################################
-    bert_input      = torch.tensor([quest_ids+sent_ids]).to(device)
+    bert_input      = torch.tensor([quest_ids+sent_ids][:512]).to(device)
     ##########################################################
     bert_out        = bert_model(bert_input)[0]
     ##########################################################
@@ -172,6 +171,8 @@ def emit_exact_answers(qtext, snip):
         # print(sent_bpes[i], round(begin_y[i], 2), round(end_y[i], 2))
         if(begin_y[i] >= 0.5):
             start_ind       = i
+            while(sent_bpes[start_ind].startswith('##')):
+                start_ind = start_ind-1
             end_ind         = start_ind + np.argmax(end_y[i:i+max_span])
             answer_bpes     = sent_bpes[start_ind:end_ind+1]
             fixed_tokens    = fix_bert_tokens(answer_bpes)
@@ -179,6 +180,8 @@ def emit_exact_answers(qtext, snip):
     if(len(ret) == 0):
         ##################################################### add best BEGIN
         start_ind       = np.argmax(begin_y)
+        while(sent_bpes[start_ind].startswith('##')):
+            start_ind = start_ind-1
         end_ind         = start_ind + np.argmax(end_y[start_ind:start_ind+max_span])
         answer_bpes     = sent_bpes[start_ind:end_ind+1]
         fixed_tokens    = fix_bert_tokens(answer_bpes)
@@ -189,7 +192,10 @@ def emit_exact_answers(qtext, snip):
             end_ind         = end_ind_2
             start_ind       = end_ind - max_span + np.argmax(begin_y[max([0, end_ind-max_span]):end_ind+1])
             start_ind       = max([0, start_ind])
+            while(sent_bpes[start_ind].startswith('##')):
+                start_ind = start_ind-1
             answer_bpes     = sent_bpes[start_ind:end_ind+1]
+            print(answer_bpes)
             fixed_tokens    = fix_bert_tokens(answer_bpes)
             ret.append((' '.join(fixed_tokens), begin_y[start_ind], end_y[end_ind]))
     #########################################################
@@ -199,7 +205,11 @@ if __name__ == '__main__':
     qtext   = 'what is the origin of COVID-19'
     snips   = [
         'In order to be approved to conduct saliva testing, based on regulatory guidelines at the time, we were required to compare paired NP and saliva collections from the same individuals, not only to validate saliva as an acceptable specimen type on our instrument.',
-        'title'
+        'title',
+        '''
+        After December 2019 outbreak in China, the novel Coronavirus infection (COVID-19) has very quickly overflowed worldwide. Infection causes a clinical syndrome encompassing a wide range of clinical features, from asymptomatic or oligosymptomatic course to acute respiratory distress and death (1, 2) . As of April, 2020 a total of 104,291 laboratory-confirmed cases have been documented in Italy, and Lombardy, the Northern Italian Region, recorded over 60,000 COVID-19 cases. Maggiore Hospital of Crema began one of the Italian battlefronts. Frequency of disease and fatality rate are calculated on the number of patients positive to oral, nasal, or nasopharyngeal swab. However, the European Community, Schengen area and also Italian Regions had released different policies to define the use of swab and real-time reverse transcription polymerase chain reaction (RT-PCR) as diagnostic tools. Population-scale testing for COVID-19 is one of the best ways to limit mortality rates. Largescale testing finds and isolates infections quickly, limiting the virus' spread and protecting vulnerable populations. Millions of COVID-19 test kits will need to be processed. Organizations around the world are trying to improve their capacity as quickly as possible, but the challenge is too hard. Local, National and International Media continuously attack Regional and National Institutions, complaining about the inability of the Lombardy Region, the most solid and advanced Italian Region in terms of public health, not to have the possibility to processing a capillary population based swab screening test. However, diagnostic test, mostly involving nasopharyngeal swab, can be inaccurate in two ways. A false positive result erroneously considers a person infected and consequently includes an unnecessary quarantine. False negative results can weight much more because of real affected person will be not isolate and can infect other ones.
+        '''.strip(),
+        'However, diagnostic test, mostly involving nasopharyngeal swab, can be inaccurate in two ways.'
     ]
     for snip in snips:
         res = emit_exact_answers(qtext, snip)
