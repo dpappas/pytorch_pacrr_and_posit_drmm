@@ -185,7 +185,8 @@ def emit_exact_answers(qtext, snip):
         ret.append((' '.join(fixed_tokens), begin_y[start_ind], end_y[end_ind]))
         ##################################################### add best END
         end_ind         = np.argmax(end_y)
-        start_ind       = end_ind - max_span + np.argmax(begin_y[end_ind-max_span:end_ind])
+        start_ind       = end_ind - max_span + np.argmax(begin_y[max([0, end_ind-max_span]):end_ind+1])
+        start_ind       = max([0, start_ind])
         answer_bpes     = sent_bpes[start_ind:end_ind+1]
         fixed_tokens    = fix_bert_tokens(answer_bpes)
         ret.append((' '.join(fixed_tokens), begin_y[start_ind], end_y[end_ind]))
@@ -195,11 +196,12 @@ def emit_exact_answers(qtext, snip):
 if __name__ == '__main__':
     qtext   = 'what is the origin of COVID-19'
     snips   = [
-        'In order to be approved to conduct saliva testing, based on regulatory guidelines at the time, we were required to compare paired NP and saliva collections from the same individuals, not only to validate saliva as an acceptable specimen type on our instrument.'
+        'In order to be approved to conduct saliva testing, based on regulatory guidelines at the time, we were required to compare paired NP and saliva collections from the same individuals, not only to validate saliva as an acceptable specimen type on our instrument.',
+        'title'
     ]
     for snip in snips:
         res = emit_exact_answers(qtext, snip)
-
+        pprint(res)
 
 
 
