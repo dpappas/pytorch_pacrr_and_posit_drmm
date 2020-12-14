@@ -138,10 +138,9 @@ def get_first_n(qtext, n, exclude_pmids=None):
             'norm_bm25_score'   : scaler.transform([[res['_score']]])[0][0],
             'rank'              : rank,
             'doc'               : {
-                'title'             : 'title',
-                'abstractText'      : res['_source']['section_text'],
-                'pmid'              : res['_id'],
-                'section_type'      : res['_source']['section_type'],
+                'title'             : res['_source']['joint_text'].split('------------------------------', 1)[0].strip(),
+                'abstractText'      : res['_source']['joint_text'].split('------------------------------', 1)[1].strip(),
+                'pmid'              : res['_id']
             }
         })
     return temp_1

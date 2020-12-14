@@ -840,5 +840,5 @@ def retrieve_given_question(quest, n=100):
 
 if __name__ == '__main__':
     question_text1      = 'what is the origin of COVID-19'
-    ret_dummy1          = retrieve_given_question(question_text1, n=100, section=None)
+    ret_dummy1          = retrieve_given_question(question_text1, n=100)
 
