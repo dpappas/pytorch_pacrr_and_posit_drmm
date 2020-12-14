@@ -184,12 +184,14 @@ def emit_exact_answers(qtext, snip):
         fixed_tokens    = fix_bert_tokens(answer_bpes)
         ret.append((' '.join(fixed_tokens), begin_y[start_ind], end_y[end_ind]))
         ##################################################### add best END
-        end_ind         = np.argmax(end_y)
-        start_ind       = end_ind - max_span + np.argmax(begin_y[max([0, end_ind-max_span]):end_ind+1])
-        start_ind       = max([0, start_ind])
-        answer_bpes     = sent_bpes[start_ind:end_ind+1]
-        fixed_tokens    = fix_bert_tokens(answer_bpes)
-        ret.append((' '.join(fixed_tokens), begin_y[start_ind], end_y[end_ind]))
+        end_ind_2       = np.argmax(end_y)
+        if(end_ind != end_ind_2):       # checkout if this is the former
+            end_ind         = end_ind_2
+            start_ind       = end_ind - max_span + np.argmax(begin_y[max([0, end_ind-max_span]):end_ind+1])
+            start_ind       = max([0, start_ind])
+            answer_bpes     = sent_bpes[start_ind:end_ind+1]
+            fixed_tokens    = fix_bert_tokens(answer_bpes)
+            ret.append((' '.join(fixed_tokens), begin_y[start_ind], end_y[end_ind]))
     #########################################################
     return ret
 
