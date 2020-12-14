@@ -170,10 +170,17 @@ def emit_exact_answers(qtext, snip):
     for i in range(len(sent_bpes)):
         # print(sent_bpes[i], round(begin_y[i], 2), round(end_y[i], 2))
         if(begin_y[i] >= 0.5):
-            start_ind   = i
-            end_ind     = start_ind + np.argmax(end_y[i:i+6])
-            answer_bpes = sent_bpes[start_ind:end_ind+1]
-            ret.append(' '.join(fix_bert_tokens(answer_bpes)))
+            start_ind       = i
+            end_ind         = start_ind + np.argmax(end_y[i:i+6])
+            answer_bpes     = sent_bpes[start_ind:end_ind+1]
+            fixed_tokens    = fix_bert_tokens(answer_bpes)
+            ret.append((' '.join(fixed_tokens), begin_y[i], end_y[end_ind]))
+    if(len(ret) == 0):
+        start_ind       = np.argmax(begin_y)
+        end_ind         = start_ind + np.argmax(end_y[start_ind:start_ind+6])
+        answer_bpes     = sent_bpes[start_ind:end_ind+1]
+        fixed_tokens    = fix_bert_tokens(answer_bpes)
+        ret.append((' '.join(fix_bert_tokens(answer_bpes)), begin_y[start_ind], end_y[end_ind]))
     #########################################################
     return ret
 
