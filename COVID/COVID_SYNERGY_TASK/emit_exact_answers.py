@@ -195,14 +195,14 @@ def emit_exact_answers(qtext, snip):
             while(sent_bpes[start_ind].startswith('##')):
                 start_ind = start_ind-1
             answer_bpes     = sent_bpes[start_ind:end_ind+1]
-            print(answer_bpes)
             fixed_tokens    = fix_bert_tokens(answer_bpes)
             ret.append((' '.join(fixed_tokens), begin_y[start_ind], end_y[end_ind]))
     #########################################################
     return ret
 
 if __name__ == '__main__':
-    qtext   = 'what is the origin of COVID-19'
+    qtext   = 'Which diagnostic test is approved for coronavirus infection screening?'
+    #'what is the origin of COVID-19'
     snips   = [
         'In order to be approved to conduct saliva testing, based on regulatory guidelines at the time, we were required to compare paired NP and saliva collections from the same individuals, not only to validate saliva as an acceptable specimen type on our instrument.',
         'title',
