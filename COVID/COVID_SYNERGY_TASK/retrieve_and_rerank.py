@@ -828,14 +828,10 @@ def retrieve_given_question(quest, n=100):
         ###############################################################
         t_res = {
             'doc_score'         : doc_emit_.cpu().tolist()[0],
-            'title'             : ddd['doc']['title'],
             'paragraph'         : ddd['doc']['abstractText'],
             'sents_with_scores' : [(score, sent) for score, sent in zip(gs_emits_.cpu().tolist(), datum['held_out_sents'])],
-            'section'           : ddd['doc']['section'],
-            'pmid'              : ddd['doc']['pmid'],
-            'pmcid'             : ddd['doc']['pmcid'],
-            'doi'               : ddd['doc']['doi'],
-            'date'              : ddd['doc']['date'],
+            'section_type'      : ddd['doc']['section_type'],
+            'pmid'              : ddd['doc']['pmid']
         }
         ###############################################################
         results.append(t_res)
