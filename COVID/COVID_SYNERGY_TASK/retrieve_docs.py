@@ -89,8 +89,8 @@ def retrieve_some_docs(qtext, n=100, exclude_pmids=None):
         'size' : n,
         "query": {
             "bool" : {
-                "should" : [{"match": {"section_text": {"query": question}}}] + [
-                    {"match_phrase": {"section_text": {"query": chunk}}}
+                "should" : [{"match": {"joint_text": {"query": question}}}] + [
+                    {"match_phrase": {"joint_text": {"query": chunk}}}
                     for chunk in noun_chunks
                 ],
                 "minimum_should_match" : 1,
@@ -138,8 +138,8 @@ def get_first_n(qtext, n, exclude_pmids=None):
             'norm_bm25_score'   : scaler.transform([[res['_score']]])[0][0],
             'rank'              : rank,
             'doc'               : {
-                'title'             : res['_source']['joint_text'].split('------------------------------', 1)[0].strip(),
-                'abstractText'      : res['_source']['joint_text'].split('------------------------------', 1)[1].strip(),
+                'title'             : res['_source']['joint_text'].split('--------------------', 1)[0].strip(),
+                'abstractText'      : res['_source']['joint_text'].split('--------------------', 1)[1].strip(),
                 'pmid'              : res['_id'],
                 'publish_time'      : res['_source']['publish_time']
             }
