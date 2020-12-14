@@ -83,11 +83,11 @@ for question in tqdm(d['questions']):
         # sent_score =  sent_score * (2.0 if any(ea in [tt[0] for tt in par_ex_ans_counter.most_common(5)] for ea in s[6]) else 1.0)
         results.append((s[0] +' '  + s[1], s[5], sent_score))
     ####################################################################
-    print('')
-    print(qtext)
-    # pprint(list(pmids_counter.most_common(5)))
-    pprint(exact_answers_counter.most_common(5))
-    pprint(par_ex_ans_counter.most_common(5))
+    # print('')
+    # print(qtext)
+    # # pprint(list(pmids_counter.most_common(5)))
+    # pprint(exact_answers_counter.most_common(5))
+    # pprint(par_ex_ans_counter.most_common(5))
     ####################################################################
     results = sorted(results, key=lambda s: s[2], reverse=True)
     ############################################
@@ -100,8 +100,10 @@ for question in tqdm(d['questions']):
         ccc.update(Counter([(d_)]))
         if(sum(ccc.values()) == 10):
             break
+    print('')
     print(40 * '=')
-    pprint(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept)))
+    print(qtext)
+    pprint(Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept))))
     ####################################################################
 
 '''
