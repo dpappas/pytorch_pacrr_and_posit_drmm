@@ -9,23 +9,14 @@ idf_pickle_path             = 'idf.pkl'
 resume_from                 = 'best_dev_checkpoint.pth.tar'
 ###########################################################
 
-from    elasticsearch import Elasticsearch
-from    textblob                    import TextBlob
 from    retrieve_docs               import get_first_n_1, pprint, bioclean, stopwords, os, np, pickle, tqdm, json
 from    nltk.tokenize               import sent_tokenize
 from    gensim.models.keyedvectors  import KeyedVectors
 from    difflib                     import SequenceMatcher
 import  nltk, torch, random, re
-from    nltk                        import ngrams
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  torch.autograd              as autograd
-
-# Modified bioclean: also split on dashes. Works better for retrieval with galago.
-bioclean_mod = lambda t: re.sub(
-    '[.,?;*!%^&_+():-\[\]{}]', '',
-    t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()
-).split()
 
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 
@@ -774,61 +765,6 @@ def load_model_from_checkpoint(resume_from):
     else:
         print('ERROR! 404!!! EXITING!')
         exit()
-
-def keep_only_longest(phrases):
-    ret = []
-    for phrase in sorted(phrases, key=lambda x : len(x), reverse=True):
-        if(any(phrase in t for t in ret)):
-            continue
-        else:
-            ret.append(phrase)
-    return ret
-
-def retrieve_some_docs(qtext):
-    tokenized_body  = bioclean_mod(qtext)
-    tokenized_body  = [t for t in tokenized_body if t not in stopwords]
-    question        = ' '.join(tokenized_body)
-    bod = {
-        'size' : 100,
-        "query": {
-            "bool" : {
-                "should" : [{"match": {"section_text": {"query": question}}}] + [
-                    {"match_phrase": {"section_text": {"query": chunk}}}
-                    for chunk in get_noun_chunks(qtext)
-                ],
-                "minimum_should_match" : 1,
-                "boost" : 1.0
-            }
-        }
-    }
-    res = es.search(index=index, body=bod)
-    return res
-
-def get_noun_chunks(text):
-    blob    = TextBlob(text)
-    pt      = blob.pos_tags
-    nps     = []
-    for i in range(1,5):
-        nps.extend(
-            [
-                ' '.join([tt[0] for tt in gr])
-                for gr in ngrams(pt, i)
-                if(
-                    all(
-                        (t[1] in ['NNP','NN','JJ','ADJ','ADV'] and t[0].lower() not in stopwords)
-                        for t in gr
-                    )
-                )
-            ]
-        )
-    ret = list(blob.noun_phrases)+nps
-    ret = keep_only_longest(ret)
-    return ret
-
-#####################################################################################
-
-index   = 'allenai_covid_index_2020_11_29_01'
-es      = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
 ###########################################################
 min_doc_score               = -1000.

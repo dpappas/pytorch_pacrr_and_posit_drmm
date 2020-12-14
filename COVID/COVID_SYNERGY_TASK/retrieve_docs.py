@@ -1,13 +1,15 @@
 
 
-import sys, os, re, json, pickle, ijson
-from tqdm import tqdm
-from sklearn.preprocessing import StandardScaler
-import numpy as np
-from elasticsearch import Elasticsearch
-from pprint import pprint
-import torch, nltk
-import datetime
+import  sys, os, re, json, pickle, ijson
+from    tqdm import tqdm
+from    sklearn.preprocessing import StandardScaler
+import  numpy as np
+from    elasticsearch import Elasticsearch
+from    pprint import pprint
+import  torch, nltk
+import  datetime
+from    textblob import TextBlob
+from    nltk import ngrams
 
 #####################################################################################
 # Modified bioclean: also split on dashes. Works better for retrieval with galago.
@@ -48,6 +50,63 @@ n_gpu   = torch.cuda.device_count()
 
 def tokenize(x):
   return bioclean(x)
+
+def keep_only_longest(phrases):
+    ret = []
+    for phrase in sorted(phrases, key=lambda x : len(x), reverse=True):
+        if(any(phrase in t for t in ret)):
+            continue
+        else:
+            ret.append(phrase)
+    return ret
+
+def retrieve_some_docs(qtext):
+    tokenized_body  = bioclean_mod(qtext)
+    tokenized_body  = [t for t in tokenized_body if t not in stopwords]
+    question        = ' '.join(tokenized_body)
+    bod = {
+        'size' : 100,
+        "query": {
+            "bool" : {
+                "should" : [{"match": {"section_text": {"query": question}}}] + [
+                    {"match_phrase": {"section_text": {"query": chunk}}}
+                    for chunk in get_noun_chunks(qtext)
+                ],
+                "minimum_should_match" : 1,
+                "boost" : 1.0
+            }
+        }
+    }
+    res = es.search(index=index, body=bod)
+    return res
+
+def get_noun_chunks(text):
+    blob    = TextBlob(text)
+    pt      = blob.pos_tags
+    nps     = []
+    for i in range(1,5):
+        nps.extend(
+            [
+                ' '.join([tt[0] for tt in gr])
+                for gr in ngrams(pt, i)
+                if(
+                    all(
+                        (t[1] in ['NNP','NN','JJ','ADJ','ADV'] and t[0].lower() not in stopwords)
+                        for t in gr
+                    )
+                )
+            ]
+        )
+    ret = list(blob.noun_phrases)+nps
+    ret = keep_only_longest(ret)
+    return ret
+
+#####################################################################################
+
+index   = 'allenai_covid_index_2020_11_29_01'
+es      = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+
+#####################################################################################
 
 def get_first_n_1(qtext, n, section=None, max_year=None, exclude_pmids=None, must_include=None, must_exclude=None):
     tokenized_body  = bioclean_mod(qtext)
