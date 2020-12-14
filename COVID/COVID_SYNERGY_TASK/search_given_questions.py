@@ -10,12 +10,14 @@ fpath   = '/home/dpappas/BioASQ-taskSynergy-dryRun-testset'
 d       = json.load(open(fpath))
 
 for question in tqdm(d['questions']):
-    qtype       = question['type']
-    qtext       = question['body']
-    res         = retrieve_given_question(qtext)
-    all_sents   = []
+    qtype           = question['type']
+    qtext           = question['body']
+    res             = retrieve_given_question(qtext)
+    all_sents       = []
+    pmids_counter   = Counter()
     for item in res:
         doc_id          = item['pmid'].split()[0].strip()
+        pmids_counter.update(Counter([doc_id]))
         par_id          = item['pmid'].split()[1].strip()
         doc_score       = item['doc_score']
         #################################################
@@ -29,7 +31,8 @@ for question in tqdm(d['questions']):
             cand_ex_ans     = [t[0] for t in cand_ex_ans]
             all_sents.append((doc_id, par_id, doc_score, overall_exact, sent_score, sent_text, cand_ex_ans))
     ####################################################################
-
+    pprint(pmids_counter)
+    ####################################################################
 
 
 
