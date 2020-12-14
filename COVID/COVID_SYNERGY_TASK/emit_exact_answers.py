@@ -152,6 +152,7 @@ gb = my_model.eval()
 #########################
 
 def emit_exact_answers(qtext, snip):
+    max_span        = 6
     ##########################################################
     sent_ids        = prep_bpe_data_text(snip.lower())[1:]
     sent_bpes       = bert_tokenizer.convert_ids_to_tokens(sent_ids)
@@ -171,16 +172,23 @@ def emit_exact_answers(qtext, snip):
         # print(sent_bpes[i], round(begin_y[i], 2), round(end_y[i], 2))
         if(begin_y[i] >= 0.5):
             start_ind       = i
-            end_ind         = start_ind + np.argmax(end_y[i:i+6])
+            end_ind         = start_ind + np.argmax(end_y[i:i+max_span])
             answer_bpes     = sent_bpes[start_ind:end_ind+1]
             fixed_tokens    = fix_bert_tokens(answer_bpes)
             ret.append((' '.join(fixed_tokens), begin_y[i], end_y[end_ind]))
     if(len(ret) == 0):
+        ##################################################### add best BEGIN
         start_ind       = np.argmax(begin_y)
-        end_ind         = start_ind + np.argmax(end_y[start_ind:start_ind+6])
+        end_ind         = start_ind + np.argmax(end_y[start_ind:start_ind+max_span])
         answer_bpes     = sent_bpes[start_ind:end_ind+1]
         fixed_tokens    = fix_bert_tokens(answer_bpes)
-        ret.append((' '.join(fix_bert_tokens(answer_bpes)), begin_y[start_ind], end_y[end_ind]))
+        ret.append((' '.join(fixed_tokens), begin_y[start_ind], end_y[end_ind]))
+        ##################################################### add best END
+        end_ind         = np.argmax(end_y)
+        start_ind       = end_ind - max_span + np.argmax(begin_y[end_ind-max_span:end_ind])
+        answer_bpes     = sent_bpes[start_ind:end_ind+1]
+        fixed_tokens    = fix_bert_tokens(answer_bpes)
+        ret.append((' '.join(fixed_tokens), begin_y[start_ind], end_y[end_ind]))
     #########################################################
     return ret
 
