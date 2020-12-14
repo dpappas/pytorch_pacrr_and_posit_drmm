@@ -45,6 +45,8 @@ with open(csv_path, 'r') as read_obj:
             cord_uid, sha, source_x, title, doi, pmcid, pubmed_id, license, abstract, publish_time, authors, journal,
             mag_id, who_covidence_id, arxiv_id, pdf_json_files, pmc_json_files, url, s2_id
         ) = row
+        if(len(publish_time)==0):
+            publish_time = '1600'
         datum       = {
             '_id'           : cord_uid,
             'joint_text'    : title + '--------------------' + abstract,
