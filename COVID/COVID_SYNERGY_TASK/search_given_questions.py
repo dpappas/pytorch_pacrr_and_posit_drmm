@@ -103,7 +103,8 @@ for question in tqdm(d['questions']):
     print('')
     print(40 * '=')
     print(qtext)
-    pprint(Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept))))
+    eas = Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept)))
+    pprint(eas.most_common(10))
     ####################################################################
 
 '''

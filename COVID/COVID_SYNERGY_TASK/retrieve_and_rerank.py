@@ -816,7 +816,7 @@ def retrieve_given_question(quest, n=100):
     quest_tokens, quest_embeds          = get_embeds(tokenize(quest), wv)
     q_idfs                              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     results                             = []
-    for ddd in tqdm(docs['retrieved_documents']):
+    for ddd in docs['retrieved_documents']:
         datum = prep_data(quest, ddd['doc'], ddd['norm_bm25_score'], wv, [], idf, max_idf, True)
         doc_emit_, gs_emits_    = model.emit_one(
             doc1_sents_embeds   = datum['sents_embeds'],
