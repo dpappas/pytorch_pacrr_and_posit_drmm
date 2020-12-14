@@ -16,10 +16,9 @@ from    nltk import ngrams
 bioclean_mod    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').strip().lower()).split()
 bioclean        = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower()).split()
 #####################################################################################
+
 with open('/home/dpappas/bioasq_all/stopwords.pkl', 'rb') as f:
     stopwords = pickle.load(f)
-# with open('stopwords.pkl', 'rb') as f:
-#     stopwords = pickle.load(f)
 
 stopwords   = stopwords.union(set(nltk.corpus.stopwords.words("english")))
 stopwords.add('what')
@@ -60,26 +59,6 @@ def keep_only_longest(phrases):
             ret.append(phrase)
     return ret
 
-def retrieve_some_docs(qtext):
-    tokenized_body  = bioclean_mod(qtext)
-    tokenized_body  = [t for t in tokenized_body if t not in stopwords]
-    question        = ' '.join(tokenized_body)
-    bod = {
-        'size' : 100,
-        "query": {
-            "bool" : {
-                "should" : [{"match": {"section_text": {"query": question}}}] + [
-                    {"match_phrase": {"section_text": {"query": chunk}}}
-                    for chunk in get_noun_chunks(qtext)
-                ],
-                "minimum_should_match" : 1,
-                "boost" : 1.0
-            }
-        }
-    }
-    res = es.search(index=index, body=bod)
-    return res
-
 def get_noun_chunks(text):
     blob    = TextBlob(text)
     pt      = blob.pos_tags
@@ -100,6 +79,29 @@ def get_noun_chunks(text):
     ret = list(blob.noun_phrases)+nps
     ret = keep_only_longest(ret)
     return ret
+
+def retrieve_some_docs(qtext, n=100, exclude_pmids=None):
+    noun_chunks     = get_noun_chunks(qtext)
+    tokenized_body  = bioclean_mod(qtext)
+    tokenized_body  = [t for t in tokenized_body if t not in stopwords]
+    question        = ' '.join(tokenized_body)
+    bod = {
+        'size' : n,
+        "query": {
+            "bool" : {
+                "should" : [{"match": {"section_text": {"query": question}}}] + [
+                    {"match_phrase": {"section_text": {"query": chunk}}}
+                    for chunk in noun_chunks
+                ],
+                "minimum_should_match" : 1,
+                "boost" : 1.0
+            }
+        }
+    }
+    if(exclude_pmids):
+        bod["query"]["bool"]["must_not"] = [{"_id": {"values": exclude_pmids}}]
+    res = es.search(index=index, body=bod)
+    return res
 
 #####################################################################################
 
@@ -183,5 +185,47 @@ def get_first_n_1(qtext, n, section=None, max_year=None, exclude_pmids=None, mus
             }
         })
     return temp_1
+
+def get_first_n(qtext, n, exclude_pmids=None):
+    results = retrieve_some_docs(qtext, n=n, exclude_pmids=exclude_pmids)
+    #######################################################
+    temp_1 = {
+        'num_rel': 0,
+        'num_rel_ret': 0,
+        'num_ret': -1,
+        'query_id': 1234567890,
+        'query_text': qtext,
+        'relevant_documents': [],
+        'retrieved_documents': []
+    }
+    #######################################################
+    all_scores = [res['_score'] for res in results]
+    # print(all_scores)
+    if(len(all_scores)==0):
+        return temp_1
+    scaler = StandardScaler().fit(np.array(all_scores).reshape(-1, 1))
+    temp_1['num_ret'] = len(all_scores)
+    #######################################################
+    for res, rank in zip(results, range(1, len(results) + 1)):
+        temp_1['retrieved_documents'].append({
+            'bm25_score'        : res['_score'],
+            'doc_id'            : res['_id'],
+            'is_relevant'       : False,
+            'norm_bm25_score'   : scaler.transform([[res['_score']]])[0][0],
+            'rank'              : rank,
+            'doc'               : {
+                'title'             : res['_source']['joint_text'].split('--------------------', 1)[0].strip(),
+                'abstractText'      : res['_source']['joint_text'].split('--------------------', 1)[1].strip(),
+                # 'doi'               : res['_source']['doi'],
+                # 'pmcid'             : res['_source']['pmcid'],
+                # 'pmid'              : res['_source']['pmid'],
+                'pmid'              : res['_id'],
+                # 'section'           : res['_source']['section'],
+                'date'     : res['_source']['DateCompleted']
+            }
+        })
+    return temp_1
+
+
 
 #####################################################################################

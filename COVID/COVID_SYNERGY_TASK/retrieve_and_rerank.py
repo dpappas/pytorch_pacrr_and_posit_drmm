@@ -1,15 +1,15 @@
 
 ###########################################################
-# w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
-# idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
-# resume_from                 = '/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
+w2v_bin_path                = '/home/dpappas/bioasq_all/pubmed2018_w2v_30D.bin'
+idf_pickle_path             = '/home/dpappas/bioasq_all/idf.pkl'
+resume_from                 = '/home/dpappas/ablation_1111111_0p01_0_bioasq_jpdrmm_2L_0p01_run_0/best_dev_checkpoint.pth.tar'
 ###########################################################
-w2v_bin_path                = 'pubmed2018_w2v_30D.bin'
-idf_pickle_path             = 'idf.pkl'
-resume_from                 = 'best_dev_checkpoint.pth.tar'
+# w2v_bin_path                = 'pubmed2018_w2v_30D.bin'
+# idf_pickle_path             = 'idf.pkl'
+# resume_from                 = 'best_dev_checkpoint.pth.tar'
 ###########################################################
 
-from    retrieve_docs               import get_first_n_1, pprint, bioclean, stopwords, os, np, pickle, tqdm, json
+from    retrieve_docs               import get_first_n, bioclean, stopwords, os, np, pickle, tqdm, json
 from    nltk.tokenize               import sent_tokenize
 from    gensim.models.keyedvectors  import KeyedVectors
 from    difflib                     import SequenceMatcher
@@ -811,8 +811,8 @@ wv = dict([(word, wv[word]) for word in wv.vocab.keys()])
 model.eval()
 ###########################################################
 
-def retrieve_given_question(quest, n=100, section=None, min_year=1600, max_year=2021):
-    docs                                = get_first_n_1(qtext= quest, n=n, section=section, min_year=min_year, max_year= max_year)
+def retrieve_given_question(quest, n=100):
+    docs                                = get_first_n(qtext= quest, n=n)
     quest_tokens, quest_embeds          = get_embeds(tokenize(quest), wv)
     q_idfs                              = np.array([[idf_val(qw, idf, max_idf)] for qw in quest_tokens], 'float')
     results                             = []
