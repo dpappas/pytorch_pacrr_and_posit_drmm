@@ -3,6 +3,7 @@ import  json
 from    collections import Counter
 from    pprint import pprint
 from    retrieve_and_rerank import retrieve_given_question
+from    emit_exact_answers import emit_exact_answers
 
 fpath   = '/home/dpappas/BioASQ-taskSynergy-dryRun-testset'
 d       = json.load(open(fpath))
