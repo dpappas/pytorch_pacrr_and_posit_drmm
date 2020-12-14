@@ -140,7 +140,8 @@ def get_first_n(qtext, n, exclude_pmids=None):
             'doc'               : {
                 'title'             : res['_source']['joint_text'].split('------------------------------', 1)[0].strip(),
                 'abstractText'      : res['_source']['joint_text'].split('------------------------------', 1)[1].strip(),
-                'pmid'              : res['_id']
+                'pmid'              : res['_id'],
+                'publish_time'      : res['_source']['publish_time']
             }
         })
     return temp_1
