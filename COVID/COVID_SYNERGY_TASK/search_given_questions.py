@@ -13,7 +13,9 @@ for question in d['questions']:
     qtext   = question['body']
     print(qtext)
     res = retrieve_given_question(qtext)
-    pprint(res)
+    pprint(res[0].keys())
+    for score, sent in res[0]['sents_with_scores']:
+        pprint(emit_exact_answers(qtext, sent))
     break
     # pprint(res)
     c = Counter()
