@@ -825,6 +825,11 @@ def get_noun_chunks(text):
     ret = keep_only_longest(ret)
     return ret
 
+#####################################################################################
+
+index   = 'allenai_covid_index_2020_11_29_01'
+es      = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+
 ###########################################################
 min_doc_score               = -1000.
 min_sent_score              = -1000.
