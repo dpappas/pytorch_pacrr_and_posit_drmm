@@ -1,43 +1,106 @@
 
-import  json
+import  json, re
 from    collections import Counter
 from    pprint import pprint
 from    retrieve_and_rerank import retrieve_given_question
 from    emit_exact_answers import emit_exact_answers
-from tqdm import tqdm
+from    tqdm import tqdm
 
 # fpath   = '/home/dpappas/BioASQ-taskSynergy-dryRun-testset'
 fpath   = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset1'
 d       = json.load(open(fpath))
 
+nonos           = [
+'sars',
+'sars - cov',
+'cov - 2',
+'coronavirus',
+'covid - 19',
+'covid',
+]
+nonos_2         = ['et al', 'et. al', '>']
+sent_min_chars  = 20
+
 for question in tqdm(d['questions']):
     qtype           = question['type']
-    qtext           = question['body']
-    res             = retrieve_given_question(qtext)
-    all_sents       = []
+    if(qtype != 'factoid' and qtype != 'list'):
+        continue
+    qtext                   = question['body']
+    res                     = retrieve_given_question(qtext)
+    ###############################################################################################################
+    par_ex_ans_counter      = Counter()
+    all_sents               = []
     pmids_counter           = Counter()
     exact_answers_counter   = Counter()
-    for item in res[:10]:
+    sents_alredy_examined   = set() # i use this because during indexing i also appended the spans of the figures
+    for item in res[:20]:
         doc_id          = item['pmid'].split()[0].strip()
         pmids_counter.update(Counter([doc_id]))
         par_id          = item['pmid'].split()[1].strip()
         doc_score       = item['doc_score']
         #################################################
         overall_exact   = emit_exact_answers(qtext, item['paragraph'])
-        overall_exact   = [t for t in overall_exact if (t[1] >= 0.5 and t[2] >= 0.5 and 'sars - cov' not in t[0] and 'cov - 2' not in t[0] and 'covid - 19' not in t[0] and 'coronavirus' not in t[0])]
+        overall_exact   = [
+            t
+            for t in overall_exact
+            if (
+                t[1] >= 0.5 and
+                t[2] >= 0.5 and
+                all(nono != t[0] for nono in nonos) and
+                all(nono2 not in t[0] for nono2 in nonos_2)
+            )
+        ]
         overall_exact   = [t[0] for t in overall_exact]
+        par_ex_ans_counter.update(Counter(overall_exact))
         #################################################
         for sent_score, sent_text in item['sents_with_scores']:
+            if(len(sent_text)<sent_min_chars or re.sub('\s+', '', sent_text.lower()) in sents_alredy_examined):
+                continue
             cand_ex_ans     = emit_exact_answers(qtext, sent_text)
-            cand_ex_ans     = [t for t in cand_ex_ans if(t[1]>=0.5 and t[2]>=0.5 and 'sars - cov' not in t[0] and 'cov - 2' not in t[0] and 'covid - 19' not in t[0] and 'coronavirus' not in t[0])]
+            cand_ex_ans     = [
+                t
+                for t in cand_ex_ans
+                if(
+                    t[1]>=0.5 and
+                    t[2]>=0.5 and
+                    all(nono != t[0] for nono in nonos) and
+                    all(nono2 not in t[0] for nono2 in nonos_2)
+                )
+            ]
             cand_ex_ans     = [t[0] for t in cand_ex_ans]
             exact_answers_counter.update(Counter(cand_ex_ans))
             all_sents.append((doc_id, par_id, doc_score, overall_exact, sent_score, sent_text, cand_ex_ans))
+            sents_alredy_examined.add(re.sub('\s+', '', sent_text.lower()))
+    ####################################################################
+    results = []
+    for s in all_sents:
+        # we use the jpdrmm score of the sent
+        sent_score = s[4]
+        # we use the jpdrmm score of the paragraph
+        sent_score = sent_score * s[2]
+        # if multiple paragraphs from a document are present we boost it
+        sent_score = sent_score * pmids_counter[s[0]]
+        # if the sentence has an exact answer we boost it
+        sent_score =  sent_score * (2.0 if len(s[6])>0 else 1.0)
+        # if the exact answer of the sentence could be found in the exact answers of the paragraph we boost it
+        sent_score =  sent_score * (2.0 if any(ea in s[3] for ea in s[6]) else 1.0)
+        # if the exact answer of the sentence could be found in the top 5 exact answers of all paragraphs we boost it
+        sent_score =  sent_score * (2.0 if any(ea in [tt[0] for tt in par_ex_ans_counter.most_common(5)] for ea in s[6]) else 1.0)
+        results.append((s[0] +' '  + s[1], s[5], sent_score))
     ####################################################################
     print('')
     print(qtext)
-    pprint(list(pmids_counter.most_common(5)))
-    pprint(list(exact_answers_counter.most_common(5)))
+    # pprint(list(pmids_counter.most_common(5)))
+    pprint(exact_answers_counter.most_common(5))
+    pprint(par_ex_ans_counter.most_common(5))
+    print(
+        '\n\n'.join(
+            [
+                s[1] for s in sorted(results, key=lambda s: s[2], reverse=True)[:10]
+            ]
+        )
+    )
+    print(40 * '=')
     ####################################################################
 
 
