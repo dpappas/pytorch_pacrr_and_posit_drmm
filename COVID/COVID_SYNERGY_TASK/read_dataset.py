@@ -51,7 +51,7 @@ for member in tqdm(tar, total=234501):
             '_id'   : d['paper_id']+ ' ' +str(c),
             'section_text'  : title,
             'section_type'  : 'title',
-            'rank'  : c
+            'rank'          : c
         }
         actions.append(create_an_action(datum, datum['_id']))
         # upload_to_elk(finished=False)
