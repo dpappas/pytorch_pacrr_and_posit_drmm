@@ -141,7 +141,6 @@ def get_first_n(qtext, n, exclude_pmids=None):
                 'title'             : 'title',
                 'abstractText'      : res['_source']['section_text'],
                 'pmid'              : res['_id'],
-                'date'              : res['_source']['DateCompleted']
             }
         })
     return temp_1
