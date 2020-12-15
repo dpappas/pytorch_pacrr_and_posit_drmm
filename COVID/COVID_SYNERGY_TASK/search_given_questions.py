@@ -26,8 +26,7 @@ sent_min_chars  = 20
 def get_answers(qtext, le_text):
     overall_exact   = emit_exact_answers(qtext, le_text) #
     overall_exact   = [
-        t
-        for t in overall_exact
+        t for t in overall_exact
         if (
             t[1] >= 0.5 and
             t[2] >= 0.5 and
@@ -109,7 +108,14 @@ for question in tqdm(d['questions']):
     print(40 * '=')
     print(qtext)
     print('\n'.join([s[2] for s in kept]))
-    eas = Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept)))
+    eas = Counter(
+        flattened(
+            list(
+                get_answers(qtext, sent_text[2])
+                for sent_text in kept
+            )
+        )
+    )
     pprint(eas.most_common(10))
     ####################################################################
 
