@@ -37,9 +37,7 @@ def get_answers(qtext, le_text):
     overall_exact   = [t[0] for t in overall_exact]
     return overall_exact
 
-exported = {
-"questions": []
-}
+exported = {"questions": []}
 
 for question in tqdm(d['questions']):
     qtext               = question['body']
@@ -82,7 +80,28 @@ for question in tqdm(d['questions']):
                 continue
             cand_ex_ans     = get_answers(qtext, sent_text)
             exact_answers_counter.update(Counter(cand_ex_ans))
-            all_sents.append((doc_id, par_id, doc_score, overall_exact, sent_score, sent_text, cand_ex_ans))
+            if sent_text in item['title']:
+                section                 = 'title'
+                offsetInBeginSection    = item['title'].index(sent_text)
+                offsetInEndSection      = offsetInBeginSection + len(sent_text)
+            else:
+                section                 = 'abstract'
+                offsetInBeginSection    = item['abstract'].index(sent_text)
+                offsetInEndSection      = offsetInBeginSection + len(sent_text)
+            all_sents.append(
+                (
+                    doc_id,
+                    par_id,
+                    doc_score,
+                    overall_exact,
+                    sent_score,
+                    sent_text,
+                    cand_ex_ans,
+                    section,
+                    offsetInBeginSection,
+                    offsetInEndSection,
+                )
+            )
             # sents_alredy_examined.add(re.sub('\s+', '', sent_text.lower()))
             sents_alredy_examined.add(re.sub('\W+', '', sent_text.lower()))
     ####################################################################
@@ -100,7 +119,7 @@ for question in tqdm(d['questions']):
         # sent_score =  sent_score * (2.0 if any(ea in s[3] for ea in s[6]) else 1.0)
         # # if the exact answer of the sentence could be found in the top 5 exact answers of all paragraphs we boost it
         # sent_score =  sent_score * (2.0 if any(ea in [tt[0] for tt in par_ex_ans_counter.most_common(5)] for ea in s[6]) else 1.0)
-        results.append((s[0] +' '  + s[1], s[5], sent_score))
+        results.append((s[0] +' '  + s[1], s[5], sent_score, s[7], s[8], s[9]))
     ####################################################################
     # print('')
     # print(qtext)
@@ -112,9 +131,19 @@ for question in tqdm(d['questions']):
     ############################################
     kept    = []
     ccc     = Counter()
-    for d_, s_, sc_ in results:
+    for d_, s_, sc_, sec_, of1, of2 in results:
         if(ccc[d_]==2):
             continue
+        q_export['snippets'].append(
+            {
+                "document": d_,
+                "offsetInBeginSection": of1,
+                "offsetInEndSection": of2,
+                "text": s_,
+                "beginSection": sec_,
+                "endSection": sec_
+            }
+        )
         kept.append((d_, sc_, s_))
         ccc.update(Counter([(d_)]))
         if(sum(ccc.values()) == 10):
@@ -133,6 +162,9 @@ for question in tqdm(d['questions']):
     )
     pprint(eas.most_common(10))
     ####################################################################
+    exported["questions"].append(q_export)
+    ####################################################################
+    break
 
 '''
 for question in tqdm(d['questions']):
