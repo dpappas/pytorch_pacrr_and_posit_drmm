@@ -10,6 +10,7 @@ flattened = lambda l: [item for sublist in l for item in sublist]
 
 # fpath   = '/home/dpappas/BioASQ-taskSynergy-dryRun-testset'
 fpath   = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset1'
+opath   = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset1_ouputs.json'
 d       = json.load(open(fpath))
 
 nonos           = [
@@ -170,9 +171,19 @@ for question in tqdm(d['questions']):
         eas = Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept)))
         q_export['exact_answer'] =[[ea[0]] for ea in eas.most_common(10)]
         q_export['answer_ready'] = True
+    elif (qtype == 'summary'):
+        for snip in q_export['snippets']:
+            if(len(q_export['ideal_answer'].split() + snip['text'].split()) < 200):
+                q_export['ideal_answer'] = q_export['ideal_answer'] + ' ' + snip['text']
+                q_export['ideal_answer'] = q_export['ideal_answer'].strip()
+        q_export['answer_ready'] = True
     ####################################################################
     exported["questions"].append(q_export)
     ####################################################################
+
+with open(opath, 'w') as f:
+    f.write(json.dumps(exported, indent=4, sort_keys=False))
+
 
 '''
 for question in tqdm(d['questions']):
