@@ -37,11 +37,25 @@ def get_answers(qtext, le_text):
     overall_exact   = [t[0] for t in overall_exact]
     return overall_exact
 
+exported = {
+"questions": []
+}
+
 for question in tqdm(d['questions']):
+    qtext               = question['body']
     qtype           = question['type']
+    q_export = {
+        "body"          : qtext,
+        "id"            : question['id'],
+        "type"          : qtype,
+        "documents"     : [],
+        "snippets"      : [],
+        "answer_ready"  : False,
+        "ideal_answer"  : '',
+        "exact_answer"  : []
+    }
     if(qtype != 'factoid' and qtype != 'list'):
         continue
-    qtext                   = question['body']
     res                     = retrieve_given_question(qtext)
     ###############################################################################################################
     par_ex_ans_counter      = Counter()
@@ -49,7 +63,7 @@ for question in tqdm(d['questions']):
     pmids_counter           = Counter()
     exact_answers_counter   = Counter()
     sents_alredy_examined   = set() # i use this because during indexing i also appended the spans of the figures
-    for item in res[:20]:
+    for item in res:
         # doc_id          = item['pmid'].split()[0].strip()
         doc_id          = item['cord_uid'].split()[0].strip()
         pmids_counter.update(Counter([doc_id]))
