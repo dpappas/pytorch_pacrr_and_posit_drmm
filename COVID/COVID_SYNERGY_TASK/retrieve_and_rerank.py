@@ -831,6 +831,7 @@ def retrieve_given_question(quest, n=100):
             'paragraph'         : ddd['doc']['title'] + '\n\n' + ddd['doc']['abstractText'],
             'sents_with_scores' : [(score, sent) for score, sent in zip(gs_emits_.cpu().tolist(), datum['held_out_sents'])],
             'pmid'              : ddd['doc']['pmid'],
+            'cord_uid'          : ddd['doc']['cord_uid'],
             'publish_time'      : ddd['doc']['publish_time']
         }
         ###############################################################
