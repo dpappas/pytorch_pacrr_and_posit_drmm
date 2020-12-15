@@ -65,7 +65,7 @@ for question in tqdm(d['questions']):
         # doc_id          = item['pmid'].split()[0].strip()
         doc_id          = item['cord_uid'].split()[0].strip()
         pmids_counter.update(Counter([doc_id]))
-        par_id          = '0' # item['pmid'].split()[1].strip()
+        par_id          = '' # item['pmid'].split()[1].strip()
         doc_score       = item['doc_score']
         #################################################
         overall_exact   = get_answers(qtext, item['paragraph'])
@@ -119,7 +119,7 @@ for question in tqdm(d['questions']):
         # sent_score =  sent_score * (2.0 if any(ea in s[3] for ea in s[6]) else 1.0)
         # # if the exact answer of the sentence could be found in the top 5 exact answers of all paragraphs we boost it
         # sent_score =  sent_score * (2.0 if any(ea in [tt[0] for tt in par_ex_ans_counter.most_common(5)] for ea in s[6]) else 1.0)
-        results.append((s[0] +' '  + s[1], s[5], sent_score, s[7], s[8], s[9]))
+        results.append((s[0], s[5], sent_score, s[7], s[8], s[9]))
     ####################################################################
     # print('')
     # print(qtext)
