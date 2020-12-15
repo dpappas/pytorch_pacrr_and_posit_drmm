@@ -53,19 +53,24 @@ for question in tqdm(d['questions']):
     for item in res[:20]:
         doc_id          = item['pmid'].split()[0].strip()
         pmids_counter.update(Counter([doc_id]))
-        par_id          = item['pmid'].split()[1].strip()
+        par_id          = '0' # item['pmid'].split()[1].strip()
         doc_score       = item['doc_score']
         #################################################
         overall_exact   = get_answers(qtext, item['paragraph'])
         par_ex_ans_counter.update(Counter(overall_exact))
         #################################################
         for sent_score, sent_text in item['sents_with_scores']:
-            if(len(sent_text)<sent_min_chars or re.sub('\s+', '', sent_text.lower()) in sents_alredy_examined):
+            if(
+                len(sent_text)<sent_min_chars or
+                # re.sub('\s+', '', sent_text.lower()) in sents_alredy_examined
+                re.sub('\W+', '', sent_text.lower()) in sents_alredy_examined
+            ):
                 continue
             cand_ex_ans     = get_answers(qtext, sent_text)
             exact_answers_counter.update(Counter(cand_ex_ans))
             all_sents.append((doc_id, par_id, doc_score, overall_exact, sent_score, sent_text, cand_ex_ans))
-            sents_alredy_examined.add(re.sub('\s+', '', sent_text.lower()))
+            # sents_alredy_examined.add(re.sub('\s+', '', sent_text.lower()))
+            sents_alredy_examined.add(re.sub('\W+', '', sent_text.lower()))
     ####################################################################
     results = []
     for s in all_sents:
@@ -103,6 +108,7 @@ for question in tqdm(d['questions']):
     print('')
     print(40 * '=')
     print(qtext)
+    print('\n'.join([s[2] for s in kept]))
     eas = Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept)))
     pprint(eas.most_common(10))
     ####################################################################
