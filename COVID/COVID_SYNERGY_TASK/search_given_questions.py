@@ -40,9 +40,9 @@ def get_answers(qtext, le_text):
 exported = {"questions": []}
 
 for question in tqdm(d['questions']):
-    qtext               = question['body']
-    qtype           = question['type']
-    q_export = {
+    qtext                   = question['body']
+    qtype                   = question['type']
+    q_export                = {
         "body"          : qtext,
         "id"            : question['id'],
         "type"          : qtype,
@@ -52,8 +52,6 @@ for question in tqdm(d['questions']):
         "ideal_answer"  : '',
         "exact_answer"  : []
     }
-    if(qtype != 'factoid' and qtype != 'list'):
-        continue
     res                     = retrieve_given_question(qtext)
     ###############################################################################################################
     par_ex_ans_counter      = Counter()
@@ -68,7 +66,10 @@ for question in tqdm(d['questions']):
         par_id          = '' # item['pmid'].split()[1].strip()
         doc_score       = item['doc_score']
         #################################################
-        overall_exact   = get_answers(qtext, item['paragraph'])
+        if (qtype == 'factoid' or qtype == 'list'):
+            overall_exact   = get_answers(qtext, item['paragraph'])
+        else:
+            overall_exact   = []
         par_ex_ans_counter.update(Counter(overall_exact))
         #################################################
         for sent_score, sent_text in item['sents_with_scores']:
@@ -78,7 +79,10 @@ for question in tqdm(d['questions']):
                 re.sub('\W+', '', sent_text.lower()) in sents_alredy_examined
             ):
                 continue
-            cand_ex_ans     = get_answers(qtext, sent_text)
+            if (qtype == 'factoid' or qtype == 'list'):
+                cand_ex_ans   = get_answers(qtext, sent_text)
+            else:
+                cand_ex_ans   = []
             exact_answers_counter.update(Counter(cand_ex_ans))
             if sent_text in item['title']:
                 section                 = 'title'
@@ -157,12 +161,13 @@ for question in tqdm(d['questions']):
     # print(40 * '=')
     # print(qtext)
     # print('\n'.join([s[2] for s in kept]))
-    eas = Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept)))
     # pprint(eas.most_common(10))
     if(qtype == 'factoid'):
+        eas = Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept)))
         q_export['exact_answer'] =[[ea[0]] for ea in eas.most_common(5)]
         q_export['answer_ready'] = True
     elif(qtype == 'list'):
+        eas = Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept)))
         q_export['exact_answer'] =[[ea[0]] for ea in eas.most_common(10)]
         q_export['answer_ready'] = True
     ####################################################################
