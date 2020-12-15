@@ -50,7 +50,8 @@ for question in tqdm(d['questions']):
     exact_answers_counter   = Counter()
     sents_alredy_examined   = set() # i use this because during indexing i also appended the spans of the figures
     for item in res[:20]:
-        doc_id          = item['pmid'].split()[0].strip()
+        # doc_id          = item['pmid'].split()[0].strip()
+        doc_id          = item['cord_uid'].split()[0].strip()
         pmids_counter.update(Counter([doc_id]))
         par_id          = '0' # item['pmid'].split()[1].strip()
         doc_score       = item['doc_score']
