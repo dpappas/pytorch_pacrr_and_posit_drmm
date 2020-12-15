@@ -132,16 +132,21 @@ for question in tqdm(d['questions']):
     kept    = []
     ccc     = Counter()
     for d_, s_, sc_, sec_, of1, of2 in results:
+        if(d_ not in q_export['documents']):
+            q_export['documents'].append(d_)
+            if(len(q_export['documents'])==10):
+                break
+    for d_, s_, sc_, sec_, of1, of2 in results:
         if(ccc[d_]==2):
             continue
         q_export['snippets'].append(
             {
-                "document": d_,
-                "offsetInBeginSection": of1,
-                "offsetInEndSection": of2,
-                "text": s_,
-                "beginSection": sec_,
-                "endSection": sec_
+                "document"              : d_,
+                "offsetInBeginSection"  : of1,
+                "offsetInEndSection"    : of2,
+                "text"                  : s_,
+                "beginSection"          : sec_,
+                "endSection"            : sec_
             }
         )
         kept.append((d_, sc_, s_))
