@@ -153,23 +153,21 @@ for question in tqdm(d['questions']):
         ccc.update(Counter([(d_)]))
         if(sum(ccc.values()) == 10):
             break
-    print('')
-    print(40 * '=')
-    print(qtext)
-    print('\n'.join([s[2] for s in kept]))
-    eas = Counter(
-        flattened(
-            list(
-                get_answers(qtext, sent_text[2])
-                for sent_text in kept
-            )
-        )
-    )
-    pprint(eas.most_common(10))
+    # print('')
+    # print(40 * '=')
+    # print(qtext)
+    # print('\n'.join([s[2] for s in kept]))
+    eas = Counter(flattened(list(get_answers(qtext, sent_text[2]) for sent_text in kept)))
+    # pprint(eas.most_common(10))
+    if(qtype == 'factoid'):
+        q_export['exact_answer'] =[[ea[0]] for ea in eas.most_common(5)]
+        q_export['answer_ready'] = True
+    elif(qtype == 'list'):
+        q_export['exact_answer'] =[[ea[0]] for ea in eas.most_common(10)]
+        q_export['answer_ready'] = True
     ####################################################################
     exported["questions"].append(q_export)
     ####################################################################
-    break
 
 '''
 for question in tqdm(d['questions']):
