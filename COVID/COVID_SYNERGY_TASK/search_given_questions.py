@@ -177,6 +177,9 @@ for question in tqdm(d['questions']):
                 q_export['ideal_answer'] = q_export['ideal_answer'] + ' ' + snip['text']
                 q_export['ideal_answer'] = q_export['ideal_answer'].strip()
         q_export['answer_ready'] = True
+    elif (qtype == 'yesno'):
+        q_export['answer_ready'] = True
+        q_export['exact_answer'] = 'yes'
     ####################################################################
     exported["questions"].append(q_export)
     ####################################################################
