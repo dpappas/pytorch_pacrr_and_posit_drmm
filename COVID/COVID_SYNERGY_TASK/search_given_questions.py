@@ -6,18 +6,30 @@ from    retrieve_and_rerank import retrieve_given_question
 from    retrieve_docs       import get_noun_chunks
 from    emit_exact_answers  import emit_exact_answers
 from    tqdm import tqdm
+from textacy import make_spacy_doc, keyterms
+
+bioclean_mod    = lambda t: re.sub('[~`@#$-=<>/.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').replace("\n", ' ').strip().lower())
+import spacy
+nlp 	= spacy.load("en_core_sci_lg")
+
+def get_keyphrases_sgrank(text):
+    # doc = make_spacy_doc(bioclean_mod(text), lang='en')
+    doc = nlp(text)
+    keyphrases = keyterms.sgrank(
+        doc,
+        ngrams       = tuple(range(1, 4)),
+        normalize    = None,  # None, # u'lemma', # u'lower'
+        window_width = 50,
+        n_keyterms   = 5,
+        idf          = None,
+        include_pos  = ("NOUN", "PROPN", "ADJ"),  # ("NOUN", "PROPN", "ADJ"), # ("NOUN", "PROPN", "ADJ", "VERB", "CCONJ"),
+    )
+    keyphrases = [t[0] for t in keyphrases[0]]
+    return keyphrases
 
 from elasticsearch import Elasticsearch
-with open('/home/dpappas/elk_ips.txt') as fp:
-    cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
-    fp.close()
-
-es          = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
-doc_index   = 'pubmed_abstracts_joint_0_1'
-es_res      = es.mget(
-    body = {'ids': list(qid_to_pos_docids['5fc9a72c30a653d77d000020'])},
-    index=doc_index
-)
+es          = Elasticsearch('127.0.0.1', verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+doc_index   = 'allenai_covid_index_2020_11_29_csv'
 
 flattened = lambda l: [item for sublist in l for item in sublist]
 
@@ -34,13 +46,12 @@ opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset2_ouput
 d               = json.load(open(fpath))
 
 feedback            = json.load(open(feedback_fpath))
-qtext_to_qid        = {}
-qid_to_pos_docids   = {}
-qid_to_neg_docids   = {}
-qid_to_pos_chunks   = {}
-qid_to_neg_chunks   = {}
-qid_to_pos_snips    = {}
-qid_to_neg_snips    = {}
+qtext_to_qid            = {}
+qid_to_pos_doc_chunks   = {}
+qid_to_pos_chunks       = {}
+qid_to_neg_chunks       = {}
+qid_to_pos_snips        = {}
+qid_to_neg_snips        = {}
 for quest in tqdm(feedback['questions']):
     # print(quest.keys())
     print(quest['body'])
@@ -54,11 +65,25 @@ for quest in tqdm(feedback['questions']):
     qid_to_neg_chunks[quest['id']]  = neg_chunks
     qid_to_pos_snips[quest['id']]   = pos_snips
     qid_to_neg_snips[quest['id']]   = neg_snips
-    qid_to_pos_docids[quest['id']]  = [sn['id'] for sn in quest['documents'] if(sn['golden'])]
-    qid_to_neg_docids[quest['id']]  = [sn['id'] for sn in quest['documents'] if(not sn['golden'])]
     #################################################
+    # pos_docids                      = [sn['id'] for sn in quest['documents'] if(sn['golden'])]
+    # es_res                          = es.mget(body={'ids': pos_docids}, index=doc_index)
+    # posdocs                         = [t['_source']['joint_text'].replace('--------------------',' ') for t in es_res['docs'] if '_source' in t]
+    # posdocs_chunks                  = Counter([t.lower() for t in flattened([get_keyphrases_sgrank(sn) for sn in posdocs])])
+    # #################################################
+    # neg_docids                      = [sn['id'] for sn in quest['documents'] if(not sn['golden'])]
+    # es_res                          = es.mget(body={'ids': neg_docids}, index=doc_index)
+    # negdocs                         = [t['_source']['joint_text'].replace('--------------------',' ') for t in es_res['docs'] if '_source' in t]
+    # negdocs_chunks                  = Counter([t.lower() for t in flattened([get_keyphrases_sgrank(sn) for sn in negdocs])])
+    # #################################################
+    # pprint(
+    #     [
+    #         c for c in posdocs_chunks
+    #         if c not in negdocs_chunks
+    #      ]
+    # )
+    # break
 
-pprint(set(qid_to_pos_chunks['5fc9a72c30a653d77d000020'].keys()) - set(qid_to_neg_chunks['5fc9a72c30a653d77d000020'].keys()))
 
 
 nonos           = ['sars', 'sars - cov', 'cov - 2', 'coronavirus', 'covid - 19', 'covid']
