@@ -3,9 +3,21 @@ import  json, re
 from    collections import Counter
 from    pprint import pprint
 from    retrieve_and_rerank import retrieve_given_question
-from    retrieve_docs import get_noun_chunks
-from    emit_exact_answers import emit_exact_answers
+from    retrieve_docs       import get_noun_chunks
+from    emit_exact_answers  import emit_exact_answers
 from    tqdm import tqdm
+
+from elasticsearch import Elasticsearch
+with open('/home/dpappas/elk_ips.txt') as fp:
+    cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
+    fp.close()
+
+es          = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+doc_index   = 'pubmed_abstracts_joint_0_1'
+es_res      = es.mget(
+    body = {'ids': list(qid_to_pos_docids['5fc9a72c30a653d77d000020'])},
+    index=doc_index
+)
 
 flattened = lambda l: [item for sublist in l for item in sublist]
 
@@ -20,6 +32,34 @@ feedback_fpath  = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round
 fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset2.json'
 opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset2_ouputs.json'
 d               = json.load(open(fpath))
+
+feedback            = json.load(open(feedback_fpath))
+qtext_to_qid        = {}
+qid_to_pos_docids   = {}
+qid_to_neg_docids   = {}
+qid_to_pos_chunks   = {}
+qid_to_neg_chunks   = {}
+qid_to_pos_snips    = {}
+qid_to_neg_snips    = {}
+for quest in tqdm(feedback['questions']):
+    # print(quest.keys())
+    print(quest['body'])
+    qtext_to_qid[quest['body']]     = quest['id']
+    #################################################
+    neg_snips                       = [sn['text'] for sn in quest['snippets'] if(not sn['golden'])]
+    pos_snips                       = [sn['text'] for sn in quest['snippets'] if(sn['golden'])]
+    neg_chunks                      = Counter([t.lower() for t in flattened([get_noun_chunks(sn) for sn in neg_snips])])
+    pos_chunks                      = Counter([t.lower() for t in flattened([get_noun_chunks(sn) for sn in pos_snips])])
+    qid_to_pos_chunks[quest['id']]  = pos_chunks
+    qid_to_neg_chunks[quest['id']]  = neg_chunks
+    qid_to_pos_snips[quest['id']]   = pos_snips
+    qid_to_neg_snips[quest['id']]   = neg_snips
+    qid_to_pos_docids[quest['id']]  = [sn['id'] for sn in quest['documents'] if(sn['golden'])]
+    qid_to_neg_docids[quest['id']]  = [sn['id'] for sn in quest['documents'] if(not sn['golden'])]
+    #################################################
+
+pprint(set(qid_to_pos_chunks['5fc9a72c30a653d77d000020'].keys()) - set(qid_to_neg_chunks['5fc9a72c30a653d77d000020'].keys()))
+
 
 nonos           = ['sars', 'sars - cov', 'cov - 2', 'coronavirus', 'covid - 19', 'covid']
 nonos_2         = ['et al', 'et. al', '>']
