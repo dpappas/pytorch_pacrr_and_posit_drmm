@@ -89,7 +89,6 @@ for quest in tqdm(feedback['questions']):
     # break
 
 
-
 nonos           = ['sars', 'sars - cov', 'cov - 2', 'coronavirus', 'covid - 19', 'covid']
 nonos_2         = ['et al', 'et. al', '>']
 sent_min_chars  = 20
