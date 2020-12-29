@@ -6,7 +6,9 @@ from    retrieve_and_rerank import retrieve_given_question
 from    retrieve_docs       import get_noun_chunks
 from    emit_exact_answers  import emit_exact_answers
 from    tqdm import tqdm
-from textacy import make_spacy_doc, keyterms
+
+'''
+from    textacy import make_spacy_doc, keyterms
 
 bioclean_mod    = lambda t: re.sub('[~`@#$-=<>/.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').replace("\n", ' ').strip().lower())
 import spacy
@@ -30,6 +32,7 @@ def get_keyphrases_sgrank(text):
 from elasticsearch import Elasticsearch
 es          = Elasticsearch('127.0.0.1', verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 doc_index   = 'allenai_covid_index_2020_11_29_csv'
+'''
 
 flattened = lambda l: [item for sublist in l for item in sublist]
 
