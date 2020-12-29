@@ -147,7 +147,6 @@ def get_first_n(qtext, n, exclude_pmids=None):
         })
     return temp_1
 
-
 if __name__ == '__main__':
     qtext   = 'Which diagnostic test is approved for coronavirus infection screening?'
     res     = get_first_n(qtext, n=100, exclude_pmids=None)
