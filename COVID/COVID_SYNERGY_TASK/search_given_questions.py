@@ -8,19 +8,19 @@ from    tqdm import tqdm
 
 flattened = lambda l: [item for sublist in l for item in sublist]
 
-# fpath   = '/home/dpappas/BioASQ-taskSynergy-dryRun-testset'
-fpath   = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset1'
-opath   = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset1_ouputs.json'
-d       = json.load(open(fpath))
+# # fpath   = '/home/dpappas/BioASQ-taskSynergy-dryRun-testset'
 
-nonos           = [
-'sars',
-'sars - cov',
-'cov - 2',
-'coronavirus',
-'covid - 19',
-'covid',
-]
+# feedback_fpath  = None
+# fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset1'
+# opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset1_ouputs.json'
+# d               = json.load(open(fpath))
+
+feedback_fpath  = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round2.json'
+fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset2.json'
+opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset2_ouputs.json'
+d               = json.load(open(fpath))
+
+nonos           = ['sars', 'sars - cov', 'cov - 2', 'coronavirus', 'covid - 19', 'covid']
 nonos_2         = ['et al', 'et. al', '>']
 sent_min_chars  = 20
 
