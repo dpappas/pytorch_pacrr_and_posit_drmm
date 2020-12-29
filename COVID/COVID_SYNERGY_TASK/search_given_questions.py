@@ -112,6 +112,8 @@ def get_answers(qtext, le_text):
 
 exported = {"questions": []}
 
+# question = d['questions'][0]
+
 for question in tqdm(d['questions']):
     qtext                   = question['body']
     qtype                   = question['type']
@@ -130,6 +132,8 @@ for question in tqdm(d['questions']):
         n               = 100,
         exclude_pmids   = qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']]
     )
+    if(any([tt['pmid'] in qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']] for tt in res])):
+        raise Exception('spam', 'eggs')
     ###############################################################################################################
     par_ex_ans_counter      = Counter()
     all_sents               = []
