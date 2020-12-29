@@ -3,6 +3,7 @@ import  json, re
 from    collections import Counter
 from    pprint import pprint
 from    retrieve_and_rerank import retrieve_given_question
+from    retrieve_docs import get_noun_chunks
 from    emit_exact_answers import emit_exact_answers
 from    tqdm import tqdm
 
