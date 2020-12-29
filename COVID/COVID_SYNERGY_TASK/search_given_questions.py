@@ -125,7 +125,11 @@ for question in tqdm(d['questions']):
         "ideal_answer"  : '',
         "exact_answer"  : []
     }
-    res                     = retrieve_given_question(qtext)
+    res                     = retrieve_given_question(
+        qtext,
+        n               = 100,
+        exclude_pmids   = qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']]
+    )
     ###############################################################################################################
     par_ex_ans_counter      = Counter()
     all_sents               = []
@@ -255,6 +259,7 @@ for question in tqdm(d['questions']):
     ####################################################################
     exported["questions"].append(q_export)
     ####################################################################
+    break
 
 with open(opath, 'w') as f:
     f.write(json.dumps(exported, indent=4, sort_keys=False))

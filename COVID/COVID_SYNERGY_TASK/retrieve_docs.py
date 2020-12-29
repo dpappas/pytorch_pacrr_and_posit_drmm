@@ -99,7 +99,15 @@ def retrieve_some_docs(qtext, n=100, exclude_pmids=None):
         }
     }
     if(exclude_pmids):
-        bod["query"]["bool"]["must_not"] = [{"_id": {"values": exclude_pmids}}]
+        # bod["query"]["bool"]["must_not"] = [{"_id": {"values": exclude_pmids}}]
+        bod["query"]["bool"]["must_not"] = [
+            {
+                "ids": {
+                    "type" : "_doc",
+                    "values": exclude_pmids
+                }
+            }
+        ]
     res = es.search(index=index, body=bod)
     return res
 
@@ -149,7 +157,7 @@ def get_first_n(qtext, n, exclude_pmids=None):
 
 if __name__ == '__main__':
     qtext   = 'Which diagnostic test is approved for coronavirus infection screening?'
-    res     = get_first_n(qtext, n=100, exclude_pmids=None)
+    res     = get_first_n(qtext, n=100, exclude_pmids=['6crputzl'])
     pprint(res)
 
 
