@@ -127,12 +127,12 @@ for question in tqdm(d['questions']):
         "ideal_answer"  : '',
         "exact_answer"  : []
     }
-    res                     = retrieve_given_question(
-        qtext,
-        n               = 100,
-        exclude_pmids   = qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']]
-    )
-    if(any([tt['pmid'] in qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']] for tt in res])):
+    try:
+        exclude_pmids = qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']]
+    except:
+        exclude_pmids = []
+    res                     = retrieve_given_question(qtext, n = 100, exclude_pmids = exclude_pmids)
+    if(any([tt['pmid'] in exclude_pmids for tt in res])):
         raise Exception('spam', 'eggs')
     ###############################################################################################################
     par_ex_ans_counter      = Counter()
@@ -263,7 +263,6 @@ for question in tqdm(d['questions']):
     ####################################################################
     exported["questions"].append(q_export)
     ####################################################################
-    break
 
 with open(opath, 'w') as f:
     f.write(json.dumps(exported, indent=4, sort_keys=False))
