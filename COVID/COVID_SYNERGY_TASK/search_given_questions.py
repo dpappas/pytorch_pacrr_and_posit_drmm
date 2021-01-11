@@ -43,12 +43,15 @@ flattened = lambda l: [item for sublist in l for item in sublist]
 # opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset1_ouputs.json'
 # d               = json.load(open(fpath))
 
-feedback_fpath  = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round2.json'
-fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset2.json'
-opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset2_ouputs.json'
+fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset3.json'
+opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset3_ouputs.json'
 d               = json.load(open(fpath))
 
-feedback            = json.load(open(feedback_fpath))
+feedback_fpaths = [
+    '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round2.json',
+    '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round3.json'
+]
+
 qtext_to_qid            = {}
 # qid_to_pos_doc_chunks   = {}
 qid_to_pos_chunks       = {}
@@ -57,40 +60,41 @@ qid_to_pos_snips        = {}
 qid_to_neg_snips        = {}
 qid_to_pos_docids       = {}
 qid_to_neg_docids       = {}
-for quest in tqdm(feedback['questions']):
-    # print(quest.keys())
-    print(quest['body'])
-    qtext_to_qid[quest['body']]     = quest['id']
-    #################################################
-    neg_snips                       = [sn['text'] for sn in quest['snippets'] if(not sn['golden'])]
-    pos_snips                       = [sn['text'] for sn in quest['snippets'] if(sn['golden'])]
-    neg_chunks                      = Counter([t.lower() for t in flattened([get_noun_chunks(sn) for sn in neg_snips])])
-    pos_chunks                      = Counter([t.lower() for t in flattened([get_noun_chunks(sn) for sn in pos_snips])])
-    qid_to_pos_chunks[quest['id']]  = pos_chunks
-    qid_to_neg_chunks[quest['id']]  = neg_chunks
-    qid_to_pos_snips[quest['id']]   = pos_snips
-    qid_to_neg_snips[quest['id']]   = neg_snips
-    #################################################
-    pos_docids                      = [sn['id'] for sn in quest['documents'] if(sn['golden'])]
-    qid_to_pos_docids[quest['id']]  = pos_docids
-    # es_res                          = es.mget(body={'ids': pos_docids}, index=doc_index)
-    # posdocs                         = [t['_source']['joint_text'].replace('--------------------',' ') for t in es_res['docs'] if '_source' in t]
-    # posdocs_chunks                  = Counter([t.lower() for t in flattened([get_keyphrases_sgrank(sn) for sn in posdocs])])
-    # #################################################
-    neg_docids                      = [sn['id'] for sn in quest['documents'] if(not sn['golden'])]
-    qid_to_neg_docids[quest['id']]  = neg_docids
-    # es_res                          = es.mget(body={'ids': neg_docids}, index=doc_index)
-    # negdocs                         = [t['_source']['joint_text'].replace('--------------------',' ') for t in es_res['docs'] if '_source' in t]
-    # negdocs_chunks                  = Counter([t.lower() for t in flattened([get_keyphrases_sgrank(sn) for sn in negdocs])])
-    # #################################################
-    # pprint(
-    #     [
-    #         c for c in posdocs_chunks
-    #         if c not in negdocs_chunks
-    #      ]
-    # )
-    # break
-
+for feedback_fpath in feedback_fpaths:
+    feedback            = json.load(open(feedback_fpath))
+    for quest in tqdm(feedback['questions']):
+        # print(quest.keys())
+        print(quest['body'])
+        qtext_to_qid[quest['body']]     = quest['id']
+        #################################################
+        neg_snips                       = [sn['text'] for sn in quest['snippets'] if(not sn['golden'])]
+        pos_snips                       = [sn['text'] for sn in quest['snippets'] if(sn['golden'])]
+        neg_chunks                      = Counter([t.lower() for t in flattened([get_noun_chunks(sn) for sn in neg_snips])])
+        pos_chunks                      = Counter([t.lower() for t in flattened([get_noun_chunks(sn) for sn in pos_snips])])
+        qid_to_pos_chunks[quest['id']]  = pos_chunks
+        qid_to_neg_chunks[quest['id']]  = neg_chunks
+        qid_to_pos_snips[quest['id']]   = pos_snips
+        qid_to_neg_snips[quest['id']]   = neg_snips
+        #################################################
+        pos_docids                      = [sn['id'] for sn in quest['documents'] if(sn['golden'])]
+        qid_to_pos_docids[quest['id']]  = pos_docids
+        # es_res                          = es.mget(body={'ids': pos_docids}, index=doc_index)
+        # posdocs                         = [t['_source']['joint_text'].replace('--------------------',' ') for t in es_res['docs'] if '_source' in t]
+        # posdocs_chunks                  = Counter([t.lower() for t in flattened([get_keyphrases_sgrank(sn) for sn in posdocs])])
+        # #################################################
+        neg_docids                      = [sn['id'] for sn in quest['documents'] if(not sn['golden'])]
+        qid_to_neg_docids[quest['id']]  = neg_docids
+        # es_res                          = es.mget(body={'ids': neg_docids}, index=doc_index)
+        # negdocs                         = [t['_source']['joint_text'].replace('--------------------',' ') for t in es_res['docs'] if '_source' in t]
+        # negdocs_chunks                  = Counter([t.lower() for t in flattened([get_keyphrases_sgrank(sn) for sn in negdocs])])
+        # #################################################
+        # pprint(
+        #     [
+        #         c for c in posdocs_chunks
+        #         if c not in negdocs_chunks
+        #      ]
+        # )
+        # break
 
 nonos           = ['sars', 'sars - cov', 'cov - 2', 'coronavirus', 'covid - 19', 'covid']
 nonos_2         = ['et al', 'et. al', '>']
