@@ -42,7 +42,7 @@ actions             = []
 csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2021-01-10/metadata.csv'
 with open(csv_path, 'r') as read_obj:
     csv_reader = reader(read_obj)
-    for row in tqdm(csv_reader, total=368619):
+    for row in tqdm(csv_reader, total=500000):
         (
             cord_uid,
             sha,
