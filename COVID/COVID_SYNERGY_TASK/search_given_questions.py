@@ -71,19 +71,39 @@ for feedback_fpath in feedback_fpaths:
         pos_snips                       = [sn['text'] for sn in quest['snippets'] if(sn['golden'])]
         neg_chunks                      = Counter([t.lower() for t in flattened([get_noun_chunks(sn) for sn in neg_snips])])
         pos_chunks                      = Counter([t.lower() for t in flattened([get_noun_chunks(sn) for sn in pos_snips])])
-        qid_to_pos_chunks[quest['id']]  = pos_chunks
-        qid_to_neg_chunks[quest['id']]  = neg_chunks
-        qid_to_pos_snips[quest['id']]   = pos_snips
-        qid_to_neg_snips[quest['id']]   = neg_snips
+        #################################################
+        try:
+            qid_to_pos_chunks[quest['id']].update(pos_chunks)
+        except:
+            qid_to_pos_chunks[quest['id']]  = pos_chunks
+        try:
+            qid_to_neg_chunks[quest['id']].update(neg_chunks)
+        except:
+            qid_to_neg_chunks[quest['id']]  = neg_chunks
+        #################################################
+        try:
+            qid_to_pos_snips[quest['id']].extend(pos_snips)
+        except:
+            qid_to_pos_snips[quest['id']]   = pos_snips
+        try:
+            qid_to_neg_snips[quest['id']].extend(neg_snips)
+        except:
+            qid_to_neg_snips[quest['id']]   = neg_snips
         #################################################
         pos_docids                      = [sn['id'] for sn in quest['documents'] if(sn['golden'])]
-        qid_to_pos_docids[quest['id']]  = pos_docids
+        try:
+            qid_to_pos_docids[quest['id']].extend(pos_docids)
+        except:
+            qid_to_pos_docids[quest['id']]  = pos_docids
         # es_res                          = es.mget(body={'ids': pos_docids}, index=doc_index)
         # posdocs                         = [t['_source']['joint_text'].replace('--------------------',' ') for t in es_res['docs'] if '_source' in t]
         # posdocs_chunks                  = Counter([t.lower() for t in flattened([get_keyphrases_sgrank(sn) for sn in posdocs])])
         # #################################################
         neg_docids                      = [sn['id'] for sn in quest['documents'] if(not sn['golden'])]
-        qid_to_neg_docids[quest['id']]  = neg_docids
+        try:
+            qid_to_neg_docids[quest['id']].extend(neg_docids)
+        except:
+            qid_to_neg_docids[quest['id']] = neg_docids
         # es_res                          = es.mget(body={'ids': neg_docids}, index=doc_index)
         # negdocs                         = [t['_source']['joint_text'].replace('--------------------',' ') for t in es_res['docs'] if '_source' in t]
         # negdocs_chunks                  = Counter([t.lower() for t in flattened([get_keyphrases_sgrank(sn) for sn in negdocs])])
