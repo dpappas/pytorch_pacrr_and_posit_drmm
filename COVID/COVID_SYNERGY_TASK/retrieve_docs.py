@@ -113,7 +113,7 @@ def retrieve_some_docs(qtext, n=100, exclude_pmids=None):
 #####################################################################################
 
 # index   = 'allenai_covid_index_2020_11_29_csv'
-index   = 'allenai_covid_index_2021_01_10_csv'
+index   = 'allenai_covid_index_2021_01_25_csv'
 es      = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
 #####################################################################################
