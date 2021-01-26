@@ -30,7 +30,8 @@ def upload_to_elk():
     actions         = []
 
 # index       = 'allenai_covid_index_2020_11_29_csv'
-index       = 'allenai_covid_index_2021_01_10_csv'
+# index       = 'allenai_covid_index_2021_01_10_csv'
+index       = 'allenai_covid_index_2021_01_25_csv'
 es          = Elasticsearch(['127.0.0.1:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
 b_size              = 250
@@ -39,7 +40,8 @@ total_paragraphs    = 0
 database_instances  = []
 actions             = []
 # csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2020-11-29/metadata.csv'
-csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2021-01-10/metadata.csv'
+# csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2021-01-10/metadata.csv'
+csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2021-01-25/metadata.csv'
 with open(csv_path, 'r') as read_obj:
     csv_reader = reader(read_obj)
     for row in tqdm(csv_reader, total=500000):
