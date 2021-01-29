@@ -122,7 +122,6 @@ def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean,
     else:
         return score
 
-
 # Create final file for submission using the BioASQ format
 def createBioASQformat(dataset, idf_scores, avgdl, normalized, mean, deviation, rare_word):
     with open(dataset, 'r') as f1:
