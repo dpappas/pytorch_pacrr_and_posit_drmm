@@ -1349,14 +1349,15 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        print(gs_emits.size())
-        final_good_output   = gs_emits
-        final_bad_output    = bs_emits
+        final_good_output   = torch.sigmoid(gs_emits.max())
+        final_bad_output    = torch.sigmoid(bs_emits.max())
+        print(final_good_output)
+        print(final_bad_output)
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-use_cuda = torch.cuda.is_available()
+use_cuda = False #torch.cuda.is_available()
 ##########################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
@@ -1435,6 +1436,11 @@ for run in range(run_from, run_to):
             logger.info('early stop in epoch {} . waited for {} epochs'.format(epoch, early_stop))
             break
 
+'''
+
+CUDA_VISIBLE_DEVICES=1 python3.6 train_w2v_jpdrmm_maxpoolonly.py
+
+'''
 
 
 
