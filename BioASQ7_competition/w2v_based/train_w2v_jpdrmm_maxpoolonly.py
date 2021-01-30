@@ -1323,10 +1323,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        #
-        print(gs_emits.size())
-        final_good_output   = gs_emits
+        gs_emits            = torch.sigmoid(gs_emits)
+        final_good_output   = gs_emits.max()
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
@@ -1349,15 +1347,16 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        final_good_output   = torch.sigmoid(gs_emits.max())
-        final_bad_output    = torch.sigmoid(bs_emits.max())
-        print(final_good_output)
-        print(final_bad_output)
+        gs_emits            = torch.sigmoid(gs_emits)
+        bs_emits            = torch.sigmoid(bs_emits)
+        #
+        final_good_output   = gs_emits.max()
+        final_bad_output    = bs_emits.max()
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
 
-use_cuda = False #torch.cuda.is_available()
+use_cuda = True #False #torch.cuda.is_available()
 ##########################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'

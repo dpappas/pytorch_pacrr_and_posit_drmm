@@ -183,3 +183,99 @@ for batch_no in range(1,6):
     print(30 *'-')
     ##################################################################################################
 
+
+for batch_no in range(1,6):
+    le_out  = {"questions": []}
+    le_docs = pickle.load(open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_docset_top100.test.pkl'.format(batch_no),'rb'))
+    d       = pickle.load(open('/home/dpappas/bioasq_all/bioasq7/data/test_batch_{}/bioasq7_bm25_top100/bioasq7_bm25_top100.test.pkl'.format(batch_no), 'rb'))
+    d2      = json.load(open('bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batch_no,batch_no)))
+    ##################################################################################################
+    id2rel      = {}
+    id2relsnip  = {}
+    for q in d2['questions']:
+        id2rel[q['id']]     = [doc.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for doc in q['documents']]
+        id2relsnip[q['id']] = [bioclean(snip['text'].strip()) for snip in q['snippets']]
+    ##################################################################################################
+    recalls         = []
+    recalls_snip    = []
+    for quer in d['queries']:
+        qo              = {
+            "body"  : "n/a",
+            "id"    : quer['query_id'],
+            "documents": [],
+            "snippets": []
+        }
+        retr_doc_ids    = [doc['doc_id'] for doc in quer['retrieved_documents'][:100]]
+        retr_ids        = [doc_id for doc_id in retr_doc_ids if doc_id in id2rel[quer['query_id']]][:10]
+        qo['documents'] = ["http://www.ncbi.nlm.nih.gov/pubmed/{}".format(did) for did in retr_ids]
+        found           = float(len(retr_ids))
+        tot             = float(len(id2rel[quer['query_id']]))
+        recalls.append(found/tot)
+        #################
+        all_sents       = []
+        for doc_id in retr_doc_ids:
+            for sent in sent_tokenize(le_docs[doc_id]['title']):
+                all_sents.append((sent, doc_id, 'title', le_docs[doc_id]['title'].index(sent)))
+            for sent in sent_tokenize(le_docs[doc_id]['abstractText']):
+                all_sents.append((sent, doc_id, 'abstractText', le_docs[doc_id]['abstractText'].index(sent)))
+        retr_snips          = list(set(all_sents))
+        #################
+        if(len(id2relsnip[quer['query_id']]) != 0):
+            retr_snips      = [t for t in retr_snips if snip_is_relevant(bioclean(t[0]), id2relsnip[quer['query_id']])][:10]
+            found           = float(len(retr_snips))
+            tot             = float(len(id2relsnip[quer['query_id']]))
+            recalls_snip.append(found/tot)
+            for rsn in retr_snips:
+                if(rsn in retr_ids):
+                    qo['snippets'].append(
+                        {
+                            "beginSection"          : rsn[2],
+                            "document"              : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(rsn[1]),
+                            "endSection"            : rsn[2],
+                            "offsetInBeginSection"  : rsn[3],
+                            "offsetInEndSection"    : rsn[3]+len(rsn[0]),
+                            "text"                  : rsn[0]
+                        }
+                    )
+        #################
+        le_out['questions'].append(qo)
+    ##################################################################################################
+    print(np.average(recalls))
+    print(np.average(recalls_snip))
+    fout = '/home/dpappas/gold_{}'.format(batch_no)
+    with open(fout, 'w') as f:
+        gb = f.write(json.dumps(le_out, indent=4, sort_keys=True))
+        f.close()
+    print(30 *'-')
+    ##################################################################################################
+
+'''
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_1/BioASQ-task7bPhaseB-testset1 \
+/home/dpappas/gold_1 | grep ^MAP
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_2/BioASQ-task7bPhaseB-testset2 \
+/home/dpappas/gold_2 | grep ^MAP
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_3/BioASQ-task7bPhaseB-testset3 \
+/home/dpappas/gold_3 | grep ^MAP
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_4/BioASQ-task7bPhaseB-testset4 \
+/home/dpappas/gold_4 | grep ^MAP
+
+java -Xmx10G -cp /home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar \
+evaluation.EvaluatorTask1b -phaseA -e 5 \
+/home/dpappas/bioasq_all/bioasq7/data/test_batch_5/BioASQ-task7bPhaseB-testset5 \
+/home/dpappas/gold_5 | grep ^MAP
+
+'''
+
+
