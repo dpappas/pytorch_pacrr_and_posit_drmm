@@ -9,6 +9,7 @@ for batch_no in range(1,6):
     id2rel = {}
     for q in d2['questions']:
         id2rel[q['id']] = [doc.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for doc in q['documents']]
+        gold_snip_texts = [snip['text'].strip() for snip in q['snippets']]
     ################################################################################################################################
     recalls = []
     for quer in d['questions']:
@@ -17,8 +18,9 @@ for batch_no in range(1,6):
             doc for doc in quer['documents'][:10]
             if doc in id2rel[quer['id']]
         ]
-        found 		= float(len(retr_ids))
-        tot 		= float(len(id2rel[quer['id']]))
+        retr_snips      = quer['snippets'][0]['text']
+        found           = float(len(retr_ids))
+        tot             = float(len(id2rel[quer['id']]))
         recalls.append(found/tot)
     print(np.average(recalls))
     ################################################################################################################################

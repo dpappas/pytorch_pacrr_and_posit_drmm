@@ -1424,7 +1424,7 @@ for run in range(run_from, run_to):
     random.seed(my_seed)
     torch.manual_seed(my_seed)
     #
-    odir    = 'bioasq_jpdrmm_2L_0p01_run_{}/'.format(run)
+    odir    = 'bioasq_w2vjpdrmm_maxpoolonly_2L_0p01_run_{}/'.format(run)
     odir    = os.path.join(odd, odir)
     print(odir)
     if(not os.path.exists(odir)):
