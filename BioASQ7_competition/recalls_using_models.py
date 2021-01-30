@@ -44,7 +44,8 @@ for batch_no in range(1,6):
         #################
         retr_snips      = [bioclean(snip['text']) for snip in quer['snippets'][:10]]
         retr_snips      = [t for t in retr_snips if snip_is_relevant(t, id2relsnip[quer['id']])]
-        recalls_snip.append(float(len(retr_snips))/float(len(id2relsnip[quer['id']])))
+        if(len(id2relsnip[quer['id']]) != 0):
+            recalls_snip.append(float(len(retr_snips))/float(len(id2relsnip[quer['id']])))
         #################
     print(np.average(recalls))
     print(np.average(recalls_snip))
