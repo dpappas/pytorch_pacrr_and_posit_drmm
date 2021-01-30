@@ -78,8 +78,8 @@ def snip_is_relevant(one_sent, gold_snips):
                 # (gold_snip.encode('ascii', 'ignore') in one_sent.encode('ascii','ignore'))
                 (one_sent in gold_snip or gold_snip in one_sent) and
                 (
-                        len(one_sent) <= len(gold_snip)+3 and
-                        len(one_sent) > len(gold_snip) - 3
+                        len(one_sent) < len(gold_snip)+6 and
+                        len(one_sent) > len(gold_snip) - 6
                 )
                 for gold_snip in gold_snips
             ]
