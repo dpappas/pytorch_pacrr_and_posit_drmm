@@ -5,6 +5,106 @@ import re
 
 bioclean    = lambda t: re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').strip().lower())
 
+def tf(term, document):
+    tf = 0
+    for word in document:
+        if word == term:
+            tf += 1
+    if len(document) == 0:
+        return tf
+    else:
+        return tf / len(document)
+
+def similarity_score(query, document, k1, b, idf_scores, avgdl, normalize, mean, deviation, rare_word):
+    score = 0
+    for query_term in query:
+        if query_term not in idf_scores:
+            score += rare_word * (
+                    (tf(query_term, document) * (k1 + 1)) /
+                    (
+                            tf(query_term, document) +
+                            k1 * (1 - b + b * (len(document) / avgdl))
+                    )
+            )
+        else:
+            score += idf_scores[query_term] * ((tf(query_term, document) * (k1 + 1)) / (
+                        tf(query_term, document) + k1 * (1 - b + b * (len(document) / avgdl))))
+    if normalize:
+        return ((score - mean) / deviation)
+    else:
+        return score
+
+def get_bm25_metrics(avgdl=0., mean=0., deviation=0.):
+    ######################################################
+    if (avgdl == 0):
+        total_words = 0
+        total_docs  = 0
+        docs = scan(es, query=None, index=doc_index, doc_type=doc_type)
+        for doc in tqdm(docs, total=30000000):
+            sents = []
+            if('ArticleTitle' in doc['_source']):
+                sents += sent_tokenize(doc['_source']['ArticleTitle'])
+            if('AbstractText' in doc['_source']):
+                sents += sent_tokenize(doc['_source']['AbstractText'])
+            for s in sents:
+                total_words += len(tokenize(s))
+                total_docs += 1.
+        avgdl = float(total_words) / float(total_docs)
+        print('avgdl {} computed'.format(avgdl))
+    else:
+        print('avgdl {} provided'.format(avgdl))
+    ######################################################
+    if (mean == 0 and deviation == 0):
+        BM25scores = []
+        k1, b = 1.2, 0.75
+        for question in tqdm(training_data['questions']):
+            qtext                   = question['body']
+            q_toks                  = tokenize(qtext)
+            idf_scores              = [idf_val(w, idf, max_idf) for w in q_toks]
+            abbreviations, entities = get_scispacy(question['body'])
+            #
+            for retr_doc in get_first_n_20(qtext, 100, idf_scores, entities, abbreviations):
+                sents = []
+                if('ArticleTitle' in retr_doc['_source']):
+                    sents += sent_tokenize(retr_doc['_source']['ArticleTitle'])
+                if('AbstractText' in retr_doc['_source']):
+                    sents += sent_tokenize(retr_doc['_source']['AbstractText'])
+                for sent in sents:
+                    BM25score = similarity_score(q_toks, tokenize(sent), k1, b, idf, avgdl, False, 0, 0, max_idf)
+                    BM25scores.append(BM25score)
+        mean = sum(BM25scores) / float(len(BM25scores))
+        nominator = 0
+        for score in BM25scores:
+            nominator += ((score - mean) ** 2)
+        deviation = math.sqrt((nominator) / float(len(BM25scores) - 1))
+        print('mean {} computed'.format(mean))
+        print('deviation {} computed'.format(deviation))
+    else:
+        print('mean {} provided'.format(mean))
+        print('deviation {} provided'.format(deviation))
+    return avgdl, mean, deviation
+
+def load_idfs(idf_path):
+    print('Loading IDF tables')
+    ###############################
+    with open(idf_path, 'rb') as f:
+        idf = pickle.load(f)
+    max_idf = 0.0
+    for w in idf:
+        if idf[w] > max_idf:
+            max_idf = idf[w]
+    print('Loaded idf tables with max idf {}'.format(max_idf))
+    ###############################
+    return idf, max_idf
+
+k1, b = 1.2, 0.75
+avgdl, mean, deviation  = get_bm25_metrics(avgdl=20.47079583909152, mean=0.6158675062087192, deviation=1.205199607538813)
+
+idf_pickle_path         = '/home/dpappas/bioasq_all/idf.pkl'
+idf, max_idf            = load_idfs(idf_pickle_path)
+
+# BM25score = similarity_score(q_toks, bioclean(sent).split(), k1, b, idf, avgdl, False, 0, 0, max_idf)
+
 def snip_is_relevant(one_sent, gold_snips):
     # print one_sent
     # pprint(gold_snips)
