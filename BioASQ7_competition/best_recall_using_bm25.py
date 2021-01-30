@@ -105,7 +105,7 @@ for batch_no in range(1,6):
     #     tot         = float(len(id2rel[quer['query_id']]))
     #     recalls.append(found/tot)
     for quer in d['queries']:
-        retr_doc_ids    = [doc['doc_id'] for doc in quer['retrieved_documents'][:100]]
+        retr_doc_ids    = [doc['doc_id'] for doc in quer['retrieved_documents'][:10]]
         retr_ids        = [doc_id for doc_id in retr_doc_ids if doc_id in id2rel[quer['query_id']]]
         found           = float(len(retr_ids))
         tot             = float(len(id2rel[quer['query_id']]))
@@ -116,6 +116,20 @@ for batch_no in range(1,6):
             all_sents.extend(sent_tokenize(le_docs[doc_id]['title']))
             all_sents.extend(sent_tokenize(le_docs[doc_id]['abstractText']))
         retr_snips          = list(set(all_sents))
+        #################
+        snipsWscore = [
+            (
+                snip,
+                similarity_score(
+                    bioclean(quer['query_text']),
+                    bioclean(snip).split(), k1, b, idf, avgdl, False, 0, 0, max_idf
+                )
+            )
+            for snip in retr_snips
+        ]
+        snipsWscore = sorted(snipsWscore, key=lambda x: x[1], reverse=True)
+        retr_snips  = [t[0] for t in snipsWscore[:10]]
+        #################
         if(len(id2relsnip[quer['query_id']]) != 0):
             retr_snips      = [t for t in retr_snips if snip_is_relevant(bioclean(t), id2relsnip[quer['query_id']])]
             recalls_snip.append(float(len(retr_snips))/float(len(id2relsnip[quer['query_id']])))
