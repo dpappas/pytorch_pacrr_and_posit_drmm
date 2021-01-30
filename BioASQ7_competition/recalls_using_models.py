@@ -31,8 +31,8 @@ def snip_is_relevant(one_sent, gold_snips):
     )
 
 for batch_no in range(1,6):
-    d = json.load(open('/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_{}/pdrmm_bcnn.json'.format(batch_no)))
-    # d 	= json.load(open('/home/dpappas/bioasq_all/bioasq7/document_results/test_batch_{}/bert_jpdrmm.json'.format(batch_no,batch_no)))
+    # d = json.load(open('/home/dpappas/bioasq_all/bioasq7/snippet_results/test_batch_{}/pdrmm_bcnn.json'.format(batch_no)))
+    d 	= json.load(open('/home/dpappas/bioasq_w2vjpdrmm_maxpoolonly_2L_0p01_run_0/batch{}/v3 test_emit_bioasq.json'.format(batch_no)))
     # d = json.load(
     #     open(
     #         '/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/batch_{}/v3 test_emit_bioasq.json'.format(batch_no)
