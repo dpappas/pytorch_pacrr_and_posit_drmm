@@ -192,18 +192,20 @@ for batch_no in range(1,6):
     ##################################################################################################
     id2rel      = {}
     id2relsnip  = {}
+    id2snips    = {}
     for q in d2['questions']:
         id2rel[q['id']]     = [doc.replace('http://www.ncbi.nlm.nih.gov/pubmed/', '') for doc in q['documents']]
         id2relsnip[q['id']] = [bioclean(snip['text'].strip()) for snip in q['snippets']]
+        id2snips[q['id']]   = q['snippets'][:10]
     ##################################################################################################
     recalls         = []
     recalls_snip    = []
     for quer in d['queries']:
         qo              = {
-            "body"  : "n/a",
-            "id"    : quer['query_id'],
-            "documents": [],
-            "snippets": []
+            "body"      : "n/a",
+            "id"        : quer['query_id'],
+            "documents" : [],
+            "snippets"  : []
         }
         retr_doc_ids    = [doc['doc_id'] for doc in quer['retrieved_documents'][:100]]
         retr_ids        = [doc_id for doc_id in retr_doc_ids if doc_id in id2rel[quer['query_id']]][:10]
@@ -220,23 +222,11 @@ for batch_no in range(1,6):
                 all_sents.append((sent, doc_id, 'abstractText', le_docs[doc_id]['abstractText'].index(sent)))
         retr_snips          = list(set(all_sents))
         #################
-        if(len(id2relsnip[quer['query_id']]) != 0):
-            retr_snips      = [t for t in retr_snips if snip_is_relevant(bioclean(t[0]), id2relsnip[quer['query_id']])][:10]
-            found           = float(len(retr_snips))
-            tot             = float(len(id2relsnip[quer['query_id']]))
-            recalls_snip.append(found/tot)
-            for rsn in retr_snips:
-                if(rsn in retr_ids):
-                    qo['snippets'].append(
-                        {
-                            "beginSection"          : rsn[2],
-                            "document"              : "http://www.ncbi.nlm.nih.gov/pubmed/{}".format(rsn[1]),
-                            "endSection"            : rsn[2],
-                            "offsetInBeginSection"  : rsn[3],
-                            "offsetInEndSection"    : rsn[3]+len(rsn[0]),
-                            "text"                  : rsn[0]
-                        }
-                    )
+        qo['snippets'] = [
+            t
+            for t in id2snips[quer['query_id']]
+            if t['document'] in qo['documents']
+        ][:10]
         #################
         le_out['questions'].append(qo)
     ##################################################################################################
