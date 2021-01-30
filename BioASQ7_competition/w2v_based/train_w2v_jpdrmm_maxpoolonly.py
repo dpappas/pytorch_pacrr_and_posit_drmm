@@ -1086,7 +1086,6 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         self.init_question_weight_module()
         self.init_mlps_for_pooled_attention()
         self.init_sent_output_layer()
-        self.init_doc_out_layer()
         # doc loss func
         self.margin_loss        = nn.MarginRankingLoss(margin=1.0)
         if(use_cuda):
@@ -1326,15 +1325,8 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         #
         good_out_pp         = torch.cat([good_out, doc_gaf], -1)
         #
-        final_good_output   = self.final_layer_1(good_out_pp)
-        final_good_output   = self.final_activ_1(final_good_output)
-        final_good_output   = self.final_layer_2(final_good_output)
-        #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
-        #
+        print(gs_emits.size())
+        final_good_output   = gs_emits
         return final_good_output, gs_emits
     def forward(self, doc1_sents_embeds, doc2_sents_embeds, question_embeds, q_idfs, sents_gaf, sents_baf, doc_gaf, doc_baf):
         q_idfs              = autograd.Variable(torch.FloatTensor(q_idfs),              requires_grad=False)
@@ -1357,27 +1349,9 @@ class Sent_Posit_Drmm_Modeler(nn.Module):
         good_out, gs_emits  = self.do_for_one_doc_cnn(doc1_sents_embeds, sents_gaf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         bad_out, bs_emits   = self.do_for_one_doc_cnn(doc2_sents_embeds, sents_baf, question_embeds, q_context, q_weights, self.k_sent_maxpool)
         #
-        good_out_pp         = torch.cat([good_out, doc_gaf], -1)
-        bad_out_pp          = torch.cat([bad_out, doc_baf], -1)
-        #
-        final_good_output   = self.final_layer_1(good_out_pp)
-        final_good_output   = self.final_activ_1(final_good_output)
-        final_good_output   = self.final_layer_2(final_good_output)
-        #
-        gs_emits            = gs_emits.unsqueeze(-1)
-        gs_emits            = torch.cat([gs_emits, final_good_output.unsqueeze(-1).expand_as(gs_emits)], -1)
-        gs_emits            = self.oo_layer(gs_emits).squeeze(-1)
-        gs_emits            = torch.sigmoid(gs_emits)
-        #
-        final_bad_output    = self.final_layer_1(bad_out_pp)
-        final_bad_output    = self.final_activ_1(final_bad_output)
-        final_bad_output    = self.final_layer_2(final_bad_output)
-        #
-        bs_emits            = bs_emits.unsqueeze(-1)
-        # bs_emits            = torch.cat([bs_emits, final_good_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits            = torch.cat([bs_emits, final_bad_output.unsqueeze(-1).expand_as(bs_emits)], -1)
-        bs_emits            = self.oo_layer(bs_emits).squeeze(-1)
-        bs_emits            = torch.sigmoid(bs_emits)
+        print(gs_emits.size())
+        final_good_output   = gs_emits
+        final_bad_output    = bs_emits
         #
         loss1               = self.my_hinge_loss(final_good_output, final_bad_output)
         return loss1, final_good_output, final_bad_output, gs_emits, bs_emits
