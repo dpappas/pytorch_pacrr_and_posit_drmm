@@ -4,8 +4,7 @@ import numpy as np
 
 for batch_no in range(1,6):
     # d 	= json.load(open('bioasq_all/bioasq7/document_results/test_batch_{}/JBERT.json'.format(batch_no,batch_no)))
-    # d 	= json.load(open('/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_run_frozen/batch_{}/v3 test_emit_bioasq.json'.format(batch_no)))
-    d = json.load(open('/media/dpappas/dpappas_data/models_out/bioasq7_bertjpdrmadaptnf_adapt_frozen_run_0_WL_0.1/batch_{}/v3 test_emit_bioasq.json'.format(batch_no)))
+    d = json.load(open('/media/dpappas/dpappas_data/models_out/./bioasq7_bertjpdrmadaptnf_toponly_unfrozen_run_0/batch_{}/v3 test_emit_bioasq.json'.format(batch_no)))
     d2 = json.load(open('bioasq_all/bioasq7/data/test_batch_{}/BioASQ-task7bPhaseB-testset{}'.format(batch_no, batch_no)))
     id2rel = {}
     for q in d2['questions']:
