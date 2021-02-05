@@ -70,7 +70,7 @@ def create_an_action(elk_dato, id):
     elk_dato['_id']      = id
     elk_dato['_op_type'] = 'index'
     elk_dato['_index']   = index
-    elk_dato['_type']    = doc_type
+    # elk_dato['_type']    = doc_type
     return elk_dato
 
 def upload_to_elk(finished=False):
@@ -94,14 +94,14 @@ def upload_to_elk(finished=False):
 es = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
 index       = 'natural_questions_0_1'
-doc_type    = 'natural_questions_map_0_1'
+# doc_type    = 'natural_questions_map_0_1'
 actions     = []
 b_size      = 200
 
 # nq_jsonl = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/sample/nq-dev-sample.jsonl.gz'
 # nq_jsonl = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/sample/nq-train-sample.jsonl.gz'
 
-diri = '/media/dpappas/dpappas_data/natural_questions/natural_questions/v1.0/'
+diri = '/media/dpappas/dpappas_data/NaturalQuestions/natural_questions/v1.0/'
 
 all_fs = []
 for subdir in os.listdir(diri):

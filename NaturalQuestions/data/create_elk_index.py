@@ -10,9 +10,9 @@ elastic_con = Elasticsearch(['localhost:9200'], verify_certs=True, timeout=150, 
 elastic_con.indices.delete(index=index, ignore=[400,404])
 
 mapping = {
-    "settings": {"analysis": {"analyzer": {"default": {"type": "english"}}}},
+    #"settings": {"analysis": {"analyzer": {"default": {"type": "english"}}}},
     "mappings":{
-        map:{
+        # map:{
             "properties":{
                 'document_url'     : {"type": "keyword"},
                 'paragraph_index'  : {"type": "long"},
@@ -28,7 +28,7 @@ mapping = {
                     }
                 }
             }
-        }
+        # }
     }
 }
 
