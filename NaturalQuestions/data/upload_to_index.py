@@ -113,7 +113,7 @@ random.shuffle(all_fs)
 for nq_jsonl in tqdm(all_fs):
     with open(nq_jsonl, 'rb') as fileobj:
         f = gzip.GzipFile(fileobj=fileobj)
-        for l in tqdm(f.readlines()):
+        for l in tqdm(f): # .readlines()):
             dd = json.loads(l.decode('utf-8'))
             ########################
             html = dd['document_html']
