@@ -70,7 +70,7 @@ def create_an_action(elk_dato, id):
     elk_dato['_id']      = id
     elk_dato['_op_type'] = 'index'
     elk_dato['_index']   = index
-    elk_dato['_type']    = doc_type
+    # elk_dato['_type']    = doc_type
     return elk_dato
 
 def upload_to_elk(finished=False):
