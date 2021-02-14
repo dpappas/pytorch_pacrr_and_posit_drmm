@@ -99,7 +99,7 @@ index       = 'natural_questions_q_0_1'
 # doc_type    = 'natural_questions_q_map_0_1'
 
 actions     = []
-b_size      = 200
+b_size      = 100
 
 ###############################################################################
 
@@ -131,6 +131,12 @@ for nq_jsonl in tqdm(all_fs):
                     e = annot['long_answer']['end_token']
                     # long_answer = ' '.join([t['token'] for t in dd['document_tokens'][s:e + 1]])
                     long_answer = ' '.join([t['token'] for t in dd['document_tokens'][s:e]])
+                    if('<ul>' in long_answer.lower()):
+                        continue
+                    if('<td>' in long_answer.lower()):
+                        continue
+                    if('<table>' in long_answer.lower()):
+                        continue
                     for sa in annot['short_answers']:
                         s = sa['start_token']
                         e = sa['end_token']
