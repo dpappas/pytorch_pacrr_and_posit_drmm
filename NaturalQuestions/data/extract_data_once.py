@@ -94,6 +94,8 @@ for quest in pbar:
     ####################
     pbar.set_description('{} - {}'.format(zero_count, total_train_quests))
 
-pickle.dump(train_data, open('/home/dpappas/NQ_data/NQ_train_data.pkl', 'wb'), protocol=2)
-pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data.pkl',   'wb'), protocol=2)
+# pickle.dump(train_data, open('/home/dpappas/NQ_data/NQ_train_data.pkl', 'wb'), protocol=2)
+# pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data.pkl',   'wb'), protocol=2)
+pickle.dump(train_data, open('/home/dpappas/NQ_data/NQ_train_data_new.pkl', 'wb'), protocol=2)
+pickle.dump(dev_data,   open('/home/dpappas/NQ_data/NQ_dev_data_new.pkl',   'wb'), protocol=2)
 
