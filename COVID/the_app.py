@@ -202,17 +202,31 @@ def get_using_id():
         if(req is not None):
             item_id         = req['id']
             ###############################################################################################
-            ret             = {
-                'request': {'id'  : item_id},
-                'results': {
-                    'total' : None,
-                    'docs'  : []
-                }
-            }
             ret_dummy       = get_from_id(item_id)
-            ret['results']['total'] = len(ret_dummy)
-            ret['results']['docs'] = ret_dummy
-            return jsonify(ret)
+            if(len(ret_dummy) == 0):
+                return jsonify({})
+            else:
+                ret_dummy = ret_dummy[0]
+                del(ret_dummy['doc_vec_scibert'])
+                ret = {
+                    "date"          : ret_dummy['date'],
+                    "doi"           : ret_dummy['doi'],
+                    "joint_text"    : ret_dummy['joint_text'],
+                    "pmcid"         : ret_dummy['pmcid'],
+                    "pmid"          : ret_dummy['pmid'],
+                    "section"       : ret_dummy['section']
+                }
+                ret             = ret_dummy
+                # ret             = {
+                #     'request': {'id'  : item_id},
+                #     'results': {
+                #         'total' : None,
+                #         'docs'  : []
+                #     }
+                # }
+                # ret['results']['total'] = len(ret_dummy)
+                # ret['results']['docs']  = ret_dummy
+                return jsonify(ret)
         else:
             ret = {
                 'request': {},
