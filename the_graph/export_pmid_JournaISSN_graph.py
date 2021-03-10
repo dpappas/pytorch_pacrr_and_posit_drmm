@@ -50,7 +50,7 @@ source /home/dpappas/venvs/elasticsearch_old/bin/activate
 # python issn_pubmed.py 1990 1999
 # python issn_pubmed.py 2000 2004
 # python issn_pubmed.py 2005 2009
-python issn_pubmed.py 2010 2015
+# python issn_pubmed.py 2010 2015
 python issn_pubmed.py 2016 2018
 python issn_pubmed.py 2019 2021
 '''
