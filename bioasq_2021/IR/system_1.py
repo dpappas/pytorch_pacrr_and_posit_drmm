@@ -635,6 +635,8 @@ def do_for_one_retrieved(doc_emit_, gs_emits_, held_out_sents, retr, doc_res, go
             extracted_from_one.append(t)
     doc_res[retr['doc_id']] = float(emition)
     all_emits               = sorted(all_emits, key=lambda x: x[1], reverse=True)
+    # return only top K
+    extracted_from_one      = sorted(extracted_from_one, key=lambda x:x[1])[:2]
     return doc_res, extracted_from_one, all_emits
 
 def get_norm_doc_scores(the_doc_scores):
@@ -727,6 +729,7 @@ def do_for_some_retrieved(docs, dato, retr_docs, data_for_revision, ret_data, us
     ret_data['questions'].append(emitions)
     #
     extracted_snippets                      = [tt for tt in extracted_snippets if (tt[2] in doc_res[:10])]
+    #
     if(use_sent_tokenizer):
         extracted_snippets_v1               = select_snippets_v1(extracted_snippets)
         extracted_snippets_v2               = select_snippets_v2(extracted_snippets)
