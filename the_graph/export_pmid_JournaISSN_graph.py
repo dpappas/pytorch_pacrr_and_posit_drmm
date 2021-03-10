@@ -25,7 +25,7 @@ bod         = {
     "query": {
         "bool": {
           "must": [
-            {"query_string": {"query": "_exists_:references", "analyze_wildcard": True}},
+            {"query_string": {"query": "_exists_:Journal.ISSN", "analyze_wildcard": True}},
             {"range": {"DateCompleted": {"gte": year_from, "lte": year_to, "format": "yyyy"}}}
           ]
         }
@@ -39,9 +39,7 @@ pbar        = tqdm(items, total=tot)
 
 with open('pmid2issn_{}_{}.txt'.format(year_from, year_to),'w') as fp:
     for item in pbar:
-        if('references' in item['_source']):
-            for ref in item['_source']['references']:
-                fp.write('{} : {}\n'.format(item['_id'], ref['PMID']))
+        fp.write('{} : {}\n'.format(item['_id'], item['_source']['Journal']['ISSN']))
     fp.close()
 
 
@@ -51,10 +49,10 @@ source /home/dpappas/venvs/elasticsearch_old/bin/activate
 # python issn_pubmed.py 1900 1989
 # python issn_pubmed.py 1990 1999
 # python issn_pubmed.py 2000 2004
-# python issn_pubmed.py 2005 2009
-# python issn_pubmed.py 2010 2015
-# python issn_pubmed.py 2016 2018
-# python issn_pubmed.py 2019 2021
+python issn_pubmed.py 2005 2009
+python issn_pubmed.py 2010 2015
+python issn_pubmed.py 2016 2018
+python issn_pubmed.py 2019 2021
 '''
 
 
