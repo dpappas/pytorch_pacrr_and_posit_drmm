@@ -48,15 +48,15 @@ print(len(some_nodes))
 some_nodes = [t for t in some_nodes if G.has_node(t)]
 print(len(some_nodes))
 
-# dists = np.zeros((len(some_nodes), len(some_nodes)))
-# for i in range(len(some_nodes)):
-#     for j in range(i, len(some_nodes)):
-#         try:
-#             dists[i, j] = shortest_path(G, source=some_nodes[i], target=some_nodes[j], weight=None, method="dijkstra")
-#         except Exception as e:
-#             print(e)
-#             dists[i, j] = 100000
-#
-# print(dists)
-#
+dists = np.zeros((len(some_nodes), len(some_nodes)))
+for i in range(len(some_nodes)):
+    for j in range(i, len(some_nodes)):
+        try:
+            dists[i, j] = len(shortest_path(G, source=some_nodes[i], target=some_nodes[j], weight=None, method="dijkstra"))
+        except Exception as e:
+            print(e)
+            dists[i, j] = 100000
+
+print(dists)
+
 
