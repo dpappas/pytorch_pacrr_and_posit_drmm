@@ -17,7 +17,7 @@ fpaths = [
     'C:\\Users\\dvpap\\Downloads\\pmid2issn_2000_2004.txt',
     'C:\\Users\\dvpap\\Downloads\\pmid2issn_2005_2009.txt',
     'C:\\Users\\dvpap\\Downloads\\pmid2issn_2016_2018.txt',
-    'C:\\Users\\dvpap\\Downloads\\.txt',
+    #'C:\\Users\\dvpap\\Downloads\\.txt',
 ]
 
 G   = nx.Graph()
