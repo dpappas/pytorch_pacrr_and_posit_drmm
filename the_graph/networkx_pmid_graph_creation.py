@@ -21,7 +21,7 @@ for fpath in fpaths:
     print(fpath)
     for l in tqdm(open(fpath)):
         # print((fpath, l.strip()))
-        from_, to_ = l.strip().split(':')
+        from_, to_ = l.strip().split(':', 1)
         from_, to_ = from_.strip(), to_.strip()
         if len(to_.strip()) == 0:
             continue
