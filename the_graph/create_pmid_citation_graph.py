@@ -47,9 +47,14 @@ with open('citations_{}_{}.txt'.format(year_from, year_to),'w') as fp:
 
 '''
 source /home/dpappas/venvs/elasticsearch_old/bin/activate
+python citation_pubmed.py 1000 1899
+python citation_pubmed.py 1900 1989
+python citation_pubmed.py 1990 1999
+python citation_pubmed.py 2000 2004
+python citation_pubmed.py 2005 2009
 # python citation_pubmed.py 2010 2015
 # python citation_pubmed.py 2016 2018
-python citation_pubmed.py 2019 2021
+# python citation_pubmed.py 2019 2021
 '''
 
 
