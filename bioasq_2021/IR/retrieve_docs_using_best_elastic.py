@@ -168,7 +168,7 @@ for q in tqdm(test_data['questions']):
                 'rank'              : rank
             })
     test_data_to_save['queries'].append(temp_1)
-    break
+    # break
 
 if(not os.path.exists(odir)):
     os.makedirs(odir)
