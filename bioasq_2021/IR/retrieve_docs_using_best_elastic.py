@@ -65,7 +65,7 @@ print(stopwords)
 def tokenize(x):
   return bioclean(x)
 
-def get_first_n_1(qtext, n, max_year=2021):
+def get_first_n_1(qtext, n, max_year=2022):
     # tokenized_body  = bioclean_mod(qtext)
     # tokenized_body  = [t for t in tokenized_body if t not in stopwords]
     # question        = ' '.join(tokenized_body)
@@ -77,7 +77,36 @@ def get_first_n_1(qtext, n, max_year=2021):
         "query": {
             "bool": {
                 "must": [{"range": {"DateCompleted": {"gte": "1900", "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}],
-                "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}],
+                "should": [
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1,
+                                'minimum_should_match': "30%"
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1,
+                                'minimum_should_match': "50%"
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1,
+                                'minimum_should_match': "70%"
+                            }
+                        }
+                    },
+                    {"match_phrase": {"joint_text": {"query": question, "boost": 1}}}
+                ],
                 "minimum_should_match": 1,
             }
         }
@@ -101,8 +130,9 @@ for q in tqdm(test_data['questions']):
     qid         = q['id']
     #######################################################
     results     = get_first_n_1(qtext, 100)
+    print([t['_id'] for t in results])
     #######################################################
-    temp_1 = {
+    temp_1      = {
         'num_rel'               : 0,
         'num_rel_ret'           : 0,
         'num_ret'               : -1,
@@ -138,6 +168,7 @@ for q in tqdm(test_data['questions']):
                 'rank'              : rank
             })
     test_data_to_save['queries'].append(temp_1)
+    break
 
 if(not os.path.exists(odir)):
     os.makedirs(odir)
