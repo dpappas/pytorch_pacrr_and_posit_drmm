@@ -1,6 +1,7 @@
 
 
 import networkx as nx
+from tqdm import tqdm
 from networkx.algorithms.shortest_paths.generic import shortest_path
 
 fpaths = [
@@ -9,17 +10,19 @@ fpaths = [
     'C:\\Users\\dvpap\\Downloads\\citations_2010_2015.txt',
     'C:\\Users\\dvpap\\Downloads\\citations_2016_2018.txt',
     'C:\\Users\\dvpap\\Downloads\\citations_2019_2021.txt',
+    'C:\\Users\\dvpap\\Downloads\\citations_2000_2004.txt'
 ]
 
 G   = nx.Graph()
 
 for fpath in fpaths:
-    for l in open(fpath):
+    print(fpath)
+    for l in tqdm(open(fpath)):
+        # print((fpath, l.strip()))
         from_, to_ = l.strip().split(':')
         from_, to_ = from_.strip(), to_.strip()
         if len(to_.strip()) == 0:
             continue
-        print(from_, to_)
         G.add_edge(from_, to_)
 
 print(shortest_path(G, source='5335695', target='2503568', weight=None, method="dijkstra"))
