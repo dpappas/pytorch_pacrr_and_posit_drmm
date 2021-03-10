@@ -1,22 +1,25 @@
 
-
+import os
 import networkx as nx
 import numpy as np
 from tqdm import tqdm
 from networkx.algorithms.shortest_paths.generic import shortest_path
 
+# dir_path = 'C:\\Users\\dvpap\\Downloads\\'
+dir_path = '/home/dpappas/'
+
 fpaths = [
-    'C:\\Users\\dvpap\\Downloads\\citations_1900_1989.txt',
-    'C:\\Users\\dvpap\\Downloads\\citations_1990_1999.txt',
-    'C:\\Users\\dvpap\\Downloads\\citations_2000_2004.txt',
-    'C:\\Users\\dvpap\\Downloads\\citations_2005_2009.txt',
-    'C:\\Users\\dvpap\\Downloads\\citations_2010_2015.txt',
-    'C:\\Users\\dvpap\\Downloads\\citations_2016_2018.txt',
-    'C:\\Users\\dvpap\\Downloads\\citations_2019_2021.txt',
+    'citations_1900_1989.txt',
+    'citations_1990_1999.txt',
+    'citations_2000_2004.txt',
+    'citations_2005_2009.txt',
+    'citations_2010_2015.txt',
+    'citations_2016_2018.txt',
+    'citations_2019_2021.txt',
     #
-    'C:\\Users\\dvpap\\Downloads\\pmid2issn_2000_2004.txt',
-    'C:\\Users\\dvpap\\Downloads\\pmid2issn_2005_2009.txt',
-    'C:\\Users\\dvpap\\Downloads\\pmid2issn_2016_2018.txt',
+    'pmid2issn_2000_2004.txt',
+    'pmid2issn_2005_2009.txt',
+    'pmid2issn_2016_2018.txt',
     #'C:\\Users\\dvpap\\Downloads\\.txt',
 ]
 
@@ -24,7 +27,7 @@ G   = nx.Graph()
 
 for fpath in fpaths:
     print(fpath)
-    for l in tqdm(open(fpath)):
+    for l in tqdm(open(os.path.join(dir_path, fpath))):
         # print((fpath, l.strip()))
         from_, to_ = l.strip().split(':', 1)
         from_, to_ = from_.strip(), to_.strip()
