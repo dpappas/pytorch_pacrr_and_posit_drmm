@@ -32,6 +32,8 @@ green_colors    = list(white.range_to(Color("green"), 101))
 green_colors    = [c.get_hex_l() for c in green_colors]
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 # CORS(app)
 # sslify = SSLify(app)
 
