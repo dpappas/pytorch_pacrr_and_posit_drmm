@@ -65,7 +65,43 @@ def get_first_n_1(qtext, n, section=None, min_year=1600, max_year=2020):
                 "must": [
                     {"range": {"date": {"gte": str(min_year), "lte": str(max_year), "format": "dd/MM/yyyy||yyyy"}}}
                 ],
-                "should": [{"match": {"joint_text": {"query": question, "boost": 1}}}],
+                "should": [
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1,
+                                'minimum_should_match': "30%"
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1,
+                                'minimum_should_match': "50%"
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1,
+                                'minimum_should_match': "70%"
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1
+                            }
+                        }
+                    }
+                ],
                 "minimum_should_match": 1,
             }
         }
