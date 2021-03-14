@@ -11,8 +11,7 @@ from flask import url_for
 import numpy as np
 from flask import Flask
 from flask import render_template
-from flask import request
-from flask import jsonify
+from flask import request, redirect, jsonify
 from flask_cors import CORS, cross_origin
 from collections import OrderedDict
 from pprint import pprint
@@ -123,7 +122,7 @@ def just_the_json():
             ret['results']['total'] = len(ret_dummy)
             if(len(ret_dummy)==0):
                 response = jsonify(ret)
-                response.headers.add("Access-Control-Allow-Origin", "*")
+                response.headers.add("Access-Control-Allow-Origin", "*/*")
                 return response
             scaler          = MinMaxScaler(feature_range=(0, 0.5))
             scaler.fit(np.array([d['doc_score'] for d in ret_dummy]).reshape(-1, 1))
@@ -173,7 +172,7 @@ def just_the_json():
                     doc_datum['sentences'].append((sent_score, sent_text, do_for_sent(sent_text)))
                 ret['results']['docs'].append(doc_datum)
             response = jsonify(ret)
-            response.headers.add("Access-Control-Allow-Origin", "*")
+            response.headers.add("Access-Control-Allow-Origin", "*/*")
             return response
         else:
             ret = {
@@ -186,7 +185,7 @@ def just_the_json():
                 'error': 'empty request'
             }
             response = jsonify(ret)
-            response.headers.add("Access-Control-Allow-Origin", "*")
+            response.headers.add("Access-Control-Allow-Origin", "*/*")
             return response
     except Exception as ex:
         ret = {
@@ -199,7 +198,7 @@ def just_the_json():
             'error': 'Error: {}'.format(str(ex))
         }
         response = jsonify(ret)
-        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Origin", "*/*")
         return response
 
 @app.route("/get_using_id", methods=["POST", "GET"])
@@ -217,7 +216,7 @@ def get_using_id():
             ret_dummy       = get_from_id(item_id)
             if(len(ret_dummy) == 0):
                 response = jsonify({})
-                response.headers.add("Access-Control-Allow-Origin", "*")
+                response.headers.add("Access-Control-Allow-Origin", "*/*")
                 return response
             else:
                 ret_dummy = ret_dummy[0]
@@ -241,7 +240,7 @@ def get_using_id():
                 # ret['results']['total'] = len(ret_dummy)
                 # ret['results']['docs']  = ret_dummy
                 response = jsonify(ret)
-                response.headers.add("Access-Control-Allow-Origin", "*")
+                response.headers.add("Access-Control-Allow-Origin", "*/*")
                 return response
         else:
             ret = {
@@ -249,7 +248,7 @@ def get_using_id():
                 'error': 'empty request'
             }
             response = jsonify(ret)
-            response.headers.add("Access-Control-Allow-Origin", "*")
+            response.headers.add("Access-Control-Allow-Origin", "*/*")
             return response
     except Exception as ex:
         ret = {
@@ -257,7 +256,7 @@ def get_using_id():
             'error': 'Error: {}'.format(str(ex))
         }
         response = jsonify(ret)
-        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Origin", "*/*")
         return response
 
 @app.route("/submit_question", methods=["POST", "GET"])
@@ -347,6 +346,13 @@ def submit_question():
         text_to_return += '</div>'
     text_to_return += '\n' + r2
     return text_to_return
+
+@app.before_request
+def before_request():
+    if request.url.startswith('http://'):
+        url = request.url.replace('http://', 'https://', 1)
+        code = 301
+        return redirect(url, code=code)
 
 if __name__ == '__main__':
     # app.run(port=5000, debug=True)
