@@ -89,6 +89,7 @@ for (i = 0; i < acc.length; i++) {
 '''
 
 @app.route("/just_the_json", methods=["POST", "GET"])
+@cross_origin()
 def just_the_json():
     try:
         req = request.get_json()
@@ -119,7 +120,9 @@ def just_the_json():
             ret_dummy       = retrieve_given_question(question_text, n=20, section=section, min_year=min_year, max_year=max_year)
             ret['results']['total'] = len(ret_dummy)
             if(len(ret_dummy)==0):
-                return jsonify(ret)
+                response = jsonify(ret)
+                response.headers.add("Access-Control-Allow-Origin", "*")
+                return response
             scaler          = MinMaxScaler(feature_range=(0, 0.5))
             scaler.fit(np.array([d['doc_score'] for d in ret_dummy]).reshape(-1, 1))
             ###############################################################################################
@@ -167,7 +170,9 @@ def just_the_json():
                         sent_score = 0.0
                     doc_datum['sentences'].append((sent_score, sent_text, do_for_sent(sent_text)))
                 ret['results']['docs'].append(doc_datum)
-            return jsonify(ret)
+            response = jsonify(ret)
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            return response
         else:
             ret = {
                 'request': {
@@ -178,7 +183,9 @@ def just_the_json():
                 },
                 'error': 'empty request'
             }
-            return jsonify(ret)
+            response = jsonify(ret)
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            return response
     except Exception as ex:
         ret = {
             'request': {
@@ -189,9 +196,12 @@ def just_the_json():
             },
             'error': 'Error: {}'.format(str(ex))
         }
-        return jsonify(ret)
+        response = jsonify(ret)
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
 
 @app.route("/get_using_id", methods=["POST", "GET"])
+@cross_origin()
 def get_using_id():
     try:
         req = request.get_json()
@@ -204,7 +214,9 @@ def get_using_id():
             ###############################################################################################
             ret_dummy       = get_from_id(item_id)
             if(len(ret_dummy) == 0):
-                return jsonify({})
+                response = jsonify({})
+                response.headers.add("Access-Control-Allow-Origin", "*")
+                return response
             else:
                 ret_dummy = ret_dummy[0]
                 del(ret_dummy['doc_vec_scibert'])
@@ -226,21 +238,28 @@ def get_using_id():
                 # }
                 # ret['results']['total'] = len(ret_dummy)
                 # ret['results']['docs']  = ret_dummy
-                return jsonify(ret)
+                response = jsonify(ret)
+                response.headers.add("Access-Control-Allow-Origin", "*")
+                return response
         else:
             ret = {
                 'request': {},
                 'error': 'empty request'
             }
-            return jsonify(ret)
+            response = jsonify(ret)
+            response.headers.add("Access-Control-Allow-Origin", "*")
+            return response
     except Exception as ex:
         ret = {
             'request': {},
             'error': 'Error: {}'.format(str(ex))
         }
-        return jsonify(ret)
+        response = jsonify(ret)
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
 
 @app.route("/submit_question", methods=["POST", "GET"])
+@cross_origin()
 def submit_question():
     question_text   = request.form.get("sent1") #.strip()
     section         = request.form.get("section") #.strip()
