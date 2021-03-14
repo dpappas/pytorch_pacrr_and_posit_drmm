@@ -17,8 +17,7 @@ from flask_cors import CORS, cross_origin
 from collections import OrderedDict
 from pprint import pprint
 from rule_matching import do_for_sent
-# from flask_cors import CORS
-# from flask_sslify import SSLify
+from flask_sslify import SSLify
 
 # pip3.6 install -U flask-cors
 # pip3.6  install Flask-SSLify
@@ -32,10 +31,10 @@ green_colors    = list(white.range_to(Color("green"), 101))
 green_colors    = [c.get_hex_l() for c in green_colors]
 
 app = Flask(__name__)
+sslify = SSLify(app)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 # CORS(app)
-# sslify = SSLify(app)
 
 @app.route("/")
 def get_news():
