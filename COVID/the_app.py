@@ -13,6 +13,7 @@ from flask import Flask
 from flask import render_template
 from flask import request
 from flask import jsonify
+from flask_cors import CORS, cross_origin
 from collections import OrderedDict
 from pprint import pprint
 from rule_matching import do_for_sent
