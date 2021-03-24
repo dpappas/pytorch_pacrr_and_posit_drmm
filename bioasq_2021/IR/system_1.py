@@ -1230,9 +1230,9 @@ print(test_map)
 
 '''
 
-CUDA_VISIBLE_DEVICES=1 python3.6 system_1.py 1 \
+CUDA_VISIBLE_DEVICES=1 python3.6 system_1.py 2 \
 /media/dpappas/dpappas_data/models_out/weight_tuning/bioasq_jpdrmm_2L_0p01_weight_0.01_run_0/best_dev_checkpoint.pth.tar \
-/home/dpappas/bioasq_2021/system1_output_ft_b1
+/home/dpappas/bioasq_2021/system1_output_ft_b2
 
 
 '''
