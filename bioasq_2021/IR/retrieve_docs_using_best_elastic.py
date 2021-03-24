@@ -114,9 +114,11 @@ def get_first_n_1(qtext, n, max_year=2022):
     res             = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-batch       = 1
+batch       = 2
 # fpath       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/BioASQ-task8bPhaseA-testset{}'.format(batch,batch)
 # odir        = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/'.format(batch)
+# fpath       = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseA-testset{}'.format(batch,batch)
+# odir        = '/home/dpappas/bioasq_2021/test_batch_{}/bm25_top100/'.format(batch)
 fpath       = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseA-testset{}'.format(batch,batch)
 odir        = '/home/dpappas/bioasq_2021/test_batch_{}/bm25_top100/'.format(batch)
 test_data   = json.load(open(fpath))
