@@ -126,8 +126,6 @@ with open(opath, 'w') as f:
     f.write(json.dumps(extract_data, indent=4, sort_keys=False))
     f.close()
 
-
-
 '''
 python3.6 combine_1_and_2.py 5
 '''
