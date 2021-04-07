@@ -6,6 +6,7 @@ from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from pprint import pprint
+import sys
 
 def fix2(qtext):
     qtext = qtext.lower()
@@ -114,7 +115,7 @@ def get_first_n_1(qtext, n, max_year=2022):
     res             = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
-batch       = 2
+batch       = int(sys.argv[1])
 # fpath       = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/BioASQ-task8bPhaseA-testset{}'.format(batch,batch)
 # odir        = '/home/dpappas/bioasq_all/bioasq8/data/test_batch_{}/bioasq8_bm25_top100/'.format(batch)
 # fpath       = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseA-testset{}'.format(batch,batch)
@@ -181,7 +182,7 @@ pickle.dump(test_docs_to_save, open(os.path.join(odir, 'bioasq9_bm25_docset_top1
 
 '''
 source /home/dpappas/venvs/elasticsearch_old/bin/activate
-python retrieve_docs.py 
+python retrieve_docs.py 3
 '''
 
 
