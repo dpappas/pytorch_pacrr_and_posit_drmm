@@ -23,7 +23,7 @@ model         = AutoModelForQuestionAnswering.from_pretrained("Primer/bart-squad
 model.to('cuda')
 model.eval()
 
-b               = 2
+b               = 3
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_4_factoid.json'.format(b)
 d               = json.load(open(fpath))
