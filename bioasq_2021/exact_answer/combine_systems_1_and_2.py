@@ -194,7 +194,7 @@ torch.manual_seed(my_seed)
 use_cuda        = torch.cuda.is_available()
 device          = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 
-b               = 2
+b               = 3
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_3_factoid.json'.format(b)
 
@@ -343,6 +343,13 @@ with torch.no_grad():
 with open(ofpath, 'w') as of:
     of.write(json.dumps(d, indent=4, sort_keys=True))
     of.close()
+
+'''
+
+source ~/venvs/finetune_transformers/bin/activate
+python combine_systems_1_and_2.py
+
+'''
 
 '''
 exit()
