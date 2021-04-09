@@ -18,9 +18,10 @@ import os, json
 # opath   = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\submit_batch_1\\system4\\batch1_submit_system_4.json'
 
 sys_no  = 4
-f1      = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH2\\PHASE_B\\factoid_results\\batch2_system_{}_factoid.json'.format(sys_no)
-f2      = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH2\\PHASE_B\\summary_results\\System{}-Test2.json'.format(sys_no)
-opath   = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH2\\PHASE_B\\batch2_submit_system_{}.json'.format(sys_no)
+b       = 3
+f1      = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_B\\factoid_results\\batch{}_system_{}_factoid.json'.format(b, b, sys_no)
+f2      = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_B\\summary_results\\System{}-Test{}.json'.format(b, sys_no, b)
+opath   = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_B\\batch{}_submit_system_{}.json'.format(b, sys_no, b)
 
 d1      = json.load(open(f1))
 d2      = json.load(open(f2))
