@@ -21,7 +21,7 @@ sys_no  = 4
 b       = 3
 f1      = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_B\\factoid_results\\batch{}_system_{}_factoid.json'.format(b, b, sys_no)
 f2      = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_B\\summary_results\\System{}-Test{}.json'.format(b, sys_no, b)
-opath   = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_B\\batch{}_submit_system_{}.json'.format(b, sys_no, b)
+opath   = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_B\\batch{}_submit_system_{}.json'.format(b, b, sys_no)
 
 d1      = json.load(open(f1))
 d2      = json.load(open(f2))
