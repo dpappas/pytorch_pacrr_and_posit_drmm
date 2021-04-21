@@ -191,7 +191,7 @@ my_seed = 1
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-b               = '2'
+b               = sys.argv[1]
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_1_factoid.json'.format(b)
 model_name      = "ktrapeznikov/biobert_v1.1_pubmed_squad_v2"

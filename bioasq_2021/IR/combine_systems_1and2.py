@@ -12,7 +12,7 @@ index, doc_type = 'pubmed_abstracts_joint_0_1', 'abstract_map_joint_0_1'
 
 es      = Elasticsearch(['palomar.ilsp.gr:9201'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
-b       = '3'
+b       = '4'
 
 d1      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system1_output_ft_b{}\\v3 test_data_for_revision.json'.format(b,b)))
 d2      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system2_output_ft_b{}\\v3 test_data_for_revision.json'.format(b,b)))

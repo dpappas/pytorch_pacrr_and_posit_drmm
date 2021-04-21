@@ -182,7 +182,7 @@ pickle.dump(test_docs_to_save, open(os.path.join(odir, 'bioasq9_bm25_docset_top1
 
 '''
 source /home/dpappas/venvs/elasticsearch_old/bin/activate
-python retrieve_docs.py 3
+python retrieve_docs.py 4
 '''
 
 
