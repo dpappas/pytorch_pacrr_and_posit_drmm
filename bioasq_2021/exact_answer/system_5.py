@@ -17,7 +17,7 @@ import numpy as np
 from pprint import pprint
 import torch
 import torch.nn as nn
-from nltk.tokenize import sent_tokenize
+from nltk.tokenize import sent_tokenize, word_tokenize
 
 def first_alpha_is_upper(sent):
     # specials = [
@@ -41,9 +41,8 @@ def first_alpha_is_upper(sent):
     sent = ' '.join(
         [
             tok
-            for tok in sent.split()
-            if not tok.startswith('__')
-            and tok.isalnum()
+            for tok in word_tokenize(sent)
+            if not tok.startswith('__') and tok.isalnum()
         ]
     )
     for c in sent:
