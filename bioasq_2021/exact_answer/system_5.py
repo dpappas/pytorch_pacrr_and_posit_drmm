@@ -187,7 +187,7 @@ my_seed = 1
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-b               = '4'
+b               = sys.argv[1]# '4'
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_5_factoid.json'.format(b)
 model_name      = "ktrapeznikov/albert-xlarge-v2-squad-v2"
@@ -335,7 +335,7 @@ with open(ofpath, 'w') as of:
 '''
 
 source ~/venvs/finetune_transformers/bin/activate
-CUDA_VISIBLE_DEVICES=1 python factoid_system_5.py
+CUDA_VISIBLE_DEVICES=1 python factoid_system_5.py 4
 
 
 '''
