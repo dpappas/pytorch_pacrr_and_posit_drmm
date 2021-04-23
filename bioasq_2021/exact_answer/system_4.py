@@ -97,7 +97,7 @@ with open(ofpath, 'w') as of:
 
 '''
 source ~/venvs/finetune_transformers/bin/activate
-python factoid_system_4.py
+CUDA_VISIBLE_DEVICES=1 python factoid_system_4.py 4
 '''
 
 

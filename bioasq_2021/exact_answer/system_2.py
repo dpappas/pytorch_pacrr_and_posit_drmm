@@ -190,7 +190,7 @@ my_seed = 1
 random.seed(my_seed)
 torch.manual_seed(my_seed)
 
-b               = '2'
+b               = sys.argv[1]
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_2_factoid.json'.format(b)
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 
@@ -368,5 +368,5 @@ approach_2(begin_y, end_y, sent_ids, prob_thresh = 0.01)
 
 '''
 source ~/venvs/finetune_transformers/bin/activate
-python factoid_system_2.py
+CUDA_VISIBLE_DEVICES=1 python factoid_system_2.py 4
 '''
