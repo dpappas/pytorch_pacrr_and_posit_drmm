@@ -194,7 +194,7 @@ torch.manual_seed(my_seed)
 use_cuda        = torch.cuda.is_available()
 device          = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 
-b               = 3
+b               = sys.argv[1]
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_3_factoid.json'.format(b)
 
@@ -347,7 +347,7 @@ with open(ofpath, 'w') as of:
 '''
 
 source ~/venvs/finetune_transformers/bin/activate
-python combine_systems_1_and_2.py
+python combine_systems_1_and_2.py 4
 
 '''
 

@@ -8,6 +8,7 @@ from collections import Counter
 from tqdm import tqdm
 import torch
 from nltk.tokenize import sent_tokenize
+import sys
 
 bioclean_mod    = lambda t: re.sub('[~`@#$-=<>/.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').replace('\\', '').replace("'", '').replace("-", ' ').replace("\n", ' ').strip().lower())
 
@@ -23,7 +24,7 @@ model         = AutoModelForQuestionAnswering.from_pretrained("Primer/bart-squad
 model.to('cuda')
 model.eval()
 
-b               = 3
+b               = sys.argv[1]
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_4_factoid.json'.format(b)
 d               = json.load(open(fpath))
