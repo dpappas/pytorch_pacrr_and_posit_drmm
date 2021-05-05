@@ -237,7 +237,7 @@ def get_first_n_1(qtext, n, max_year=2022, expand=False):
                                 "joint_text": {
                                     "query": ' '.join(list(similar_set)),
                                     "boost": 1,
-                                    'minimum_should_match': float(1.0/len(similar_set))
+                                    'minimum_should_match': "{}%".format(int(100/len(similar_set)))
                                 }
                             }
                         }
@@ -313,7 +313,7 @@ pickle.dump(test_docs_to_save, open(os.path.join(odir, 'bioasq9_bm25_docset_top1
 
 '''
 source /home/dpappas/venvs/elasticsearch_old/bin/activate
-python retrieve_docs.py 4
+python retrieve_docs.py 5
 '''
 
 

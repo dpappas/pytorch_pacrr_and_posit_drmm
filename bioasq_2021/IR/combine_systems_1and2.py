@@ -12,15 +12,20 @@ index, doc_type = 'pubmed_abstracts_joint_0_1', 'abstract_map_joint_0_1'
 
 es      = Elasticsearch(['palomar.ilsp.gr:9201'], verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
-b       = '4'
+b       = '5'
+
+# d1      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system1_output_ft_b{}_expanded\\v3 test_data_for_revision.json'.format(b,b)))
+# d2      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system2_output_ft_b{}_expanded\\v3 test_data_for_revision.json'.format(b,b)))
+# d3      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system1_output_ft_b{}_expanded\\v3 test_emit_bioasq.json'.format(b,b)))
+# d4      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system2_output_ft_b{}_expanded\\v3 test_emit_bioasq.json'.format(b,b)))
+# odir    = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system3_output_ft_b{}_expanded\\'.format(b,b)
 
 d1      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system1_output_ft_b{}\\v3 test_data_for_revision.json'.format(b,b)))
 d2      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system2_output_ft_b{}\\v3 test_data_for_revision.json'.format(b,b)))
-
 d3      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system1_output_ft_b{}\\v3 test_emit_bioasq.json'.format(b,b)))
 d4      = json.load(open('C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system2_output_ft_b{}\\v3 test_emit_bioasq.json'.format(b,b)))
-
 odir    = 'C:\\Users\\dvpap\\OneDrive\\Desktop\\bioasq_2021\\BATCH{}\\PHASE_A\\system3_output_ft_b{}\\'.format(b,b)
+
 if not os.path.exists(odir):
     os.makedirs(odir)
 
