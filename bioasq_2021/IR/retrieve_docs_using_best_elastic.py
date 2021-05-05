@@ -8,6 +8,120 @@ import numpy as np
 from pprint import pprint
 import sys
 
+similar_sets = [
+set(['assessed', 'evaluated', 'analyzed', 'analysed', 'measured', 'examined']),
+set(['found', 'observed']),
+set(['database', 'databank']),
+set(['genome', 'genome assembly']),
+set(['xbp', 'xbps', 'atf']),
+set(['coacervation', 'phase separation']),
+set(['mitochondrion', 'mitochondria']),
+set(['asians', 'caucasians', 'europeans']),
+set(['breastfeeding', 'breast feeding', 'exclusive breastfeeding', 'childbirth']),
+set(['activates', 'antagonizes']),
+set(['mutation', 'missense mutation', 'pathogenic variant', 'nonsense mutation', 'gene mutation', 'point mutation', 'missense variant', 'deletion', 'frameshift mutation', 'novel mutation']),
+set(['genes', 'gene families']),
+set(['vaccine', 'influenza vaccine', 'dryvax', 'influenza vaccines', 'vaccines', 'recombinant vaccine']),
+set(['monoclonal', 'polyclonal']),
+set(['dickkopf', 'dkk']),
+set(['expression', 'protein expression', 'expression level', 'mrna expression']),
+set(['fibroids', 'myomas']),
+set(['microduplication', 'microdeletion', 'q deletion', 'pathogenic variant']),
+set(['alzheimers', 'alzheimer', 'huntingtons', 'alzheimer disease', 'alzheimers disease']),
+set(['oncomine', 'gepia']),
+set(['antibody', 'polyclonal', 'mab']),
+set(['glioblastoma', 'gbm', 'glioma', 'glioblastoma multiforme', 'non small cell lung carcinoma', 'neuroblastoma', 'malignant gliomas', 'non small cell lung cancer nsclc', 'npc', 'triple negative breast cancer', 'sclc']),
+set(['nanog', 'sox']),
+set(['effect', 'effects']),
+set(['abacavir', 'atazanavir', 'nevirapine']),
+set(['endoderm', 'mesoderm', 'ectoderm', 'ureteric bud']),
+set(['cyp', 'cyps', 'ugt', 'cytochrome p', 'cypa']),
+set(['fingolimod', 'natalizumab', 'nintedanib']),
+set(['pain', 'back pain']),
+set(['promotes', 'accelerates', 'suppresses', 'restrains', 'augments']),
+set(['located', 'situated']),
+set(['rbioconductor', 'web tool', 'r package']),
+set(['antagonists', 'agonists']),
+set(['polymorphism', 'rs', 'genetic variant', 'rsag', 'genetic polymorphism']),
+set(['pharmacogenetic', 'pharmacogenomic']),
+set(['able', 'unable']),
+set(['yeast', 'saccharomyces cerevisiae', 's cerevisiae']),
+set(['used', 'utilized', 'employed', 'utilised', 'applied']),
+set(['describe', 'discuss']),
+set(['prevalence', 'prevalence rate']),
+set(['efavirenz', 'stavudine', 'nevirapine', 'ritonavir', 'darunavir', 'rilpivirine', 'raltegravir', 'dolutegravir', 'tenofovir', 'zidovudine']),
+set(['two', 'three', 'four']),
+set(['trastuzumab', 'cetuximab', 'pertuzumab', 'erlotinib', 'panitumumab', 'afatinib', 'pembrolizumab', 'docetaxel', 'olaparib', 'lapatinib', 'atezolizumab']),
+set(['autosomal', 'autosomal dominant', 'autosomal recessive']),
+set(['azd', 'abt', 'panobinostat', 'chidamide', 'lonafarnib', 'icotinib', 'selinexor', 'gefitinib']),
+set(['ofatumumab', 'alemtuzumab', 'ibrutinib', 'rituximab', 'denileukin diftitox', 'avelumab']),
+set(['treatment', 'therapy']),
+set(['ewings', 'ewing']),
+set(['cypc', 'cypd', 'ugta', 'ugtb', 'vkorc']),
+set(['positive', 'negative']),
+set(['quantification', 'quantitation']),
+set(['cgrp', 'galanin']),
+set(['antibodies', 'igg antibodies', 'antisera']),
+set(['effective', 'efficacious']),
+set(['fda', 'us food and drug administration', 'us fda', 'european medicines agency', 'food and drug administration']),
+set(['towards', 'toward']),
+set(['propofol', 'remifentanil', 'dexmedetomidine', 'sevoflurane', 'desflurane', 'nitroglycerin', 'nicardipine', 'isoflurane', 'esmolol']),
+set(['mellifera', 'apis mellifera']),
+set(['recommendations', 'guidelines', 'clinical guidelines']),
+set(['acupotomy', 'sgb']),
+set(['molecules', 'ligands']),
+set(['p', 'p≤']),
+set(['clcn', 'kcnh', 'scna', 'atpa', 'kcnj']),
+set(['proteins', 'polypeptides']),
+set(['explain', 'reflect', 'accentuate', 'signify', 'downplay']),
+set(['southern', 'northern', 'northeastern', 'southwestern', 'southeastern', 'northwestern', 'northeast', 'southwest', 'slovakia', 'southeast', 'north']),
+set(['critical', 'crucial', 'important', 'essential', 'vital']),
+set(['bacteria', 'microorganisms', 'microbes', 'fungi']),
+set(['methodologies', 'approaches']),
+set(['infection', 'salmonella infection']),
+set(['zolmitriptan', 'solifenacin succinate']),
+set(['hypofractionated', 'intensity modulated radiation therapy', 'whole breast', 'intensity modulated radiotherapy', 'normofractionated', 'hdr brachytherapy']),
+set(['adalimumab', 'infliximab', 'etanercept', 'ustekinumab', 'golimumab', 'tcz', 'tocilizumab', 'vedolizumab', 'omalizumab', 'secukinumab', 'tofacitinib']),
+set(['vesicles', 'membranes']),
+set(['dexamethasone', 'dxm', 'dex']),
+set(['cytokine', 'inflammatory cytokine']),
+set(['domestic', 'feral']),
+set(['package', 'spreadsheet']),
+set(['aim', 'purpose', 'objective', 'objectives']),
+set(['lncrnas', 'circrnas', 'mirnas', 'ncrnas', 'lincrnas', 'trna derived fragments', 'micrornas', 'mirs']),
+set(['radiotherapy', 'radiation therapy', 'radiation treatment', 'external beam radiotherapy', 'external beam radiation therapy', 'palliative radiotherapy', 'concurrent chemoradiation', 'radiosurgery', 'chemoradiation', 'sbrt', 'whole brain radiotherapy']),
+set(['september', 'july', 'august', 'october', 'march', 'november', 'february', 'june', 'april', 'december', 'january']),
+set(['pseudotumor', 'pseudotumour']),
+set(['pose', 'impose']),
+set(['codeine', 'pseudoephedrine']),
+set(['extracellular', 'intracellular']),
+set(['children', 'adults', 'persons']),
+set(['rhabdomyolysis', 'hyperammonemia', 'hyponatremia', 'kernicterus', 'hepatic encephalopathy']),
+set(['hypercapnia', 'hypocapnia', 'hypercapnic']),
+set(['color', 'colour']),
+set(['polymorphisms', 'genetic polymorphisms', 'gene variants', 'single nucleotide polymorphisms']),
+set(['among', 'amongst']),
+set(['dipg', 'diffuse intrinsic pontine glioma']),
+set(['foam', 'fabric']),
+set(['sarcoma', 'rhabdomyosarcoma', 'lymphoma']),
+set(['offers', 'provides', 'justifies', 'holds']),
+set(['migraine', 'tension type headache', 'cluster headache', 'migraine with aura', 'migraines', 'migraine without aura']),
+set(['rodents', 'nonhuman primates', 'humans']),
+set(['recognized', 'recognised', 'regarded']),
+set(['cyld', 'wwp', 'senp', 'skp', 'trim', 'eifa', 'smurf', 'famb']),
+set(['variants', 'missense variants', 'novel variants', 'mutations']),
+set(['kisspeptin', 'gnrh neurons', 'prrp']),
+set(['basaloid', 'pleomorphic']),
+set(['mother', 'father']),
+set(['ligands', 'molecules']),
+set(['panitumumab', 'pertuzumab', 'trastuzumab', 'ramucirumab', 'cetuximab']),
+set(['toxoplasmosis', 'lyme disease', 'brucellosis', 'leptospirosis', 'strongyloidiasis']),
+set(['repressed', 'regulated']),
+set(['dkk', 'dickkopf', 'sfrp', 'activin a']),
+set(['tumors', 'tumours', 'carcinomas', 'sarcomas', 'neoplasms']),
+set(['regarding', 'concerning'])
+]
+
 def fix2(qtext):
     qtext = qtext.lower()
     if(qtext.startswith('can ')):
@@ -66,7 +180,7 @@ print(stopwords)
 def tokenize(x):
   return bioclean(x)
 
-def get_first_n_1(qtext, n, max_year=2022):
+def get_first_n_1(qtext, n, max_year=2022, expand=False):
     # tokenized_body  = bioclean_mod(qtext)
     # tokenized_body  = [t for t in tokenized_body if t not in stopwords]
     # question        = ' '.join(tokenized_body)
@@ -112,6 +226,23 @@ def get_first_n_1(qtext, n, max_year=2022):
             }
         }
     }
+    ################################################
+    if expand:
+        for token in set(question.split()):
+            for similar_set in similar_sets:
+                if token in similar_set:
+                    bod['query']['bool']['should'].append(
+                        {
+                            "match": {
+                                "joint_text": {
+                                    "query": ' '.join(list(similar_set)),
+                                    "boost": 1,
+                                    'minimum_should_match': float(1.0/len(similar_set))
+                                }
+                            }
+                        }
+                    )
+    ################################################
     res             = es.search(index=doc_index, body=bod, request_timeout=120)
     return res['hits']['hits']
 
@@ -132,7 +263,7 @@ for q in tqdm(test_data['questions']):
     print(qtext)
     qid         = q['id']
     #######################################################
-    results     = get_first_n_1(qtext, 100)
+    results     = get_first_n_1(qtext, 100, expand=True)
     print([t['_id'] for t in results])
     #######################################################
     temp_1      = {
