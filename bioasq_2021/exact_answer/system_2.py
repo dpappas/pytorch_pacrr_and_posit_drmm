@@ -200,7 +200,7 @@ fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.form
 # hidden          = 768
 
 model_name      = "ktrapeznikov/albert-xlarge-v2-squad-v2"
-my_model_path   = "/home/dpappas/bioasq_factoid/albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_42_5e-05.pth.tar"
+my_model_path   = "/home/dpappas/bioasq_factoid/BA12_albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_33_5e-05.pth.tar"
 hidden          = 2048
 
 d               = json.load(open(fpath))
