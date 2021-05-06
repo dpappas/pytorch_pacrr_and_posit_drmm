@@ -171,6 +171,7 @@ def load_model_from_checkpoint(resume_from):
         # print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
     else:
         print("=> could not find path !!! '{}'".format(resume_from))
+        exit()
 
 class Ontop_Modeler(nn.Module):
     def __init__(self, input_size, hidden_nodes):
@@ -193,8 +194,12 @@ torch.manual_seed(my_seed)
 b               = sys.argv[1]
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_1_factoid.json'.format(b)
-model_name      = "ktrapeznikov/biobert_v1.1_pubmed_squad_v2"
-my_model_path   = '/home/dpappas/bioasq_factoid/snipBefAfter1_ktrapeznikov__biobert_v1.1_pubmed_squad_v2_MLP_100_9.pth.tar'
+# model_name      = "ktrapeznikov/biobert_v1.1_pubmed_squad_v2"
+# my_model_path   = '/home/dpappas/bioasq_factoid/snipBefAfter1_ktrapeznikov__biobert_v1.1_pubmed_squad_v2_MLP_100_9.pth.tar'
+# hidden          = 768
+model_name      = "ktrapeznikov/albert-xlarge-v2-squad-v2"
+my_model_path   = "/home/dpappas/bioasq_factoid/albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_42_5e-05.pth.tar"
+hidden          = 2048
 d               = json.load(open(fpath))
 
 use_cuda        = torch.cuda.is_available()
@@ -205,7 +210,7 @@ pprint(bert_tokenizer.special_tokens_map)
 bert_model 		= AutoModel.from_pretrained(model_name).to(device)
 bert_model.eval()
 
-my_model        = Ontop_Modeler(768, 100).to(device)
+my_model        = Ontop_Modeler(hidden, 100).to(device)
 load_model_from_checkpoint(my_model_path)
 gb = my_model.eval()
 
