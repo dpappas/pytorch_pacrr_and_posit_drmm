@@ -168,6 +168,7 @@ def load_model_from_checkpoint(resume_from):
         # print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
     else:
         print("=> could not find path !!! '{}'".format(resume_from))
+        exit()
 
 class Ontop_Modeler(nn.Module):
     def __init__(self, input_size, hidden_nodes):
@@ -196,7 +197,6 @@ ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_5_factoid.json'.form
 model_name      = "ktrapeznikov/albert-xlarge-v2-squad-v2"
 my_model_path   = "/home/dpappas/bioasq_factoid/BA12_albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_33_5e-05.pth.tar"
 hidden          = 2048
-
 
 d               = json.load(open(fpath))
 

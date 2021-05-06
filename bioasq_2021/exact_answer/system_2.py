@@ -213,7 +213,7 @@ pprint(bert_tokenizer.special_tokens_map)
 bert_model 		= AutoModel.from_pretrained(model_name).to(device)
 bert_model.eval()
 
-my_model        = Ontop_Modeler(768, 100).to(device)
+my_model        = Ontop_Modeler(hidden, 100).to(device)
 load_model_from_checkpoint(my_model_path)
 gb = my_model.eval()
 

@@ -172,6 +172,7 @@ def load_model_from_checkpoint(resume_from, the_model):
         # print("=> loaded checkpoint '{}' (epoch {})".format(resume_from, checkpoint['epoch']))
     else:
         print("=> could not find path !!! '{}'".format(resume_from))
+        exit()
 
 class Ontop_Modeler(nn.Module):
     def __init__(self, input_size, hidden_nodes):
