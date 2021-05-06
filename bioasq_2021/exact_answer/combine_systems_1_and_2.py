@@ -198,9 +198,16 @@ b               = sys.argv[1]
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_3_factoid.json'.format(b)
 
-model_name      = "ktrapeznikov/biobert_v1.1_pubmed_squad_v2"
-my_model_path_1 = '/home/dpappas/bioasq_factoid/snipBefAfter1_ktrapeznikov__biobert_v1.1_pubmed_squad_v2_MLP_100_9.pth.tar'
-my_model_path_2 = '/home/dpappas/bioasq_factoid/ktrapeznikov_biobert_v1.1_pubmed_squad_v2_MLP_100_8.pth.tar'
+# model_name      = "ktrapeznikov/biobert_v1.1_pubmed_squad_v2"
+# my_model_path_1 = '/home/dpappas/bioasq_factoid/snipBefAfter1_ktrapeznikov__biobert_v1.1_pubmed_squad_v2_MLP_100_9.pth.tar'
+# my_model_path_2 = '/home/dpappas/bioasq_factoid/ktrapeznikov_biobert_v1.1_pubmed_squad_v2_MLP_100_8.pth.tar'
+# hidden          = 768
+
+model_name          = "ktrapeznikov/albert-xlarge-v2-squad-v2"
+my_model_path_1     = "/home/dpappas/bioasq_factoid/albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_42_5e-05.pth.tar"
+my_model_path_2     = "/home/dpappas/bioasq_factoid/BA1_albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_43_5e-05.pth.tar"
+hidden              = 2048
+
 d               = json.load(open(fpath))
 
 bert_tokenizer 	= AutoTokenizer.from_pretrained(model_name)
@@ -208,11 +215,11 @@ pprint(bert_tokenizer.special_tokens_map)
 bert_model 		= AutoModel.from_pretrained(model_name).to(device)
 bert_model.eval()
 
-my_model_1      = Ontop_Modeler(768, 100).to(device)
+my_model_1      = Ontop_Modeler(hidden, 100).to(device)
 load_model_from_checkpoint(my_model_path_1, my_model_1)
 gb              = my_model_1.eval()
 
-my_model_2      = Ontop_Modeler(768, 100).to(device)
+my_model_2      = Ontop_Modeler(hidden, 100).to(device)
 load_model_from_checkpoint(my_model_path_2, my_model_2)
 gb              = my_model_2.eval()
 

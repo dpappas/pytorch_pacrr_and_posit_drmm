@@ -190,9 +190,14 @@ torch.manual_seed(my_seed)
 b               = sys.argv[1]# '4'
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_5_factoid.json'.format(b)
-model_name      = "ktrapeznikov/albert-xlarge-v2-squad-v2"
+
 # my_model_path   = "/home/dpappas/bioasq_factoid/albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_31_5e-05.pth.tar"
-my_model_path   = "/home/dpappas/bioasq_factoid/BA1_albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_43_5e-05.pth.tar"
+
+model_name      = "ktrapeznikov/albert-xlarge-v2-squad-v2"
+my_model_path   = "/home/dpappas/bioasq_factoid/BA12_albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_33_5e-05.pth.tar"
+hidden          = 2048
+
+
 d               = json.load(open(fpath))
 
 use_cuda        = torch.cuda.is_available()
@@ -203,7 +208,7 @@ pprint(bert_tokenizer.special_tokens_map)
 bert_model 		= AutoModel.from_pretrained(model_name).to(device)
 bert_model.eval()
 
-my_model        = Ontop_Modeler(2048, 100).to(device)
+my_model        = Ontop_Modeler(hidden, 100).to(device)
 load_model_from_checkpoint(my_model_path)
 gb = my_model.eval()
 
