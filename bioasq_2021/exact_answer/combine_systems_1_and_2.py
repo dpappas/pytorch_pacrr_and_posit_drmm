@@ -233,6 +233,8 @@ def approach_1(begin_y, end_y, sent_ids, prob_thresh=0.1):
     plus_minus_tokens   = 14
     if(begin_y.max() >= end_y.max()):
         start_from      = begin_y.argmax().int()
+        while(bert_tokenizer._convert_id_to_token(sent_ids[start_from]).startswith('##') and start_from>0):
+            start_from  -= 1
         go_up_to        = start_from + plus_minus_tokens+1
         begin_y         = begin_y[start_from:go_up_to]
         end_y           = end_y[start_from:go_up_to]
@@ -240,16 +242,16 @@ def approach_1(begin_y, end_y, sent_ids, prob_thresh=0.1):
     else:
         go_up_to        = end_y.argmax().int() + 1
         start_from      = max([0, go_up_to - plus_minus_tokens - 2])
+        while(bert_tokenizer._convert_id_to_token(sent_ids[start_from]).startswith('##') and start_from>0):
+            start_from  -= 1
         begin_y         = begin_y[start_from:go_up_to]
         end_y           = end_y[start_from:go_up_to]
         sent_ids        = sent_ids[start_from:go_up_to]
     ##########################################################
     start_idx           = int(begin_y.argmax().int())
-    while(bert_tokenizer._convert_id_to_token(sent_ids[start_idx]).startswith('##')):
+    while(bert_tokenizer._convert_id_to_token(sent_ids[start_idx]).startswith('##') and start_idx>0):
         start_idx       -= 1
     end_idx             = int(end_y.argmax().int())
-    while(bert_tokenizer._convert_id_to_token(sent_ids[end_idx]).startswith('##')):
-        end_idx         += 1
     ##########################################################
     # plus_minus_tokens   = 5
     # if(start_idx > end_idx): # ean to start einai meta to end
