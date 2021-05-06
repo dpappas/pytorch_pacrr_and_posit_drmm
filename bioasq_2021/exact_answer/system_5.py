@@ -191,7 +191,8 @@ b               = sys.argv[1]# '4'
 fpath           = '/home/dpappas/bioasq_2021/BioASQ-task9bPhaseB-testset{}'.format(b)
 ofpath          = '/home/dpappas/bioasq_2021/batch{}_system_5_factoid.json'.format(b)
 model_name      = "ktrapeznikov/albert-xlarge-v2-squad-v2"
-my_model_path   = "/home/dpappas/bioasq_factoid/albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_31_5e-05.pth.tar"
+# my_model_path   = "/home/dpappas/bioasq_factoid/albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_31_5e-05.pth.tar"
+my_model_path   = "/home/dpappas/bioasq_factoid/BA1_albert_ktrapeznikov__albert-xlarge-v2-squad-v2_MLP_100_43_5e-05.pth.tar"
 d               = json.load(open(fpath))
 
 use_cuda        = torch.cuda.is_available()
@@ -335,7 +336,7 @@ with open(ofpath, 'w') as of:
 '''
 
 source ~/venvs/finetune_transformers/bin/activate
-CUDA_VISIBLE_DEVICES=1 python factoid_system_5.py 4
+CUDA_VISIBLE_DEVICES=1 python factoid_system_5.py 5
 
 
 '''

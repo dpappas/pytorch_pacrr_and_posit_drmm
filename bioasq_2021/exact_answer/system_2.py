@@ -368,5 +368,5 @@ approach_2(begin_y, end_y, sent_ids, prob_thresh = 0.01)
 
 '''
 source ~/venvs/finetune_transformers/bin/activate
-CUDA_VISIBLE_DEVICES=1 python factoid_system_2.py 4
+CUDA_VISIBLE_DEVICES=1 python factoid_system_2.py 5
 '''

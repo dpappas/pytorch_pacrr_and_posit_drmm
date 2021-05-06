@@ -245,7 +245,11 @@ def approach_1(begin_y, end_y, sent_ids, prob_thresh=0.1):
         sent_ids        = sent_ids[start_from:go_up_to]
     ##########################################################
     start_idx           = int(begin_y.argmax().int())
+    while(bert_tokenizer._convert_id_to_token(sent_ids[start_idx]).startswith('##')):
+        start_idx       -= 1
     end_idx             = int(end_y.argmax().int())
+    while(bert_tokenizer._convert_id_to_token(sent_ids[end_idx]).startswith('##')):
+        end_idx         += 1
     ##########################################################
     # plus_minus_tokens   = 5
     # if(start_idx > end_idx): # ean to start einai meta to end
@@ -347,7 +351,7 @@ with open(ofpath, 'w') as of:
 '''
 
 source ~/venvs/finetune_transformers/bin/activate
-CUDA_VISIBLE_DEVICES=1 python combine_systems_1_and_2.py 4
+CUDA_VISIBLE_DEVICES=1 python combine_systems_1_and_2.py 5
 
 '''
 
