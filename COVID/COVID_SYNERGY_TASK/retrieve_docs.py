@@ -84,7 +84,8 @@ def retrieve_some_docs(qtext, n=100, exclude_pmids=None):
     tokenized_body  = bioclean_mod(qtext)
     tokenized_body  = [t for t in tokenized_body if t not in stopwords]
     question        = ' '.join(tokenized_body)
-    bod = {
+    '''
+    bod             = {
         'size' : n,
         "query": {
             "bool" : {
@@ -97,6 +98,47 @@ def retrieve_some_docs(qtext, n=100, exclude_pmids=None):
             }
         }
     }
+    '''
+    ################################################
+    bod             = {
+        "size": n,
+        "query": {
+            "bool": {
+                "should": [
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1,
+                                'minimum_should_match': "30%"
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1,
+                                'minimum_should_match': "50%"
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "joint_text": {
+                                "query": question,
+                                "boost": 1,
+                                'minimum_should_match': "70%"
+                            }
+                        }
+                    },
+                    {"match_phrase": {"joint_text": {"query": question, "boost": 1}}}
+                ],
+                "minimum_should_match": 1,
+            }
+        }
+    }
+    ################################################
     if(exclude_pmids):
         # bod["query"]["bool"]["must_not"] = [{"_id": {"values": exclude_pmids}}]
         bod["query"]["bool"]["must_not"] = [
