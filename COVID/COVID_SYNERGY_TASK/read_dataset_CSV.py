@@ -46,25 +46,9 @@ with open(csv_path, 'r') as read_obj:
     csv_reader = reader(read_obj)
     for row in tqdm(csv_reader, total=500000):
         (
-            cord_uid,
-            sha,
-            source_x,
-            title,
-            doi,
-            pmcid,
-            pubmed_id,
-            license,
-            abstract,
-            publish_time,
-            authors,
-            journal,
-            mag_id,
-            who_covidence_id,
-            arxiv_id,
-            pdf_json_files,
-            pmc_json_files,
-            url,
-            s2_id
+            cord_uid, sha, source_x, title, doi, pmcid, pubmed_id, license,
+            abstract, publish_time, authors, journal, mag_id, who_covidence_id,
+            arxiv_id, pdf_json_files, pmc_json_files, url, s2_id
         ) = row
         if(len(publish_time)==0):
             publish_time = '1600'
