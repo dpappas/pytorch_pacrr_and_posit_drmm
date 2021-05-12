@@ -82,3 +82,7 @@ with open(csv_path, 'r') as read_obj:
             upload_to_elk()
 
 upload_to_elk()
+
+# go to
+# https://ai2-semanticscholar-cord-19.s3-us-west-2.amazonaws.com/historical_releases.html
+
