@@ -42,10 +42,11 @@ database_instances  = []
 actions             = []
 # csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2020-11-29/metadata.csv'
 # csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2021-01-10/metadata.csv'
-csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2021-01-25/metadata.csv'
+# csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2021-01-25/metadata.csv'
+csv_path            = '/media/dpappas/dpappas_data/CORD_allenai_datasets/2021-05-10/metadata.csv'
 with open(csv_path, 'r') as read_obj:
     csv_reader = reader(read_obj)
-    for row in tqdm(csv_reader, total=500000):
+    for row in tqdm(csv_reader, total=800000):
         (
             cord_uid, sha, source_x, title, doi, pmcid, pubmed_id, license,
             abstract, publish_time, authors, journal, mag_id, who_covidence_id,
