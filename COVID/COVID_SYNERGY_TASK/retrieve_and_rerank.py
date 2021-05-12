@@ -17,6 +17,7 @@ import  nltk, torch, random, re
 import  torch.nn.functional         as F
 import  torch.nn                    as nn
 import  torch.autograd              as autograd
+from    pprint                      import pprint
 
 softmax     = lambda z: np.exp(z) / np.sum(np.exp(z))
 
@@ -844,4 +845,5 @@ def retrieve_given_question(quest, n=100, exclude_pmids=None):
 if __name__ == '__main__':
     question_text1      = 'what is the origin of COVID-19'
     ret_dummy1          = retrieve_given_question(question_text1, n=100)
+    pprint(ret_dummy1)
 

@@ -43,14 +43,17 @@ flattened = lambda l: [item for sublist in l for item in sublist]
 # opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset1_ouputs.json'
 # d               = json.load(open(fpath))
 
-fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset4.json'
-opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset4_ouputs.json'
+# fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset4.json'
+# opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset4_ouputs.json'
+fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy_v2-feedback_round1.json'
+opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy_v2-feedback_round1_output.json'
 d               = json.load(open(fpath))
 
 feedback_fpaths = [
-    '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round2.json',
-    '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round3.json',
-    '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round4.json'
+    '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy_v2-feedback_round1.json'
+    # '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round2.json',
+    # '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round3.json',
+    # '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-feedback_round4.json'
 ]
 
 qtext_to_qid            = {}
