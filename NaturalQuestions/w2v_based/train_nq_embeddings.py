@@ -60,8 +60,8 @@ iterator1       = MakeIter(yield_lines)
 
 ################################################
 
-size        = 30
-model       = gensim.models.Word2Vec(iterator1, size=size, window=10, min_count=4, workers=10)
+size            = 30
+model           = gensim.models.Word2Vec(iterator1, size=size, window=10, min_count=4, workers=10)
 model.train(iterator1, total_examples=total_examples, epochs=20)
 model.save("lower_nq_w2v_{}.model".format(size))
 

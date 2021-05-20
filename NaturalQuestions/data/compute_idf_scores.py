@@ -39,7 +39,7 @@ for item in tqdm(items, total=total):
     df3.update(Counter(list(set([t.lower() for t in my_tokenize(item['_source']['paragraph_text'])]))))
 
 
-pickle.dump(df, open('NQ_df.pkl', 'wb'))
+pickle.dump(df,  open('NQ_df.pkl', 'wb'))
 pickle.dump(df2, open('NQ_bioclean_mine_df.pkl', 'wb'))
 pickle.dump(df3, open('NQ_my_tokenize_df.pkl', 'wb'))
 
