@@ -1106,7 +1106,6 @@ device              = torch.device("cuda") if(use_cuda) else torch.device("cpu")
 ##########################################
 eval_path           = '/home/dpappas/bioasq_all/eval/run_eval.py'
 retrieval_jar_path  = '/home/dpappas/bioasq_all/dist/my_bioasq_eval_2.jar'
-odd                 = '/home/dpappas/'
 ##########################################
 dataloc             = '/home/dpappas/NQ_data/'
 bert_all_words_path = '/home/dpappas/NQ_data/bert_all_words.pkl'
@@ -1159,7 +1158,7 @@ load_model_from_checkpoint(model, model_resume_from)
 print_params(model)
 ###########################################################
 
-epoch_dev_map = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
+epoch_dev_map               = get_one_map('test', test_data, test_docs, use_sent_tokenizer=True)
 print(epoch_dev_map)
 
 '''
