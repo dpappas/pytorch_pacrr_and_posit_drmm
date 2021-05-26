@@ -157,11 +157,11 @@ for question in tqdm(d['questions']):
         "ideal_answer"  : '',
         "exact_answer"  : []
     }
-    exclude_pmids = qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']]
-    # try:
-    #     exclude_pmids = qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']]
-    # except:
-    #     exclude_pmids = []
+    # exclude_pmids = qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']]
+    try:
+        exclude_pmids = qid_to_pos_docids[question['id']] + qid_to_neg_docids[question['id']]
+    except:
+        exclude_pmids = []
     res                     = retrieve_given_question(qtext, n = 100, exclude_pmids = exclude_pmids)
     if(any([tt['pmid'] in exclude_pmids for tt in res])):
         raise Exception('spam', 'eggs')
