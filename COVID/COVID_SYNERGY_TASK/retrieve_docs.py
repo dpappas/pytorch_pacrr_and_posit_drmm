@@ -144,7 +144,7 @@ def retrieve_some_docs(qtext, n=100, exclude_pmids=None):
         bod["query"]["bool"]["must_not"] = [
             {
                 "ids": {
-                    "type" : "_doc",
+                    # "type" : "_doc",
                     "values": exclude_pmids
                 }
             }
