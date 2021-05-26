@@ -147,6 +147,18 @@ def retrieve_some_docs(qtext, n=100, exclude_pmids=None):
                     # "type" : "_doc",
                     "values": exclude_pmids
                 }
+            },
+            {
+                "doc_id": {
+                    # "type" : "_doc",
+                    "values": exclude_pmids
+                }
+            },
+            {
+                "pmid": {
+                    # "type" : "_doc",
+                    "values": exclude_pmids
+                }
             }
         ]
     res = es.search(index=index, body=bod)
