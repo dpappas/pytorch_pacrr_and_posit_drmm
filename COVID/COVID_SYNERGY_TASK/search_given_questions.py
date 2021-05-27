@@ -47,8 +47,9 @@ flattened = lambda l: [item for sublist in l for item in sublist]
 # opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy-testset4_ouputs.json'
 # fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy_v2-feedback_round1.json'
 # opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy_v2-feedback_round1_output.json'
-fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy_v2-feedback_round2.json'
-opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy_v2-feedback_round2_output.json'
+
+fpath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy_v2-testset2.json'
+opath           = '/home/dpappas/COVID_SYNERGY/BioASQ-taskSynergy_v2-testset2_outputs.json'
 d               = json.load(open(fpath))
 
 feedback_fpaths = [

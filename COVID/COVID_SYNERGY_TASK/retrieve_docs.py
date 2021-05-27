@@ -148,18 +148,8 @@ def retrieve_some_docs(qtext, n=100, exclude_pmids=None):
                     "values": exclude_pmids
                 }
             },
-            {
-                "doc_id": {
-                    # "type" : "_doc",
-                    "values": exclude_pmids
-                }
-            },
-            {
-                "pmid": {
-                    # "type" : "_doc",
-                    "values": exclude_pmids
-                }
-            }
+            {"terms" : { "doc_id" : exclude_pmids }},
+            {"terms" : { "doc.cord_uid" : exclude_pmids }}
         ]
     res = es.search(index=index, body=bod)
     return res
@@ -212,7 +202,14 @@ def get_first_n(qtext, n, exclude_pmids=None):
 if __name__ == '__main__':
     qtext   = 'Which diagnostic test is approved for coronavirus infection screening?'
     res     = get_first_n(qtext, n=100, exclude_pmids=['6crputzl'])
-    pprint(res)
+    t1      = [t['doc_id'] for t in res['retrieved_documents']]
+    pprint(t1)
+    res     = get_first_n(qtext, n=100, exclude_pmids=['aspx7cc6'])
+    t2      = [t['doc_id'] for t in res['retrieved_documents']]
+    pprint(t2)
+    pprint(set(t1)-set(t2))
+    pprint(set(t2)-set(t1))
+    pprint(get_first_n("Which age group and gender are more susceptible of developing a Kawasaki-like syndrome with Covid-19?", n=100, exclude_pmids=["tnouw1h0", "ukmbo7mn", "5g5kreqz", "rdgknsps", "0xgjpd80", "vfbp2psw", "quc4s5wp", "5dyhyx9a", "6vy2tasf", "budtkxh5"]))
 
 
 
