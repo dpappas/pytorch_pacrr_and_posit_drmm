@@ -34,6 +34,20 @@ es          = Elasticsearch('127.0.0.1', verify_certs=True, timeout=150, max_ret
 doc_index   = 'allenai_covid_index_2020_11_29_csv'
 '''
 
+def get_answers(qtext, le_text):
+    overall_exact   = emit_exact_answers(qtext, le_text) #
+    overall_exact   = [
+        t for t in overall_exact
+        if (
+            t[1] >= 0.5 and
+            t[2] >= 0.5 and
+            all(nono != t[0] for nono in nonos) and
+            all(nono2 not in t[0] for nono2 in nonos_2)
+        )
+    ]
+    overall_exact   = [t[0] for t in overall_exact]
+    return overall_exact
+
 flattened = lambda l: [item for sublist in l for item in sublist]
 
 # # fpath   = '/home/dpappas/BioASQ-taskSynergy-dryRun-testset'
@@ -113,20 +127,6 @@ for feedback_fpath in feedback_fpaths:
 nonos           = ['sars', 'sars - cov', 'cov - 2', 'coronavirus', 'covid - 19', 'covid']
 nonos_2         = ['et al', 'et. al', '>']
 sent_min_chars  = 20
-
-def get_answers(qtext, le_text):
-    overall_exact   = emit_exact_answers(qtext, le_text) #
-    overall_exact   = [
-        t for t in overall_exact
-        if (
-            t[1] >= 0.5 and
-            t[2] >= 0.5 and
-            all(nono != t[0] for nono in nonos) and
-            all(nono2 not in t[0] for nono2 in nonos_2)
-        )
-    ]
-    overall_exact   = [t[0] for t in overall_exact]
-    return overall_exact
 
 exported = {"questions": []}
 
