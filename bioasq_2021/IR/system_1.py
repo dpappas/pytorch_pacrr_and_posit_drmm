@@ -411,8 +411,7 @@ def query_doc_overlap(qwords, dwords, idf, max_idf):
     if len(qwords) <= 0:
       qwords_in_doc_val = 0.0
     else:
-      qwords_in_doc_val = (float(qwords_in_doc) /
-                           float(len(uwords(qwords))))
+      qwords_in_doc_val = (float(qwords_in_doc) / float(len(uwords(qwords))))
     if idf_qwords <= 0.0:
       idf_qwords_in_doc_val = 0.0
     else:
