@@ -1286,7 +1286,7 @@ with open(elk_ips) as fp:
     cluster_ips = [line.strip() for line in fp.readlines() if(len(line.strip())>0)]
     fp.close()
 
-es = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
+    es = Elasticsearch(cluster_ips, verify_certs=True, timeout=150, max_retries=10, retry_on_timeout=True)
 
 with open(stopwords_path, 'rb') as f:
     stopwords = pickle.load(f)
@@ -1377,7 +1377,7 @@ pickle.dump(test_data_to_save, open(os.path.join(odir, 'bioasq9_bm25_top100.test
 pickle.dump(test_docs_to_save, open(os.path.join(odir, 'bioasq9_bm25_docset_top100.test.pkl'), 'wb'))
 
 with open(os.path.join(odir, 'all_retrieved.json'), 'w', encoding='utf-8') as f:
-    f.write(json.dumps(test_data_to_save, indent=4, sort_keys=True))
+    f.write(json.dumps(all_retrieved, indent=4, sort_keys=True))
     f.close()
 
 ################################################################################################################|
